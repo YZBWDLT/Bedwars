@@ -1,0 +1,11 @@
+{
+    "format_version": "1.16.0",
+    "minecraft:item": {
+        "description": {
+            "identifier": "bedwars:shopitem_bed_bug"
+        },
+        "components": {
+            "minecraft:foil": true
+        }
+    }
+}

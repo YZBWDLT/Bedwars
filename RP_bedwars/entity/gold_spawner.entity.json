@@ -1,0 +1,24 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:client_entity": {
+        "description": {
+            "identifier": "bedwars:gold_spawner",
+            "materials": { "default": "entity_alphatest" },
+            "textures": { "default": "textures/entity/gold_spawner" },
+            "geometry": { "default": "geometry.resource_spawner" },
+            "render_controllers": [ "controller.render.resource_spawner" ],
+
+            "scripts": {
+                "animate": [ "spin" ]
+            },
+            "animations": {
+                "spin": "animation.resource_spawner.spin"
+            },
+
+            "spawn_egg": {
+                "base_color": "#e7b70c",
+                "overlay_color": "#f1e50b"
+            }
+        }
+    }
+}

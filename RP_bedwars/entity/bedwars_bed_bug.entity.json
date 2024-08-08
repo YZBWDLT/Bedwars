@@ -1,0 +1,14 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:client_entity": {
+        "description": {
+            "identifier": "bedwars:bed_bug",
+            "materials": { "default": "snowball" },
+            "textures": { "default": "textures/items/snowball" },
+            "geometry": { "default": "geometry.item_sprite" },
+            "animations": { "flying": "animation.actor.billboard" },
+            "scripts": { "animate": [ "flying" ] },
+            "render_controllers": [ "controller.render.item_sprite" ]
+        }
+    }
+}

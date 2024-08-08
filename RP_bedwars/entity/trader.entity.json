@@ -1,0 +1,50 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:client_entity": {
+        "description": {
+            "identifier": "bedwars:trader",
+            "materials": { "default": "entity_alphatest" },
+            "textures": {
+                "skin_0": "textures/entity/trader/skin_0",
+                "skin_1": "textures/entity/trader/skin_1",
+                "skin_2": "textures/entity/trader/skin_2",
+                "skin_3": "textures/entity/trader/skin_3",
+                "skin_4": "textures/entity/trader/skin_4",
+                "skin_5": "textures/entity/trader/skin_5",
+                "skin_6": "textures/entity/trader/skin_6",
+                "skin_7": "textures/entity/trader/skin_7",
+                "skin_8": "textures/entity/trader/skin_8",
+                "skin_9": "textures/entity/trader/skin_9",
+                "skin_10": "textures/entity/trader/skin_10",
+                "skin_11": "textures/entity/trader/skin_11",
+                "skin_12": "textures/entity/trader/skin_12",
+                "skin_13": "textures/entity/trader/skin_13",
+                "skin_14": "textures/entity/trader/skin_14",
+                "skin_15": "textures/entity/trader/skin_15",
+                "skin_16": "textures/entity/trader/skin_16",
+                "skin_17": "textures/entity/trader/skin_17",
+                "skin_18": "textures/entity/trader/skin_18",
+                "skin_19": "textures/entity/trader/skin_19",
+                "skin_20": "textures/entity/trader/skin_20",
+                "skin_21": "textures/entity/trader/skin_21"
+            },
+            "geometry": {
+                "default": "geometry.humanoid_default",
+                "slim": "geometry.humanoid_slim"
+            },
+            "render_controllers": [ "controller.render.trader" ],
+            
+            "spawn_egg": { "base_color": "#e8b211", "overlay_color": "#47f118" },
+
+            "scripts": {
+                "scale": "0.9375",
+                "animate": [
+                    "look_at_player"
+                ]
+            },
+            "animations": {
+                "look_at_player": "animation.humanoid.look_at_target.default"
+            }
+        }
+    }
+}

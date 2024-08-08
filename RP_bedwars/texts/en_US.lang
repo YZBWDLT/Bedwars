@@ -1,0 +1,27 @@
+## 
+### ===== Item Rename =====
+### To recognize which item drops, for command executing
+item.bed.black.name=Black Bed
+item.bed.red.name=Red Bed
+item.bed.green.name=Green Bed
+item.bed.brown.name=Brown Bed
+item.bed.blue.name=Blue Bed
+item.bed.purple.name=Purple Bed
+item.bed.cyan.name=Cyan Bed
+item.bed.silver.name=Light Gray Bed
+item.bed.gray.name=Gray Bed
+item.bed.pink.name=Pink Bed
+item.bed.lime.name=Lime Bed
+item.bed.yellow.name=Yellow Bed
+item.bed.lightBlue.name=Light Blue Bed
+item.bed.magenta.name=Magenta Bed
+item.bed.orange.name=Orange Bed
+item.bed.white.name=White Bed
+
+### ===== Developer Functions =====
+developer.developer_mode.off=Developer mode has been disabled
+developer.developer_mode.on=Developer mode has been enabled
+
+### ===== System Functions =====
+system.gamemode_switcher.turn_to_creative=§cLook up and change back to creative mode
+

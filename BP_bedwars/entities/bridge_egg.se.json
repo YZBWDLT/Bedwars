@@ -1,0 +1,78 @@
+{
+    "format_version": "1.18.0",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "bedwars:bridge_egg",
+            "is_spawnable": false,
+            "is_summonable": true,
+            "is_experimental": false,
+            "runtime_identifier": "minecraft:snowball",
+            "scripts": {
+                "animate": [ "sounds_and_commands" ]
+            },
+            "animations": {
+                "sounds_and_commands": "animation.bridge_egg.sounds_and_commands"
+            }
+        },
+    
+        "components": {
+            "minecraft:collision_box": { "width": 0.25, "height": 0.25 },
+            "minecraft:projectile": {
+                "on_hit": { "impact_damage": { "damage": 0, "knockback": true, "destroy_on_hit": true }, "remove_on_hit": {} },
+                "anchor": 1,
+                "power": 1.5,
+                "gravity": 0.03,
+                "angle_offset": 0.0,
+                "offset": [ 0, -0.1, 0 ]
+            },
+            "minecraft:physics": { },
+            "minecraft:pushable": { "is_pushable": true, "is_pushable_by_piston": true },
+            "minecraft:conditional_bandwidth_optimization": { "default_values": { "max_optimized_distance": 80.0, "max_dropped_ticks": 7, "use_motion_prediction_hints": true } }
+        },
+
+        "events": {
+            "minecraft:entity_spawned": {
+                "sequence": [
+                    { "filters": { "all_of": [ { "test": "is_family", "value": "player", "subject": "other" }, { "test": "is_family", "value": "team_red", "subject": "other" } ] }, "add": { "component_groups": [ "team_red" ] } },
+                    { "filters": { "all_of": [ { "test": "is_family", "value": "player", "subject": "other" }, { "test": "is_family", "value": "team_blue", "subject": "other" } ] }, "add": { "component_groups": [ "team_blue" ] } },
+                    { "filters": { "all_of": [ { "test": "is_family", "value": "player", "subject": "other" }, { "test": "is_family", "value": "team_green", "subject": "other" } ] }, "add": { "component_groups": [ "team_green" ] } },
+                    { "filters": { "all_of": [ { "test": "is_family", "value": "player", "subject": "other" }, { "test": "is_family", "value": "team_yellow", "subject": "other" } ] }, "add": { "component_groups": [ "team_yellow" ] } },
+                    { "filters": { "all_of": [ { "test": "is_family", "value": "player", "subject": "other" }, { "test": "is_family", "value": "team_white", "subject": "other" } ] }, "add": { "component_groups": [ "team_white" ] } },
+                    { "filters": { "all_of": [ { "test": "is_family", "value": "player", "subject": "other" }, { "test": "is_family", "value": "team_pink", "subject": "other" } ] }, "add": { "component_groups": [ "team_pink" ] } },
+                    { "filters": { "all_of": [ { "test": "is_family", "value": "player", "subject": "other" }, { "test": "is_family", "value": "team_gray", "subject": "other" } ] }, "add": { "component_groups": [ "team_gray" ] } },
+                    { "filters": { "all_of": [ { "test": "is_family", "value": "player", "subject": "other" }, { "test": "is_family", "value": "team_cyan", "subject": "other" } ] }, "add": { "component_groups": [ "team_red" ] } }
+                ]
+            }
+        },
+        "component_groups": {
+            "team_red": {
+                "minecraft:type_family": { "family": [ "bridge_egg", "team_red" ] }
+            },
+            "team_blue": {
+                "minecraft:type_family": { "family": [ "bridge_egg", "team_blue" ] }
+            },
+            "team_green": {
+                "minecraft:type_family": { "family": [ "bridge_egg", "team_green" ] }
+            },
+            "team_yellow": {
+                "minecraft:type_family": { "family": [ "bridge_egg", "team_yellow" ] }
+            },
+            "team_white": {
+                "minecraft:type_family": { "family": [ "bridge_egg", "team_white" ] }
+            },
+            "team_pink": {
+                "minecraft:type_family": { "family": [ "bridge_egg", "team_pink" ] }
+            },
+            "team_gray": {
+                "minecraft:type_family": { "family": [ "bridge_egg", "team_gray" ] }
+            },
+            "team_cyan": {
+                "minecraft:type_family": { "family": [ "bridge_egg", "team_cyan" ] }
+            },
+            "remove_team": {
+                "minecraft:type_family": { "family": [ "bridge_egg" ] }
+            }
+        }
+    }
+}
+    

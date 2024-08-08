@@ -1,0 +1,13 @@
+{
+    "format_version": "1.10",
+    "minecraft:item": {
+        "description": {
+            "identifier": "bedwars:magic_milk",
+            "category": "items"
+        },
+        "components": {
+            "minecraft:icon": "bedwars_magic_milk",
+            "minecraft:use_animation": "drink"
+        }
+    }
+}

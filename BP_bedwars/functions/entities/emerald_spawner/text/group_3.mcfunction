@@ -1,0 +1,10 @@
+execute if score @s time matches 30 run summon bedwars:text_display "§e在§c30§e秒后产出" ~~3.5~
+execute if score @s time matches 29 run summon bedwars:text_display "§e在§c29§e秒后产出" ~~3.5~
+execute if score @s time matches 28 run summon bedwars:text_display "§e在§c28§e秒后产出" ~~3.5~
+execute if score @s time matches 27 run summon bedwars:text_display "§e在§c27§e秒后产出" ~~3.5~
+execute if score @s time matches 26 run summon bedwars:text_display "§e在§c26§e秒后产出" ~~3.5~
+execute if score @s time matches 25 run summon bedwars:text_display "§e在§c25§e秒后产出" ~~3.5~
+execute if score @s time matches 24 run summon bedwars:text_display "§e在§c24§e秒后产出" ~~3.5~
+execute if score @s time matches 23 run summon bedwars:text_display "§e在§c23§e秒后产出" ~~3.5~
+execute if score @s time matches 22 run summon bedwars:text_display "§e在§c22§e秒后产出" ~~3.5~
+execute if score @s time matches 21 run summon bedwars:text_display "§e在§c21§e秒后产出" ~~3.5~

@@ -1,0 +1,13 @@
+{
+    "format_version": "1.10",
+    "minecraft:item": {
+        "description": {
+            "identifier": "bedwars:potion_invisibility",
+            "category": "items"
+        },
+        "components": {
+            "minecraft:icon": "bedwars_potion_invisibility",
+            "minecraft:use_animation": "drink"
+        }
+    }
+}

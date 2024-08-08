@@ -1,0 +1,120 @@
+{
+    "format_version": "1.10.0",
+    "animations": {
+        "animation.iron_spawner.give_resource_directly_tier_1": {
+            "loop": true,
+            "animation_length": 3,
+            "timeline": {
+                "0.0": "/function entities/iron_spawner/give_iron_ingots"
+            }
+        },
+        "animation.iron_spawner.give_resource_directly_tier_2": {
+            "loop": true,
+            "animation_length": 2,
+            "timeline": {
+                "0.0": "/function entities/iron_spawner/give_iron_ingots"
+            }
+        },
+        "animation.iron_spawner.give_resource_directly_tier_3": {
+            "loop": true,
+            "animation_length": 1.5,
+            "timeline": {
+                "0.0": "/function entities/iron_spawner/give_iron_ingots"
+            }
+        },
+        "animation.iron_spawner.give_resource_directly_tier_4": {
+            "loop": true,
+            "animation_length": 1,
+            "timeline": {
+                "0.0": "/function entities/iron_spawner/give_iron_ingots"
+            }
+        },
+        
+        "animation.gold_spawner.give_resource_directly_tier_1": {
+            "loop": true,
+            "animation_length": 6,
+            "timeline": {
+                "0.0": "/function entities/gold_spawner/give_gold_ingots"
+            }
+        },
+        "animation.gold_spawner.give_resource_directly_tier_2": {
+            "loop": true,
+            "animation_length": 4,
+            "timeline": {
+                "0.0": "/function entities/gold_spawner/give_gold_ingots"
+            }
+        },
+        "animation.gold_spawner.give_resource_directly_tier_3": {
+            "loop": true,
+            "animation_length": 3,
+            "timeline": {
+                "0.0": "/function entities/gold_spawner/give_gold_ingots"
+            }
+        },
+        "animation.gold_spawner.give_resource_directly_tier_4": {
+            "loop": true,
+            "animation_length": 2,
+            "timeline": {
+                "0.0": "/function entities/gold_spawner/give_gold_ingots"
+            }
+        },
+
+        "animation.diamond_spawner.spawn_normally":{
+            "loop": true,
+            "animation_length": 1,
+            "timeline": {
+                "0.0": "/function entities/diamond_spawner/spawn_normally"
+            }
+        },
+        "animation.diamond_spawner.spawn_per_300_seconds":{
+            "loop": true,
+            "animation_length": 300.05,
+            "timeline": {
+                "300.0": "/function entities/diamond_spawner/spawn_8_diamonds"
+            }
+        },
+        "animation.diamond_spawner.show_waiting_text":{
+            "loop": true,
+            "animation_length": 1,
+            "timeline": {
+                "0.0": "/function entities/diamond_spawner/show_waiting_text"
+            }
+        },
+        "animation.diamond_spawner.show_spawning_text":{
+            "loop": true,
+            "animation_length": 1,
+            "timeline": {
+                "0.0": "/function entities/diamond_spawner/show_spawning_text"
+            }
+        },
+
+        "animation.emerald_spawner.spawn_normally":{
+            "loop": true,
+            "animation_length": 1,
+            "timeline": {
+                "0.0": "/function entities/emerald_spawner/spawn_normally"
+            }
+        },
+        "animation.emerald_spawner.spawn_per_300_seconds":{
+            "loop": true,
+            "animation_length": 300.05,
+            "timeline": {
+                "300.0": "/function entities/emerald_spawner/spawn_4_emeralds"
+            }
+        },
+        "animation.emerald_spawner.show_waiting_text":{
+            "loop": true,
+            "animation_length": 1,
+            "timeline": {
+                "0.0": "/function entities/emerald_spawner/show_waiting_text"
+            }
+        },
+        "animation.emerald_spawner.show_spawning_text":{
+            "loop": true,
+            "animation_length": 1,
+            "timeline": {
+                "0.0": "/function entities/emerald_spawner/show_spawning_text"
+            }
+        }
+    }
+}

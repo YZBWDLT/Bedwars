@@ -1,0 +1,91 @@
+{
+    "format_version": "1.10.0",
+    "animation_controllers": {
+        "controller.animation.iron_spawner.give_resource_directly": {
+            "initial_state": "default",
+            "states": {
+                "default": {
+                    "transitions": [
+                        { "tier_1": "query.has_any_family('tier_1') && query.is_sheared" },
+                        { "tier_2": "query.has_any_family('tier_2') && query.is_sheared" },
+                        { "tier_3": "query.has_any_family('tier_3') && query.is_sheared" },
+                        { "tier_4": "query.has_any_family('tier_4') && query.is_sheared" }
+                    ]
+                },
+                "tier_1": {
+                    "animations": [ "give_resource_directly_tier_1" ],
+                    "transitions": [ { "default": "!query.has_any_family('tier_1') || !query.is_sheared" } ]
+                },
+                "tier_2": {
+                    "animations": [ "give_resource_directly_tier_2" ],
+                    "transitions": [ { "default": "!query.has_any_family('tier_2') || !query.is_sheared" } ]
+                },
+                "tier_3": {
+                    "animations": [ "give_resource_directly_tier_3" ],
+                    "transitions": [ { "default": "!query.has_any_family('tier_3') || !query.is_sheared" } ]
+                },
+                "tier_4": {
+                    "animations": [ "give_resource_directly_tier_4" ],
+                    "transitions": [ { "default": "!query.has_any_family('tier_4') || !query.is_sheared" } ]
+                }
+            }
+        },
+        "controller.animation.gold_spawner.give_resource_directly": {
+            "initial_state": "default",
+            "states": {
+                "default": {
+                    "transitions": [
+                        { "tier_1": "query.has_any_family('tier_1') && query.is_sheared" },
+                        { "tier_2": "query.has_any_family('tier_2') && query.is_sheared" },
+                        { "tier_3": "query.has_any_family('tier_3') && query.is_sheared" },
+                        { "tier_4": "query.has_any_family('tier_4') && query.is_sheared" }
+                    ]
+                },
+                "tier_1": {
+                    "animations": [ "give_resource_directly_tier_1" ],
+                    "transitions": [ { "default": "!query.has_any_family('tier_1') || !query.is_sheared" } ]
+                },
+                "tier_2": {
+                    "animations": [ "give_resource_directly_tier_2" ],
+                    "transitions": [ { "default": "!query.has_any_family('tier_2') || !query.is_sheared" } ]
+                },
+                "tier_3": {
+                    "animations": [ "give_resource_directly_tier_3" ],
+                    "transitions": [ { "default": "!query.has_any_family('tier_3') || !query.is_sheared" } ]
+                },
+                "tier_4": {
+                    "animations": [ "give_resource_directly_tier_4" ],
+                    "transitions": [ { "default": "!query.has_any_family('tier_4') || !query.is_sheared" } ]
+                }
+            }
+        },
+
+        "controller.animation.diamond_spawner.spawn_mode": {
+            "initial_state": "spawn_normally",
+            "states": {
+                "spawn_normally": {
+                    "transitions": [ { "spawn_per_300_seconds": "query.variant == 8" } ],
+                    "animations": [ "spawn_normally", "show_spawning_text" ]
+                },
+                "spawn_per_300_seconds": {
+                    "transitions": [ { "spawn_normally": "query.variant != 8" } ],
+                    "animations": [ "spawn_per_300_seconds", "show_waiting_text" ]
+                }
+            }
+        },
+        
+        "controller.animation.emerald_spawner.spawn_mode": {
+            "initial_state": "spawn_normally",
+            "states": {
+                "spawn_normally": {
+                    "transitions": [ { "spawn_per_300_seconds": "query.variant == 4" } ],
+                    "animations": [ "spawn_normally", "show_spawning_text" ]
+                },
+                "spawn_per_300_seconds": {
+                    "transitions": [ { "spawn_normally": "query.variant != 4" } ],
+                    "animations": [ "spawn_per_300_seconds", "show_waiting_text" ]
+                }
+            }
+        }
+    }
+}

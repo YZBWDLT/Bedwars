@@ -1,0 +1,70 @@
+{
+    "format_version": "1.8.0",
+    "render_controllers": {
+        "controller.render.trader": {
+            "arrays": {
+                "textures": {
+                    "Array.skins": [
+                        "Texture.skin_0",
+                        "Texture.skin_1",
+                        "Texture.skin_2",
+                        "Texture.skin_3",
+                        "texture.skin_4",
+                        "texture.skin_5",
+                        "texture.skin_6",
+                        "texture.skin_7",
+                        "texture.skin_8",
+                        "texture.skin_9",
+                        "Texture.skin_10",
+                        "Texture.skin_11",
+                        "Texture.skin_12",
+                        "Texture.skin_13",
+                        "texture.skin_14",
+                        "texture.skin_15",
+                        "texture.skin_16",
+                        "texture.skin_17",
+                        "texture.skin_18",
+                        "texture.skin_19",
+                        "Texture.skin_20",
+                        "Texture.skin_21"
+                    ]
+                },
+                "geometries": {
+                    "Array.geometries": [
+                        "geometry.default",
+                        "geometry.default",
+                        "geometry.default",
+                        "geometry.default",
+                        "geometry.slim",
+                        "geometry.default",
+                        "geometry.default",
+                        "geometry.slim",
+                        "geometry.default",
+                        "geometry.default",
+                        "geometry.default",
+                        "geometry.default",
+                        "geometry.default",
+                        "geometry.default",
+                        "geometry.default",
+                        "geometry.default",
+                        "geometry.default",
+                        "geometry.default",
+                        "geometry.default",
+                        "geometry.default",
+                        "geometry.default",
+                        "geometry.default"
+                    ]
+                }
+            },
+            "geometry": "Array.geometries[query.skin_id]",
+            "materials": [
+                {
+                    "*": "Material.default"
+                }
+            ],
+            "textures": [
+                "Array.skins[query.skin_id]"
+            ]
+        }
+    }
+}

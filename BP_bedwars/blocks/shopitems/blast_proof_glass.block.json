@@ -1,0 +1,11 @@
+{
+    "format_version": "1.19.40",
+    "minecraft:block": {
+        "description": {
+            "identifier": "bedwars:shopitem_blast_proof_glass"
+        },
+        "components": {
+            "minecraft:material_instances": { "*": { "render_method": "blend" } }
+        }
+    }
+}

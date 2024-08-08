@@ -1,0 +1,19 @@
+{
+    "format_version": "1.10.0",
+    "animations": {
+        "animation.iron_golem.get_team": {
+            "loop": true,
+            "animation_length": 0.05,
+            "timeline": {
+                "0.0": "/function entities/iron_golem/get_team"
+            }
+        },
+        "animation.iron_golem.kill_self": {
+            "loop": true,
+            "animation_length": 125,
+            "timeline": {
+                "120.0": "/function entities/iron_golem/kill_self"
+            }
+        }
+    }
+}

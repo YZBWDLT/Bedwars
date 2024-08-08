@@ -1,0 +1,13 @@
+{
+    "format_version": "1.8.0",
+    "render_controllers": {
+        "controller.render.resource_spawner": {
+            "geometry": "Geometry.default",
+            "materials": [ { "*": "material.default" } ],
+            "textures": [ "Texture.default" ],
+            "part_visibility": [
+                { "*": "!query.is_chested" }
+            ]
+        }
+    }
+}

@@ -1,0 +1,15 @@
+diagnostic.disable.molang.query.deprecated=true
+diagnostic.disable.resourcepack.texture.undefined=true
+diagnostic.disable.minecraft.mode.gamemodes.invalid=true
+diagnostic.disable.behaviorpack.block.states.missing=true
+diagnostic.disable.minecraft.commands.summon.syntax=true
+diagnostic.disable.minecraft.commands.enchant.syntax=true
+diagnostic.disable.behaviorpack.entity.component.missing=true
+diagnostic.disable.521=true
+diagnostic.disable.behaviorpack.block.missing=true
+diagnostic.disable.1=true
+diagnostic.disable.=true
+diagnostic.disable.behaviorpack.mcstructure.missing=true
+diagnostic.disable.behaviorpack.block.states.invalid=true
+diagnostic.disable.behaviorpack.item.components.deprecated=true
+diagnostic.disable.behaviorpack.item.component.missing=true

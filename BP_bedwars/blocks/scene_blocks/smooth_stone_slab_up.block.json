@@ -1,0 +1,22 @@
+{
+    "format_version": "1.19.60",
+    "minecraft:block": {
+        "description": {
+            "identifier": "bedwars:scene_block_smooth_stone_slab_up"
+        },
+        "components": {
+            "minecraft:destructible_by_explosion": false,
+            "minecraft:destructible_by_mining": false,
+            "minecraft:collision_box": { "origin": [ -8, 8, -8 ], "size": [ 16, 8, 16 ] },
+            "minecraft:selection_box": { "origin": [ -8, 8, -8 ], "size": [ 16, 8, 16 ] },
+            "minecraft:geometry": { "identifier": "geometry.slab_up" },
+            "minecraft:material_instances": {
+                "*": { "texture": "smooth_stone" },
+                "south": { "texture": "bedwars_scene_block_smooth_stone_slab_sides" },
+                "north": { "texture": "bedwars_scene_block_smooth_stone_slab_sides" },
+                "west": { "texture": "bedwars_scene_block_smooth_stone_slab_sides" },
+                "east": { "texture": "bedwars_scene_block_smooth_stone_slab_sides" }
+            }
+        }
+    }
+}

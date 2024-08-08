@@ -1,0 +1,12 @@
+{
+    "format_version": "1.20.0",
+    "minecraft:item": {
+        "description": {
+            "identifier": "bedwars:dream_defender"
+        },
+        "components": {
+            "minecraft:entity_placer": { "entity": "minecraft:iron_golem" },
+            "minecraft:icon": { "texture": "bedwars_dream_defender" }
+        }
+    }
+}

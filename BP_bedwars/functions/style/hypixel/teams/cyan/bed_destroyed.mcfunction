@@ -1,0 +1,19 @@
+# ===== 青队床破坏消息 - Hypixel样式 =====
+
+# --- 为自家放送的消息 ---
+execute if score @s team matches 1 run tellraw @a[scores={team=8}] {"rawtext":[{"translate":"\n%%s\n ","with":{"rawtext":[{"translate":"style.hypixel.bed_destroyed.message_self","with":{"rawtext":[{"translate":"§c%%s§7","with":{"rawtext":[{"selector":"@s"}]}}]}}]}}]}
+execute if score @s team matches 2 run tellraw @a[scores={team=8}] {"rawtext":[{"translate":"\n%%s\n ","with":{"rawtext":[{"translate":"style.hypixel.bed_destroyed.message_self","with":{"rawtext":[{"translate":"§9%%s§7","with":{"rawtext":[{"selector":"@s"}]}}]}}]}}]}
+execute if score @s team matches 3 run tellraw @a[scores={team=8}] {"rawtext":[{"translate":"\n%%s\n ","with":{"rawtext":[{"translate":"style.hypixel.bed_destroyed.message_self","with":{"rawtext":[{"translate":"§a%%s§7","with":{"rawtext":[{"selector":"@s"}]}}]}}]}}]}
+execute if score @s team matches 4 run tellraw @a[scores={team=8}] {"rawtext":[{"translate":"\n%%s\n ","with":{"rawtext":[{"translate":"style.hypixel.bed_destroyed.message_self","with":{"rawtext":[{"translate":"§e%%s§7","with":{"rawtext":[{"selector":"@s"}]}}]}}]}}]}
+execute if score @s team matches 5 run tellraw @a[scores={team=8}] {"rawtext":[{"translate":"\n%%s\n ","with":{"rawtext":[{"translate":"style.hypixel.bed_destroyed.message_self","with":{"rawtext":[{"translate":"§f%%s§7","with":{"rawtext":[{"selector":"@s"}]}}]}}]}}]}
+execute if score @s team matches 6 run tellraw @a[scores={team=8}] {"rawtext":[{"translate":"\n%%s\n ","with":{"rawtext":[{"translate":"style.hypixel.bed_destroyed.message_self","with":{"rawtext":[{"translate":"§d%%s§7","with":{"rawtext":[{"selector":"@s"}]}}]}}]}}]}
+execute if score @s team matches 7 run tellraw @a[scores={team=8}] {"rawtext":[{"translate":"\n%%s\n ","with":{"rawtext":[{"translate":"style.hypixel.bed_destroyed.message_self","with":{"rawtext":[{"translate":"§8%%s§7","with":{"rawtext":[{"selector":"@s"}]}}]}}]}}]}
+
+# --- 为其他家放送的消息 ---
+execute if score @s team matches 1 run tellraw @a[scores={team=!8}] {"rawtext":[{"translate":"\n%%s\n ","with":{"rawtext":[{"translate":"style.hypixel.cyan.bed_destroyed.message_others","with":{"rawtext":[{"translate":"§c%%s§7","with":{"rawtext":[{"selector":"@s"}]}}]}}]}}]}
+execute if score @s team matches 2 run tellraw @a[scores={team=!8}] {"rawtext":[{"translate":"\n%%s\n ","with":{"rawtext":[{"translate":"style.hypixel.cyan.bed_destroyed.message_others","with":{"rawtext":[{"translate":"§9%%s§7","with":{"rawtext":[{"selector":"@s"}]}}]}}]}}]}
+execute if score @s team matches 3 run tellraw @a[scores={team=!8}] {"rawtext":[{"translate":"\n%%s\n ","with":{"rawtext":[{"translate":"style.hypixel.cyan.bed_destroyed.message_others","with":{"rawtext":[{"translate":"§a%%s§7","with":{"rawtext":[{"selector":"@s"}]}}]}}]}}]}
+execute if score @s team matches 4 run tellraw @a[scores={team=!8}] {"rawtext":[{"translate":"\n%%s\n ","with":{"rawtext":[{"translate":"style.hypixel.cyan.bed_destroyed.message_others","with":{"rawtext":[{"translate":"§e%%s§7","with":{"rawtext":[{"selector":"@s"}]}}]}}]}}]}
+execute if score @s team matches 5 run tellraw @a[scores={team=!8}] {"rawtext":[{"translate":"\n%%s\n ","with":{"rawtext":[{"translate":"style.hypixel.cyan.bed_destroyed.message_others","with":{"rawtext":[{"translate":"§f%%s§7","with":{"rawtext":[{"selector":"@s"}]}}]}}]}}]}
+execute if score @s team matches 6 run tellraw @a[scores={team=!8}] {"rawtext":[{"translate":"\n%%s\n ","with":{"rawtext":[{"translate":"style.hypixel.cyan.bed_destroyed.message_others","with":{"rawtext":[{"translate":"§d%%s§7","with":{"rawtext":[{"selector":"@s"}]}}]}}]}}]}
+execute if score @s team matches 7 run tellraw @a[scores={team=!8}] {"rawtext":[{"translate":"\n%%s\n ","with":{"rawtext":[{"translate":"style.hypixel.cyan.bed_destroyed.message_others","with":{"rawtext":[{"translate":"§8%%s§7","with":{"rawtext":[{"selector":"@s"}]}}]}}]}}]}

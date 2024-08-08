@@ -1,0 +1,1 @@
+execute at @e[family=respawner] run summon bedwars:marker ~~1~ team_green_scoreboard "§r§a绿 §f绿队：§c✘"

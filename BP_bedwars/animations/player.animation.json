@@ -1,0 +1,44 @@
+{
+    "format_version": "1.10.0",
+    "animations": {
+        "animation.player.drinking_magic_milk": {
+            "loop": false,
+            "animation_length": 1.7,
+            "timeline": {
+                "1.6": "/function entities/player/magic_milk_drunk"
+            }
+        },
+        "animation.player.is_holding_dream_defender_test": {
+            "loop": false,
+            "animation_length": 0.6,
+            "timeline": {
+                "0.5": "/tag @s remove isHoldingDreamDefender"
+            }
+        },
+
+        "animation.player.damage_type_attack_test": {
+            "loop": true, "animation_length": 0.1, "timeline": {
+                "0.0": [ "/function entities/player/attack_test" ],
+                "0.05": [ "@s reset_damage_type_test" ]
+            }
+        },
+        "animation.player.damage_type_shoot_test": {
+            "loop": true, "animation_length": 0.1, "timeline": {
+                "0.0": [ "/function entities/player/shoot_test" ],
+                "0.05": [ "@s reset_damage_type_test" ]
+            }
+        },
+        "animation.player.damage_type_cause_fall_test": {
+            "loop": true, "animation_length": 0.1, "timeline": {
+                "0.0": [ "/function entities/player/cause_fall_test" ],
+                "0.05": [ "@s reset_damage_type_test" ]
+            }
+        },
+        "animation.player.damage_type_kill_test": {
+            "loop": true, "animation_length": 0.15, "timeline": {
+                "0.0": [ "/function entities/player/kill_test" ],
+                "0.1": [ "@s reset_damage_type_test" ]
+            }
+        }
+    }
+}

@@ -1,0 +1,141 @@
+{
+    "format_version": "1.18.0",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "bedwars:iron_spawner",
+            "is_experimental": false,
+            "is_spawnable": false,
+            "is_summonable": true,
+            "scripts": { "animate": [ "controller_give_resource_directly" ] },
+            "animations": {
+                "controller_give_resource_directly": "controller.animation.iron_spawner.give_resource_directly",
+                "give_resource_directly_tier_1": "animation.iron_spawner.give_resource_directly_tier_1",
+                "give_resource_directly_tier_2": "animation.iron_spawner.give_resource_directly_tier_2",
+                "give_resource_directly_tier_3": "animation.iron_spawner.give_resource_directly_tier_3",
+                "give_resource_directly_tier_4": "animation.iron_spawner.give_resource_directly_tier_4"
+            }
+        },
+        "components": {
+            "minecraft:physics": { "has_collision": true, "has_gravity": true },
+            "minecraft:collision_box": { "height": 0, "width": 0 },
+            "minecraft:type_family": { "family": [ "inanimate", "resource_spawner", "iron_spawner" ] },
+            "minecraft:knockback_resistance": { "value": 1 },
+            "minecraft:persistent": { },
+            "minecraft:health": { "value": 1, "max": 1 },
+            "minecraft:damage_sensor": { "triggers": [ { "cause": "all", "deals_damage": false } ] }
+        },
+        "events": {
+            "minecraft:entity_spawned": { "add": { "component_groups": [ "tier_1", "spawned_0_times", "player_nearby_tester", "spawn_resources_as_tier_1" ] } },
+
+            "spawned_resource": {
+                "sequence": [
+                    { "filters": { "test": "is_variant", "value": 0, "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawned_1_times" ] } },
+                    { "filters": { "test": "is_variant", "value": 1, "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawned_2_times" ] } },
+                    { "filters": { "test": "is_variant", "value": 2, "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawned_3_times" ] } },
+                    { "filters": { "test": "is_variant", "value": 3, "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawned_4_times" ] } },
+                    { "filters": { "test": "is_variant", "value": 4, "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawned_5_times" ] } },
+                    { "filters": { "test": "is_variant", "value": 5, "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawned_6_times" ] } },
+                    { "filters": { "test": "is_variant", "value": 6, "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawned_7_times" ] } },
+                    { "filters": { "test": "is_variant", "value": 7, "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawned_8_times" ] } },
+                    { "filters": { "test": "is_variant", "value": 8, "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawned_9_times" ] } },
+                    { "filters": { "test": "is_variant", "value": 9, "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawned_10_times" ] } },
+                    { "filters": { "test": "is_variant", "value": 10, "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawned_11_times" ] } },
+                    { "filters": { "test": "is_variant", "value": 11, "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawned_12_times" ] } },
+                    { "filters": { "test": "is_variant", "value": 12, "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawned_13_times" ] } },
+                    { "filters": { "test": "is_variant", "value": 13, "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawned_14_times" ] } },
+                    { "filters": { "test": "is_variant", "value": 14, "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawned_15_times" ] } },
+                    { "filters": { "test": "is_variant", "value": 15, "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawned_16_times" ] } },
+
+                    { "filters": { "test": "is_variant", "value": 15, "operator": "==", "subject": "self" }, "remove": { "component_groups": [ "spawn_resources_as_tier_1", "spawn_resources_as_tier_2", "spawn_resources_as_tier_3", "spawn_resources_as_tier_4" ] }, "add": { "component_groups": [ "spawn_max_resources_while_items_disappeared" ] } }
+
+                ]
+            },
+
+            "reset_spawned_times_while_players_nearby": {
+                "sequence": [
+                    { "remove": { "component_groups": [ "player_nearby_tester", "spawn_resources_as_tier_1", "spawn_resources_as_tier_2", "spawn_resources_as_tier_3", "spawn_resources_as_tier_4" ] } },
+                    { "add": { "component_groups": [ "player_away_tester", "spawned_0_times", "give_players_resources_directly" ] } }
+                ] 
+            },
+            "restart_to_spawn_while_players_away": {
+                "sequence": [
+                    { "remove": { "component_groups": [ "player_away_tester" ] } },
+                    { "filters": { "test": "is_family", "value": "tier_1", "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawn_resources_as_tier_1" ] } },
+                    { "filters": { "test": "is_family", "value": "tier_2", "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawn_resources_as_tier_2" ] } },
+                    { "filters": { "test": "is_family", "value": "tier_3", "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawn_resources_as_tier_3" ] } },
+                    { "filters": { "test": "is_family", "value": "tier_4", "operator": "==", "subject": "self" }, "add": { "component_groups": [ "spawn_resources_as_tier_4" ] } },
+                    { "add": { "component_groups": [ "player_nearby_tester" ] } }
+                ] 
+            },
+
+            "upgrade_spawner": {
+                "sequence": [
+                    { "filters": { "test": "is_family", "value": "tier_1", "operator": "==", "subject": "self" }, "add": { "component_groups": [ "tier_2" ] } },
+                    { "filters": { "test": "is_family", "value": "tier_2", "operator": "==", "subject": "self" }, "add": { "component_groups": [ "tier_3" ] } },
+                    { "filters": { "test": "is_family", "value": "tier_3", "operator": "==", "subject": "self" }, "add": { "component_groups": [ "tier_4" ] } }
+                ]
+            },
+            "spawn_as_tier_1": { "add": { "component_groups": [ "tier_1" ] } },
+            "spawn_as_tier_2": { "add": { "component_groups": [ "tier_2" ] } },
+            "spawn_as_tier_3": { "add": { "component_groups": [ "tier_3" ] } },
+            "spawn_as_tier_4": { "add": { "component_groups": [ "tier_4" ] } },
+
+            "hide": { "add": { "component_groups": [ "hide" ] } },
+            "show": { "remove": { "component_groups": [ "hide" ] } }
+        },
+        "component_groups": {
+
+            "spawned_0_times": { "minecraft:variant": { "value": 0 } },
+            "spawned_1_times": { "minecraft:variant": { "value": 1 } },
+            "spawned_2_times": { "minecraft:variant": { "value": 2 } },
+            "spawned_3_times": { "minecraft:variant": { "value": 3 } },
+            "spawned_4_times": { "minecraft:variant": { "value": 4 } },
+            "spawned_5_times": { "minecraft:variant": { "value": 5 } },
+            "spawned_6_times": { "minecraft:variant": { "value": 6 } },
+            "spawned_7_times": { "minecraft:variant": { "value": 7 } },
+            "spawned_8_times": { "minecraft:variant": { "value": 8 } },
+            "spawned_9_times": { "minecraft:variant": { "value": 9 } },
+            "spawned_10_times": { "minecraft:variant": { "value": 10 } },
+            "spawned_11_times": { "minecraft:variant": { "value": 11 } },
+            "spawned_12_times": { "minecraft:variant": { "value": 12 } },
+            "spawned_13_times": { "minecraft:variant": { "value": 13 } },
+            "spawned_14_times": { "minecraft:variant": { "value": 14 } },
+            "spawned_15_times": { "minecraft:variant": { "value": 15 } },
+            "spawned_16_times": { "minecraft:variant": { "value": 16 } },
+
+            "give_players_resources_directly": { "minecraft:is_sheared": { } },
+
+            "player_nearby_tester": { "minecraft:entity_sensor": { "sensor_range": 2.5, "event_filters": [ { "all_of": [ { "test": "distance_to_nearest_player", "value": 2.5, "operator": "<=" }, { "test": "has_tag", "subject": "other", "operator": "=", "value": "isAlive" } ] } ], "event": "reset_spawned_times_while_players_nearby" } },
+            "player_away_tester": { "minecraft:entity_sensor": { "sensor_range": 2.5, "event_filters": [ { "all_of": [ { "test": "distance_to_nearest_player", "value": 2.5, "operator": ">" }, { "test": "has_tag", "subject": "other", "operator": "=", "value": "isAlive" } ] } ], "event": "restart_to_spawn_while_players_away" } },
+
+            "tier_1": { "minecraft:type_family": { "family": [ "tier_1", "inanimate", "resource_spawner", "iron_spawner" ] } },
+            "tier_2": { "minecraft:type_family": { "family": [ "tier_2", "inanimate", "resource_spawner", "iron_spawner" ] } },
+            "tier_3": { "minecraft:type_family": { "family": [ "tier_3", "inanimate", "resource_spawner", "iron_spawner" ] } },
+            "tier_4": { "minecraft:type_family": { "family": [ "tier_4", "inanimate", "resource_spawner", "iron_spawner" ] } },
+
+            "spawn_resources_as_tier_1": {
+                "minecraft:spawn_entity": { "entities": { "spawn_item": "bedwars:iron_ingot", "num_to_spawn": 5, "min_wait_time": 4, "max_wait_time": 4 } },
+                "minecraft:timer": { "time": 3, "looping": true, "time_down_event": { "event": "spawned_resource", "target": "self" } }
+            },
+            "spawn_resources_as_tier_2": {
+                "minecraft:spawn_entity": { "entities": { "spawn_item": "bedwars:iron_ingot", "num_to_spawn": 5, "min_wait_time": 3, "max_wait_time": 3 } },
+                "minecraft:timer": { "time": 2, "looping": true, "time_down_event": { "event": "spawned_resource", "target": "self" } }
+            },
+            "spawn_resources_as_tier_3": {
+                "minecraft:spawn_entity": { "entities": { "spawn_item": "bedwars:iron_ingot", "num_to_spawn": 5, "min_wait_time": 2, "max_wait_time": 2 } },
+                "minecraft:timer": { "time": 1, "looping": true, "time_down_event": { "event": "spawned_resource", "target": "self" } }
+            },
+            "spawn_resources_as_tier_4": {
+                "minecraft:spawn_entity": { "entities": { "spawn_item": "bedwars:iron_ingot", "num_to_spawn": 5, "min_wait_time": 1, "max_wait_time": 1 } },
+                "minecraft:timer": { "time": 1, "looping": true, "time_down_event": { "event": "spawned_resource", "target": "self" } }
+            },
+            "spawn_max_resources_while_items_disappeared": {
+                "minecraft:spawn_entity": { "entities": { "spawn_item": "bedwars:iron_ingot", "num_to_spawn": 80, "min_wait_time": 300, "max_wait_time": 300 } }
+            },
+
+            "hide": {
+                "minecraft:is_chested": { }
+            }
+        }
+    }
+}

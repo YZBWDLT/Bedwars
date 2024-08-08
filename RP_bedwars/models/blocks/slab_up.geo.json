@@ -1,0 +1,35 @@
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.slab_up",
+				"texture_width": 16,
+				"texture_height": 16,
+				"visible_bounds_width": 2,
+				"visible_bounds_height": 1.5,
+				"visible_bounds_offset": [0, 0.25, 0]
+			},
+			"bones": [
+				{
+					"name": "bb_main",
+					"pivot": [0, 0, 0],
+					"cubes": [
+						{
+							"origin": [-8, 8, -8],
+							"size": [16, 8, 16],
+							"uv": {
+								"north": {"uv": [0, 0], "uv_size": [16, 8]},
+								"east": {"uv": [0, 0], "uv_size": [16, 8]},
+								"south": {"uv": [0, 0], "uv_size": [16, 8]},
+								"west": {"uv": [0, 0], "uv_size": [16, 8]},
+								"up": {"uv": [16, 16], "uv_size": [-16, -16]},
+								"down": {"uv": [16, 16], "uv_size": [-16, -16]}
+							}
+						}
+					]
+				}
+			]
+		}
+	]
+}

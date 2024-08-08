@@ -1,0 +1,1 @@
+execute at @e[family=respawner] run summon bedwars:marker ~~1~ team_gray_scoreboard "§r§8灰 §f灰队：§a✔"

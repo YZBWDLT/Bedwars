@@ -1,0 +1,14 @@
+{
+    "format_version": "1.20.20",
+    "minecraft:item": {
+        "description": {
+            "identifier": "bedwars:yellow_boots",
+            "menu_category": { "category": "equipment", "group": "itemGroup.name.boots" }
+        },
+        "components": {
+            "minecraft:wearable": { "slot": "slot.armor.feet", "protection": 1 },
+            "minecraft:icon": { "texture": "bedwars_yellow_boots" },
+            "minecraft:max_stack_size": { "value": 1 }
+        }
+    }
+}

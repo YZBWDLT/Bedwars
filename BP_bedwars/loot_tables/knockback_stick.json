@@ -1,0 +1,16 @@
+{
+    "pools": [
+        {
+            "rolls": 1,
+            "entries": [
+                {
+                    "name": "bedwars:knockback_stick",
+                    "type": "item",
+                    "functions": [
+                        { "function": "specific_enchants", "enchants": [ { "id": "knockback", "level": 1 } ] }
+                    ]
+                }
+            ]
+        }
+    ]
+}

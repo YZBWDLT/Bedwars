@@ -1,0 +1,20 @@
+{
+    "format_version": "1.10.0",
+    "animation_controllers": {
+        "controller.animation.marker.clear_bed": {
+            "states": {
+                "default": {
+                    "transitions": [
+                        { "clear_bed": "query.has_any_family('bed')" }
+                    ]
+                },
+                "clear_bed": {
+                    "animations": [ "clear_bed" ],
+                    "transitions": [
+                        { "default": "!query.has_any_family('bed')" }
+                    ]
+                }
+            }
+        }
+    }
+}

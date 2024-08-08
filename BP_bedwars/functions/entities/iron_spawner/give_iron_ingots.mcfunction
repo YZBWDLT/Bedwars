@@ -1,0 +1,1 @@
+give @a[r=2.5] bedwars:iron_ingot 5

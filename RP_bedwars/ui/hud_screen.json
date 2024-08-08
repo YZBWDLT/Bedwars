@@ -1,0 +1,8 @@
+{
+    "hud_actionbar_text": {
+        "offset": [ 0 , 0 ],
+        "anchor_from": "right_middle",
+        "anchor_to": "right_middle",
+        "alpha": 0.4
+    }
+}

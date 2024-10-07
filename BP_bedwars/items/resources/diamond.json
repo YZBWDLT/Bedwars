@@ -1,10 +1,13 @@
 {
-    "format_version": "1.16.0",
+    "format_version": "1.20.50",
     "minecraft:item": {
         "description": {
-            "identifier": "bedwars:diamond"
+            "identifier": "bedwars:diamond",
+            "menu_category": { "category": "items", "is_hidden_in_commands": false }
         },
         "components": {
+            "minecraft:icon": "bedwars_diamond",
+            "minecraft:should_despawn": false
         }
     }
 }

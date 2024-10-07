@@ -1,27 +1,76 @@
-## 
-### ===== Item Rename =====
-### To recognize which item drops, for command executing
-item.bed.black.name=Black Bed
-item.bed.red.name=Red Bed
-item.bed.green.name=Green Bed
-item.bed.brown.name=Brown Bed
-item.bed.blue.name=Blue Bed
-item.bed.purple.name=Purple Bed
-item.bed.cyan.name=Cyan Bed
-item.bed.silver.name=Light Gray Bed
-item.bed.gray.name=Gray Bed
-item.bed.pink.name=Pink Bed
-item.bed.lime.name=Lime Bed
-item.bed.yellow.name=Yellow Bed
-item.bed.lightBlue.name=Light Blue Bed
-item.bed.magenta.name=Magenta Bed
-item.bed.orange.name=Orange Bed
-item.bed.white.name=White Bed
-
-### ===== Developer Functions =====
-developer.developer_mode.off=Developer mode has been disabled
-developer.developer_mode.on=Developer mode has been enabled
-
-### ===== System Functions =====
-system.gamemode_switcher.turn_to_creative=§cLook up and change back to creative mode
-
+### ===== New Items =====
+#### Resources
+item.bedwars:diamond=Diamond
+item.bedwars:emerald=Emerald
+item.bedwars:iron_ingot=Iron Ingot
+item.bedwars:gold_ingot=Gold Ingot
+#### Tools
+item.bedwars:wooden_pickaxe=Wooden Pickaxe
+item.bedwars:iron_pickaxe=Iron Pickaxe
+item.bedwars:golden_pickaxe=Golden Pickaxe
+item.bedwars:diamond_pickaxe=Diamond Pickaxe
+item.bedwars:wooden_axe=Wooden Axe
+item.bedwars:stone_axe=Stone Axe
+item.bedwars:iron_axe=Iron Axe
+item.bedwars:diamond_axe=Diamond Axe
+item.bedwars:shears=Shears
+#### Shopitems
+tile.bedwars:shopitem_wool.name=§aWool
+tile.bedwars:shopitem_stained_hardened_clay.name=§aHardened Clay
+tile.bedwars:shopitem_planks.name=§aPlanks
+tile.bedwars:shopitem_blast_proof_glass.name=§aBlast-Proof Glass
+tile.bedwars:shopitem_end_stone.name=§aEnd Stone
+item.bedwars:shopitem_ladder=§aLadder
+tile.bedwars:shopitem_obsidian.name=§aObsidian
+item.bedwars:shopitem_stone_sword=§aStone Sword
+item.bedwars:shopitem_iron_sword=§aIron Sword
+item.bedwars:shopitem_diamond_sword=§aDiamond Sword
+item.bedwars:shopitem_knockback_stick=§aStick (Knockback I)
+item.bedwars:shopitem_chain_armor=§aPermanent Chainmail Armor
+item.bedwars:shopitem_iron_armor=§aPermanent Iron Armor
+item.bedwars:shopitem_diamond_armor=§aPermanent Diamond Armor
+item.bedwars:shopitem_shears=§aPermanent Shears
+item.bedwars:shopitem_wooden_axe=§aPermanent Wooden Axe (Efficiency I)
+item.bedwars:shopitem_stone_axe=§aStone Axe (Efficiency I) §r§7(Needs Wooden Axe)
+item.bedwars:shopitem_iron_axe=§aIron Axe (Efficiency II) §r§7(Needs Stone Axe)
+item.bedwars:shopitem_diamond_axe=§aDiamond Stone Axe (Efficiency III) §r§7(Needs Iron Axe)
+item.bedwars:shopitem_wooden_pickaxe=§aPermanent Wooden Pickaxe (Efficiency I)
+item.bedwars:shopitem_iron_pickaxe=§aIron Pickaxe (Efficiency II) §r§7(Needs Wooden Pickaxe)
+item.bedwars:shopitem_golden_pickaxe=§aGolden Pickaxe (Efficiency III) §r§7(Needs Iron Pickaxe)
+item.bedwars:shopitem_diamond_pickaxe=§aDiamond Stone Pickaxe (Efficiency III) §r§7(Needs Golden Pickaxe)
+item.bedwars:shopitem_bow=§aBow
+item.bedwars:shopitem_bow_power=§aBow (Power I)
+item.bedwars:shopitem_bow_power_punch=§aBow (Power I, Punch I)
+item.bedwars:shopitem_arrow=§aArrow
+item.bedwars:shopitem_potion_jump_boost=§aJump V Potion (45 seconds)
+item.bedwars:shopitem_potion_speed=§aSpeed II Potion (45 seconds)
+item.bedwars:shopitem_potion_invisibility=§aInvisibility Potion (30 seconds)
+item.bedwars:shopitem_golden_apple=§aGolden Apple
+item.bedwars:shopitem_bed_bug=§aBedbug
+item.bedwars:shopitem_dream_defender=§aDream Defender
+item.bedwars:shopitem_fireball=§aFireball
+tile.bedwars:shopitem_tnt.name=§aTNT
+item.bedwars:shopitem_ender_pearl=§aEnder Pearl
+item.bedwars:shopitem_water_bucket=§aWater Bucket
+item.bedwars:shopitem_bridge_egg=§aBridge Egg
+item.bedwars:shopitem_magic_milk=§aMagic Milk
+tile.bedwars:shopitem_sponge.name=§aSponge
+item.bedwars:shopitem_compact_pop_up_tower=§aCompact Pop-up Tower
+#### Team Upgrades
+item.bedwars:upgrade_sharpened_swords=§a锋利附魔
+item.bedwars:upgrade_reinforced_armor_tier_1=§a盔甲强化 I
+item.bedwars:upgrade_reinforced_armor_tier_2=§a盔甲强化 II
+item.bedwars:upgrade_reinforced_armor_tier_3=§a盔甲强化 III
+item.bedwars:upgrade_reinforced_armor_tier_4=§a盔甲强化 IV
+item.bedwars:upgrade_maniac_miner_tier_1=§a疯狂矿工 I
+item.bedwars:upgrade_maniac_miner_tier_2=§a疯狂矿工 II
+item.bedwars:upgrade_forge_tier_1=§a铁锻炉
+item.bedwars:upgrade_forge_tier_2=§a金锻炉
+item.bedwars:upgrade_forge_tier_3=§a绿宝石锻炉
+item.bedwars:upgrade_forge_tier_4=§a熔融锻炉
+tile.bedwars:upgrade_heal_pool.name=§a治愈池
+item.bedwars:upgrade_dragon_buff=§a末影龙增益
+item.bedwars:upgrade_its_a_trap=§a这是个陷阱！
+item.bedwars:upgrade_counter_offensive_trap=§a反击陷阱
+item.bedwars:upgrade_alarm_trap=§a报警陷阱
+item.bedwars:upgrade_miner_fatigue_trap=§a挖掘疲劳陷阱

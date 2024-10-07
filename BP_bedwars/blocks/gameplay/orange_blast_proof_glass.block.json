@@ -1,0 +1,16 @@
+{
+    "format_version": "1.20.50",
+    "minecraft:block": {
+        "description": {
+            "identifier": "bedwars:orange_blast_proof_glass",
+            "menu_category": { "category": "construction", "group": "itemGroup.name.glass", "is_hidden_in_commands": false }
+        },
+        "components": {
+            "minecraft:material_instances": { "*": { "render_method": "blend" } },
+            "minecraft:destructible_by_explosion": false,
+            "minecraft:destructible_by_mining": { "seconds_to_destroy": 0.45 },
+            "minecraft:light_dampening": 0,
+            "minecraft:loot": "loot_tables/empty.json"
+        }
+    }
+}

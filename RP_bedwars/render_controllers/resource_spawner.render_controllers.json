@@ -6,7 +6,7 @@
             "materials": [ { "*": "material.default" } ],
             "textures": [ "Texture.default" ],
             "part_visibility": [
-                { "*": "!query.is_chested" }
+                { "*": "query.is_alive" }
             ]
         }
     }

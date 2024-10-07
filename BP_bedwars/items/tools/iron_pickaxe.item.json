@@ -1,0 +1,31 @@
+{
+    "format_version": "1.20.50",
+    "minecraft:item": {
+        "description": {
+            "identifier": "bedwars:iron_pickaxe",
+            "menu_category": { "category": "equipment", "group": "itemGroup.name.pickaxe", "is_hidden_in_commands": false }
+        },
+        "components": {
+            "minecraft:damage": { "value": 4 },
+            "minecraft:digger": { "destroy_speeds": [
+                { "block": "bedwars:end_stone", "speed": 20 },
+                { "block": "bedwars:obsidian", "speed": 6 },
+                { "block": "bedwars:red_stained_hardened_clay", "speed": 20 },
+                { "block": "bedwars:blue_stained_hardened_clay", "speed": 20 },
+                { "block": "bedwars:green_stained_hardened_clay", "speed": 20 },
+                { "block": "bedwars:yellow_stained_hardened_clay", "speed": 20 },
+                { "block": "bedwars:white_stained_hardened_clay", "speed": 20 },
+                { "block": "bedwars:pink_stained_hardened_clay", "speed": 20 },
+                { "block": "bedwars:gray_stained_hardened_clay", "speed": 20 },
+                { "block": "bedwars:cyan_stained_hardened_clay", "speed": 20 },
+                { "block": "bedwars:purple_stained_hardened_clay", "speed": 20 },
+                { "block": "bedwars:orange_stained_hardened_clay", "speed": 20 },
+                { "block": "bedwars:brown_stained_hardened_clay", "speed": 20 }
+            ], "use_efficiency": true },
+            "minecraft:enchantable": { "slot": "pickaxe", "value": 10 },
+            "minecraft:max_stack_size": 1,
+            "minecraft:hand_equipped": true,
+            "minecraft:icon": "bedwars_iron_pickaxe"
+        }
+    }
+}

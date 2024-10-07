@@ -1,0 +1,9 @@
+{
+    "pools": [
+        {
+            "conditions": [ { "condition": "match_tool", "count": 1, "item": "bedwars:diamond_pickaxe" } ],
+            "rolls": 1,
+            "entries": [ { "type": "item", "name": "bedwars:obsidian" } ]
+        }
+    ]
+}

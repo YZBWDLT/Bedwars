@@ -1,0 +1,14 @@
+{
+    "format_version": "1.20.50",
+    "minecraft:block": {
+        "description": {
+            "identifier": "bedwars:obsidian",
+            "menu_category": { "category": "nature", "is_hidden_in_commands": false }
+        },
+        "components": {
+            "minecraft:destructible_by_explosion": { "explosion_resistance": 1200 },
+            "minecraft:destructible_by_mining": { "seconds_to_destroy": 116.67 },
+            "minecraft:loot": "loot_tables/blocks/obsidian.json"
+        }
+    }
+}

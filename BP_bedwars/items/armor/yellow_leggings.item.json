@@ -1,0 +1,15 @@
+{
+    "format_version": "1.20.50",
+    "minecraft:item": {
+        "description": {
+            "identifier": "bedwars:yellow_leggings",
+            "menu_category": { "category": "equipment", "group": "itemGroup.name.leggings", "is_hidden_in_commands": false }
+        },
+        "components": {
+            "minecraft:wearable": { "slot": "slot.armor.legs", "protection": 2 },
+            "minecraft:icon":"bedwars_yellow_leggings",
+            "minecraft:max_stack_size": 1,
+            "minecraft:enchantable": { "slot": "armor_feet", "value": 10 }
+        }
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "format_version": "1.17.0",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "bedwars:text_display",
+            "is_experimental": false,
+            "is_spawnable": false,
+            "is_summonable": true,
+            "runtime_identifier": "minecraft:snowball"
+        },
+        "components": {
+            "minecraft:physics": { "has_gravity": false, "has_collision": false },
+            "minecraft:collision_box": { "height": 0, "width": 0 },
+            "minecraft:type_family": { "family": [ "inanimate", "text_display" ] },
+            "minecraft:knockback_resistance": { "value": 1 },
+            "minecraft:persistent": { },
+            "minecraft:health": { "value": 1, "max": 1 },
+            "minecraft:nameable": { "allow_name_tag_renaming": true, "always_show": true },
+            "minecraft:damage_sensor": { "triggers": [ { "cause": "all", "deals_damage": false } ] }
+        }
+    }
+}

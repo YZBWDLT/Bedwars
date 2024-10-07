@@ -1,10 +1,13 @@
 {
-    "format_version": "1.16.0",
+    "format_version": "1.20.50",
     "minecraft:item": {
         "description": {
-            "identifier": "bedwars:iron_ingot"
+            "identifier": "bedwars:iron_ingot",
+            "menu_category": { "category": "items", "is_hidden_in_commands": false }
         },
         "components": {
+            "minecraft:icon": "bedwars_iron_ingot",
+            "minecraft:should_despawn": false
         }
     }
 }

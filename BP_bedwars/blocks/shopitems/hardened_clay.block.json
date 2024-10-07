@@ -1,9 +1,0 @@
-{
-    "format_version": "1.16.0",
-    "minecraft:block": {
-        "description": {
-            "identifier": "bedwars:shopitem_hardened_clay"
-        },
-        "components": {}
-    }
-}

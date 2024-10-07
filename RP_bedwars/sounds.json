@@ -1,0 +1,16 @@
+{
+    "entity_sounds": {
+        "entities": {
+            "bedwars:diamond_spawner": {
+                "events": {
+                    "death": { "sound": "" }
+                }
+            },
+            "bedwars:emerald_spawner": {
+                "events": {
+                    "death": { "sound": "" }
+                }
+            }
+        }
+    }
+}

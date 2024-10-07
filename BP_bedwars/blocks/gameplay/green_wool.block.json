@@ -1,0 +1,13 @@
+{
+    "format_version": "1.20.50",
+    "minecraft:block": {
+        "description": {
+            "identifier": "bedwars:green_wool",
+            "menu_category": { "category": "construction", "group": "itemGroup.name.wool", "is_hidden_in_commands": false }
+        },
+        "components": {
+            "minecraft:destructible_by_explosion": { "explosion_resistance": 0.8 },
+            "minecraft:destructible_by_mining": { "seconds_to_destroy": 0.8 }
+        }
+    }
+}

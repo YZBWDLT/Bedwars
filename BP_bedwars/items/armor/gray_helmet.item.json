@@ -1,0 +1,15 @@
+{
+    "format_version": "1.20.50",
+    "minecraft:item": {
+        "description": {
+            "identifier": "bedwars:gray_helmet",
+            "menu_category": { "category": "equipment", "group": "itemGroup.name.helmet", "is_hidden_in_commands": false }
+        },
+        "components": {
+            "minecraft:wearable": { "slot": "slot.armor.head", "protection": 1 },
+            "minecraft:icon":"bedwars_gray_helmet",
+            "minecraft:max_stack_size": 1,
+            "minecraft:enchantable": { "slot": "armor_head", "value": 10 }
+        }
+    }
+}

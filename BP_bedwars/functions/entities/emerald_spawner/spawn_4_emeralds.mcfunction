@@ -1,1 +1,0 @@
-structure load resources:4_emeralds ~~1~

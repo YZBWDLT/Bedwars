@@ -1,0 +1,15 @@
+{
+    "format_version": "1.20.50",
+    "minecraft:item": {
+        "description": {
+            "identifier": "bedwars:orange_boots",
+            "menu_category": { "category": "equipment", "group": "itemGroup.name.boots", "is_hidden_in_commands": false }
+        },
+        "components": {
+            "minecraft:wearable": { "slot": "slot.armor.feet", "protection": 1 },
+            "minecraft:icon": "bedwars_orange_boots",
+            "minecraft:max_stack_size": 1,
+            "minecraft:enchantable": { "slot": "armor_feet", "value": 10 }
+        }
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "format_version": "1.20.50",
+    "minecraft:block": {
+        "description": {
+            "identifier": "bedwars:shopitem_stained_hardened_clay",
+            "menu_category": { "category": "items", "is_hidden_in_commands": false }
+        },
+        "components": {}
+    }
+}

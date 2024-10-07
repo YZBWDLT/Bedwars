@@ -1,8 +1,0 @@
-execute at @e[family=respawner] if score teamRedPlayers data matches 8 run summon bedwars:marker ~~1~ team_red_scoreboard "§r§c红 §f红队：§a8"
-execute at @e[family=respawner] if score teamRedPlayers data matches 7 run summon bedwars:marker ~~1~ team_red_scoreboard "§r§c红 §f红队：§a7"
-execute at @e[family=respawner] if score teamRedPlayers data matches 6 run summon bedwars:marker ~~1~ team_red_scoreboard "§r§c红 §f红队：§a6"
-execute at @e[family=respawner] if score teamRedPlayers data matches 5 run summon bedwars:marker ~~1~ team_red_scoreboard "§r§c红 §f红队：§a5"
-execute at @e[family=respawner] if score teamRedPlayers data matches 4 run summon bedwars:marker ~~1~ team_red_scoreboard "§r§c红 §f红队：§a4"
-execute at @e[family=respawner] if score teamRedPlayers data matches 3 run summon bedwars:marker ~~1~ team_red_scoreboard "§r§c红 §f红队：§a3"
-execute at @e[family=respawner] if score teamRedPlayers data matches 2 run summon bedwars:marker ~~1~ team_red_scoreboard "§r§c红 §f红队：§a2"
-execute at @e[family=respawner] if score teamRedPlayers data matches 1 run summon bedwars:marker ~~1~ team_red_scoreboard "§r§c红 §f红队：§a1"

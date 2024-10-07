@@ -1,0 +1,16 @@
+{
+    "format_version": "1.20.50",
+    "minecraft:item": {
+        "description": {
+            "identifier": "bedwars:magic_milk",
+            "menu_category": { "category": "items", "is_hidden_in_commands": false }
+        },
+        "components": {
+            "minecraft:food": { "can_always_eat": true },
+            "minecraft:use_modifiers": { "use_duration": 1.6, "movement_modifier": 0.4 },
+            "minecraft:icon": "bedwars_magic_milk",
+            "minecraft:max_stack_size": 1,
+            "minecraft:use_animation": "drink"
+        }
+    }
+}

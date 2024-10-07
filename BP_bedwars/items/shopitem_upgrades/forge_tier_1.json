@@ -1,9 +1,12 @@
 {
-    "format_version": "1.16.0",
+    "format_version": "1.20.50",
     "minecraft:item": {
         "description": {
-            "identifier": "bedwars:upgrade_forge_tier_1"
+            "identifier": "bedwars:upgrade_forge_tier_1",
+            "menu_category": { "category": "items", "is_hidden_in_commands": false }
         },
-        "components": {}
+        "components": {
+            "minecraft:icon": "iron_ingot"
+        }
     }
 }

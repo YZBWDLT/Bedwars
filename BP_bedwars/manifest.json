@@ -1,18 +1,32 @@
 {
     "format_version": 2,
     "header": {
-        "description": "§l§b起床战争 §r§3专用行为包&函数包",
-        "name": "§l§c起床战争",
-        "uuid": "b49cd69f-2438-4b1a-bb03-b4df18bac75b",
-        "version": [ 1, 1, 0 ],
-        "min_engine_version": [ 1, 19, 50 ]
+        "name": "量筒的起床战争 行为包",
+        "description": "Bedwars Beh",
+        "uuid": "459363a0-9008-4654-a350-496c402f2223",
+        "version": [ 1, 0, 0 ],
+        "min_engine_version": [ 1, 21, 0 ]
     },
     "modules": [
         {
-            "description": "§e一只卑微的量筒",
             "type": "data",
-            "uuid": "0c668597-ca38-439d-a9a9-464ffa7e3b26",
-            "version": [2, 0, 0]
+            "uuid": "957e511b-05b3-465d-afa3-13b6d94d57ec",
+            "version": [ 1, 0, 0 ]
+        },
+        {
+            "type": "script",
+            "uuid": "ec90562e-ee59-46c1-997b-bc55ac078fa5",
+            "version": [ 1, 0, 0 ],
+            "entry": "scripts/bedwars/main.js"
+        }
+    ],
+    "metadata": {
+        "authors": [ "YZBWDLT" ]
+    },
+    "dependencies": [
+        {
+            "module_name": "@minecraft/server",
+            "version": "1.11.0"
         }
     ]
 }

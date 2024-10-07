@@ -1,1 +1,0 @@
-give @a[r=2.5] bedwars:gold_ingot

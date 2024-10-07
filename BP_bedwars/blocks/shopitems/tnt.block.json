@@ -1,8 +1,9 @@
 {
-    "format_version": "1.16.0",
+    "format_version": "1.20.50",
     "minecraft:block": {
         "description": {
-            "identifier": "bedwars:shopitem_tnt"
+            "identifier": "bedwars:shopitem_tnt",
+            "menu_category": { "category": "items", "is_hidden_in_commands": false }
         },
         "components": {}
     }

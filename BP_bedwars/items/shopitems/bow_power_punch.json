@@ -1,11 +1,13 @@
 {
-    "format_version": "1.16.0",
+    "format_version": "1.20.50",
     "minecraft:item": {
         "description": {
-            "identifier": "bedwars:shopitem_bow_power_punch"
+            "identifier": "bedwars:shopitem_bow_power_punch",
+            "menu_category": { "category": "items", "is_hidden_in_commands": false }
         },
         "components": {
-            "minecraft:foil": true
+            "minecraft:glint": true,
+            "minecraft:icon": "bedwars_shopitem_bow"
         }
     }
 }

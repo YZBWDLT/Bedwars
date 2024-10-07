@@ -1,0 +1,14 @@
+{
+    "format_version": "1.20.50",
+    "minecraft:item": {
+        "description": {
+            "identifier": "bedwars:fireball"
+        },
+        "components": {
+            "minecraft:cooldown": { "category": "fireball", "duration": 0.3 },
+            "minecraft:projectile": { "minimum_critical_power": 1, "projectile_entity": "bedwars:fireball" },
+            "minecraft:throwable": { "do_swing_animation": true, "max_launch_power": 1, "scale_power_by_draw_duration": false },
+            "minecraft:icon": "bedwars_fireball"
+        }
+    }
+}

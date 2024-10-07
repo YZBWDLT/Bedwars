@@ -1,0 +1,115 @@
+{
+    "format_version": "1.18.20",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "minecraft:player",
+            "is_spawnable": false,
+            "is_summonable": false,
+            "is_experimental": false
+        },
+
+        "components": {
+            "minecraft:experience_reward": { "on_death": "Math.Min(query.player_level * 7, 100)" },
+            "minecraft:type_family": { "family": [ "player" ] },
+            "minecraft:is_hidden_when_invisible": { },
+            "minecraft:loot": { "table": "loot_tables/empty.json" },
+            "minecraft:collision_box": { "width": 0.6, "height": 1.8 },
+            "minecraft:can_climb": { },
+            "minecraft:movement": { "value": 0.1 },
+            "minecraft:hurt_on_condition": { "damage_conditions": [ { "filters": { "test": "in_lava", "subject": "self", "operator": "==", "value": true }, "cause": "lava", "damage_per_tick": 4 } ] },
+            "minecraft:attack": { "damage": 1 },
+            "minecraft:exhaustion_values": { "heal": 6, "jump": 0.05, "sprint_jump": 0.2, "mine": 0.005, "attack": 0.1, "damage": 0.1, "walk": 0.0, "sprint": 0.01, "swim": 0.01 },
+            "minecraft:player.saturation": { "value": 5, "max": 20 },
+            "minecraft:player.exhaustion": { "value": 0, "max": 20 },
+            "minecraft:player.level": { "value": 0, "max": 24791 },
+            "minecraft:player.experience": { "value": 0, "max": 1 },
+            "minecraft:breathable": { "total_supply": 15, "suffocate_time": -1, "inhale_time": 3.75, "generates_bubbles": false },
+            "minecraft:nameable": { "always_show": true, "allow_name_tag_renaming": false },
+            "minecraft:physics": { },
+            "minecraft:pushable": { "is_pushable": false, "is_pushable_by_piston": true },
+            "minecraft:insomnia": { "days_until_insomnia": 3 },
+            "minecraft:rideable": { "seat_count": 2, "family_types": [ "parrot_tame" ], "pull_in_entities": true, "seats": [ { "position": [ 0.4, -0.2, -0.1 ], "min_rider_count": 0, "max_rider_count": 0, "lock_rider_rotation": 0 }, { "position": [ -0.4, -0.2, -0.1 ], "min_rider_count": 1, "max_rider_count": 2, "lock_rider_rotation": 0 } ] },
+            "minecraft:conditional_bandwidth_optimization": { },
+            "minecraft:block_climber": {},
+            "minecraft:environment_sensor": { "triggers": { "filters": { "all_of": [ { "test": "has_mob_effect", "subject": "self", "value": "bad_omen" }, { "test": "is_in_village", "subject": "self", "value": true } ] }, "event": "minecraft:trigger_raid" } },
+
+            "minecraft:damage_sensor": {
+                "triggers": [
+                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_red", "subject": "self" }, { "test": "is_family", "value": "team_red", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_blue", "subject": "self" }, { "test": "is_family", "value": "team_blue", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_green", "subject": "self" }, { "test": "is_family", "value": "team_green", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_yellow", "subject": "self" }, { "test": "is_family", "value": "team_yellow", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_white", "subject": "self" }, { "test": "is_family", "value": "team_white", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_pink", "subject": "self" }, { "test": "is_family", "value": "team_pink", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_gray", "subject": "self" }, { "test": "is_family", "value": "team_gray", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_cyan", "subject": "self" }, { "test": "is_family", "value": "team_cyan", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
+
+                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_red", "subject": "self" }, { "test": "is_family", "value": "team_red", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_blue", "subject": "self" }, { "test": "is_family", "value": "team_blue", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_green", "subject": "self" }, { "test": "is_family", "value": "team_green", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_yellow", "subject": "self" }, { "test": "is_family", "value": "team_yellow", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_white", "subject": "self" }, { "test": "is_family", "value": "team_white", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_pink", "subject": "self" }, { "test": "is_family", "value": "team_pink", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_gray", "subject": "self" }, { "test": "is_family", "value": "team_gray", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_cyan", "subject": "self" }, { "test": "is_family", "value": "team_cyan", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } }
+                ]
+            }
+        },
+
+        "events": {
+            "minecraft:gain_bad_omen": { "add": { "component_groups": [ "minecraft:add_bad_omen" ] } },
+            "minecraft:clear_add_bad_omen": { "remove": { "component_groups": [ "minecraft:add_bad_omen" ] }, "add": { "component_groups": [ "minecraft:clear_bad_omen_spell_effect" ] } },
+            "minecraft:trigger_raid": { "add": { "component_groups": [ "minecraft:raid_trigger" ] } },
+            "minecraft:remove_raid_trigger": { "remove": { "component_groups": [ "minecraft:raid_trigger" ] } },
+
+            "team_red": { "add": { "component_groups": [ "team_red" ] } },
+            "team_blue": { "add": { "component_groups": [ "team_blue" ] } },
+            "team_green": { "add": { "component_groups": [ "team_green" ] } },
+            "team_yellow": { "add": { "component_groups": [ "team_yellow" ] } },
+            "team_white": { "add": { "component_groups": [ "team_white" ] } },
+            "team_pink": { "add": { "component_groups": [ "team_pink" ] } },
+            "team_gray": { "add": { "component_groups": [ "team_gray" ] } },
+            "team_cyan": { "add": { "component_groups": [ "team_cyan" ] } },
+            "team_brown": { "add": { "component_groups": [ "team_brown" ] } },
+            "team_purple": { "add": { "component_groups": [ "team_purple" ] } },
+            "team_orange": { "add": { "component_groups": [ "team_orange" ] } },
+            "remove_team": { "add": { "component_groups": [ "remove_team" ] } },
+
+            "hide_armor": { "add": { "component_groups": [ "hide_armor" ] } },
+            "show_armor": { "remove": { "component_groups": [ "hide_armor" ] } }
+        },
+
+        "component_groups": {
+            "minecraft:add_bad_omen": {
+                "minecraft:spell_effects": { "add_effects": [ { "effect": "bad_omen", "duration": 6000, "visible": false, "display_on_screen_animation": true } ] },
+                "minecraft:timer": { "time": [ 0.0, 0.0 ], "looping": false, "time_down_event": { "event": "minecraft:clear_add_bad_omen", "target": "self" } }
+            },
+            "minecraft:clear_bad_omen_spell_effect": {
+                "minecraft:spell_effects": { }
+            },
+            "minecraft:raid_trigger": {
+                "minecraft:raid_trigger": { "triggered_event": { "event": "minecraft:remove_raid_trigger", "target": "self" } },
+                "minecraft:spell_effects": { "remove_effects": "bad_omen" }
+            },
+
+            "team_red": { "minecraft:type_family": { "family": [ "player", "have_team", "team_red" ] } },
+            "team_blue": { "minecraft:type_family": { "family": [ "player", "have_team", "team_blue" ] } },
+            "team_green": { "minecraft:type_family": { "family": [ "player", "have_team", "team_green" ] } },
+            "team_yellow": { "minecraft:type_family": { "family": [ "player", "have_team", "team_yellow" ] } },
+            "team_white": { "minecraft:type_family": { "family": [ "player", "have_team", "team_white" ] } },
+            "team_pink": { "minecraft:type_family": { "family": [ "player", "have_team", "team_pink" ] } },
+            "team_gray": { "minecraft:type_family": { "family": [ "player", "have_team", "team_gray" ] } },
+            "team_cyan": { "minecraft:type_family": { "family": [ "player", "have_team", "team_cyan" ] } },
+            "team_brown": { "minecraft:type_family": { "family": [ "player", "have_team", "team_brown" ] } },
+            "team_purple": { "minecraft:type_family": { "family": [ "player", "have_team", "team_purple" ] } },
+            "team_orange": { "minecraft:type_family": { "family": [ "player", "have_team", "team_orange" ] } },
+            "remove_team": { "minecraft:type_family": { "family": [ "player" ] } },
+
+            "hide_armor": { "minecraft:is_sheared": { } }
+        }
+    }
+}
+
+
+
+

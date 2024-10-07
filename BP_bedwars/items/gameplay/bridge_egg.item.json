@@ -1,0 +1,14 @@
+{
+    "format_version": "1.20.50",
+    "minecraft:item": {
+        "description": {
+            "identifier": "bedwars:bridge_egg"
+        },
+        "components": {
+            "minecraft:cooldown": { "category": "bridge_egg", "duration": 0.3 },
+            "minecraft:projectile": { "minimum_critical_power": 1, "projectile_entity": "bedwars:bridge_egg" },
+            "minecraft:throwable": { "do_swing_animation": true, "max_launch_power": 1, "scale_power_by_draw_duration": false },
+            "minecraft:icon": "bedwars_bridge_egg"
+        }
+    }
+}

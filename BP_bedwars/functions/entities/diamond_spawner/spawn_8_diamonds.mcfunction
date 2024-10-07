@@ -1,1 +1,0 @@
-structure load resources:8_diamonds ~~1~

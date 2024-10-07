@@ -1,0 +1,12 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:client_entity": {
+        "description": {
+            "identifier": "bedwars:marker",
+            "render_controllers": [ "controller.render.marker" ],
+            "geometry": { "default": "geometry.zombie" },
+            "materials": { "default": "entity_alphatest" },
+            "textures": { "default": "textures/entity/zombie/zombie" }
+        }
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "format_version": "1.20.50",
+    "minecraft:item": {
+        "description": {
+            "identifier": "bedwars:wooden_axe",
+            "menu_category": { "category": "equipment", "group": "itemGroup.name.axe", "is_hidden_in_commands": false }
+        },
+        "components": {
+            "minecraft:damage": { "value": 3 },
+            "minecraft:digger": { "destroy_speeds": [
+                { "block": "bedwars:oak_planks", "speed": 2 },
+                { "block": "minecraft:ladder", "speed": 2 }
+            ], "use_efficiency": true },
+            "minecraft:enchantable": { "slot": "axe", "value": 10 },
+            "minecraft:max_stack_size": 1,
+            "minecraft:hand_equipped": true,
+            "minecraft:icon": "bedwars_wooden_axe"
+        }
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "format_version": "1.20.50",
+    "minecraft:block": {
+        "description": {
+            "identifier": "bedwars:tnt",
+            "menu_category": { "category": "items", "is_hidden_in_commands": false }
+        },
+        "components": {
+        }
+    }
+}

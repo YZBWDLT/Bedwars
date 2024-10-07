@@ -1,0 +1,33 @@
+{
+    "format_version": "1.18.0",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "bedwars:bed_bug",
+            "is_spawnable": false,
+            "is_summonable": true,
+            "is_experimental": false,
+            "runtime_identifier": "minecraft:snowball"
+        },
+    
+        "components": {
+            "minecraft:collision_box": { "width": 0.25, "height": 0.25 },
+            "minecraft:projectile": {
+                "on_hit": {
+                    "impact_damage": { "damage": 0, "knockback": true },
+                    "definition_event": { "affect_projectile": true, "event_trigger": { "event": "on_hit", "target": "self" } },
+                    "remove_on_hit": { }
+                },
+                "power": 1.5,
+                "gravity": 0.03,
+                "angle_offset": 0.0
+            },
+            "minecraft:physics": { },
+            "minecraft:pushable": { "is_pushable": true, "is_pushable_by_piston": true },
+            "minecraft:conditional_bandwidth_optimization": { "default_values": { "max_optimized_distance": 80.0, "max_dropped_ticks": 7, "use_motion_prediction_hints": true } }
+        },
+
+        "events": { },
+        "component_groups": { }
+    }
+}
+    

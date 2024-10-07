@@ -1,18 +1,20 @@
 {
     "format_version": 2,
     "header": {
-        "description": "§l§b起床战争 §r§3专用资源包",
-        "name": "§l§c起床战争",
+        "name": "量筒的起床战争 资源包",
+        "description": "Bedwars Res",
         "uuid": "576eb433-71f6-45ec-a702-efd7cb2e8395",
-        "version": [ 1, 1, 5 ],
-        "min_engine_version": [ 1, 19, 50 ]
+        "version": [ 1, 2, 2 ],
+        "min_engine_version": [ 1, 21, 0 ]
     },
     "modules": [
         {
-            "description": "§e一只卑微的量筒",
             "type": "resources",
             "uuid": "0c668597-ca38-439d-a9a9-464ffa7e3b26",
-            "version": [2, 0, 0]
+            "version": [ 2, 0, 0 ]
         }
-    ]
+    ],
+    "metadata": {
+        "authors": [ "YZBWDLT" ]
+    }
 }

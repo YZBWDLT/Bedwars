@@ -1,0 +1,14 @@
+{
+    "format_version": "1.20.50",
+    "minecraft:block": {
+        "description": {
+            "identifier": "bedwars:end_stone",
+            "menu_category": { "category": "nature", "is_hidden_in_commands": false }
+        },
+        "components": {
+            "minecraft:destructible_by_explosion": { "explosion_resistance": 9 },
+            "minecraft:destructible_by_mining": { "seconds_to_destroy": 10 },
+            "minecraft:loot": "loot_tables/blocks/end_stone.json"
+        }
+    }
+}

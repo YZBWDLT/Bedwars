@@ -1,1 +1,0 @@
-execute at @e[family=respawner] run summon bedwars:marker ~~1~ team_red_scoreboard "§r§c红 §f红队：§c✘"

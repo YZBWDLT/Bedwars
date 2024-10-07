@@ -1,0 +1,28 @@
+{
+    "format_version": "1.20.50",
+    "minecraft:item": {
+        "description": {
+            "identifier": "bedwars:shears",
+            "menu_category": { "category": "equipment", "is_hidden_in_commands": false }
+        },
+        "components": {
+            "minecraft:digger": { "destroy_speeds": [
+                { "block": "bedwars:red_wool", "speed": 5 },
+                { "block": "bedwars:blue_wool", "speed": 5 },
+                { "block": "bedwars:green_wool", "speed": 5 },
+                { "block": "bedwars:yellow_wool", "speed": 5 },
+                { "block": "bedwars:white_wool", "speed": 5 },
+                { "block": "bedwars:pink_wool", "speed": 5 },
+                { "block": "bedwars:gray_wool", "speed": 5 },
+                { "block": "bedwars:cyan_wool", "speed": 5 },
+                { "block": "bedwars:purple_wool", "speed": 5 },
+                { "block": "bedwars:orange_wool", "speed": 5 },
+                { "block": "bedwars:brown_wool", "speed": 5 }
+            ], "use_efficiency": true },
+            "minecraft:enchantable": { "slot": "shears", "value": 10 },
+            "minecraft:max_stack_size": 1,
+            "minecraft:hand_equipped": true,
+            "minecraft:icon": "bedwars_shears"
+        }
+    }
+}

@@ -440,10 +440,36 @@ export const settings = {
  */
 export class BedwarsMap{
 
+    /** 队伍数，在使用addTeam方法时，此数值将自加 */
+    teamCount = 0;
+    /** @type {BedwarsTeam[]} 全体队伍信息 */
+    teamList = [];
+    /** 游戏ID，只有ID与本局游戏相同的玩家允许进入游戏 */
+    gameId = randomInt( 1000, 9999 )
     /**
-     * @param {"orchid"} id - 地图 ID
-     * @param {String} name - 地图名称
-     * @param { 2 | 4 | 8 } teamCount - 队伍数
+     * @type {0|1|2|3|4}
+     * 游戏阶段是用于控制起床战争所处阶段的。
+     * 0：正在清空地图；1：正在生成地图；2：正在等待中；3：游戏中；4：游戏结束
+     */
+    gameStage = 0;
+    /** 游戏结束后，自动开启下一场游戏的倒计时 */
+    nextGameCountdown = 200;
+    /** 清空地图时，正在清除的高度层 */
+    resetMapCurrentHeight = 116;
+    /** 生成地图时，结构加载的倒计时 */
+    structureLoadCountdown = 120;
+    /**
+     * @type {{ pos: import("@minecraft/server").Vector3, direction: Number, type: "blocks_and_items" | "weapon_and_armor" | "team_upgrade" }[]}
+     * 商人信息，包括位置、朝向、类型
+     */
+    traderInfo = [];
+    /** 游戏事件，包括下一个事件的倒计时、下一个事件的ID、下一个事件的名称 */
+    gameEvent = { nextEventCountdown: 7200, nextEventId: "diamond_tier_2", nextEventName: "钻石生成点 II 级" };
+
+
+    /**
+     * @param {String} id 地图 ID
+     * @param {String} name 地图名称
      * @param {{
      * ironInterval: Number,
      * goldInterval: Number,
@@ -478,25 +504,15 @@ export class BedwarsMap{
 
         this.id = id;
         this.name = name;
-        this.teamCount = 0;
-        /** @type {BedwarsTeam[]} */ this.teamList = [];
         this.spawnerInfo = {
             ironInterval: allOptions.ironInterval, goldInterval: allOptions.goldInterval,
             /** @type {{ pos: import("@minecraft/server").Vector3, spawned: Number }[]} */ diamondInfo: [], diamondLevel: 1, diamondInterval: allOptions.diamondInterval, diamondCountdown: allOptions.diamondInterval,
             /** @type {{ pos: import("@minecraft/server").Vector3, spawned: Number }[]} */ emeraldInfo: [], emeraldLevel: 1, emeraldInterval: allOptions.emeraldInterval, emeraldCountdown: allOptions.emeraldInterval,
             distributeResource: allOptions.distributeResource, clearResourceVelocity: allOptions.clearResourceVelocity, ironSpawnTimes: allOptions.ironSpawnTimes
         };
-        this.gameEvent = { nextEventCountdown: 7200, nextEventId: "diamond_tier_2", nextEventName: "钻石生成点 II 级" };
         this.spawnpointPos = allOptions.spawnpointPos
         this.healPoolRadius = allOptions.healPoolRadius
-        this.gameId = randomInt( 1000, 9999 )
-        /** @type {0|1|2|3|4} 游戏阶段是用于控制起床战争所处阶段的。0：正在清空地图；1：正在生成地图；2：正在等待中；3：游戏中；4：游戏结束 */
-        this.gameStage = 0;
-        this.nextGameCountdown = 200;
-        this.resetMapCurrentHeight = 116;
-        this.structureLoadCountdown = 120;
         this.gameStartCountdown = settings.gameStartWaitingTime;
-        /** @type {{ pos: import("@minecraft/server").Vector3, direction: Number, type: "blocks_and_items" | "weapon_and_armor" | "team_upgrade" }[]} */ this.traderInfo = []
         this.highestBlockLimit = allOptions.highestBlockLimit
     };
 

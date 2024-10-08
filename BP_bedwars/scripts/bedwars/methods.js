@@ -968,6 +968,24 @@ export class BedwarsMap{
  */
 export class BedwarsTeam{
 
+    /** 队伍是否有效，开始时未分配到队员的队伍即为无效队伍 */
+    isValid = true;
+
+    /** 队伍是否被淘汰，淘汰的队伍是没有床、没有存活队员的有效队伍 */
+    isEliminated = false;
+
+    /** 箱子信息 */
+    chestInfo = {
+        chestPos: { x: 0, y: 0, z: 0 }, chestDirection: 0,
+        enderChestPos: { x: 0, y: 0, z: 0 }, enderChestDirection: 0
+    };
+
+    /** 队伍升级信息 */
+    teamUpgrade = { reinforcedArmor: 0, healPool: false, maniacMiner: 0, sharpenedSwords: false, forge: 0, dragonBuff: false, trap1Type: "", trap2Type: "", trap3Type: "" };
+
+    /** 陷阱信息 */
+    trapInfo = { isEnabled: false, value: 600, isAlarming: false, alarmedTimes: 0 };
+
     /**
      * @param {validTeams} id - 队伍 ID ，必须为选定值的某一个
      * @param {import("@minecraft/server").Vector3} bedPos - 床的位置
@@ -978,24 +996,14 @@ export class BedwarsTeam{
     constructor( id, bedPos, bedDirection, resourceSpawnerPos, spawnpointPos ) {
 
         this.id = ( validTeams.includes( id ) ) ? id : undefined;
-        this.isValid = true;
-        this.isEliminated = false;
         this.bedInfo = { pos: bedPos, direction: bedDirection, isExist: true }
-        this.chestInfo = {
-            chestPos: { x: 0, y: 0, z: 0 }, chestDirection: 0,
-            enderChestPos: { x: 0, y: 0, z: 0 }, enderChestDirection: 0
-        };
         this.spawnerInfo = { 
             spawnerPos: { ...resourceSpawnerPos, x: resourceSpawnerPos.x + 0.5, z: resourceSpawnerPos.z + 0.5 },
             ironSpawned: 0, ironCountdown: 8,
             goldSpawned: 0, goldCountdown: 120,
             emeraldSpawned: 0, emeraldCountdown: 1500
         };
-        this.teamUpgrade = { reinforcedArmor: 0, healPool: false, maniacMiner: 0, sharpenedSwords: false, forge: 0, dragonBuff: false, trap1Type: "", trap2Type: "", trap3Type: "" }
         this.spawnpoint = { ...spawnpointPos, x: spawnpointPos.x + 0.5, z: spawnpointPos.z + 0.5 };
-        this.trapCooldown = { isEnabled: false, value: 600 }
-        this.alarming = { isEnabled: false, value: 0 }
-        /** @type {BedwarsPlayer[]} */ this.playerList = []
     }
 
     /**
@@ -1240,8 +1248,8 @@ export class BedwarsTeam{
                     showTitle( teamPlayer, { translate: "title.trapTriggered.alarmTrap" }, { translate: "subtitle.trapTriggered.alarmTrap", with: [ `${enemyPlayer.bedwarsInfo.getTeam().getTeamName( "name" )}`, `${enemyPlayer.nameTag}` ] } )
                     warnPlayer( teamPlayer, { translate: "message.trapTriggered.alarmTrap", with: [ `${enemyPlayer.bedwarsInfo.getTeam().getTeamName( "name" )}`, `${enemyPlayer.nameTag}` ] } )    
                 } )
-                this.alarming.isEnabled = true;
-                this.alarming.value = 0;
+                this.trapInfo.isAlarming = true;
+                this.trapInfo.alarmedTimes = 0;
                 break;
             case "miner_fatigue_trap":
                 trapTriggeredMessage( this.teamUpgrade.trap1Type );
@@ -1252,7 +1260,7 @@ export class BedwarsTeam{
         /** 陷阱顺延 */
         this.teamUpgrade.trap1Type = this.teamUpgrade.trap2Type; this.teamUpgrade.trap2Type = this.teamUpgrade.trap3Type; this.teamUpgrade.trap3Type = "";
         /** 开启 30 秒的冷却 */
-        this.trapCooldown.isEnabled = true; this.trapCooldown.value = 600;
+        this.trapInfo.isEnabled = true; this.trapInfo.value = 600;
 
     }
 

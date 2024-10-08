@@ -432,9 +432,9 @@ export function trapFunction( ) {
     methods.eachTeam( team => {
     
         /** ===== 队伍的陷阱冷却控制 ===== */
-        if ( team.trapCooldown.isEnabled === true ) {
-            team.trapCooldown.value--;
-            if ( team.trapCooldown.value <= 0 ) { team.trapCooldown.isEnabled = false; team.trapCooldown.value = 600; }
+        if ( team.trapInfo.isEnabled === true ) {
+            team.trapInfo.value--;
+            if ( team.trapInfo.value <= 0 ) { team.trapInfo.isEnabled = false; team.trapInfo.value = 600; }
         };
     
         /** ===== 陷阱触发 ===== */
@@ -459,24 +459,24 @@ export function trapFunction( ) {
         /** 当：1. 该队伍的一号位存在陷阱；2. 该队伍的陷阱不处于冷却状态； 3. 存在未喝魔法牛奶的未死亡合法敌人，
          *  则：触发陷阱
          */
-        if ( team.teamUpgrade.trap1Type !== "" && team.trapCooldown.isEnabled === false && enemy !== undefined ) {
+        if ( team.teamUpgrade.trap1Type !== "" && team.trapInfo.isEnabled === false && enemy !== undefined ) {
             team.triggerTrap( enemy )
         }
     
         /** ===== 警报陷阱 ===== */
-        if ( team.alarming.isEnabled === true ) {
-            team.alarming.value++;
+        if ( team.trapInfo.isAlarming === true ) {
+            team.trapInfo.alarmedTimes++;
             methods.eachPlayer( player => {
-                if ( team.alarming.value % 4 === 0 ) {
+                if ( team.trapInfo.alarmedTimes % 4 === 0 ) {
                     player.playSound( "note.pling", { pitch: 1.5, location: team.bedInfo.pos } ) /** 给床附近的人以警告 */
                     team.getTeamMember().forEach( teamPlayer => { teamPlayer.playSound( "note.pling", { pitch: 1.5, location: teamPlayer.location } ) } )
                 }
-                else if ( team.alarming.value % 4 === 2 ) {
+                else if ( team.trapInfo.alarmedTimes % 4 === 2 ) {
                     player.playSound( "note.pling", { pitch: 1.7, location: team.bedInfo.pos } )
                     team.getTeamMember().forEach( teamPlayer => { teamPlayer.playSound( "note.pling", { pitch: 1.7, location: teamPlayer.location } ) } )
                 }
             } )
-            if ( team.alarming.value >= 112 ) { team.alarming.isEnabled = false; team.alarming.value = 0; }
+            if ( team.trapInfo.alarmedTimes >= 112 ) { team.trapInfo.isAlarming = false; team.trapInfo.alarmedTimes = 0; }
         };
     } )
 

@@ -23,4 +23,3 @@ export const shopitemType = [ "sword", "armor", "axe", "pickaxe", "teamUpgrade",
 
 /** @enum {Dimension} 主世界维度 */
 export let overworld = world.getDimension( "overworld" );
-

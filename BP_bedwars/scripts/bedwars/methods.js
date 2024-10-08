@@ -1,7 +1,8 @@
 // 起床战争队伍类
 
 import { world, system, Player, ItemStack, Entity, EnchantmentType, EquipmentSlot, Container, ScoreboardObjective } from "@minecraft/server"
-import { overworld, resourceType, shopitemType, validTeams } from "./constants.js"
+import { overworld, resourceType, validTeams } from "./constants.js"
+import { map } from "./maps.js"
 
 // ===== 常用方法区 =====
 
@@ -418,6 +419,14 @@ export function initPlayer( player ) {
     player.nameTag = player.name
 }
 
+/**
+ * 返回将输入坐标中心化（x + 0.5，z + 0.5）的坐标
+ * @param {import("@minecraft/server").Vector3} pos 待中心化的坐标
+ */
+export function centerPosition( pos ) {
+    return { ...pos, x: pos.x + 0.5, z: pos.z + 0.5 }
+}
+
 // ===== 地图类、队伍类、玩家类、设置 =====
 
 
@@ -631,20 +640,18 @@ export class BedwarsMap{
      * @param {"blocks_and_items" | "weapon_and_armor" | "team_upgrade"} type - 商人类型
      */
     addTrader( pos, direction, type ) {
-        this.traderInfo.push( { pos: { ...pos, x: pos.x + 0.5, z: pos.z + 0.5 }, direction: direction, type: type } )
+        this.traderInfo.push( { pos: centerPosition( pos ), direction: direction, type: type } )
     }
 
     /**
      * 添加资源点位置
      * @param {"diamond"|"emerald"} resourceType - 欲添加的资源点类型
-     * @param {Number} x - 资源点的 x 坐标
-     * @param {Number} y - 资源点的 y 坐标
-     * @param {Number} z - 资源点的 z 坐标
+     * @param {import("@minecraft/server").Vector3} pos - 资源点的位置
      */
-    addSpawner( resourceType, x, y, z ) {
+    addSpawner( resourceType, pos ) {
         switch ( resourceType ) {
-            case "diamond": this.spawnerInfo.diamondInfo.push( { pos: { x: x + 0.5, y: y, z: z + 0.5 }, spawned: 0 } ); break;
-            case "emerald": this.spawnerInfo.emeraldInfo.push( { pos: { x: x + 0.5, y: y, z: z + 0.5 }, spawned: 0 } ); break;
+            case "diamond": this.spawnerInfo.diamondInfo.push( { pos: centerPosition( pos ), spawned: 0 } ); break;
+            case "emerald": this.spawnerInfo.emeraldInfo.push( { pos: centerPosition( pos ), spawned: 0 } ); break;
             default: break;
         }
     };
@@ -998,12 +1005,12 @@ export class BedwarsTeam{
         this.id = ( validTeams.includes( id ) ) ? id : undefined;
         this.bedInfo = { pos: bedPos, direction: bedDirection, isExist: true }
         this.spawnerInfo = { 
-            spawnerPos: { ...resourceSpawnerPos, x: resourceSpawnerPos.x + 0.5, z: resourceSpawnerPos.z + 0.5 },
+            spawnerPos: centerPosition( resourceSpawnerPos ),
             ironSpawned: 0, ironCountdown: 8,
             goldSpawned: 0, goldCountdown: 120,
             emeraldSpawned: 0, emeraldCountdown: 1500
         };
-        this.spawnpoint = { ...spawnpointPos, x: spawnpointPos.x + 0.5, z: spawnpointPos.z + 0.5 };
+        this.spawnpoint = centerPosition( spawnpointPos );
     }
 
     /**
@@ -1129,7 +1136,6 @@ export class BedwarsTeam{
      * @param {Player} player
      */
     addPlayer( player ){
-        /** @type {BedwarsMap} */ let map = world.bedwarsMap
         /** @type {BedwarsPlayer} */ let bedwarsInfo = new BedwarsPlayer( player.name, this.id );
         bedwarsInfo.runtimeId = map.gameId
         player.bedwarsInfo = bedwarsInfo
@@ -1374,7 +1380,6 @@ export class BedwarsPlayer{
      * 获取玩家所在的队伍
      */
     getTeam( ) {
-        /** @type {BedwarsMap} */ let map = world.bedwarsMap;
         return map.teamList.filter( team => { return team.id === this.team } )[0]
     }
 
@@ -1685,8 +1690,6 @@ export class BedwarsPlayer{
 
     show2TeamsScoreboard() {
 
-        /** @type {BedwarsMap} */ let map = world.bedwarsMap
-
         /** @param {BedwarsTeam} team */
         let teamState = ( team ) => {
             if ( team.bedInfo.isExist ) { return "§a✔" }
@@ -1723,8 +1726,6 @@ export class BedwarsPlayer{
      * 为玩家展示四队记分板
      */
     show4TeamsScoreboard() {
-
-        /** @type {BedwarsMap} */ let map = world.bedwarsMap
 
         /** @param {BedwarsTeam} team */
         let teamState = ( team ) => {
@@ -1825,43 +1826,73 @@ export class BedwarsPlayer{
  */
 export class Shopitem{
 
+    /** ID */
+    id = "";
+
+    /** 商店物品 ID */
+    shopitemId = ""
+
+    /** @type {"blocks_and_items"|"weapon_and_armor"|"team_upgrade"} 物品类型 */
+    traderType = "blocks_and_items";
+
+    /** @type {"iron" | "gold" | "diamond" | "emerald"} 购买时消耗的资源类型 */
+    costResourceType = "iron";
+
+    /** 购买时消耗的资源数量 */
+    costResourceAmount = 1;
+
+    /** 购买时获得的物品数量（也是显示在商店中的物品数目） */
+    itemAmount = 1;
+
+    /** 显示在商店中的物品描述 */
+    description = "";
+
+    /** @type {0|1|2|3|4} 物品等级，如果为 0 则为不分等级 */
+    tier = 0;
+
+    /** 是否为最高等级的物品（这将影响物品在商店中的显示方式） */
+    isHighestTier = true;
+
+    /** 是否在死亡后降低等级（这将影响物品在商店中的显示方式） */
+    loseTierUponDeath = false;
+
+    /** 特殊物品 ID，如果为""则为采用自动生成的 ID */
+    itemId = "";
+
+    /** @type {"sword"|"armor"|"axe"|"pickaxe"|"teamUpgrade"|"coloredBlock"|"knockbackStick"|"shears"|"bow"|"potion"|"trap"|"other"} 商店物品类型 */
+    itemType = "other";
+
+    /** 在Solo模式下消耗的资源数量，设置为 0 或负数则为采用默认的数值 */
+    costResourceAmountInSolo = 0;
+
     /**
-     * 
      * @param {"blocks_and_items" | "weapon_and_armor" | "team_upgrade"} traderType - 对应的商人类型
      * @param {String} id - 物品 ID（自动生成商店物品 ID 为 bedwars:shopitem_(id) ）
      * @param {"iron" | "gold" | "diamond" | "emerald"} costResourceType - 购买时消耗的资源类型
-     * @param {Number} costResourceAmount - 购买时消耗的资源数量
+     * @param {Number} costResourceAmount - 购买时消耗的资源数量（常规模式下）
      * @param {Number} itemAmount - 购买时获得的物品数量
-     * @param {{ description: String, 
+     * @param {{
+     * description: String, 
      * tier: 0 | 1 | 2 | 3 | 4, 
-     * isHighestTier: true, 
-     * loseTierUponDeath: false, 
+     * isHighestTier: Boolean, 
+     * loseTierUponDeath: Boolean, 
      * itemId: String, 
-     * itemType: shopitemType
+     * itemType: "sword"|"armor"|"axe"|"pickaxe"|"teamUpgrade"|"coloredBlock"|"knockbackStick"|"shears"|"bow"|"potion"|"trap"|"other"
+     * costResourceAmountInSolo: Number
      * }} options - 其他可选内容
      */
     constructor( id, traderType, costResourceType, costResourceAmount, itemAmount, options = {} ) {
-        const defaultOptions = {
-            description: "", 
-            tier: 0, 
-            isHighestTier: true, 
-            loseTierUponDeath: false, 
-            itemId: "", 
-            itemType: "other",
-            costAdder: 0
-        }; const allOptions = { ...defaultOptions, ...options };
-        
         this.traderType = traderType;
         this.id = id;
         this.costResourceType = costResourceType;
-        this.costResourceAmount = costResourceAmount;
+        this.costResourceAmount = map.isSolo() ? ( options.costResourceAmountInSolo > 0 ? options.costResourceAmountInSolo : costResourceAmount ) : costResourceAmount;
         this.itemAmount = itemAmount;
-        this.description = allOptions.description;
-        this.tier = allOptions.tier;
-        this.isHighestTier = allOptions.isHighestTier;
-        this.loseTierUponDeath = allOptions.loseTierUponDeath;
-        this.itemType = allOptions.itemType
-        this.itemId = ( allOptions.itemId !== "" ) ? `${allOptions.itemId}` : `bedwars:${this.id}`;
+        this.description = options.description;
+        this.tier = options.tier;
+        this.isHighestTier = options.isHighestTier;
+        this.loseTierUponDeath = options.loseTierUponDeath;
+        this.itemType = options.itemType
+        this.itemId = ( options.itemId !== "" ) ? `${options.itemId}` : `bedwars:${this.id}`;
         this.shopitemId = ( this.itemType === "teamUpgrade" || this.itemType === "trap" ) ? `bedwars:upgrade_${this.id}` : `bedwars:shopitem_${this.id}`;
     };
 
@@ -1873,9 +1904,7 @@ export class Shopitem{
         if ( this.itemType === "coloredBlock" ) { this.itemId = `bedwars:${color}_${this.id}` }
     };
 
-    /**
-     * 按照所给定的物品属性自动生成适合的 Lore 显示在商店界面
-     */
+    /** 按照所给定的物品属性自动生成适合的 Lore 显示在商店界面 */
     generateLore( ) {
         let resourceColor; let resourceName;
         switch ( this.costResourceType ) {

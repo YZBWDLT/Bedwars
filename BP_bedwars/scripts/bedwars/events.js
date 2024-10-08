@@ -30,10 +30,9 @@ import * as maps from "./maps.js"
  * 【循环类】等待大厅功能，包括：记分板显示、设置出生点，将玩家传送回来
  */
 export function waitingHallFunction( ) {
-    /** @type {methods.BedwarsMap} */ let map = world.bedwarsMap;
 
     /** 记分板显示 */
-    map.waitingScoreboard()
+    maps.map.waitingScoreboard()
 
     /** 将在外面的玩家传送回来 */
     methods.eachPlayer( player => {
@@ -49,17 +48,16 @@ export function waitingHallFunction( ) {
  */
 
 export function resetMapFunction( ) {
-    /** @type {methods.BedwarsMap} */ let map = world.bedwarsMap;
 
     /** 清除地图 */
     if ( system.currentTick % 2 === 0 ) {
-        map.resetMapCurrentHeight--;
-        constants.overworld.runCommand( `fill 0 ${map.resetMapCurrentHeight} 0 105 ${map.resetMapCurrentHeight} 105 air` );
-        constants.overworld.runCommand( `fill 0 ${map.resetMapCurrentHeight} 0 -105 ${map.resetMapCurrentHeight} 105 air` );
-        constants.overworld.runCommand( `fill 0 ${map.resetMapCurrentHeight} 0 105 ${map.resetMapCurrentHeight} -105 air` );
-        constants.overworld.runCommand( `fill 0 ${map.resetMapCurrentHeight} 0 -105 ${map.resetMapCurrentHeight} -105 air` );
+        maps.map.resetMapCurrentHeight--;
+        constants.overworld.runCommand( `fill 0 ${maps.map.resetMapCurrentHeight} 0 105 ${maps.map.resetMapCurrentHeight} 105 air` );
+        constants.overworld.runCommand( `fill 0 ${maps.map.resetMapCurrentHeight} 0 -105 ${maps.map.resetMapCurrentHeight} 105 air` );
+        constants.overworld.runCommand( `fill 0 ${maps.map.resetMapCurrentHeight} 0 105 ${maps.map.resetMapCurrentHeight} -105 air` );
+        constants.overworld.runCommand( `fill 0 ${maps.map.resetMapCurrentHeight} 0 -105 ${maps.map.resetMapCurrentHeight} -105 air` );
         /** 清除进程结束后，生成地图 */
-        if ( map.resetMapCurrentHeight <= 0 ) { map.gameStage = 1; map.structureLoadCountdown = 120; }
+        if ( maps.map.resetMapCurrentHeight <= 0 ) { maps.map.gameStage = 1; maps.map.structureLoadCountdown = 120; }
     }
 
 }
@@ -68,16 +66,15 @@ export function resetMapFunction( ) {
  * 【循环类】地图加载功能 | 加载地图
  */
 export function mapLoadFunction( ) {
-    /** @type {methods.BedwarsMap} */ let map = world.bedwarsMap;
 
     /** 剩余119刻时加载结构 */
-    if ( map.structureLoadCountdown === 119 ) { map.generateMap() }
+    if ( maps.map.structureLoadCountdown === 119 ) { maps.map.generateMap() }
     /** 剩余19刻时加载队伍颜色 */
-    if ( map.structureLoadCountdown === 19 ) { map.teamIslandInit() }
+    if ( maps.map.structureLoadCountdown === 19 ) { maps.map.teamIslandInit() }
     /** 剩余0刻时，进入下一阶段 */
-    if ( map.structureLoadCountdown === 0 ) { map.gameStage = 2; map.gameStartCountdown = methods.settings.gameStartWaitingTime; }
+    if ( maps.map.structureLoadCountdown === 0 ) { maps.map.gameStage = 2; maps.map.gameStartCountdown = methods.settings.gameStartWaitingTime; }
 
-    map.structureLoadCountdown--;
+    maps.map.structureLoadCountdown--;
 
 }
 
@@ -85,22 +82,21 @@ export function mapLoadFunction( ) {
  * 【循环类】等待功能
  */
 export function waitingFunction() {
-    /** @type {methods.BedwarsMap} */ let map = world.bedwarsMap;
 
     /** 大于规定的人数时，开始倒计时 */
     if ( methods.getPlayerAmount() >= methods.settings.minWaitingPlayers ) {
-        map.gameStartCountdown--;
+        maps.map.gameStartCountdown--;
         methods.eachPlayer( player => {
-            if ( map.gameStartCountdown === 399 ) {
+            if ( maps.map.gameStartCountdown === 399 ) {
                 player.sendMessage( { translate: "message.gameStart", with: [ `20` ] } );
                 player.playSound( "note.hat", { location: player.location } );
-            } else if ( map.gameStartCountdown === 199 ) {
+            } else if ( maps.map.gameStartCountdown === 199 ) {
                 player.sendMessage( { translate: "message.gameStart", with: [ `§610` ] } );
                 methods.showTitle( player, `§a10`, "", { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 } );
                 player.playSound( "note.hat", { location: player.location } );
-            } else if ( map.gameStartCountdown < 100 && map.gameStartCountdown % 20 === 19 ) {
-                player.sendMessage( { translate: "message.gameStart", with: [ `§c${methods.tickToSecond( map.gameStartCountdown )}` ] } );
-                methods.showTitle( player, `§c${methods.tickToSecond( map.gameStartCountdown )}`, "", { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 } );
+            } else if ( maps.map.gameStartCountdown < 100 && maps.map.gameStartCountdown % 20 === 19 ) {
+                player.sendMessage( { translate: "message.gameStart", with: [ `§c${methods.tickToSecond( maps.map.gameStartCountdown )}` ] } );
+                methods.showTitle( player, `§c${methods.tickToSecond( maps.map.gameStartCountdown )}`, "", { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 } );
                 player.playSound( "note.hat", { location: player.location } );
             }
         } )
@@ -108,8 +104,8 @@ export function waitingFunction() {
     }
 
     /** 人数不足时，且已经开始倒计时，则取消倒计时 */
-    if ( methods.getPlayerAmount() < methods.settings.minWaitingPlayers && map.gameStartCountdown < methods.settings.gameStartWaitingTime ) {
-        map.gameStartCountdown = methods.settings.gameStartWaitingTime;
+    if ( methods.getPlayerAmount() < methods.settings.minWaitingPlayers && maps.map.gameStartCountdown < methods.settings.gameStartWaitingTime ) {
+        maps.map.gameStartCountdown = methods.settings.gameStartWaitingTime;
         methods.eachPlayer( player => {
             player.sendMessage( { translate: "message.needsMorePlayer" } );
             methods.showTitle( player, { translate: "title.needsMorePlayer" }, "", { fadeInDuration: 0, stayDuration: 40, fadeOutDuration: 0 } );
@@ -118,8 +114,8 @@ export function waitingFunction() {
     }
 
     /** 开始游戏 */
-    if ( map.gameStartCountdown === 0 ) {
-        map.gameStart()
+    if ( maps.map.gameStartCountdown === 0 ) {
+        maps.map.gameStart()
     }
 
 }
@@ -276,8 +272,7 @@ export function dreamDefenderEvent( event ) {
  * @param {ItemUseOnBeforeEvent} event
  */
 export function playerUseItemOnHeightLimitEvent( event ) {
-    /** @type {methods.BedwarsMap} */ let map = world.bedwarsMap;
-    if ( event.block.location.y > map.highestBlockLimit && event.source.getGameMode() !== "creative" ) {
+    if ( event.block.location.y > maps.map.highestBlockLimit && event.source.getGameMode() !== "creative" ) {
         event.cancel = true;
         event.source.sendMessage( { translate: "§c达到建筑高度限制！" } )
     }
@@ -486,22 +481,20 @@ export function trapFunction( ) {
  * 【循环类】资源生成功能，分队伍资源生成与世界资源生成，以及玩家位置检测（以调整上限）
  */
 export function spawnResourceFunction( ) {
-
-    /** 获取地图信息 */ /** @type { methods.BedwarsMap } */ let map = world.bedwarsMap
     
     /** 各队伍的资源生成 | 铁锭、金锭、绿宝石 | 受设置“允许无效队伍产生资源”的影响 */
     methods.eachTeam( team => { if ( methods.settings.invalidTeamCouldSpawnResources === true || ( methods.settings.invalidTeamCouldSpawnResources === false && team.isValid === true ) ) {
         if ( team.spawnerInfo.ironCountdown <= 0 ) {
-            for ( let i = 0; i < map.spawnerInfo.ironSpawnTimes; i++ ) { team.spawnResources( "iron", map.spawnerInfo.distributeResource, map.spawnerInfo.clearResourceVelocity ); }
-            team.spawnerInfo.ironCountdown = Math.floor( map.spawnerInfo.ironInterval * map.spawnerInfo.ironSpawnTimes / team.getForgeSpeedBonus() );
+            for ( let i = 0; i < maps.map.spawnerInfo.ironSpawnTimes; i++ ) { team.spawnResources( "iron", maps.map.spawnerInfo.distributeResource, maps.map.spawnerInfo.clearResourceVelocity ); }
+            team.spawnerInfo.ironCountdown = Math.floor( maps.map.spawnerInfo.ironInterval * maps.map.spawnerInfo.ironSpawnTimes / team.getForgeSpeedBonus() );
         };
         if ( team.spawnerInfo.goldCountdown <= 0 ) {
-            team.spawnResources( "gold", map.spawnerInfo.distributeResource, map.spawnerInfo.clearResourceVelocity );
-            team.spawnerInfo.goldCountdown = Math.floor( map.spawnerInfo.goldInterval / team.getForgeSpeedBonus() );
+            team.spawnResources( "gold", maps.map.spawnerInfo.distributeResource, maps.map.spawnerInfo.clearResourceVelocity );
+            team.spawnerInfo.goldCountdown = Math.floor( maps.map.spawnerInfo.goldInterval / team.getForgeSpeedBonus() );
         };
         if ( team.spawnerInfo.emeraldCountdown <= 0 ) {
-            team.spawnResources( "emerald", map.spawnerInfo.distributeResource, map.spawnerInfo.clearResourceVelocity );
-            team.spawnerInfo.emeraldCountdown = map.spawnerInfo.emeraldInterval;
+            team.spawnResources( "emerald", maps.map.spawnerInfo.distributeResource, maps.map.spawnerInfo.clearResourceVelocity );
+            team.spawnerInfo.emeraldCountdown = maps.map.spawnerInfo.emeraldInterval;
         }
         team.spawnerInfo.ironCountdown--;
         team.spawnerInfo.goldCountdown--;
@@ -513,26 +506,26 @@ export function spawnResourceFunction( ) {
     } } )
 
     /** 世界资源生成 | 钻石点、绿宝石点 */
-    if ( map.spawnerInfo.diamondCountdown <= 0 ) {
-        map.spawnResources( "diamond" );
-        map.spawnerInfo.diamondCountdown = map.spawnerInfo.diamondInterval - 10 * 20 * map.spawnerInfo.diamondLevel ;
+    if ( maps.map.spawnerInfo.diamondCountdown <= 0 ) {
+        maps.map.spawnResources( "diamond" );
+        maps.map.spawnerInfo.diamondCountdown = maps.map.spawnerInfo.diamondInterval - 10 * 20 * maps.map.spawnerInfo.diamondLevel ;
     };
-    if ( map.spawnerInfo.emeraldCountdown <= 0 ) {
-        map.spawnResources( "emerald" );
-        map.spawnerInfo.emeraldCountdown = map.spawnerInfo.emeraldInterval - 10 * 20 * map.spawnerInfo.emeraldLevel ;
+    if ( maps.map.spawnerInfo.emeraldCountdown <= 0 ) {
+        maps.map.spawnResources( "emerald" );
+        maps.map.spawnerInfo.emeraldCountdown = maps.map.spawnerInfo.emeraldInterval - 10 * 20 * maps.map.spawnerInfo.emeraldLevel ;
     };
-    map.spawnerInfo.diamondCountdown--;
-    map.spawnerInfo.emeraldCountdown--;
+    maps.map.spawnerInfo.diamondCountdown--;
+    maps.map.spawnerInfo.emeraldCountdown--;
 
     /** 显示资源点动画和生成信息 */
-    map.showTextAndAnimation( );
+    maps.map.showTextAndAnimation( );
 
     /** 检测玩家在资源点附近时，则清除使用次数 */
-    map.spawnerInfo.diamondInfo.forEach( spawner => {
-        if ( methods.getPlayerNearby( spawner.pos, 2.5 ).length !== 0 ) { map.resetSpawnerSpawnedTimes( spawner.pos ); };
+    maps.map.spawnerInfo.diamondInfo.forEach( spawner => {
+        if ( methods.getPlayerNearby( spawner.pos, 2.5 ).length !== 0 ) { maps.map.resetSpawnerSpawnedTimes( spawner.pos ); };
     } );
-    map.spawnerInfo.emeraldInfo.forEach( spawner => {
-        if ( methods.getPlayerNearby( spawner.pos, 2.5 ).length !== 0 ) { map.resetSpawnerSpawnedTimes( spawner.pos ); };
+    maps.map.spawnerInfo.emeraldInfo.forEach( spawner => {
+        if ( methods.getPlayerNearby( spawner.pos, 2.5 ).length !== 0 ) { maps.map.resetSpawnerSpawnedTimes( spawner.pos ); };
     } );
 
 }
@@ -722,9 +715,8 @@ export function voidDamageFunction( ) {
 export function scoreboardFunction( ) {
 
     if ( system.currentTick % 3 === 0 ) {
-        /** @type {methods.BedwarsMap} */ let map = world.bedwarsMap
 
-        switch ( map.teamCount ) {
+        switch ( maps.map.teamCount ) {
             case 2:
                 methods.eachValidPlayer( player => { player.bedwarsInfo.show2TeamsScoreboard() } )
                 break;
@@ -746,10 +738,9 @@ export function scoreboardFunction( ) {
  * 【循环类】游戏事件功能，在一段时间过后执行一个游戏事件，例如钻石、绿宝石生成点的升级
  */
 export function gameEventFunction( ) {
-    /** @type {methods.BedwarsMap} */ let map = world.bedwarsMap
 
-    if ( map.gameEvent.nextEventCountdown > 0 ) { map.gameEvent.nextEventCountdown-- }
-    else { map.triggerEvent() }
+    if ( maps.map.gameEvent.nextEventCountdown > 0 ) { maps.map.gameEvent.nextEventCountdown-- }
+    else { maps.map.triggerEvent() }
 }
 
 /**
@@ -767,8 +758,7 @@ export function teamFunction( ) {
     } )
 
     /** 如果仅剩一个队伍存活，则该队伍获胜 */
-    /** @type {methods.BedwarsMap} */ let map = world.bedwarsMap
-    if ( map.getAliveTeam().length <= 1 ) { map.gameOver( map.getAliveTeam()[0] ) }
+    if ( maps.map.getAliveTeam().length <= 1 ) { maps.map.gameOver( maps.map.getAliveTeam()[0] ) }
     
 }
 
@@ -780,7 +770,6 @@ export function playerRejoinEvent( event ) {
     
     /** 获取玩家对应的记分板和队伍 */
     let player = event.player;
-    /** @type {methods.BedwarsMap} */ let map = world.bedwarsMap
 
     /** 如果重生的玩家是无效玩家，则为重进的玩家 */
     if ( !methods.playerIsValid( player ) ) {
@@ -790,7 +779,7 @@ export function playerRejoinEvent( event ) {
         let runtimeId = 0;
         if ( data !== undefined ) { runtimeId = data.getScore( "runtimeId" ); }
 
-        if ( runtimeId === map.gameId ) {
+        if ( runtimeId === maps.map.gameId ) {
 
             /** 尝试获取玩家的队伍信息，并加入进队伍中，此时能保证备份记分板一定存在 */
             let team = 12; team = data.getScore( "team" )
@@ -808,7 +797,7 @@ export function playerRejoinEvent( event ) {
     }
 
     /** 等待期间时执行的内容 */
-    if ( map.gameStage < 3 ) { methods.initPlayer( player ) }
+    if ( maps.map.gameStage < 3 ) { methods.initPlayer( player ) }
 
 }
 
@@ -818,8 +807,7 @@ export function playerRejoinEvent( event ) {
  */
 export function playerLeaveEvent( event ) {
     let player = event.player;
-    /** @type {methods.BedwarsMap} */ let map = world.bedwarsMap
-    if ( methods.playerIsValid( player ) && map.gameStage >= 3 ) {
+    if ( methods.playerIsValid( player ) && maps.map.gameStage >= 3 ) {
         player.bedwarsInfo.dataBackup( player )
     }
 }
@@ -829,10 +817,9 @@ export function playerLeaveEvent( event ) {
  */
 export function gameOverEvent( ) {
 
-    /** @type {methods.BedwarsMap} */ let map = world.bedwarsMap
-    map.nextGameCountdown--;
+    maps.map.nextGameCountdown--;
 
-    if ( map.nextGameCountdown === 0 ) { maps.regenerateMap() }
+    if ( maps.map.nextGameCountdown === 0 ) { maps.regenerateMap() }
 
 }
 

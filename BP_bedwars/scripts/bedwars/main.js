@@ -1,14 +1,11 @@
 import { system, world } from "@minecraft/server";
-import * as methods from "./methods.js";
 import * as bedwarsEvents from "./events.js"
 import * as maps from "./maps.js"
-
 
 /** 地图创建 */
 maps.regenerateMap()
 
 /** 起床战争功能 */
-
 
 if ( world.bedwarsMap !== undefined ) {
     world.beforeEvents.playerBreakBlock.subscribe( event => { bedwarsEvents.playerBreakBlockEvent( event ); } )
@@ -28,22 +25,21 @@ if ( world.bedwarsMap !== undefined ) {
 
 system.runInterval( () => {
     if ( world.bedwarsMap !== undefined ) {
-        /** @type {methods.BedwarsMap} */ let map = world.bedwarsMap
 
         bedwarsEvents.effectFunction();
-        if ( map.gameStage === 0 ) {
+        if ( maps.map.gameStage === 0 ) {
             bedwarsEvents.waitingHallFunction();
             bedwarsEvents.resetMapFunction();
         }
-        else if ( map.gameStage === 1 ) {
+        else if ( maps.map.gameStage === 1 ) {
             bedwarsEvents.waitingHallFunction();
             bedwarsEvents.mapLoadFunction();
         }
-        else if ( map.gameStage === 2 ) {
+        else if ( maps.map.gameStage === 2 ) {
             bedwarsEvents.waitingHallFunction();
             bedwarsEvents.waitingFunction();
         }
-        else if ( map.gameStage === 3 ) {
+        else if ( maps.map.gameStage === 3 ) {
             bedwarsEvents.magicMilkFunction();
             bedwarsEvents.bedbugFunction();
             bedwarsEvents.dreamDefenderFunction();

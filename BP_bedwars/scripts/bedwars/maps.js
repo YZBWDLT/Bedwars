@@ -37,8 +37,10 @@ export function regenerateMap( mapId = undefined ) {
         case "picnic": createMapPicnic(); break;
         case "lion_temple": createMapLionTemple(); break;
     }
-    
 }
+
+/** @type {BedwarsMap} 地图信息 */
+export let map = world.bedwarsMap
 
 /** ===== 4队地图 ===== */
 
@@ -61,12 +63,12 @@ function createMapOrchid( ) {
     mapOrchid.addTeam( teamYellow );
 
     /** 设置地图钻石和绿宝石生成点 */
-    mapOrchid.addSpawner( "diamond", 0, 72, -76 ); 
-    mapOrchid.addSpawner( "diamond", 56, 72, 0 ); 
-    mapOrchid.addSpawner( "diamond", 0, 72, 76 );
-    mapOrchid.addSpawner( "diamond", -56, 72, 0 ); 
-    mapOrchid.addSpawner( "emerald", 0, 72, -8 ); 
-    mapOrchid.addSpawner( "emerald", 0, 72, 8 );
+    mapOrchid.addSpawner( "diamond", { x: 0, y: 72, z: -76 } );
+    mapOrchid.addSpawner( "diamond", { x: 56, y: 72, z: 0 } );
+    mapOrchid.addSpawner( "diamond", { x: 0, y: 72, z: 76 } );
+    mapOrchid.addSpawner( "diamond", { x: -56, y: 72, z: 0 } );
+    mapOrchid.addSpawner( "emerald", { x: 0, y: 72, z: -8 } );
+    mapOrchid.addSpawner( "emerald", { x: 0, y: 72, z: 8 } );
 
     /** 设置地图商人 */
     mapOrchid.addTrader( { x: 59, y: 71, z: -45 }, 180, "blocks_and_items" );
@@ -107,12 +109,12 @@ function createMapChained( ) {
     mapChained.addTeam( teamYellow );
     
     /** 设置地图钻石和绿宝石生成点 */
-    mapChained.addSpawner( "diamond", 36, 67, 34 ); 
-    mapChained.addSpawner( "diamond", -34, 67, 36 ); 
-    mapChained.addSpawner( "diamond", -36, 67, -34 );
-    mapChained.addSpawner( "diamond", 34, 67, -36 ); 
-    mapChained.addSpawner( "emerald", -11, 67, 0 ); 
-    mapChained.addSpawner( "emerald", 11, 67, 0 );
+    mapChained.addSpawner( "diamond", { x: 36, y: 67, z: 34 } );
+    mapChained.addSpawner( "diamond", { x: -34, y: 67, z: 36 } );
+    mapChained.addSpawner( "diamond", { x: -36, y: 67, z: -34 } );
+    mapChained.addSpawner( "diamond", { x: 34, y: 67, z: -36 } );
+    mapChained.addSpawner( "emerald", { x: -11, y: 67, z: 0 } );
+    mapChained.addSpawner( "emerald", { x: 11, y: 67, z: 0 } );
     
     /** 设置地图商人 */
     mapChained.addTrader( { x: 84, y: 64, z: 8 }, 180, "blocks_and_items" );
@@ -153,12 +155,12 @@ function createMapBoletum( ) {
     mapBoletum.addTeam( teamYellow );
     
     /** 设置地图钻石和绿宝石生成点 */
-    mapBoletum.addSpawner( "diamond", 43, 70, -43 ); 
-    mapBoletum.addSpawner( "diamond", 43, 70, 43 ); 
-    mapBoletum.addSpawner( "diamond", -43, 70, 43 );
-    mapBoletum.addSpawner( "diamond", -43, 70, -43 ); 
-    mapBoletum.addSpawner( "emerald", -11, 74, -12 ); 
-    mapBoletum.addSpawner( "emerald", 9, 74, 12 );
+    mapBoletum.addSpawner( "diamond", { x: 43, y: 70, z: -43 } );
+    mapBoletum.addSpawner( "diamond", { x: 43, y: 70, z: 43 } );
+    mapBoletum.addSpawner( "diamond", { x: -43, y: 70, z: 43 } );
+    mapBoletum.addSpawner( "diamond", { x: -43, y: 70, z: -43 } );
+    mapBoletum.addSpawner( "emerald", { x: -11, y: 74, z: -12 } );
+    mapBoletum.addSpawner( "emerald", { x: 9, y: 74, z: 12 } );
     
     /** 设置地图商人 */
     mapBoletum.addTrader( { x: -5, y: 68, z: 80 }, 180, "blocks_and_items" );
@@ -199,12 +201,12 @@ function createMapCarapace( ) {
     mapCarapace.addTeam( teamYellow );
     
     /** 设置地图钻石和绿宝石生成点 */
-    mapCarapace.addSpawner( "diamond", 31, 67, -30 ); 
-    mapCarapace.addSpawner( "diamond", 30, 67, 31 ); 
-    mapCarapace.addSpawner( "diamond", -31, 67, 30 );
-    mapCarapace.addSpawner( "diamond", -30, 67, -31 ); 
-    mapCarapace.addSpawner( "emerald", 0, 67, 0 ); 
-    mapCarapace.addSpawner( "emerald", 0, 75, 0 );
+    mapCarapace.addSpawner( "diamond", { x: 31, y: 67, z: -30 } );
+    mapCarapace.addSpawner( "diamond", { x: 30, y: 67, z: 31 } );
+    mapCarapace.addSpawner( "diamond", { x: -31, y: 67, z: 30 } );
+    mapCarapace.addSpawner( "diamond", { x: -30, y: 67, z: -31 } );
+    mapCarapace.addSpawner( "emerald", { x: 0, y: 67, z: 0 } );
+    mapCarapace.addSpawner( "emerald", { x: 0, y: 75, z: 0 } );
     
     /** 设置地图商人 */
     mapCarapace.addTrader( { x: 5, y: 66, z: -59 }, 180, "blocks_and_items" );
@@ -228,46 +230,46 @@ function createMapCarapace( ) {
 
 function createMapArchway( ) {
     /** 队伍信息初始化 */
-    let mapCarapace = new BedwarsMap( "archway", "拱形廊道", { highestBlockLimit: 91, healPoolRadius: 15, distributeResource: false } );
+    let mapArchway = new BedwarsMap( "archway", "拱形廊道", { highestBlockLimit: 91, healPoolRadius: 15, distributeResource: false } );
     let teamRed = new BedwarsTeam( "red", { x: -15, y: 66, z: -66 }, 3, { x: -14, y: 65, z: -79 }, { x: -14, y: 65, z: -75 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 66, y: 66, z: -15 }, 0, { x: 79, y: 65, z: -14 }, { x: 75, y: 65, z: -14 } );
     let teamGreen = new BedwarsTeam( "green", { x: 15, y: 66, z: 66 }, 1, { x: 14, y: 65, z: 79 }, { x: 14, y: 65, z: 75 } );
     let teamYellow = new BedwarsTeam( "yellow", { x: -66, y: 66, z: 15 }, 2, { x: -79, y: 65, z: 14 }, { x: -75, y: 65, z: 14 } );
     
     /** 移除多余实体，进行初始化 */
-    mapCarapace.init()
+    mapArchway.init()
     
     /** 设置地图的队伍 */
-    mapCarapace.addTeam( teamRed ); 
-    mapCarapace.addTeam( teamBlue ); 
-    mapCarapace.addTeam( teamGreen ); 
-    mapCarapace.addTeam( teamYellow );
+    mapArchway.addTeam( teamRed ); 
+    mapArchway.addTeam( teamBlue ); 
+    mapArchway.addTeam( teamGreen ); 
+    mapArchway.addTeam( teamYellow );
     
     /** 设置地图钻石和绿宝石生成点 */
-    mapCarapace.addSpawner( "diamond", 34, 67, -49 ); 
-    mapCarapace.addSpawner( "diamond", 49, 67, 34 ); 
-    mapCarapace.addSpawner( "diamond", -34, 67, 49 );
-    mapCarapace.addSpawner( "diamond", -49, 67, -34 ); 
-    mapCarapace.addSpawner( "emerald", 0, 66, 0 ); 
-    mapCarapace.addSpawner( "emerald", 0, 76, 0 );
+    mapArchway.addSpawner( "diamond", { x: 34, y: 67, z: -49 } );
+    mapArchway.addSpawner( "diamond", { x: 49, y: 67, z: 34 } );
+    mapArchway.addSpawner( "diamond", { x: -34, y: 67, z: 49 } );
+    mapArchway.addSpawner( "diamond", { x: -49, y: 67, z: -34 } );
+    mapArchway.addSpawner( "emerald", { x: 0, y: 66, z: 0 } );
+    mapArchway.addSpawner( "emerald", { x: 0, y: 76, z: 0 } );
     
     /** 设置地图商人 */
-    mapCarapace.addTrader( { x: -9, y: 65, z: -76 }, 90, "blocks_and_items" );
-    mapCarapace.addTrader( { x: 76, y: 65, z: -9 }, 180, "blocks_and_items" );
-    mapCarapace.addTrader( { x: 9, y: 65, z: 76 }, 270, "blocks_and_items" );
-    mapCarapace.addTrader( { x: -76, y: 65, z: 9 }, 90, "blocks_and_items" );
-    mapCarapace.addTrader( { x: -9, y: 65, z: -75 }, 90, "weapon_and_armor" );
-    mapCarapace.addTrader( { x: 75, y: 65, z: -9 }, 180, "weapon_and_armor" );
-    mapCarapace.addTrader( { x: 9, y: 65, z: 75 }, 270, "weapon_and_armor" );
-    mapCarapace.addTrader( { x: -75, y: 65, z: 9 }, 90, "weapon_and_armor" );
-    mapCarapace.addTrader( { x: -19, y: 65, z: -75.5 }, 270, "team_upgrade" );
-    mapCarapace.addTrader( { x: 75.5, y: 65, z: -19 }, 90, "team_upgrade" );
-    mapCarapace.addTrader( { x: 19, y: 65, z: 75.5 }, 90, "team_upgrade" );
-    mapCarapace.addTrader( { x: -75.5, y: 65, z: 19 }, 180, "team_upgrade" );
+    mapArchway.addTrader( { x: -9, y: 65, z: -76 }, 90, "blocks_and_items" );
+    mapArchway.addTrader( { x: 76, y: 65, z: -9 }, 180, "blocks_and_items" );
+    mapArchway.addTrader( { x: 9, y: 65, z: 76 }, 270, "blocks_and_items" );
+    mapArchway.addTrader( { x: -76, y: 65, z: 9 }, 90, "blocks_and_items" );
+    mapArchway.addTrader( { x: -9, y: 65, z: -75 }, 90, "weapon_and_armor" );
+    mapArchway.addTrader( { x: 75, y: 65, z: -9 }, 180, "weapon_and_armor" );
+    mapArchway.addTrader( { x: 9, y: 65, z: 75 }, 270, "weapon_and_armor" );
+    mapArchway.addTrader( { x: -75, y: 65, z: 9 }, 90, "weapon_and_armor" );
+    mapArchway.addTrader( { x: -19, y: 65, z: -75.5 }, 270, "team_upgrade" );
+    mapArchway.addTrader( { x: 75.5, y: 65, z: -19 }, 90, "team_upgrade" );
+    mapArchway.addTrader( { x: 19, y: 65, z: 75.5 }, 90, "team_upgrade" );
+    mapArchway.addTrader( { x: -75.5, y: 65, z: 19 }, 180, "team_upgrade" );
     
     /** 在 world 类中插入地图信息 */
-    world.bedwarsMap = mapCarapace;
-    return [ mapCarapace, teamRed, teamBlue, teamGreen, teamYellow ];
+    world.bedwarsMap = mapArchway;
+    return [ mapArchway, teamRed, teamBlue, teamGreen, teamYellow ];
 
 }
 
@@ -289,10 +291,10 @@ function createMapCryptic( ) {
     mapCryptic.addTeam( teamBlue ); 
     
     /** 设置地图钻石和绿宝石生成点 */
-    mapCryptic.addSpawner( "diamond", -70, 80, 0 ); 
-    mapCryptic.addSpawner( "diamond", 70, 75, 0 ); 
-    mapCryptic.addSpawner( "emerald", 21, 70, 0 ); 
-    mapCryptic.addSpawner( "emerald", -25, 83, 0 );
+    mapCryptic.addSpawner( "diamond", { x: -70, y: 80, z: 0 } );
+    mapCryptic.addSpawner( "diamond", { x: 70, y: 75, z: 0 } );
+    mapCryptic.addSpawner( "emerald", { x: 21, y: 70, z: 0 } );
+    mapCryptic.addSpawner( "emerald", { x: -25, y: 83, z: 0 } );
     
     /** 设置地图商人 */
     mapCryptic.addTrader( { x: -2, y: 78, z: 87 }, 270, "blocks_and_items" );
@@ -323,10 +325,10 @@ function createMapFrost( ) {
     mapFrost.addTeam( teamBlue ); 
     
     /** 设置地图钻石和绿宝石生成点 */
-    mapFrost.addSpawner( "diamond", 38, 77, -10 ); 
-    mapFrost.addSpawner( "diamond", -38, 77, 10 ); 
-    mapFrost.addSpawner( "emerald", 0, 78, -12 ); 
-    mapFrost.addSpawner( "emerald", 0, 78, 12 );
+    mapFrost.addSpawner( "diamond", { x: 38, y: 77, z: -10 } );
+    mapFrost.addSpawner( "diamond", { x: -38, y: 77, z: 10 } );
+    mapFrost.addSpawner( "emerald", { x: 0, y: 78, z: -12 } );
+    mapFrost.addSpawner( "emerald", { x: 0, y: 78, z: 12 } );
     
     /** 设置地图商人 */
     mapFrost.addTrader( { x: -6, y: 72, z: 72 }, 270, "blocks_and_items" );
@@ -357,10 +359,10 @@ function createMapGarden( ) {
     mapGarden.addTeam( teamBlue ); 
     
     /** 设置地图钻石和绿宝石生成点 */
-    mapGarden.addSpawner( "diamond", 0, 79, -52 ); 
-    mapGarden.addSpawner( "diamond", 0, 79, 52 ); 
-    mapGarden.addSpawner( "emerald", -21, 78, -21 ); 
-    mapGarden.addSpawner( "emerald", 21, 78, 21 );
+    mapGarden.addSpawner( "diamond", { x: 0, y: 79, z: -52 } );
+    mapGarden.addSpawner( "diamond", { x: 0, y: 79, z: 52 } );
+    mapGarden.addSpawner( "emerald", { x: -21, y: 78, z: -21 } );
+    mapGarden.addSpawner( "emerald", { x: 21, y: 78, z: 21 } );
     
     /** 设置地图商人 */
     mapGarden.addTrader( { x: 95, y: 79, z: 8 }, 180, "blocks_and_items" );
@@ -391,10 +393,10 @@ function createMapRuins( ) {
     mapRuins.addTeam( teamBlue ); 
     
     /** 设置地图钻石和绿宝石生成点 */
-    mapRuins.addSpawner( "diamond", -47, 71, -10 ); 
-    mapRuins.addSpawner( "diamond", 47, 71, 10 ); 
-    mapRuins.addSpawner( "emerald", 17, 71, -6 ); 
-    mapRuins.addSpawner( "emerald", -17, 71, 6 );
+    mapRuins.addSpawner( "diamond", { x: -47, y: 71, z: -10 } );
+    mapRuins.addSpawner( "diamond", { x: 47, y: 71, z: 10 } );
+    mapRuins.addSpawner( "emerald", { x: 17, y: 71, z: -6 } );
+    mapRuins.addSpawner( "emerald", { x: -17, y: 71, z: 6 } );
     
     /** 设置地图商人 */
     mapRuins.addTrader( { x: 6, y: 72, z: -80 }, 90, "blocks_and_items" );
@@ -425,11 +427,11 @@ function createMapPicnic( ) {
     mapPicnic.addTeam( teamBlue ); 
     
     /** 设置地图钻石和绿宝石生成点 */
-    mapPicnic.addSpawner( "diamond", 48, 65, 10 ); 
-    mapPicnic.addSpawner( "diamond", -48, 65, -10 ); 
-    mapPicnic.addSpawner( "emerald", -7, 70, -11 ); 
-    mapPicnic.addSpawner( "emerald", 8, 70, 12 );
-    
+    mapPicnic.addSpawner( "diamond", { x: 48, y: 65, z: 10 } );
+    mapPicnic.addSpawner( "diamond", { x: -48, y: 65, z: -10 } );
+    mapPicnic.addSpawner( "emerald", { x: -7, y: 70, z: -11 } );
+    mapPicnic.addSpawner( "emerald", { x: 8, y: 70, z: 12 } );
+
     /** 设置地图商人 */
     mapPicnic.addTrader( { x: 6, y: 64, z: -76 }, 90, "blocks_and_items" );
     mapPicnic.addTrader( { x: -6, y: 64, z: 75 }, 270, "blocks_and_items" );
@@ -459,11 +461,11 @@ function createMapLionTemple( ) {
     mapLionTemple.addTeam( teamBlue ); 
     
     /** 设置地图钻石和绿宝石生成点 */
-    mapLionTemple.addSpawner( "diamond", 53, 84, 0 ); 
-    mapLionTemple.addSpawner( "diamond", -58, 84, 0 ); 
-    mapLionTemple.addSpawner( "emerald", -20, 79, 0 ); 
-    mapLionTemple.addSpawner( "emerald", 17, 84, 0 );
-    
+    mapLionTemple.addSpawner( "diamond", { x: 53, y: 84, z: 0 } );
+    mapLionTemple.addSpawner( "diamond", { x: -58, y: 84, z: 0 } );
+    mapLionTemple.addSpawner( "emerald", { x: -20, y: 79, z: 0 } );
+    mapLionTemple.addSpawner( "emerald", { x: 17, y: 84, z: 0 } );
+
     /** 设置地图商人 */
     mapLionTemple.addTrader( { x: -7, y: 75, z: 73 }, 270, "blocks_and_items" );
     mapLionTemple.addTrader( { x: 3, y: 75, z: -73 }, 90, "blocks_and_items" );

@@ -744,9 +744,7 @@ export class BedwarsMap{
 
     }
 
-    /**
-     * 生成商人
-     */
+    /** 生成商人 */
     setTrader() {
 
         this.traderInfo.forEach( traderInfo => {
@@ -768,9 +766,7 @@ export class BedwarsMap{
 
     }
 
-    /**
-     * 获取下一个游戏事件的名称
-     */
+    /** 获取下一个游戏事件的名称 */
     getEventName( ) {
         switch ( this.gameEvent.nextEventId ) {
             case "diamond_tier_2": this.gameEvent.nextEventName = "钻石生成点 II 级"; return this.gameEvent.nextEventName;
@@ -783,9 +779,7 @@ export class BedwarsMap{
         }
     }
 
-    /**
-     * 触发游戏事件
-     */
+    /** 触发游戏事件 */
     triggerEvent( ) {
         switch ( this.gameEvent.nextEventId ) {
             case "diamond_tier_2":
@@ -905,9 +899,7 @@ export class BedwarsMap{
 
     }
 
-    /**
-     * 游戏开始事件
-     */
+    /** 游戏开始事件 */
     gameStart( ) {
         /** 开始游戏 */
         this.gameStage = 3;
@@ -957,11 +949,14 @@ export class BedwarsMap{
         player.nameTag = player.name;
     }
 
-    /**
-     * 获取未被淘汰的队伍
-     */
+    /** 获取未被淘汰的队伍 */
     getAliveTeam( ) {
         return this.teamList.filter( team => team.isEliminated === false )
+    }
+
+    /** 获取地图是否为solo模式 */
+    isSolo( ) {
+        return this.teamCount > 4
     }
 
 }

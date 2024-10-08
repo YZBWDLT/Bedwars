@@ -2,7 +2,7 @@
     "format_version": 2,
     "header": {
         "name": "量筒的起床战争 行为包",
-        "description": "Bedwars Beh",
+        "description": "仿照Hypixel在基岩版上实现的起床战争！",
         "uuid": "459363a0-9008-4654-a350-496c402f2223",
         "version": [ 1, 0, 0 ],
         "min_engine_version": [ 1, 21, 0 ]

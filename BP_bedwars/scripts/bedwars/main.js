@@ -28,18 +28,9 @@ system.runInterval( () => {
 
         bedwarsEvents.effectFunction();
         if ( map().gameStage === 0 ) {
-            bedwarsEvents.waitingHallFunction();
-            bedwarsEvents.resetMapFunction();
-        }
-        else if ( map().gameStage === 1 ) {
-            bedwarsEvents.waitingHallFunction();
-            bedwarsEvents.mapLoadFunction();
-        }
-        else if ( map().gameStage === 2 ) {
-            bedwarsEvents.waitingHallFunction();
             bedwarsEvents.waitingFunction();
         }
-        else if ( map().gameStage === 3 ) {
+        else if ( map().gameStage === 1 ) {
             bedwarsEvents.magicMilkFunction();
             bedwarsEvents.bedbugFunction();
             bedwarsEvents.dreamDefenderFunction();

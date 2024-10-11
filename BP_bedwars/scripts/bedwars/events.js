@@ -58,13 +58,8 @@ import {
     teamUpgradeShopitems
 } from "./shopitem.js"
 
-/**
- * 【循环类】等待大厅功能，包括：记分板显示、设置出生点，将玩家传送回来
- */
-export function waitingHallFunction( ) {
-
-    /** 记分板显示 */
-    map().waitingScoreboard()
+/** 【循环类】等待时 */
+export function waitingFunction() {
 
     /** 将在外面的玩家传送回来 */
     eachPlayer( player => {
@@ -73,87 +68,92 @@ export function waitingHallFunction( ) {
         }
     } )
 
-}
-
-/**
- * 【循环类】清除原场景功能 | 在开始地图前所进行的地图清除工作
- */
-
-export function resetMapFunction( ) {
-
-    /** 清除地图 */
-    if ( system.currentTick % 2 === 0 ) {
-        map().resetMapCurrentHeight--;
-        constants.overworld.runCommand( `fill 0 ${map().resetMapCurrentHeight} 0 105 ${map().resetMapCurrentHeight} 105 air` );
-        constants.overworld.runCommand( `fill 0 ${map().resetMapCurrentHeight} 0 -105 ${map().resetMapCurrentHeight} 105 air` );
-        constants.overworld.runCommand( `fill 0 ${map().resetMapCurrentHeight} 0 105 ${map().resetMapCurrentHeight} -105 air` );
-        constants.overworld.runCommand( `fill 0 ${map().resetMapCurrentHeight} 0 -105 ${map().resetMapCurrentHeight} -105 air` );
-        /** 清除进程结束后，生成地图 */
-        if ( map().resetMapCurrentHeight <= 0 ) { map().gameStage = 1; map().structureLoadCountdown = 120; }
-    }
-
-}
-
-/**
- * 【循环类】地图加载功能 | 加载地图
- */
-export function mapLoadFunction( ) {
-
-    /** 剩余119刻时加载结构 */
-    if ( map().structureLoadCountdown === 119 ) { map().generateMap() }
-    /** 剩余19刻时加载队伍颜色 */
-    if ( map().structureLoadCountdown === 19 ) { map().teamIslandInit() }
-    /** 剩余0刻时，进入下一阶段 */
-    if ( map().structureLoadCountdown === 0 ) { map().gameStage = 2; map().gameStartCountdown = settings.gameStartWaitingTime; }
-
-    map().structureLoadCountdown--;
-
-}
-
-/**
- * 【循环类】等待功能
- */
-export function waitingFunction() {
-
-    /** 大于规定的人数时，开始倒计时 */
-    if ( getPlayerAmount() >= settings.minWaitingPlayers ) {
-        map().gameStartCountdown--;
-        eachPlayer( player => {
-            if ( map().gameStartCountdown === 399 ) {
-                player.sendMessage( { translate: "message.gameStart", with: [ `20` ] } );
-                player.playSound( "note.hat", { location: player.location } );
-            } else if ( map().gameStartCountdown === 199 ) {
-                player.sendMessage( { translate: "message.gameStart", with: [ `§610` ] } );
-                showTitle( player, `§a10`, "", { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 } );
-                player.playSound( "note.hat", { location: player.location } );
-            } else if ( map().gameStartCountdown < 100 && map().gameStartCountdown % 20 === 19 ) {
-                player.sendMessage( { translate: "message.gameStart", with: [ `§c${tickToSecond( map().gameStartCountdown )}` ] } );
-                showTitle( player, `§c${tickToSecond( map().gameStartCountdown )}`, "", { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 } );
-                player.playSound( "note.hat", { location: player.location } );
+    let loadInfo = map().loadInfo;
+    /** 加载地图流程 */
+    if ( loadInfo.isLoading ) {
+        /** 清除原场景 */
+        if ( loadInfo.clearingLayer !== 0 ) {
+            /** 记分板显示 */
+            map().waitingScoreboard( "§f清除原地图中...§r" );
+            /** 每隔 loadInfo.clearTimePerLayer 刻，清理一层 */
+            if ( system.currentTick % loadInfo.clearTimePerLayer === 0 ) {
+                loadInfo.clearingLayer--;
+                constants.overworld.runCommand( `fill 0 ${loadInfo.clearingLayer} 0 105 ${loadInfo.clearingLayer} 105 air` );
+                constants.overworld.runCommand( `fill 0 ${loadInfo.clearingLayer} 0 -105 ${loadInfo.clearingLayer} 105 air` );
+                constants.overworld.runCommand( `fill 0 ${loadInfo.clearingLayer} 0 105 ${loadInfo.clearingLayer} -105 air` );
+                constants.overworld.runCommand( `fill 0 ${loadInfo.clearingLayer} 0 -105 ${loadInfo.clearingLayer} -105 air` );
             }
-        } )
-
+            /** 清除完毕后，加载结构 */
+            if ( loadInfo.clearingLayer === 0 ) { map().generateMap(); };
+        }
+        /** 加载结构等待 */
+        else if ( loadInfo.structureLoadTime !== 0 ) {
+            /** 记分板显示 */
+            map().waitingScoreboard( "§f生成地图中...§r" );
+            /** 倒计时 */
+            loadInfo.structureLoadTime--;
+            /** 倒计时结束后，设置队伍岛屿颜色与床 */
+            if ( loadInfo.structureLoadTime === 0 ) { map().teamIslandInit() };
+        }
+        /** 设置队伍岛屿颜色与床等待 */
+        else {
+            /** 记分板显示 */
+            map().waitingScoreboard( "§f生成地图中...§r" );
+            /** 倒计时 */
+            loadInfo.structureLoadTime--;
+            /** 倒计时结束后，设置等待时间，并关闭加载状态 */
+            if ( loadInfo.structureLoadTime === 0 ) {
+                loadInfo.isLoading = false;
+                map().gameStartCountdown = settings.gameStartWaitingTime;
+            }
+        }
     }
-
-    /** 人数不足时，且已经开始倒计时，则取消倒计时 */
-    if ( getPlayerAmount() < settings.minWaitingPlayers && map().gameStartCountdown < settings.gameStartWaitingTime ) {
-        map().gameStartCountdown = settings.gameStartWaitingTime;
-        eachPlayer( player => {
-            player.sendMessage( { translate: "message.needsMorePlayer" } );
-            showTitle( player, { translate: "title.needsMorePlayer" }, "", { fadeInDuration: 0, stayDuration: 40, fadeOutDuration: 0 } );
-            player.playSound( "note.hat", { location: player.location } );
-        } )
+    /** 加载地图结束后，等待时 */
+    else {
+        /** 大于规定的人数时，开始倒计时 */
+        if ( getPlayerAmount() >= settings.minWaitingPlayers ) {
+            /** 倒计时 */
+            map().gameStartCountdown--;
+            /** 记分板显示 */
+            map().waitingScoreboard( `§f即将开始： §a${tickToSecond(map().gameStartCountdown)}秒§r` );
+            /** 提醒玩家还有多长时间开始游戏 */
+            eachPlayer( player => {
+                if ( map().gameStartCountdown === 399 ) {
+                    player.sendMessage( { translate: "message.gameStart", with: [ `20` ] } );
+                    player.playSound( "note.hat", { location: player.location } );
+                } else if ( map().gameStartCountdown === 199 ) {
+                    player.sendMessage( { translate: "message.gameStart", with: [ `§610` ] } );
+                    showTitle( player, `§a10`, "", { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 } );
+                    player.playSound( "note.hat", { location: player.location } );
+                } else if ( map().gameStartCountdown < 100 && map().gameStartCountdown % 20 === 19 ) {
+                    player.sendMessage( { translate: "message.gameStart", with: [ `§c${tickToSecond( map().gameStartCountdown )}` ] } );
+                    showTitle( player, `§c${tickToSecond( map().gameStartCountdown )}`, "", { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 } );
+                    player.playSound( "note.hat", { location: player.location } );
+                }
+            } )
+            /** 倒计时结束后，开始游戏 */
+            if ( map().gameStartCountdown === 0 ) { map().gameStart() }
+        }
+        /** 人数不足时，且已经开始倒计时，则取消倒计时 */
+        else if ( map().gameStartCountdown < settings.gameStartWaitingTime ) {
+            /** 重置倒计时 */
+            map().gameStartCountdown = settings.gameStartWaitingTime;
+            /** 提醒玩家倒计时已取消 */
+            eachPlayer( player => {
+                player.sendMessage( { translate: "message.needsMorePlayer" } );
+                showTitle( player, { translate: "title.needsMorePlayer" }, "", { fadeInDuration: 0, stayDuration: 40, fadeOutDuration: 0 } );
+                player.playSound( "note.hat", { location: player.location } );
+            } )
+        }
+        /** 人数不足且未开始倒计时时，显示等待中 */
+        else {
+            /** 记分板显示 */
+            map().waitingScoreboard( "§f等待中...§r" );
+        }
     }
-
-    /** 开始游戏 */
-    if ( map().gameStartCountdown === 0 ) {
-        map().gameStart()
-    }
-
 }
 
-/**
- * 【事件类】玩家破坏方块事件，包括破坏原版方块的检测和破坏床的检测
+/** 【事件类】玩家破坏方块事件，包括破坏原版方块的检测和破坏床的检测
  * @param {PlayerBreakBlockBeforeEvent} event 
  */
 export function playerBreakBlockEvent( event ) {
@@ -442,7 +442,7 @@ export function effectFunction( ) {
         eachPlayer( player => { player.addEffect( "saturation", 1, { amplifier: 9, showParticles: false } ); } )
 
         /** 团队升级 */
-        if ( map().gameStage === 3 ) { eachTeam( team => { team.teamUpgradeEffect( ) } ); };
+        if ( map().gameStage === 1 ) { eachTeam( team => { team.teamUpgradeEffect( ) } ); };
 
     }
 }
@@ -833,7 +833,7 @@ export function playerRejoinEvent( event ) {
     }
 
     /** 等待期间时执行的内容 */
-    if ( map().gameStage < 3 ) { initPlayer( player ) }
+    if ( map().gameStage < 1 ) { initPlayer( player ) }
 
 }
 
@@ -843,7 +843,7 @@ export function playerRejoinEvent( event ) {
  */
 export function playerLeaveEvent( event ) {
     let player = event.player;
-    if ( playerIsValid( player ) && map().gameStage >= 3 ) {
+    if ( playerIsValid( player ) && map().gameStage >= 1 ) {
         player.bedwarsInfo.dataBackup( player )
     }
 }

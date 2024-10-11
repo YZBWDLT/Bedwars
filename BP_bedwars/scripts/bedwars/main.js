@@ -1,13 +1,13 @@
 import { system, world } from "@minecraft/server";
-import * as bedwarsEvents from "./events.js"
-import * as maps from "./maps.js"
+import { regenerateMap, map } from "./maps.js";
+import * as bedwarsEvents from "./events.js";
 
 /** 地图创建 */
-maps.regenerateMap()
+regenerateMap();
 
 /** 起床战争功能 */
 
-if ( world.bedwarsMap !== undefined ) {
+if ( map() !== undefined ) {
     world.beforeEvents.playerBreakBlock.subscribe( event => { bedwarsEvents.playerBreakBlockEvent( event ); } )
     world.afterEvents.itemCompleteUse.subscribe( event => { bedwarsEvents.playerUsePotionAndMagicMilkEvent( event ); } )
     world.afterEvents.projectileHitEntity.subscribe( event => { bedwarsEvents.bedBugEvent( event ); bedwarsEvents.hurtByFireballsEvent( event ) } )
@@ -24,22 +24,22 @@ if ( world.bedwarsMap !== undefined ) {
 }
 
 system.runInterval( () => {
-    if ( world.bedwarsMap !== undefined ) {
+    if ( map !== undefined ) {
 
         bedwarsEvents.effectFunction();
-        if ( maps.map.gameStage === 0 ) {
+        if ( map().gameStage === 0 ) {
             bedwarsEvents.waitingHallFunction();
             bedwarsEvents.resetMapFunction();
         }
-        else if ( maps.map.gameStage === 1 ) {
+        else if ( map().gameStage === 1 ) {
             bedwarsEvents.waitingHallFunction();
             bedwarsEvents.mapLoadFunction();
         }
-        else if ( maps.map.gameStage === 2 ) {
+        else if ( map().gameStage === 2 ) {
             bedwarsEvents.waitingHallFunction();
             bedwarsEvents.waitingFunction();
         }
-        else if ( maps.map.gameStage === 3 ) {
+        else if ( map().gameStage === 3 ) {
             bedwarsEvents.magicMilkFunction();
             bedwarsEvents.bedbugFunction();
             bedwarsEvents.dreamDefenderFunction();

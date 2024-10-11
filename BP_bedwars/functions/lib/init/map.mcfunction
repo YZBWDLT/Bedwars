@@ -14,4 +14,3 @@ structure load hypixel:waiting_hall -12 117 -12
 
 # --- 设置玩家出生点 ---
 setworldspawn 0 121 0
-

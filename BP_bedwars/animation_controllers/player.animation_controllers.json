@@ -1,0 +1,20 @@
+{
+    "format_version": "1.10.0",
+    "animation_controllers": {
+        "controller.animation.player.is_invisibility_test": {
+            "states": {
+                "default": {
+                    "on_entry": [ "@s show_armor" ],
+                    "transitions": [
+                        { "is_invisibility": "query.is_invisible && query.has_any_family('have_team')" }
+                    ]
+                },
+                "is_invisibility": {
+                    "transitions": [
+                        { "default": "!query.is_invisible || !query.has_any_family('have_team')" }
+                    ]
+                }
+            }
+        }
+    }
+}

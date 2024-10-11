@@ -5,7 +5,9 @@
             "identifier": "minecraft:player",
             "is_spawnable": false,
             "is_summonable": false,
-            "is_experimental": false
+            "is_experimental": false,
+            "scripts": { "animate": [ "is_invisibility_test" ] },
+            "animations": { "is_invisibility_test": "controller.animation.player.is_invisibility_test" }
         },
 
         "components": {

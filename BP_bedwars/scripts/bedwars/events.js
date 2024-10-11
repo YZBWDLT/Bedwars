@@ -20,11 +20,43 @@ import {
     PlayerSpawnAfterEvent,
     ItemUseOnAfterEvent,
     ItemUseOnBeforeEvent,
-    ScriptEventCommandMessageAfterEvent
+    ScriptEventCommandMessageAfterEvent,
+    Player
 } from "@minecraft/server";
 import * as constants from "./constants.js"
-import * as methods from "./methods.js"
-import * as maps from "./maps.js"
+import {
+    copyPosition,
+    eachPlayer,
+    eachTeam,
+    eachValidPlayer,
+    getEnchantmentLevel,
+    getPlayerAmount,
+    getPlayerNearby,
+    initPlayer,
+    playerIsAlive,
+    playerIsValid,
+    removeItem,
+    replaceEquipmentItem,
+    teamNumberToTeamName,
+    tickToSecond,
+    warnPlayer,
+    settings,
+    showTitle,
+    BedwarsPlayer,
+    spawnItem
+} from "./methods"
+import {
+    map,
+    regenerateMap,
+    validMapsFor2Teams,
+    validMapsFor4Teams,
+    validMapsFor8Teams
+} from "./maps.js"
+import {
+    blocksAndItemsShopitems,
+    weaponAndArmorShopitems,
+    teamUpgradeShopitems
+} from "./shopitem.js"
 
 /**
  * 【循环类】等待大厅功能，包括：记分板显示、设置出生点，将玩家传送回来
@@ -32,10 +64,10 @@ import * as maps from "./maps.js"
 export function waitingHallFunction( ) {
 
     /** 记分板显示 */
-    maps.map.waitingScoreboard()
+    map().waitingScoreboard()
 
     /** 将在外面的玩家传送回来 */
-    methods.eachPlayer( player => {
+    eachPlayer( player => {
         if ( player.runCommand( `execute if entity @s[x=-12,y=119,z=-12,dx=25,dy=10,dz=25]` ).successCount === 0 && player.getGameMode() !== "creative" ) {
             player.setGameMode( "adventure" ); player.teleport( { x:0, y:121, z:0 } )
         }
@@ -51,13 +83,13 @@ export function resetMapFunction( ) {
 
     /** 清除地图 */
     if ( system.currentTick % 2 === 0 ) {
-        maps.map.resetMapCurrentHeight--;
-        constants.overworld.runCommand( `fill 0 ${maps.map.resetMapCurrentHeight} 0 105 ${maps.map.resetMapCurrentHeight} 105 air` );
-        constants.overworld.runCommand( `fill 0 ${maps.map.resetMapCurrentHeight} 0 -105 ${maps.map.resetMapCurrentHeight} 105 air` );
-        constants.overworld.runCommand( `fill 0 ${maps.map.resetMapCurrentHeight} 0 105 ${maps.map.resetMapCurrentHeight} -105 air` );
-        constants.overworld.runCommand( `fill 0 ${maps.map.resetMapCurrentHeight} 0 -105 ${maps.map.resetMapCurrentHeight} -105 air` );
+        map().resetMapCurrentHeight--;
+        constants.overworld.runCommand( `fill 0 ${map().resetMapCurrentHeight} 0 105 ${map().resetMapCurrentHeight} 105 air` );
+        constants.overworld.runCommand( `fill 0 ${map().resetMapCurrentHeight} 0 -105 ${map().resetMapCurrentHeight} 105 air` );
+        constants.overworld.runCommand( `fill 0 ${map().resetMapCurrentHeight} 0 105 ${map().resetMapCurrentHeight} -105 air` );
+        constants.overworld.runCommand( `fill 0 ${map().resetMapCurrentHeight} 0 -105 ${map().resetMapCurrentHeight} -105 air` );
         /** 清除进程结束后，生成地图 */
-        if ( maps.map.resetMapCurrentHeight <= 0 ) { maps.map.gameStage = 1; maps.map.structureLoadCountdown = 120; }
+        if ( map().resetMapCurrentHeight <= 0 ) { map().gameStage = 1; map().structureLoadCountdown = 120; }
     }
 
 }
@@ -68,13 +100,13 @@ export function resetMapFunction( ) {
 export function mapLoadFunction( ) {
 
     /** 剩余119刻时加载结构 */
-    if ( maps.map.structureLoadCountdown === 119 ) { maps.map.generateMap() }
+    if ( map().structureLoadCountdown === 119 ) { map().generateMap() }
     /** 剩余19刻时加载队伍颜色 */
-    if ( maps.map.structureLoadCountdown === 19 ) { maps.map.teamIslandInit() }
+    if ( map().structureLoadCountdown === 19 ) { map().teamIslandInit() }
     /** 剩余0刻时，进入下一阶段 */
-    if ( maps.map.structureLoadCountdown === 0 ) { maps.map.gameStage = 2; maps.map.gameStartCountdown = methods.settings.gameStartWaitingTime; }
+    if ( map().structureLoadCountdown === 0 ) { map().gameStage = 2; map().gameStartCountdown = settings.gameStartWaitingTime; }
 
-    maps.map.structureLoadCountdown--;
+    map().structureLoadCountdown--;
 
 }
 
@@ -84,19 +116,19 @@ export function mapLoadFunction( ) {
 export function waitingFunction() {
 
     /** 大于规定的人数时，开始倒计时 */
-    if ( methods.getPlayerAmount() >= methods.settings.minWaitingPlayers ) {
-        maps.map.gameStartCountdown--;
-        methods.eachPlayer( player => {
-            if ( maps.map.gameStartCountdown === 399 ) {
+    if ( getPlayerAmount() >= settings.minWaitingPlayers ) {
+        map().gameStartCountdown--;
+        eachPlayer( player => {
+            if ( map().gameStartCountdown === 399 ) {
                 player.sendMessage( { translate: "message.gameStart", with: [ `20` ] } );
                 player.playSound( "note.hat", { location: player.location } );
-            } else if ( maps.map.gameStartCountdown === 199 ) {
+            } else if ( map().gameStartCountdown === 199 ) {
                 player.sendMessage( { translate: "message.gameStart", with: [ `§610` ] } );
-                methods.showTitle( player, `§a10`, "", { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 } );
+                showTitle( player, `§a10`, "", { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 } );
                 player.playSound( "note.hat", { location: player.location } );
-            } else if ( maps.map.gameStartCountdown < 100 && maps.map.gameStartCountdown % 20 === 19 ) {
-                player.sendMessage( { translate: "message.gameStart", with: [ `§c${methods.tickToSecond( maps.map.gameStartCountdown )}` ] } );
-                methods.showTitle( player, `§c${methods.tickToSecond( maps.map.gameStartCountdown )}`, "", { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 } );
+            } else if ( map().gameStartCountdown < 100 && map().gameStartCountdown % 20 === 19 ) {
+                player.sendMessage( { translate: "message.gameStart", with: [ `§c${tickToSecond( map().gameStartCountdown )}` ] } );
+                showTitle( player, `§c${tickToSecond( map().gameStartCountdown )}`, "", { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 } );
                 player.playSound( "note.hat", { location: player.location } );
             }
         } )
@@ -104,18 +136,18 @@ export function waitingFunction() {
     }
 
     /** 人数不足时，且已经开始倒计时，则取消倒计时 */
-    if ( methods.getPlayerAmount() < methods.settings.minWaitingPlayers && maps.map.gameStartCountdown < methods.settings.gameStartWaitingTime ) {
-        maps.map.gameStartCountdown = methods.settings.gameStartWaitingTime;
-        methods.eachPlayer( player => {
+    if ( getPlayerAmount() < settings.minWaitingPlayers && map().gameStartCountdown < settings.gameStartWaitingTime ) {
+        map().gameStartCountdown = settings.gameStartWaitingTime;
+        eachPlayer( player => {
             player.sendMessage( { translate: "message.needsMorePlayer" } );
-            methods.showTitle( player, { translate: "title.needsMorePlayer" }, "", { fadeInDuration: 0, stayDuration: 40, fadeOutDuration: 0 } );
+            showTitle( player, { translate: "title.needsMorePlayer" }, "", { fadeInDuration: 0, stayDuration: 40, fadeOutDuration: 0 } );
             player.playSound( "note.hat", { location: player.location } );
         } )
     }
 
     /** 开始游戏 */
-    if ( maps.map.gameStartCountdown === 0 ) {
-        maps.map.gameStart()
+    if ( map().gameStartCountdown === 0 ) {
+        map().gameStart()
     }
 
 }
@@ -129,10 +161,10 @@ export function playerBreakBlockEvent( event ) {
     let blockId = event.block.typeId;
 
     // 如果玩家破坏的方块是原版方块，且不属于在 constants.breakableVanillaBlocksByPlayer 数组中的可破坏方块，则防止玩家破坏方块
-    if ( blockId.includes( "minecraft:" ) && !constants.breakableVanillaBlocksByPlayer.includes( blockId ) && !methods.settings.creativePlayerCanBreakBlocks ) {
+    if ( blockId.includes( "minecraft:" ) && !constants.breakableVanillaBlocksByPlayer.includes( blockId ) && !settings.creativePlayerCanBreakBlocks ) {
         let breaker = event.player;
         system.run( () => {
-            methods.warnPlayer( breaker, { translate: "message.breakingInvalidBlocks" } );
+            warnPlayer( breaker, { translate: "message.breakingInvalidBlocks" } );
         } );
         event.cancel = true;
     }
@@ -141,20 +173,20 @@ export function playerBreakBlockEvent( event ) {
     if ( event.block.typeId === "minecraft:bed" ) {
         /** 获取基本信息 */
         let breaker = event.player;
-        /** @type {methods.BedwarsPlayer}*/ let breakerInfo = breaker.bedwarsInfo;
-        /** @type {methods.BedwarsTeam[]} */ let teamList = world.bedwarsMap.teamList
+        /** @type {BedwarsPlayer}*/ let breakerInfo = breaker.bedwarsInfo;
+        let teamList = map().teamList;
         system.run( () => {
             /** 获取被破坏的床所属的队伍 | 可能返回 undefined */
             let team = teamList.filter( team => { return constants.overworld.getBlock( team.bedInfo.pos ).typeId === "minecraft:air" && team.bedInfo.isExist === true } )[0];
             if ( team !== undefined ){
                 /** 被无信息的玩家破坏时 */
-                if ( !methods.playerIsValid( breaker ) || breakerInfo.team === undefined ) { team.bedDestroyedByInvalidPlayer( breaker ) }
+                if ( !playerIsValid( breaker ) || breakerInfo.team === undefined ) { team.bedDestroyedByInvalidPlayer( breaker ) }
                 /** 被自己队伍的玩家破坏时 */
                 else if ( breakerInfo.team === team.id ) { team.bedDestroyedBySelfPlayer( breaker ); }
                 /** 被其他队的玩家破坏时 */
                 else { team.bedDestroyedByOtherPlayer( breaker ); };
                 // 移除床的掉落物
-                methods.removeItem( "minecraft:bed" );
+                removeItem( "minecraft:bed" );
             }
         } )
     }
@@ -178,7 +210,7 @@ export function playerUsePotionAndMagicMilkEvent( event ) {
             event.source.triggerEvent( "hide_armor" )
             break;
         case "bedwars:magic_milk": 
-            if ( methods.playerIsValid( event.source ) ) {
+            if ( playerIsValid( event.source ) ) {
                 event.source.bedwarsInfo.magicMilk.enabled = true;
                 event.source.bedwarsInfo.magicMilk.remainingTime = 600;
             }
@@ -190,8 +222,8 @@ export function playerUsePotionAndMagicMilkEvent( event ) {
  * 【循环类】魔法牛奶计时器
  */
 export function magicMilkFunction( ) {
-    methods.eachValidPlayer( player => { if ( player.bedwarsInfo.magicMilk.enabled ) {
-        /** @type {methods.BedwarsPlayer} */ let playerInfo = player.bedwarsInfo;
+    eachValidPlayer( player => { if ( player.bedwarsInfo.magicMilk.enabled ) {
+        /** @type {BedwarsPlayer} */ let playerInfo = player.bedwarsInfo;
         playerInfo.magicMilk.remainingTime--;
         if ( playerInfo.magicMilk.remainingTime <= 0 ) {
             player.sendMessage( { translate: "message.magicMilkTimeOut" } )
@@ -210,8 +242,8 @@ export function bedBugEvent( event ) {
         let silverfish = event.dimension.spawnEntity( "minecraft:silverfish", event.location ); 
         let thrower = event.source
 
-        if ( methods.playerIsValid( thrower ) ) {
-            /** @type {methods.BedwarsPlayer} */let throwerInfo = thrower.bedwarsInfo;
+        if ( playerIsValid( thrower ) ) {
+            /** @type {BedwarsPlayer} */let throwerInfo = thrower.bedwarsInfo;
 
             /** 设置为玩家的队伍，并设置蠹虫的消失时间和名字的时间条 */
             silverfish.triggerEvent( `team_${throwerInfo.team}` );
@@ -251,8 +283,8 @@ export function dreamDefenderEvent( event ) {
             let ironGolem = event.block.dimension.spawnEntity( "minecraft:iron_golem", placePosition ); 
             let placer = event.source
             placer.getGameMode() === "creative" ? null : placer.runCommand( `clear @s bedwars:dream_defender -1 1` ) ;
-            if ( methods.playerIsValid( placer ) ) {
-                /** @type {methods.BedwarsPlayer} */let placerInfo = placer.bedwarsInfo;
+            if ( playerIsValid( placer ) ) {
+                /** @type {BedwarsPlayer} */let placerInfo = placer.bedwarsInfo;
                 /** 设置为玩家的队伍，并设置铁傀儡的消失时间和名字的时间条 */
                 ironGolem.triggerEvent( `team_${placerInfo.team}` );
                 ironGolem.team = placerInfo.getTeam( )
@@ -272,7 +304,7 @@ export function dreamDefenderEvent( event ) {
  * @param {ItemUseOnBeforeEvent} event
  */
 export function playerUseItemOnHeightLimitEvent( event ) {
-    if ( event.block.location.y > maps.map.highestBlockLimit && event.source.getGameMode() !== "creative" ) {
+    if ( event.block.location.y > map().highestBlockLimit && event.source.getGameMode() !== "creative" ) {
         event.cancel = true;
         event.source.sendMessage( { translate: "§c达到建筑高度限制！" } )
     }
@@ -295,11 +327,11 @@ export function dreamDefenderFunction( ) {
 export function bridgeEggFunction( ) {
     constants.overworld.getEntities( { type: "bedwars:bridge_egg" } ).forEach( bridgeEgg => {
         /** @type {Entity} */ let owner = bridgeEgg.getComponent( "minecraft:projectile" ).owner;
-        if ( methods.playerIsValid( owner ) ) {
-            /** @type {methods.BedwarsPlayer} */ let ownerInfo = owner.bedwarsInfo;
+        if ( playerIsValid( owner ) ) {
+            /** @type {BedwarsPlayer} */ let ownerInfo = owner.bedwarsInfo;
             for (let x = -1; x <= 1; x++) { for (let z = -1; z <= 1; z++) { if ( Math.random() < 0.85 ) {
                 bridgeEgg.runCommand(`fill ~${x}~-2~${z} ~${x}~-2~${z} bedwars:${ownerInfo.team}_wool keep`);
-                methods.eachPlayer( player => { player.playSound( "random.pop", { location: bridgeEgg.location } ) } )
+                eachPlayer( player => { player.playSound( "random.pop", { location: bridgeEgg.location } ) } )
             } } }
         }
     } )
@@ -331,9 +363,9 @@ export function playerUseWaterBucketEvent( event ) {
  * 【循环类】玩家装备检测与补充，包括剑斧附魔检测、盔甲存在与附魔检测、剑镐斧剪刀供应
  */
 export function equipmentFunction( ) {
-    methods.eachPlayer( player => { if ( methods.playerIsAlive( player ) ) {
+    eachPlayer( player => { if ( playerIsAlive( player ) ) {
 
-        /** @type {methods.BedwarsPlayer} */ let playerInfo = player.bedwarsInfo;
+        /** @type {BedwarsPlayer} */ let playerInfo = player.bedwarsInfo;
 
         /** 剑、斧附魔检测器 */
         if ( playerInfo.getTeam( ).teamUpgrade.sharpenedSwords === true ) {
@@ -344,17 +376,17 @@ export function equipmentFunction( ) {
         let playerEquipment = player.getComponent( "minecraft:equippable" );
         let enchantmentLevel = playerInfo.getTeam( ).teamUpgrade.reinforcedArmor
         let equipmentType = ( ) => { switch ( playerInfo.equipment.armor ) { case 2: return "chainmail"; case 3: return "iron"; case 4: return "diamond"; default: return `${playerInfo.team}`; } }
-        if ( playerEquipment.getEquipment( "Head" ) === undefined || methods.getEnchantmentLevel( player, "Head", "protection" ) !== enchantmentLevel ) {
-            methods.replaceEquipmentItem( player, `bedwars:${playerInfo.team}_helmet`, "Head", { itemLock: "slot", enchantments: [ { id: "protection", level: enchantmentLevel } ] } )
+        if ( playerEquipment.getEquipment( "Head" ) === undefined || getEnchantmentLevel( player, "Head", "protection" ) !== enchantmentLevel ) {
+            replaceEquipmentItem( player, `bedwars:${playerInfo.team}_helmet`, "Head", { itemLock: "slot", enchantments: [ { id: "protection", level: enchantmentLevel } ] } )
         }
-        if ( playerEquipment.getEquipment( "Chest" ) === undefined || methods.getEnchantmentLevel( player, "Chest", "protection" ) !== enchantmentLevel ) {
-            methods.replaceEquipmentItem( player, `bedwars:${playerInfo.team}_chestplate`, "Chest", { itemLock: "slot", enchantments: [ { id: "protection", level: enchantmentLevel } ] } )
+        if ( playerEquipment.getEquipment( "Chest" ) === undefined || getEnchantmentLevel( player, "Chest", "protection" ) !== enchantmentLevel ) {
+            replaceEquipmentItem( player, `bedwars:${playerInfo.team}_chestplate`, "Chest", { itemLock: "slot", enchantments: [ { id: "protection", level: enchantmentLevel } ] } )
         }
-        if ( playerEquipment.getEquipment( "Legs" ) === undefined || methods.getEnchantmentLevel( player, "Legs", "protection" ) !== enchantmentLevel || playerEquipment.getEquipment( "Legs" ).typeId !== `bedwars:${equipmentType()}_leggings` ) {
-            methods.replaceEquipmentItem( player, `bedwars:${equipmentType()}_leggings`, "Legs", { itemLock: "slot", enchantments: [ { id: "protection", level: enchantmentLevel } ] } )
+        if ( playerEquipment.getEquipment( "Legs" ) === undefined || getEnchantmentLevel( player, "Legs", "protection" ) !== enchantmentLevel || playerEquipment.getEquipment( "Legs" ).typeId !== `bedwars:${equipmentType()}_leggings` ) {
+            replaceEquipmentItem( player, `bedwars:${equipmentType()}_leggings`, "Legs", { itemLock: "slot", enchantments: [ { id: "protection", level: enchantmentLevel } ] } )
         }
-        if ( playerEquipment.getEquipment( "Feet" ) === undefined || methods.getEnchantmentLevel( player, "Feet", "protection" ) !== enchantmentLevel || playerEquipment.getEquipment( "Feet" ).typeId !== `bedwars:${equipmentType()}_boots` ) {
-            methods.replaceEquipmentItem( player, `bedwars:${equipmentType()}_boots`, "Feet", { itemLock: "slot", enchantments: [ { id: "protection", level: enchantmentLevel } ] } )
+        if ( playerEquipment.getEquipment( "Feet" ) === undefined || getEnchantmentLevel( player, "Feet", "protection" ) !== enchantmentLevel || playerEquipment.getEquipment( "Feet" ).typeId !== `bedwars:${equipmentType()}_boots` ) {
+            replaceEquipmentItem( player, `bedwars:${equipmentType()}_boots`, "Feet", { itemLock: "slot", enchantments: [ { id: "protection", level: enchantmentLevel } ] } )
         }
 
         /** 剑镐斧剪刀供应器 */
@@ -377,11 +409,11 @@ export function explosionEvents( event ) {
     /** 在可破坏的方块列表中，如果有属于 constants.dropsFromExplosion 的方块，则在方块位置生成掉落物 */
     let blockList = [];
     event.getImpactedBlocks().filter( block => { if ( world.gameRules.tntExplosionDropDecay === false && event.source.typeId === "minecraft:tnt" ) { return constants.dropsFromExplosion.includes( block.typeId ) } else { return constants.dropsFromExplosion.includes( block.typeId ) && Math.random() < 0.33 } } ).forEach( block => { blockList.push( { id: block.typeId, pos: block.location } ) } );
-    system.run( () => { blockList.forEach( block => { methods.spawnItem( block.pos, block.id, { clearVelocity: false } ); } ); } )
+    system.run( () => { blockList.forEach( block => { spawnItem( block.pos, block.id, { clearVelocity: false } ); } ); } )
 
     /** 火球跳：如果爆炸发生在玩家 2.5 格附近，则给玩家一个 y 方向的速度 */
-    let pos = methods.copyPosition( event.source.location )
-    system.run( () => { let players = methods.getPlayerNearby( pos, 2.5 ); if ( players.length !== 0 ) { players.forEach( player => { player.applyKnockback( 0, 0, 0, 1 + 0.5 * Math.random() ) } ) } } )
+    let pos = copyPosition( event.source.location )
+    system.run( () => { let players = getPlayerNearby( pos, 2.5 ); if ( players.length !== 0 ) { players.forEach( player => { player.applyKnockback( 0, 0, 0, 1 + 0.5 * Math.random() ) } ) } } )
 
 }
 
@@ -390,11 +422,11 @@ export function explosionEvents( event ) {
  */
 export function explosionFunction( ) {
     constants.overworld.getEntities( { type: "bedwars:fireball" } ).forEach( fireball => {
-        let playerNearFireball = methods.getPlayerNearby( fireball.location, 2.5 );
+        let playerNearFireball = getPlayerNearby( fireball.location, 2.5 );
         if ( playerNearFireball.length !== 0 ) { playerNearFireball.forEach( player => { player.addEffect( "resistance", 5, { showParticles: false, amplifier: 3 } ) } ) } 
     } )
     constants.overworld.getEntities( { type: "minecraft:tnt" } ).forEach( tnt => {
-        let playerNeartnt = methods.getPlayerNearby( tnt.location, 2.5 );
+        let playerNeartnt = getPlayerNearby( tnt.location, 2.5 );
         if ( playerNeartnt.length !== 0 ) { playerNeartnt.forEach( player => { player.addEffect( "resistance", 5, { showParticles: false, amplifier: 3 } ) } ) } 
     } )
 }
@@ -407,10 +439,10 @@ export function effectFunction( ) {
     if ( system.currentTick % 20 === 0 ) {
 
         /** 全局：饱和效果 */
-        methods.eachPlayer( player => { player.addEffect( "saturation", 1, { amplifier: 9, showParticles: false } ); } )
+        eachPlayer( player => { player.addEffect( "saturation", 1, { amplifier: 9, showParticles: false } ); } )
 
         /** 团队升级 */
-        if ( world.bedwarsMap.gameStage === 3 ) { methods.eachTeam( team => { team.teamUpgradeEffect( ) } ); };
+        if ( map().gameStage === 3 ) { eachTeam( team => { team.teamUpgradeEffect( ) } ); };
 
     }
 }
@@ -421,15 +453,15 @@ export function effectFunction( ) {
 export function trapFunction( ) {
 
     /** 陷阱信息在玩家物品栏的显示 */
-    methods.eachPlayer( player => { if ( methods.playerIsAlive( player ) ) { player.bedwarsInfo.showTrapsInInventory() } } ) 
+    eachPlayer( player => { if ( playerIsAlive( player ) ) { player.bedwarsInfo.showTrapsInInventory() } } ) 
 
     /** 陷阱运行 */
-    methods.eachTeam( team => {
+    eachTeam( team => {
     
         /** ===== 队伍的陷阱冷却控制 ===== */
-        if ( team.trapInfo.isEnabled === true ) {
-            team.trapInfo.value--;
-            if ( team.trapInfo.value <= 0 ) { team.trapInfo.isEnabled = false; team.trapInfo.value = 600; }
+        if ( team.trapInfo.cooldownEnabled === true ) {
+            team.trapInfo.cooldown--;
+            if ( team.trapInfo.cooldown <= 0 ) { team.trapInfo.cooldownEnabled = false; team.trapInfo.cooldown = 600; }
         };
     
         /** ===== 陷阱触发 ===== */
@@ -437,12 +469,12 @@ export function trapFunction( ) {
         /** 获取入侵的敌人信息 */
         let getEnemy = () => {
             /** 获取床 10 格范围内所有玩家 */
-            let playersNearBed = methods.getPlayerNearby( team.bedInfo.pos, 10 );
+            let playersNearBed = getPlayerNearby( team.bedInfo.pos, 10 );
             /** 不是无玩家的情况 */
             if ( playersNearBed.length !== 0 ) {
                 let enemies = playersNearBed.filter( player => {
-                    /** @type {methods.BedwarsPlayer} */ let playerInfo = player.bedwarsInfo
-                    return methods.playerIsAlive( player ) /** 不是无效玩家且不是已死亡的玩家 */
+                    /** @type {BedwarsPlayer} */ let playerInfo = player.bedwarsInfo
+                    return playerIsAlive( player ) /** 不是无效玩家且不是已死亡的玩家 */
                     && playerInfo.team !== team.id /** 不是本队玩家 */
                     && playerInfo.magicMilk.enabled !== true /** 不是喝了魔法牛奶的玩家 */
                 } )
@@ -454,24 +486,28 @@ export function trapFunction( ) {
         /** 当：1. 该队伍的一号位存在陷阱；2. 该队伍的陷阱不处于冷却状态； 3. 存在未喝魔法牛奶的未死亡合法敌人，
          *  则：触发陷阱
          */
-        if ( team.teamUpgrade.trap1Type !== "" && team.trapInfo.isEnabled === false && enemy !== undefined ) {
+        if ( team.teamUpgrade.trap1Type !== "" && team.trapInfo.cooldownEnabled === false && enemy !== undefined ) {
             team.triggerTrap( enemy )
         }
     
         /** ===== 警报陷阱 ===== */
-        if ( team.trapInfo.isAlarming === true ) {
+        if ( team.trapInfo.isAlarming === true && system.currentTick % 2 === 0 ) {
+            /** 对特定位置的特定玩家加以1.5和1.7交叉音调的警报音效
+             * @param {Player} player 警报玩家
+             * @param {import("@minecraft/server").Vector3} pos 警报位置
+             */
+            let alarmSound = ( player, pos ) => {
+                player.playSound( "note.pling", { pitch: 1.5 + 0.2 * ( team.trapInfo.alarmedTimes % 2 ), location: pos } ) /** 给床附近的人以警告 */
+            }
+            /** 对床边的所有玩家（包括敌人）和本队所有玩家（无论在何处）加以警报 */
+            eachPlayer( player => { alarmSound( player, team.bedInfo.pos ) } )
+            team.getTeamMember().forEach( player => { alarmSound( player, player.location ) } )
+            /** 记录警报次数，警报超过56次则关闭警报 */
             team.trapInfo.alarmedTimes++;
-            methods.eachPlayer( player => {
-                if ( team.trapInfo.alarmedTimes % 4 === 0 ) {
-                    player.playSound( "note.pling", { pitch: 1.5, location: team.bedInfo.pos } ) /** 给床附近的人以警告 */
-                    team.getTeamMember().forEach( teamPlayer => { teamPlayer.playSound( "note.pling", { pitch: 1.5, location: teamPlayer.location } ) } )
-                }
-                else if ( team.trapInfo.alarmedTimes % 4 === 2 ) {
-                    player.playSound( "note.pling", { pitch: 1.7, location: team.bedInfo.pos } )
-                    team.getTeamMember().forEach( teamPlayer => { teamPlayer.playSound( "note.pling", { pitch: 1.7, location: teamPlayer.location } ) } )
-                }
-            } )
-            if ( team.trapInfo.alarmedTimes >= 112 ) { team.trapInfo.isAlarming = false; team.trapInfo.alarmedTimes = 0; }
+            if ( team.trapInfo.alarmedTimes >= 56 ) {
+                team.trapInfo.isAlarming = false;
+                team.trapInfo.alarmedTimes = 0;
+            }
         };
     } )
 
@@ -483,49 +519,49 @@ export function trapFunction( ) {
 export function spawnResourceFunction( ) {
     
     /** 各队伍的资源生成 | 铁锭、金锭、绿宝石 | 受设置“允许无效队伍产生资源”的影响 */
-    methods.eachTeam( team => { if ( methods.settings.invalidTeamCouldSpawnResources === true || ( methods.settings.invalidTeamCouldSpawnResources === false && team.isValid === true ) ) {
+    eachTeam( team => { if ( settings.invalidTeamCouldSpawnResources === true || ( settings.invalidTeamCouldSpawnResources === false && team.isValid === true ) ) {
         if ( team.spawnerInfo.ironCountdown <= 0 ) {
-            for ( let i = 0; i < maps.map.spawnerInfo.ironSpawnTimes; i++ ) { team.spawnResources( "iron", maps.map.spawnerInfo.distributeResource, maps.map.spawnerInfo.clearResourceVelocity ); }
-            team.spawnerInfo.ironCountdown = Math.floor( maps.map.spawnerInfo.ironInterval * maps.map.spawnerInfo.ironSpawnTimes / team.getForgeSpeedBonus() );
+            for ( let i = 0; i < map().spawnerInfo.ironSpawnTimes; i++ ) { team.spawnResources( "iron" ); }
+            team.spawnerInfo.ironCountdown = Math.floor( map().spawnerInfo.ironInterval * map().spawnerInfo.ironSpawnTimes / team.getForgeBonus() );
         };
         if ( team.spawnerInfo.goldCountdown <= 0 ) {
-            team.spawnResources( "gold", maps.map.spawnerInfo.distributeResource, maps.map.spawnerInfo.clearResourceVelocity );
-            team.spawnerInfo.goldCountdown = Math.floor( maps.map.spawnerInfo.goldInterval / team.getForgeSpeedBonus() );
+            team.spawnResources( "gold" );
+            team.spawnerInfo.goldCountdown = Math.floor( map().spawnerInfo.goldInterval / team.getForgeBonus() );
         };
         if ( team.spawnerInfo.emeraldCountdown <= 0 ) {
-            team.spawnResources( "emerald", maps.map.spawnerInfo.distributeResource, maps.map.spawnerInfo.clearResourceVelocity );
-            team.spawnerInfo.emeraldCountdown = maps.map.spawnerInfo.emeraldInterval;
+            team.spawnResources( "emerald" );
+            team.spawnerInfo.emeraldCountdown = map().spawnerInfo.emeraldInterval;
         }
         team.spawnerInfo.ironCountdown--;
         team.spawnerInfo.goldCountdown--;
         team.spawnerInfo.emeraldCountdown--;
         /** 检测玩家在资源点附近时，则清除使用次数 */
-        if ( methods.getPlayerNearby( team.spawnerInfo.spawnerPos, 2.5 ).filter( player => methods.playerIsAlive(player) ).length !== 0 ) {
+        if ( getPlayerNearby( team.spawnerInfo.spawnerPos, 2.5 ).filter( player => playerIsAlive(player) ).length !== 0 ) {
             team.resetSpawnerSpawnedTimes();
         };
     } } )
 
     /** 世界资源生成 | 钻石点、绿宝石点 */
-    if ( maps.map.spawnerInfo.diamondCountdown <= 0 ) {
-        maps.map.spawnResources( "diamond" );
-        maps.map.spawnerInfo.diamondCountdown = maps.map.spawnerInfo.diamondInterval - 10 * 20 * maps.map.spawnerInfo.diamondLevel ;
+    if ( map().spawnerInfo.diamondCountdown <= 0 ) {
+        map().spawnResources( "diamond" );
+        map().spawnerInfo.diamondCountdown = map().spawnerInfo.diamondInterval - 10 * 20 * map().spawnerInfo.diamondLevel ;
     };
-    if ( maps.map.spawnerInfo.emeraldCountdown <= 0 ) {
-        maps.map.spawnResources( "emerald" );
-        maps.map.spawnerInfo.emeraldCountdown = maps.map.spawnerInfo.emeraldInterval - 10 * 20 * maps.map.spawnerInfo.emeraldLevel ;
+    if ( map().spawnerInfo.emeraldCountdown <= 0 ) {
+        map().spawnResources( "emerald" );
+        map().spawnerInfo.emeraldCountdown = map().spawnerInfo.emeraldInterval - 10 * 20 * map().spawnerInfo.emeraldLevel ;
     };
-    maps.map.spawnerInfo.diamondCountdown--;
-    maps.map.spawnerInfo.emeraldCountdown--;
+    map().spawnerInfo.diamondCountdown--;
+    map().spawnerInfo.emeraldCountdown--;
 
     /** 显示资源点动画和生成信息 */
-    maps.map.showTextAndAnimation( );
+    map().showTextAndAnimation( );
 
     /** 检测玩家在资源点附近时，则清除使用次数 */
-    maps.map.spawnerInfo.diamondInfo.forEach( spawner => {
-        if ( methods.getPlayerNearby( spawner.pos, 2.5 ).length !== 0 ) { maps.map.resetSpawnerSpawnedTimes( spawner.pos ); };
+    map().spawnerInfo.diamondInfo.forEach( spawner => {
+        if ( getPlayerNearby( spawner.pos, 2.5 ).length !== 0 ) { map().resetSpawnerSpawnedTimes( spawner.pos ); };
     } );
-    maps.map.spawnerInfo.emeraldInfo.forEach( spawner => {
-        if ( methods.getPlayerNearby( spawner.pos, 2.5 ).length !== 0 ) { maps.map.resetSpawnerSpawnedTimes( spawner.pos ); };
+    map().spawnerInfo.emeraldInfo.forEach( spawner => {
+        if ( getPlayerNearby( spawner.pos, 2.5 ).length !== 0 ) { map().resetSpawnerSpawnedTimes( spawner.pos ); };
     } );
 
 }
@@ -537,7 +573,7 @@ export function tradeFunction() {
 
     /** 当玩家在商人3格以内时，并且商人在玩家视角之中时，设置其所有物品为itemLock的，以防止玩家将物品放进商人背包之中 */
 
-    methods.eachPlayer( player => {
+    eachPlayer( player => {
         let haveTraderNearby = player.runCommand( "execute if entity @e[r=3.5,type=bedwars:trader]" ).successCount === 1
         let haveTraderInView = player.getEntitiesFromViewDirection( { type: "bedwars:trader", maxDistance: 3.5 } )
         let alwaysLockInInventory = [ "bedwars:wooden_sword", "bedwars:wooden_pickaxe", "bedwars:iron_pickaxe", "bedwars:golden_pickaxe", "bedwars:diamond_pickaxe", "bedwars:wooden_axe", "bedwars:stone_axe", "bedwars:iron_axe", "bedwars:diamond_axe", "bedwars:shears"  ]
@@ -561,15 +597,15 @@ export function tradeFunction() {
     
     
     /** 商人填充物品 */
-    for ( let i = 0; i < methods.blocksAndItemsShopitems.length; i++ ) { methods.blocksAndItemsShopitems[i].setTraderItem(i) };
-    for ( let i = 0; i < methods.weaponAndArmorShopitems.length; i++ ) { methods.weaponAndArmorShopitems[i].setTraderItem(i) };
-    for ( let i = 0; i < methods.teamUpgradeShopitems.length; i++ ) { methods.teamUpgradeShopitems[i].setTraderItem(i) };
+    for ( let i = 0; i < blocksAndItemsShopitems.length; i++ ) { blocksAndItemsShopitems[i].setTraderItem(i) };
+    for ( let i = 0; i < weaponAndArmorShopitems.length; i++ ) { weaponAndArmorShopitems[i].setTraderItem(i) };
+    for ( let i = 0; i < teamUpgradeShopitems.length; i++ ) { teamUpgradeShopitems[i].setTraderItem(i) };
     
     /** 玩家购买物品 */
-    methods.eachPlayer( player => {
-        methods.blocksAndItemsShopitems.forEach( item => { item.playerPurchaseItems( player ) } )
-        methods.weaponAndArmorShopitems.forEach( item => { item.playerPurchaseItems( player ) } )
-        methods.teamUpgradeShopitems.forEach( item => { item.playerPurchaseItems( player ) } )
+    eachPlayer( player => {
+        blocksAndItemsShopitems.forEach( item => { item.playerPurchaseItems( player ) } )
+        weaponAndArmorShopitems.forEach( item => { item.playerPurchaseItems( player ) } )
+        teamUpgradeShopitems.forEach( item => { item.playerPurchaseItems( player ) } )
     } )
     
     /** 清除不必要的掉落物 */
@@ -578,8 +614,8 @@ export function tradeFunction() {
     } )
 
     /** 设置玩家不得进入商人区域 */
-    methods.eachPlayer( player => {
-        if ( methods.playerIsAlive( player ) ) { player.runCommand( `function maps/${world.bedwarsMap.id}/player_into_shop` ) }
+    eachPlayer( player => {
+        if ( playerIsAlive( player ) ) { player.runCommand( `function maps/${map().id}/player_into_shop` ) }
     } )
     
 }
@@ -589,23 +625,23 @@ export function tradeFunction() {
  */
 export function respawnFunction() {
 
-    methods.eachValidPlayer( player => { 
+    eachValidPlayer( player => { 
 
         /** 玩家重生点设定 */
-        player.setSpawnPoint( { ...world.bedwarsMap.spawnpointPos, ...{ dimension: constants.overworld } } )
+        player.setSpawnPoint( { ...map().spawnpointPos, ...{ dimension: constants.overworld } } )
 
         /** 玩家死亡时事件 */
         if ( player.bedwarsInfo.deathState.isDeath ) {
 
-            /** @type {methods.BedwarsPlayer} */ let playerInfo = player.bedwarsInfo;
+            /** @type {BedwarsPlayer} */ let playerInfo = player.bedwarsInfo;
     
             /** 对可重生玩家 */
             if ( playerInfo.deathState.respawnCountdown > 0 ) {
                 player.getGameMode() !== "creative" ? player.setGameMode( "spectator" ) : null;
                 playerInfo.deathState.respawnCountdown--;
                 if ( playerInfo.deathState.respawnCountdown % 20 === 19 ) {
-                    methods.showTitle( player, { translate: "title.respawning" }, { translate: "subtitle.respawning", with: [ `${methods.tickToSecond(playerInfo.deathState.respawnCountdown)}` ] }, { fadeInDuration: 0 } )
-                    player.sendMessage( { translate: "message.respawning", with: [ `${methods.tickToSecond(playerInfo.deathState.respawnCountdown)}` ] } );
+                    showTitle( player, { translate: "title.respawning" }, { translate: "subtitle.respawning", with: [ `${tickToSecond(playerInfo.deathState.respawnCountdown)}` ] }, { fadeInDuration: 0 } )
+                    player.sendMessage( { translate: "message.respawning", with: [ `${tickToSecond(playerInfo.deathState.respawnCountdown)}` ] } );
                 }
             }
             /** 重生倒计时结束后，重生玩家 */
@@ -633,8 +669,8 @@ export function hurtByPlayerEvent( event ) {
     let player = event.hurtEntity;
     let attacker = event.damageSource.damagingEntity;
 
-    if ( methods.playerIsValid( player ) ) {
-        /** @type {methods.BedwarsPlayer} */ let playerInfo = player.bedwarsInfo;
+    if ( playerIsValid( player ) ) {
+        /** @type {BedwarsPlayer} */ let playerInfo = player.bedwarsInfo;
         if ( attacker !== undefined && attacker.typeId === "minecraft:player" ) {
             playerInfo.lastHurt.attacker = attacker;
             playerInfo.lastHurt.attackedSinceLastAttack = 0;
@@ -657,9 +693,9 @@ export function hurtByFireballsEvent( event ) {
     let fireball = event.projectile;
     let explosionPos = event.location;
     let fireballOwner = event.source
-    if ( fireball.typeId === "bedwars:fireball" && methods.getPlayerNearby( explosionPos, 4 ).length !== 0 ) {
-        methods.eachValidPlayer( player => { if ( methods.getPlayerNearby( explosionPos, 4 ).includes( player ) && player !== fireballOwner ) {
-            /** @type {methods.BedwarsPlayer} */ let playerInfo = player.bedwarsInfo;
+    if ( fireball.typeId === "bedwars:fireball" && getPlayerNearby( explosionPos, 4 ).length !== 0 ) {
+        eachValidPlayer( player => { if ( getPlayerNearby( explosionPos, 4 ).includes( player ) && player !== fireballOwner ) {
+            /** @type {BedwarsPlayer} */ let playerInfo = player.bedwarsInfo;
             playerInfo.lastHurt.attacker = fireballOwner;
             playerInfo.lastHurt.attackedSinceLastAttack = 0;
             if ( player.getComponent( "minecraft:is_sheared" ) !== undefined ) {
@@ -674,8 +710,8 @@ export function hurtByFireballsEvent( event ) {
  * 【循环类】玩家受伤计时器，计算玩家自上次受伤的时间，超过 10 秒后则复原
  */
 export function playerHurtFunction( ) {
-    methods.eachValidPlayer( player => { 
-        /** @type {methods.BedwarsPlayer} */ let playerInfo = player.bedwarsInfo;
+    eachValidPlayer( player => { 
+        /** @type {BedwarsPlayer} */ let playerInfo = player.bedwarsInfo;
         if ( playerInfo.lastHurt.attackedSinceLastAttack < 200 ) {
             playerInfo.lastHurt.attackedSinceLastAttack++
         } else {
@@ -692,8 +728,8 @@ export function playerDieEvent( event ) {
     let player = event.deadEntity;
     let deathType = event.damageSource.cause;
     let killer = event.damageSource.damagingEntity;
-    if ( methods.playerIsValid( player ) ) {
-        /** @type {methods.BedwarsPlayer} */ let playerInfo = player.bedwarsInfo;
+    if ( playerIsValid( player ) ) {
+        /** @type {BedwarsPlayer} */ let playerInfo = player.bedwarsInfo;
         if ( [ "entityAttack", "projectile", "fall", "void", "entityExplosion" ].includes( deathType ) ) { playerInfo.deathState.deathType = deathType }
         else { deathType = "other" }
         playerInfo.playerDied( killer )
@@ -704,7 +740,7 @@ export function playerDieEvent( event ) {
  * 【循环类】设置玩家跌入虚空后，施加大量的 void 类型伤害
  */
 export function voidDamageFunction( ) {
-    methods.eachValidPlayer( player => { 
+    eachValidPlayer( player => { 
         player.runCommand( "execute if entity @s[x=~,y=0,z=~,dx=0,dy=-60,dz=0] run damage @s 200 void" )
     } )
 }
@@ -716,22 +752,22 @@ export function scoreboardFunction( ) {
 
     if ( system.currentTick % 3 === 0 ) {
 
-        switch ( maps.map.teamCount ) {
+        switch ( map().teamCount ) {
             case 2:
-                methods.eachValidPlayer( player => { player.bedwarsInfo.show2TeamsScoreboard() } )
+                eachValidPlayer( player => { player.bedwarsInfo.show2TeamsScoreboard() } )
                 break;
             case 4:
-                methods.eachValidPlayer( player => { player.bedwarsInfo.show4TeamsScoreboard() } )
+                eachValidPlayer( player => { player.bedwarsInfo.show4TeamsScoreboard() } )
                 break;
             case 8:
-                methods.eachValidPlayer( player => { player.bedwarsInfo.show8TeamsScoreboard() } )
+                eachValidPlayer( player => { player.bedwarsInfo.show8TeamsScoreboard() } )
                 break;
         }
     }
 
     world.scoreboard.getObjective( "health" ) === undefined ? world.scoreboard.addObjective( "health", "§c❤" ) : null;
     world.scoreboard.getObjectiveAtDisplaySlot( "BelowName" ) === undefined ? world.scoreboard.setObjectiveAtDisplaySlot( "BelowName", { objective: world.scoreboard.getObjective( "health" ) } ) : null
-    methods.eachValidPlayer( player => { player.bedwarsInfo.showHealth() } )
+    eachValidPlayer( player => { player.bedwarsInfo.showHealth() } )
 }
 
 /**
@@ -739,15 +775,15 @@ export function scoreboardFunction( ) {
  */
 export function gameEventFunction( ) {
 
-    if ( maps.map.gameEvent.nextEventCountdown > 0 ) { maps.map.gameEvent.nextEventCountdown-- }
-    else { maps.map.triggerEvent() }
+    if ( map().gameEvent.nextEventCountdown > 0 ) { map().gameEvent.nextEventCountdown-- }
+    else { map().triggerEvent() }
 }
 
 /**
  * 【循环类】队伍功能，包括队伍淘汰判定、胜利判定
  */
 export function teamFunction( ) {
-    methods.eachTeam( team => {
+    eachTeam( team => {
 
         /** 如果一个队伍有床但没有玩家，则设置为无效的队伍 */
         // if ( team.bedInfo.isExist === true && team.getTeamMember().length === 0 ) { team.setTeamInvalid() }
@@ -758,7 +794,7 @@ export function teamFunction( ) {
     } )
 
     /** 如果仅剩一个队伍存活，则该队伍获胜 */
-    if ( maps.map.getAliveTeam().length <= 1 ) { maps.map.gameOver( maps.map.getAliveTeam()[0] ) }
+    if ( map().getAliveTeam().length <= 1 ) { map().gameOver( map().getAliveTeam()[0] ) }
     
 }
 
@@ -772,32 +808,32 @@ export function playerRejoinEvent( event ) {
     let player = event.player;
 
     /** 如果重生的玩家是无效玩家，则为重进的玩家 */
-    if ( !methods.playerIsValid( player ) ) {
+    if ( !playerIsValid( player ) ) {
 
         /** 尝试获取玩家的游戏 ID，只有 ID 一致时方可继续判断 */
         let data = world.scoreboard.getObjective( player.name );
         let runtimeId = 0;
         if ( data !== undefined ) { runtimeId = data.getScore( "runtimeId" ); }
 
-        if ( runtimeId === maps.map.gameId ) {
+        if ( runtimeId === map().gameId ) {
 
             /** 尝试获取玩家的队伍信息，并加入进队伍中，此时能保证备份记分板一定存在 */
             let team = 12; team = data.getScore( "team" )
-            methods.eachTeam( teamInfo => { if ( teamInfo.id === methods.teamNumberToTeamName( team ) ) { teamInfo.addPlayer( player ) } } )
+            eachTeam( teamInfo => { if ( teamInfo.id === teamNumberToTeamName( team ) ) { teamInfo.addPlayer( player ) } } )
 
             /** 如果玩家已经加入到了队伍之中，此时将拥有合法的玩家数据，同时也 */
-            if ( methods.playerIsValid( player ) ) { player.bedwarsInfo.dataReset( data ) }
+            if ( playerIsValid( player ) ) { player.bedwarsInfo.dataReset( data ) }
             /** 如果玩家没能加入到队伍中，则为旁观者 */
-            else { world.bedwarsMap.addSpectator( player ); world.scoreboard.removeObjective( player.name ) }
+            else { map().addSpectator( player ); world.scoreboard.removeObjective( player.name ) }
 
         } else {
-            world.bedwarsMap.addSpectator( player )
+            map().addSpectator( player )
         }
 
     }
 
     /** 等待期间时执行的内容 */
-    if ( maps.map.gameStage < 3 ) { methods.initPlayer( player ) }
+    if ( map().gameStage < 3 ) { initPlayer( player ) }
 
 }
 
@@ -807,7 +843,7 @@ export function playerRejoinEvent( event ) {
  */
 export function playerLeaveEvent( event ) {
     let player = event.player;
-    if ( methods.playerIsValid( player ) && maps.map.gameStage >= 3 ) {
+    if ( playerIsValid( player ) && map().gameStage >= 3 ) {
         player.bedwarsInfo.dataBackup( player )
     }
 }
@@ -817,9 +853,9 @@ export function playerLeaveEvent( event ) {
  */
 export function gameOverEvent( ) {
 
-    maps.map.nextGameCountdown--;
+    map().nextGameCountdown--;
 
-    if ( maps.map.nextGameCountdown === 0 ) { maps.regenerateMap() }
+    if ( map().nextGameCountdown === 0 ) { regenerateMap() }
 
 }
 
@@ -906,12 +942,12 @@ export function settingsEvent( event ) {
                     sendFeedback( cmdDescription(
                         [ { name: par1Name, typeName: "整数" } ],
                         "该值用于控制至少需要多少玩家才可开始游戏。",
-                        `§a${methods.settings.minWaitingPlayers}`
+                        `§a${settings.minWaitingPlayers}`
                     ) )
                 } else {
                     intPar( Number( event.message ), par1Name, par1 => {
                         sendFeedback( `开始游戏需求的玩家人数已更改为${par1}` );
-                        methods.settings.minWaitingPlayers = par1;
+                        settings.minWaitingPlayers = par1;
                     }, 2 )
                 }
                 break;
@@ -921,13 +957,13 @@ export function settingsEvent( event ) {
                     sendFeedback( cmdDescription(
                         [ { name: par1Name, typeName: "整数" } ],
                         "该值用于控制玩家达到规定数目后，多久后开始游戏。单位：游戏刻。",
-                        `§a${methods.settings.gameStartWaitingTime}`
+                        `§a${settings.gameStartWaitingTime}`
                     ) )
                 } else {
                     intPar( Number( event.message ), par1Name, par1 => {
                         sendFeedback( `开始游戏的等待时间已更改为${par1}` );
-                        methods.settings.gameStartWaitingTime = par1;
-                        world.bedwarsMap.gameStartCountdown = par1;
+                        settings.gameStartWaitingTime = par1;
+                        map().gameStartCountdown = par1;
                     } )
                 }
                 break;
@@ -938,13 +974,13 @@ export function settingsEvent( event ) {
                     sendFeedback( cmdDescription(
                         [ { name: par1Name, typeName: enum1Array.join( " | " ) }, { name: par2Name, typeName: "整数" } ],
                         "该值用于控制游戏中的资源点最多允许生成的数目。",
-                        `\n§7iron = §a${methods.settings.resourceMaxSpawnTimes.iron}\n§7gold = §a${methods.settings.resourceMaxSpawnTimes.gold}\n§7diamond = §a${methods.settings.resourceMaxSpawnTimes.diamond}\n§7emerald = §a${methods.settings.resourceMaxSpawnTimes.emerald}`
+                        `\n§7iron = §a${settings.resourceMaxSpawnTimes.iron}\n§7gold = §a${settings.resourceMaxSpawnTimes.gold}\n§7diamond = §a${settings.resourceMaxSpawnTimes.diamond}\n§7emerald = §a${settings.resourceMaxSpawnTimes.emerald}`
                     ) )
                 } else {
                     enumPar( event.message.split(" ")[0], par1Name, enum1Array, par1 => {
                         intPar( Number(event.message.split(" ")[1]), par2Name, par2 => {
                             sendFeedback( `${par1}的最大生成数已更改为${par2}` );
-                            methods.settings.resourceMaxSpawnTimes[par1] = par2;
+                            settings.resourceMaxSpawnTimes[par1] = par2;
                         } )
                     } )
                 }
@@ -956,13 +992,13 @@ export function settingsEvent( event ) {
                     sendFeedback( cmdDescription(
                         [ { name: par1Name, typeName: enum1Array.join( " | " ) }, { name: par2Name, typeName: "整数" } ],
                         "该值用于控制游戏中的玩家重生所需要的时长。单位：游戏刻。",
-                        `\n§7normalPlayers = §a${methods.settings.respawnTime.normalPlayers}\n§7rejoinedPlayers = §a${methods.settings.respawnTime.rejoinedPlayers}`
+                        `\n§7normalPlayers = §a${settings.respawnTime.normalPlayers}\n§7rejoinedPlayers = §a${settings.respawnTime.rejoinedPlayers}`
                     ) )
                 } else {
                     enumPar( event.message.split(" ")[0], par1Name, enum1Array, par1 => {
                         intPar( Number(event.message.split(" ")[1]), "重生时长", par2 => {
                             sendFeedback( `${par1}类型玩家的重生时长已更改为${par2}游戏刻` );
-                            methods.settings.respawnTime[par1] = par2;
+                            settings.respawnTime[par1] = par2;
                         } )
                     } )
                 }
@@ -973,12 +1009,12 @@ export function settingsEvent( event ) {
                     sendFeedback( cmdDescription(
                         [ { name: par1Name, typeName: "布尔值" } ],
                         "该值用于控制游戏中没有分配到玩家的无效队伍是否能够生成资源。",
-                        `§a${methods.settings.invalidTeamCouldSpawnResources}`
+                        `§a${settings.invalidTeamCouldSpawnResources}`
                     ) )
                 } else {
                     booleanPar( event.message, "可生成资源", par1 => {
                         sendFeedback( `无效队伍生成资源的权限已更改为${par1}` );
-                        methods.settings.invalidTeamCouldSpawnResources = par1
+                        settings.invalidTeamCouldSpawnResources = par1
                     } )
                 }
                 break;
@@ -989,22 +1025,22 @@ export function settingsEvent( event ) {
                     sendFeedback( cmdDescription(
                         [ { name: par1Name, typeName: enum1Array.join( " | " ) }, { name: par2Name, typeName: "布尔值" } ],
                         "控制游戏中何种类型的地图允许生成。",
-                        `\n§7allow2Teams = §a${methods.settings.randomMap.allow2Teams}\n§7allow4Teams = §a${methods.settings.randomMap.allow4Teams}\n§7allow8Teams = §a${methods.settings.randomMap.allow8Teams}`
+                        `\n§7allow2Teams = §a${settings.randomMap.allow2Teams}\n§7allow4Teams = §a${settings.randomMap.allow4Teams}\n§7allow8Teams = §a${settings.randomMap.allow8Teams}`
                     ) )
                 } else {
                     enumPar( event.message.split(" ")[0], par1Name, enum1Array, par1 => {
                         booleanPar( event.message.split(" ")[1], par2Name, par2 => {
                             sendFeedback( `${par1}的允许生成状态已更改为${par2}` );
-                            methods.settings.randomMap[par1] = par2;
+                            settings.randomMap[par1] = par2;
                         } )
                     } )
                 }
                 break;
             case "bs:regenerateMap":
                 let mapList = [];
-                if ( methods.settings.randomMap.allow2Teams === true ) { mapList = mapList.concat(maps.validMapsFor2Teams); }
-                if ( methods.settings.randomMap.allow4Teams === true ) { mapList = mapList.concat(maps.validMapsFor4Teams); }
-                if ( methods.settings.randomMap.allow8Teams === true ) { mapList = mapList.concat(maps.validMapsFor8Teams); }
+                if ( settings.randomMap.allow2Teams === true ) { mapList = mapList.concat(validMapsFor2Teams); }
+                if ( settings.randomMap.allow4Teams === true ) { mapList = mapList.concat(validMapsFor4Teams); }
+                if ( settings.randomMap.allow8Teams === true ) { mapList = mapList.concat(validMapsFor8Teams); }
 
                 par1Name = "生成地图"; enum1Array = enum1Array.concat( "true", mapList )
 
@@ -1017,11 +1053,11 @@ export function settingsEvent( event ) {
                 } else {
                     enumPar( event.message, par1Name, enum1Array, par1 => {
                         if ( par1 === "true" ) {
-                            maps.regenerateMap();
+                            regenerateMap();
                             sendFeedback( `即将生成一张随机地图。` );
                         }
                         else {
-                            maps.regenerateMap( par1 );
+                            regenerateMap( par1 );
                             sendFeedback( `即将生成地图${par1}。` );
                         }
                     } )
@@ -1033,12 +1069,12 @@ export function settingsEvent( event ) {
                     sendFeedback( cmdDescription(
                         [ { name: par1Name, typeName: "布尔值" } ],
                         "该值用于控制游戏中创造模式玩家是否能够破坏原版方块。",
-                        `§a${methods.settings.creativePlayerCanBreakBlocks}`
+                        `§a${settings.creativePlayerCanBreakBlocks}`
                     ) )
                 } else {
                     booleanPar( event.message, "可生成资源", par1 => {
                         sendFeedback( `创造模式玩家破坏方块的权限已更改为${par1}` );
-                        methods.settings.creativePlayerCanBreakBlocks = par1
+                        settings.creativePlayerCanBreakBlocks = par1
                     } )
                 }
                 break;

@@ -6,12 +6,12 @@
                 "default": {
                     "on_entry": [ "@s show_armor" ],
                     "transitions": [
-                        { "is_invisibility": "query.is_invisible && query.has_any_family('have_team')" }
+                        { "is_invisibility": "query.is_invisible" }
                     ]
                 },
                 "is_invisibility": {
                     "transitions": [
-                        { "default": "!query.is_invisible || !query.has_any_family('have_team')" }
+                        { "default": "!query.is_invisible" }
                     ]
                 }
             }

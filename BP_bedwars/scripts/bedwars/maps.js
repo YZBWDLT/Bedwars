@@ -12,7 +12,7 @@ export const validMapsFor2Teams = [ "cryptic", "frost", "garden", "ruins", "picn
 export const validMapsFor4Teams = [ "orchid", "chained", "boletum", "carapace", "archway" ];
 
 /** 【固定数据】可用 8 队地图列表 */
-export const validMapsFor8Teams = [ "glacier" ];
+export const validMapsFor8Teams = [ "glacier", "rooftop" ];
 
 /** 【函数】打乱一个数组
  * @param {Array} array
@@ -65,7 +65,7 @@ export class BedwarsMap{
     /** 【属性】游戏ID，只有ID与本局游戏相同的玩家允许进入游戏 */
     gameId = randomInt( 1000, 9999 )
 
-    /** 【属性】游戏阶段，0：正在清空地图；1：正在生成地图；2：正在等待中；3：游戏中；4：游戏结束
+    /** 【属性】游戏阶段，0：游戏前；1：游戏中；2：游戏结束
      * @type {0|1|2|3|4}
      */
     gameStage = 0;
@@ -73,17 +73,8 @@ export class BedwarsMap{
     /** 【属性】游戏结束后，自动开启下一场游戏的倒计时，单位：游戏刻 */
     nextGameCountdown = 200;
 
-    /** 【属性】清空地图时，正在清除的高度层 */
-    resetMapCurrentHeight = 116;
-
-    /** 【属性】生成地图时，结构加载的倒计时 */
-    structureLoadCountdown = 120;
-
     /** 【属性】游戏开始倒计时 */
     gameStartCountdown = settings.gameStartWaitingTime;
-
-    /** 【属性】高度限制 */
-    highestBlockLimit = 110;
 
     /** 【属性】商人信息，包括位置、朝向、类型
      * @type {{ pos: import("@minecraft/server").Vector3, direction: Number, type: "blocks_and_items" | "weapon_and_armor" | "team_upgrade" }[]}
@@ -100,6 +91,21 @@ export class BedwarsMap{
     /** 【属性】治愈池范围 */
     healPoolRadius = 20;
 
+    /** 【属性】地图加载信息 */
+    loadInfo = {
+        /** 地图是否正在加载 */ isLoading: true,
+        /** 清空地图时，正在清除的高度层 */ clearingLayer: 116,
+        /** 清空地图时，间隔多长时间清除下一层，单位：游戏刻 */ clearTimePerLayer: 3,
+        /** 加载结构所需的时间，单位：游戏刻 */ structureLoadTime: 100,
+        /** 设置队伍岛屿颜色和床所需的时间，单位：游戏刻 */ setTeamIslandTime: 20
+    };
+
+    /** 【属性】高度限制信息 */
+    heightLimit = {
+        /** 最高高度限制 */ max: 110,
+        /** 最低高度限制 */ min: 50
+    };
+
 
     /** 【构建器】
      * @param {String} id 地图 ID
@@ -111,7 +117,8 @@ export class BedwarsMap{
      * emeraldInterval: Number,
      * spawnpointPos: import("@minecraft/server").Vector3,
      * healPoolRadius: Number
-     * highestBlockLimit: Number
+     * maxHeightLimit: Number
+     * minHeightLimit: Number
      * distributeResource: Boolean,
      * clearResourceVelocity: Boolean,
      * ironSpawnTimes: Number
@@ -129,7 +136,8 @@ export class BedwarsMap{
         if ( options.clearResourceVelocity !== undefined ) { this.spawnerInfo.clearResourceVelocity = options.clearResourceVelocity; }
         if ( options.spawnpointPos !== undefined ) { this.spawnpointPos = options.spawnpointPos; }
         if ( options.healPoolRadius !== undefined ) { this.healPoolRadius = options.healPoolRadius; }
-        if ( options.highestBlockLimit !== undefined ) { this.highestBlockLimit = options.highestBlockLimit; }
+        if ( options.maxHeightLimit !== undefined ) { this.heightLimit.max = options.maxHeightLimit; }
+        if ( options.minHeightLimit !== undefined ) { this.heightLimit.min = options.minHeightLimit; }
     };
 
     /** 【方法】进行地图初始化 */
@@ -142,8 +150,10 @@ export class BedwarsMap{
         /** 进行初始化命令函数 */ overworld.runCommand( `function lib/init/map` )
     }
 
-    /** 【方法】在等待大厅时展示的记分板 */
-    waitingScoreboard( ) {
+    /** 【方法】在等待大厅时展示的记分板
+     * @param {String} infoBoardProgress - 当前地图进度
+     */
+    waitingScoreboard( infoBoardProgress ) {
 
         /** 展示内容 */
         let infoBoardTitle = "§l§e     起床战争§r     ";
@@ -153,12 +163,6 @@ export class BedwarsMap{
         let infoBoardTeamCount = `§f队伍数： §a${this.teamCount}§r`;
         let infoBoardMode = `§f模式： §a经典§r`;
         let infoBoardAuthor = `§e一只卑微的量筒§r`
-
-        if ( this.gameStage === 0 ) { infoBoardProgress = `§f清除原地图中...§r` }
-        else if ( this.gameStage === 1 ) { infoBoardProgress = `§f生成地图中...§r` }
-        else if ( this.gameStage === 2 && getPlayerAmount() < settings.minWaitingPlayers ) { infoBoardProgress = `§f等待中...§r` }
-        else { infoBoardProgress = `§f即将开始： §a${tickToSecond(this.gameStartCountdown)}秒§r` }
-
         eachPlayer( player => { player.onScreenDisplay.setActionBar( `${infoBoardTitle}\n§8${this.gameId}\n\n${infoBoardMapName}\n${infoBoardWaitingPlayer}\n\n${infoBoardProgress}\n\n${infoBoardTeamCount}\n${infoBoardMode}\n\n${infoBoardAuthor}` ) } )
 
     }
@@ -438,7 +442,7 @@ export class BedwarsMap{
     gameOver( winningTeam ) {
 
         /** 设置游戏结束 */
-        this.gameStage = 4; this.nextGameCountdown = 200;
+        this.gameStage = 2; this.nextGameCountdown = 200;
 
         /** 判断何队获胜 */
         if ( winningTeam === undefined ) {
@@ -488,7 +492,7 @@ export class BedwarsMap{
     /** 【方法】游戏开始事件 */
     gameStart( ) {
         /** 开始游戏 */
-        this.gameStage = 3;
+        this.gameStage = 1;
 
         /** 分配玩家队伍 */
         this.assignPlayersRandomly()
@@ -572,6 +576,7 @@ export function regenerateMap( mapId = undefined ) {
         case "lion_temple": createMapLionTemple(); break;
 
         case "glacier": createMapGlacier(); break;
+        case "rooftop": createMapRooftop(); break;
     }
 }
 
@@ -580,11 +585,11 @@ export let map = () => { return world.bedwarsMap };
 
 /** ===== 4队地图 ===== */
 
-/** 【函数】创建地图兰花 */
+/** 【4队】兰花 */
 function createMapOrchid( ) {
 
     /** 队伍信息初始化 */
-    let mapOrchid = new BedwarsMap( "orchid", "兰花", { healPoolRadius: 21, highestBlockLimit: 95 } );
+    let mapOrchid = new BedwarsMap( "orchid", "兰花", { maxHeightLimit: 95, healPoolRadius: 21 } );
     let teamRed = new BedwarsTeam( "red", { x: 41, y: 71, z: -50 }, 0, { x: 62, y: 71, z: -50 }, { x: 58, y: 71, z: -49 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 41, y: 71, z: 50 }, 0, { x: 62, y: 71, z: 50 }, { x: 58, y: 71, z: 49 } );
     let teamGreen = new BedwarsTeam( "green", { x: -41, y: 71, z: 50 }, 2, { x: -62, y: 71, z: 50 }, { x: -58, y: 71, z: 49 } );
@@ -626,11 +631,11 @@ function createMapOrchid( ) {
 
 }
 
-/** 【函数】创建地图铁索连环 */
+/** 【4队】铁索连环 */
 function createMapChained( ) {
 
     /** 队伍信息初始化 */
-    let mapChained = new BedwarsMap( "chained", "铁索连环", { highestBlockLimit: 90 } );
+    let mapChained = new BedwarsMap( "chained", "铁索连环", { maxHeightLimit: 90 } );
     let teamRed = new BedwarsTeam( "red", { x: 69, y: 65, z: 0 }, 0, { x: 86, y: 64, z: 0 }, { x: 81, y: 64, z: 0 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 0, y: 65, z: 69 }, 1, { x: 0, y: 64, z: 86 }, { x: 0, y: 64, z: 81 } );
     let teamGreen = new BedwarsTeam( "green", { x: -69, y: 65, z: 0 }, 2, { x: -86, y: 64, z: 0 }, { x: -81, y: 64, z: 0 } );
@@ -672,11 +677,11 @@ function createMapChained( ) {
     
 }
 
-/** 【函数】创建地图蘑菇岛 */
+/** 【4队】蘑菇岛 */
 function createMapBoletum( ) {
 
     /** 队伍信息初始化 */
-    let mapBoletum = new BedwarsMap( "boletum", "蘑菇岛", { highestBlockLimit: 94 } );
+    let mapBoletum = new BedwarsMap( "boletum", "蘑菇岛", { maxHeightLimit: 94 } );
     let teamRed = new BedwarsTeam( "red", { x: 0, y: 69, z: 66 }, 1, { x: 0, y: 68, z: 82 }, { x: 0, y: 68, z: 78 } );
     let teamBlue = new BedwarsTeam( "blue", { x: -68, y: 69, z: 0 }, 2, { x: -84, y: 68, z: 0 }, { x: -80, y: 68, z: 0 } );
     let teamGreen = new BedwarsTeam( "green", { x: -2, y: 69, z: -68 }, 3, { x: -2, y: 68, z: -84 }, { x: -2, y: 68, z: -80 } );
@@ -718,11 +723,11 @@ function createMapBoletum( ) {
     
 }
 
-/** 【函数】创建地图甲壳 */
+/** 【4队】甲壳 */
 function createMapCarapace( ) {
 
     /** 队伍信息初始化 */
-    let mapCarapace = new BedwarsMap( "carapace", "甲壳", { highestBlockLimit: 91, distributeResource: false, clearResourceVelocity: false } );
+    let mapCarapace = new BedwarsMap( "carapace", "甲壳", { maxHeightLimit: 91, distributeResource: false, clearResourceVelocity: false } );
     let teamRed = new BedwarsTeam( "red", { x: 0, y: 66, z: -48 }, 3, { x: 0, y: 66, z: -64 }, { x: 0, y: 66, z: -58 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 48, y: 66, z: 0 }, 0, { x: 64, y: 66, z: 0 }, { x: 58, y: 66, z: 0 } );
     let teamGreen = new BedwarsTeam( "green", { x: 0, y: 66, z: 48 }, 1, { x: 0, y: 66, z: 64 }, { x: 0, y: 66, z: 58 } );
@@ -764,10 +769,10 @@ function createMapCarapace( ) {
     
 }
 
-/** 【函数】创建地图拱形廊道 */
+/** 【4队】拱形廊道 */
 function createMapArchway( ) {
     /** 队伍信息初始化 */
-    let mapArchway = new BedwarsMap( "archway", "拱形廊道", { highestBlockLimit: 91, healPoolRadius: 15, distributeResource: false } );
+    let mapArchway = new BedwarsMap( "archway", "拱形廊道", { maxHeightLimit: 91, healPoolRadius: 15, distributeResource: false } );
     let teamRed = new BedwarsTeam( "red", { x: -15, y: 66, z: -66 }, 3, { x: -14, y: 65, z: -79 }, { x: -14, y: 65, z: -75 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 66, y: 66, z: -15 }, 0, { x: 79, y: 65, z: -14 }, { x: 75, y: 65, z: -14 } );
     let teamGreen = new BedwarsTeam( "green", { x: 15, y: 66, z: 66 }, 1, { x: 14, y: 65, z: 79 }, { x: 14, y: 65, z: 75 } );
@@ -811,11 +816,11 @@ function createMapArchway( ) {
 
 /** ===== 2队地图 ===== */
 
-/** 【函数】创建地图神秘 */
+/** 【2队】神秘 */
 function createMapCryptic( ) {
 
     /** 队伍信息初始化 */
-    let mapCryptic = new BedwarsMap( "cryptic", "神秘", { highestBlockLimit: 102, ironSpawnTimes: 5, distributeResource: false } );
+    let mapCryptic = new BedwarsMap( "cryptic", "神秘", { maxHeightLimit: 102, ironSpawnTimes: 5, distributeResource: false } );
     let teamRed = new BedwarsTeam( "red", { x: 2, y: 77, z: 73 }, 1, { x: 2, y: 78, z: 90 }, { x: 2, y: 78, z: 85 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 2, y: 77, z: -73 }, 3, { x: 2, y: 78, z: -90 }, { x: 2, y: 78, z: -85 } );
     
@@ -845,11 +850,11 @@ function createMapCryptic( ) {
     
 }
 
-/** 【函数】创建地图极寒 */
+/** 【2队】极寒 */
 function createMapFrost( ) {
 
     /** 队伍信息初始化 */
-    let mapFrost = new BedwarsMap( "frost", "极寒", { highestBlockLimit: 97, ironSpawnTimes: 5 } );
+    let mapFrost = new BedwarsMap( "frost", "极寒", { maxHeightLimit: 97, ironSpawnTimes: 5 } );
     let teamRed = new BedwarsTeam( "red", { x: 0, y: 72, z: 59 }, 1, { x: 0, y: 72, z: 75 }, { x: 0, y: 72, z: 70 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 0, y: 72, z: -59 }, 3, { x: 0, y: 72, z: -75 }, { x: 0, y: 72, z: -70 } );
     
@@ -879,11 +884,11 @@ function createMapFrost( ) {
     
 }
 
-/** 【函数】创建地图花园 */
+/** 【2队】花园 */
 function createMapGarden( ) {
 
     /** 队伍信息初始化 */
-    let mapGarden = new BedwarsMap( "garden", "花园", { highestBlockLimit: 97, ironSpawnTimes: 5 } );
+    let mapGarden = new BedwarsMap( "garden", "花园", { maxHeightLimit: 97, ironSpawnTimes: 5 } );
     let teamRed = new BedwarsTeam( "red", { x: 79, y: 77, z: 0 }, 0, { x: 98, y: 79, z: 0 }, { x: 94, y: 79, z: 0 } );
     let teamBlue = new BedwarsTeam( "blue", { x: -79, y: 77, z: 0 }, 2, { x: -98, y: 79, z: 0 }, { x: -94, y: 79, z: 0 } );
     
@@ -913,11 +918,11 @@ function createMapGarden( ) {
     
 }
 
-/** 【函数】创建地图废墟 */
+/** 【2队】废墟 */
 function createMapRuins( ) {
 
     /** 队伍信息初始化 */
-    let mapRuins = new BedwarsMap( "ruins", "废墟", { highestBlockLimit: 96, ironSpawnTimes: 5 } );
+    let mapRuins = new BedwarsMap( "ruins", "废墟", { maxHeightLimit: 96, ironSpawnTimes: 5 } );
     let teamRed = new BedwarsTeam( "red", { x: -4, y: 71, z: -64 }, 3, { x: 0, y: 72, z: -82 }, { x: 0, y: 72, z: -78 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 4, y: 71, z: 64 }, 1, { x: 0, y: 72, z: 82 }, { x: 0, y: 72, z: 78 } );
     
@@ -947,11 +952,11 @@ function createMapRuins( ) {
     
 }
 
-/** 【函数】创建地图野餐 */
+/** 【2队】野餐 */
 function createMapPicnic( ) {
 
     /** 队伍信息初始化 */
-    let mapPicnic = new BedwarsMap( "picnic", "野餐", { highestBlockLimit: 90, ironSpawnTimes: 5, distributeResource: false } );
+    let mapPicnic = new BedwarsMap( "picnic", "野餐", { maxHeightLimit: 90, ironSpawnTimes: 5, distributeResource: false } );
     let teamRed = new BedwarsTeam( "red", { x: 0, y: 65, z: -62 }, 3, { x: 0, y: 64, z: -78 }, { x: 0, y: 64, z: -74 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 0, y: 65, z: 61 }, 1, { x: 0, y: 64, z: 77 }, { x: 0, y: 64, z: 73 } );
     
@@ -981,11 +986,11 @@ function createMapPicnic( ) {
     
 }
 
-/** 【函数】创建地图狮庙 */
+/** 【2队】狮庙 */
 function createMapLionTemple( ) {
 
     /** 队伍信息初始化 */
-    let mapLionTemple = new BedwarsMap( "lion_temple", "狮庙", { highestBlockLimit: 100, distributeResource: false } );
+    let mapLionTemple = new BedwarsMap( "lion_temple", "狮庙", { maxHeightLimit: 100, distributeResource: false } );
     let teamRed = new BedwarsTeam( "red", { x: -2, y: 73, z: 58 }, 1, { x: -2, y: 75, z: 78 }, { x: -2, y: 75, z: 73 } );
     let teamBlue = new BedwarsTeam( "blue", { x: -2, y: 73, z: -58 }, 3, { x: -2, y: 75, z: -78 }, { x: -2, y: 75, z: -73 } );
     /** 移除多余实体，进行初始化 */
@@ -1020,7 +1025,7 @@ function createMapLionTemple( ) {
 function createMapGlacier() {
 
     /** 队伍信息初始化 */
-    let mapGlacier = new BedwarsMap( "glacier", "冰川", { highestBlockLimit: 106, distributeResource: false } );
+    let mapGlacier = new BedwarsMap( "glacier", "冰川", { maxHeightLimit: 106, distributeResource: false } );
     let teamRed = new BedwarsTeam( "red", { x: -32, y: 81, z: -65 }, 3, { x: -32, y: 81, z: -86 }, { x: -32, y: 81, z: -80 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 32, y: 81, z: -65 }, 3, { x: 32, y: 81, z: -86 }, { x: 32, y: 81, z: -80 } );
     let teamGreen = new BedwarsTeam( "green", { x: 65, y: 81, z: -32 }, 0, { x: 86, y: 81, z: -32 }, { x: 80, y: 81, z: -32 } );
@@ -1065,5 +1070,60 @@ function createMapGlacier() {
 
     /** 在 world 类中插入地图信息 */
     world.bedwarsMap = mapGlacier;
+    
+}
+
+/** 【8队】屋顶 */
+function createMapRooftop() {
+
+    /** 队伍信息初始化 */
+    let mapRooftop = new BedwarsMap( "rooftop", "屋顶", { maxHeightLimit: 91, distributeResource: false, ironSpawnTimes: 5 } );
+    let teamRed = new BedwarsTeam( "red", { x: -34, y: 66, z: -79 }, 3, { x: -34, y: 66, z: -96 }, { x: -34, y: 66, z: -89 } );
+    let teamBlue = new BedwarsTeam( "blue", { x: 34, y: 66, z: -79 }, 3, { x: 34, y: 66, z: -96 }, { x: 34, y: 66, z: -89 } );
+    let teamGreen = new BedwarsTeam( "green", { x: 79, y: 66, z: -34 }, 0, { x: 96, y: 66, z: -34 }, { x: 89, y: 66, z: -34 } );
+    let teamYellow = new BedwarsTeam( "yellow", { x: 79, y: 66, z: 34 }, 0, { x: 96, y: 66, z: 34 }, { x: 89, y: 66, z: 34 } );
+    let teamCyan = new BedwarsTeam( "cyan", { x: 34, y: 66, z: 79 }, 1, { x: 34, y: 66, z: 96 }, { x: 34, y: 66, z: 89 } );
+    let teamWhite = new BedwarsTeam( "white", { x: -34, y: 66, z: 79 }, 1, { x: -34, y: 66, z: 96 }, { x: -34, y: 66, z: 89 } );
+    let teamPink = new BedwarsTeam( "pink", { x: -79, y: 66, z: 34 }, 2, { x: -96, y: 66, z: 34 }, { x: -89, y: 66, z: 34 } );
+    let teamGray = new BedwarsTeam( "gray", { x: -79, y: 66, z: -34 }, 2, { x: -96, y: 66, z: -34 }, { x: -89, y: 66, z: -34 } );
+
+    /** 移除多余实体，进行初始化 */
+    mapRooftop.init()
+    
+    /** 设置地图的队伍 */
+    mapRooftop.addTeam( teamRed );
+    mapRooftop.addTeam( teamBlue );
+    mapRooftop.addTeam( teamGreen );
+    mapRooftop.addTeam( teamYellow );
+    mapRooftop.addTeam( teamCyan );
+    mapRooftop.addTeam( teamWhite );
+    mapRooftop.addTeam( teamPink );
+    mapRooftop.addTeam( teamGray );
+
+    /** 设置地图钻石和绿宝石生成点 */
+    mapRooftop.addSpawner( "diamond", { x: 39, y: 72, z: 39 } );
+    mapRooftop.addSpawner( "diamond", { x: -39, y: 72, z: 39 } );
+    mapRooftop.addSpawner( "diamond", { x: 39, y: 72, z: -39 } );
+    mapRooftop.addSpawner( "diamond", { x: -39, y: 72, z: -39 } );
+    mapRooftop.addSpawner( "emerald", { x: 11, y: 81, z: 11 } );
+    mapRooftop.addSpawner( "emerald", { x: -11, y: 81, z: -11 } );
+    mapRooftop.addSpawner( "emerald", { x: 11, y: 72, z: 13 } );
+    mapRooftop.addSpawner( "emerald", { x: -11, y: 72, z: -13 } );
+
+    /** 设置地图商人 */
+    mapRooftop.addTrader( { x: -28, y: 66, z: -91 }, 90, "blocks_and_items" ); mapRooftop.addTrader( { x: -28, y: 66, z: -90 }, 90, "weapon_and_armor" ); mapRooftop.addTrader( { x: -40, y: 66, z: -90.5 }, 270, "team_upgrade" );
+    mapRooftop.addTrader( { x: 40, y: 66, z: -91 }, 90, "blocks_and_items" ); mapRooftop.addTrader( { x: 40, y: 66, z: -90 }, 90, "weapon_and_armor" ); mapRooftop.addTrader( { x: 28, y: 66, z: -90.5 }, 270, "team_upgrade" );
+    mapRooftop.addTrader( { x: 91, y: 66, z: -28 }, 180, "blocks_and_items" ); mapRooftop.addTrader( { x: 90, y: 66, z: -28 }, 180, "weapon_and_armor" ); mapRooftop.addTrader( { x: 90.5, y: 66, z: -40 }, 0, "team_upgrade" );
+    mapRooftop.addTrader( { x: 91, y: 66, z: 40 }, 180, "blocks_and_items" ); mapRooftop.addTrader( { x: 90, y: 66, z: 40 }, 180, "weapon_and_armor" ); mapRooftop.addTrader( { x: 90.5, y: 66, z: 28 }, 0, "team_upgrade" );
+    mapRooftop.addTrader( { x: 28, y: 66, z: 91 }, 270, "blocks_and_items" ); mapRooftop.addTrader( { x: 28, y: 66, z: 90 }, 270, "weapon_and_armor" ); mapRooftop.addTrader( { x: 40, y: 66, z: 90.5 }, 90, "team_upgrade" );
+    mapRooftop.addTrader( { x: -40, y: 66, z: 91 }, 270, "blocks_and_items" ); mapRooftop.addTrader( { x: -40, y: 66, z: 90 }, 270, "weapon_and_armor" ); mapRooftop.addTrader( { x: -28, y: 66, z: 90.5 }, 90, "team_upgrade" );
+    mapRooftop.addTrader( { x: -91, y: 66, z: 28 }, 0, "blocks_and_items" ); mapRooftop.addTrader( { x: -90, y: 66, z: 28 }, 0, "weapon_and_armor" ); mapRooftop.addTrader( { x: -90.5, y: 66, z: 40 }, 180, "team_upgrade" );
+    mapRooftop.addTrader( { x: -91, y: 66, z: -40 }, 0, "blocks_and_items" ); mapRooftop.addTrader( { x: -90, y: 66, z: -40 }, 0, "weapon_and_armor" ); mapRooftop.addTrader( { x: -90.5, y: 66, z: -28 }, 180, "team_upgrade" );
+
+    /** 延长本地图加载时间至15秒（因为这地图实在太大了......） */
+    mapRooftop.loadInfo.structureLoadTime = 300;
+
+    /** 在 world 类中插入地图信息 */
+    world.bedwarsMap = mapRooftop;
     
 }

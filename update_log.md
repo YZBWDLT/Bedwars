@@ -1,7 +1,8 @@
 ### 新地图
 
-- Glacier 冰川，第一张8队地图
+- Glacier 冰川，8队地图
   - 8队地图中的物价略有调整，详情请见Hypixel服务器内售价情况
+- Rooftop 屋顶，8队地图
 
 ### 商品物价更改
 
@@ -13,6 +14,10 @@
 | 床虱 | 30铁锭 | 24铁锭 |
 | 海绵 | 6金锭 | 3金锭 |
 | 水桶 | 6金锭 | 3金锭 |
+
+### 最低高度限制
+
+- 现在所有地图都存在**最低高度限制**，玩家将不再允许在50格以下放置方块
 
 ### 漏洞修复
 
@@ -31,6 +36,8 @@
 
 #### `events.js`
 - **更改** 优化了`trapFunction()`的警报陷阱，使其更易读
+- **更改** 合并了`waitingHallFunction()`、`resetMapFunction()`、`mapLoadFunction()`、`waitingFunction()` → `waitingFunction()`
+- **更改** 现在`playerUseItemOnHeightLimitEvent(event)`提供了对最低高度的支持
 
 #### `maps.js`
 - 拆自`methods.js`和`constants.js`，保留以下内容：
@@ -62,7 +69,20 @@
 - 现在将所需要的变量放到了类体中，而非构建器中，并添加了注释以标记变量用途
 - **新增** `isSolo()`方法，用于判断地图是否为单挑模式
   - 当队伍数超过4队后，则认为是单挑模式的地图
+- **新增** `loadInfo`对象
+  - `isLoading`：地图是否处于加载状态
+  - `clearingLayer`：正在清除的高度层
+    - 因此，原有变量`resetMapCurrentHeight`被移除
+  - `clearTimePerLayer`：清空地图时，间隔多长时间清除下一层，单位：游戏刻
+  - `structureLoadTime`：加载结构所需的时间，单位：游戏刻
+    - 因此，原有变量`structureLoadCountdown`被移除
+  - `setTeamIslandTime`：设置队伍岛屿颜色和床所需的时间，单位：游戏刻
+- **新增** `heightLimit`对象
+  - `max`：地图最高高度限制，默认值为`110`
+    - 因此，原有变量`highestBlockLimit`被移除
+  - `min`：地图最低高度限制，默认值为`50`
 - **更改** `addSpawner(resourceType,pos)`，现在接受`pos:Vector3`而非`x`、`y`、`z`的三个数
+- **更改** 现在`gameStage`的标记为`0`：游戏前，`1`：游戏时，`2`：游戏后
 
 #### `BedwarsTeam`类
 - 现在将所需要的变量放到了类体中，而非构建器中，并添加了注释以标记变量用途

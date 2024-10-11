@@ -299,14 +299,17 @@ export function dreamDefenderEvent( event ) {
     }
 }
 
-/**
- * 【事件类】玩家使用方块事件，如果使用的方块是位于地图限制的最高位置，则阻止玩家使用
+/** 【事件类】玩家使用方块事件，如果使用的方块是位于地图限制的最高或最低位置，则阻止玩家使用
  * @param {ItemUseOnBeforeEvent} event
  */
 export function playerUseItemOnHeightLimitEvent( event ) {
-    if ( event.block.location.y > map().highestBlockLimit && event.source.getGameMode() !== "creative" ) {
+    if ( event.block.location.y > map().heightLimit.max && event.source.getGameMode() !== "creative" ) {
         event.cancel = true;
         event.source.sendMessage( { translate: "§c达到建筑高度限制！" } )
+    }
+    if ( event.block.location.y < map().heightLimit.min && event.source.getGameMode() !== "creative" ) {
+        event.cancel = true;
+        event.source.sendMessage( { translate: "§c你不能在这里放置方块！" } )
     }
 }
 

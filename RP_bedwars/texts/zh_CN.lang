@@ -303,6 +303,9 @@ message.gameOver.endInATie=§r§c游戏以平局结束！没有赢家！
 message.greenLine=§a§l---------------
 message.gameStartTitle=§f§l起床战争（经典模式）
 message.gameStartIntroduction=§e§l保护你的床并摧毁敌人的床，收集铁锭、金锭、钻石和绿宝石来升级，使自身和队伍变得更强。
+message.gameStartTitle.capture=§f§l起床战争（夺床模式）
+message.gameStartIntroduction.capture=§e§l购买并放置更多的床以削减对方的分数，或者在他们放置更多的床之前摧毁他们所有的床并将他们全部淘汰以获取最终的胜利。
+
 
 title.needsMorePlayer=§c等待玩家进入...
 message.needsMorePlayer=§c玩家数量不足！暂时取消游戏。

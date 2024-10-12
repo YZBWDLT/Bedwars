@@ -36,15 +36,15 @@ export class BedwarsMap{
 
     /** 【属性】地图的钻石点与绿宝石点信息、全地图中所有类型资源生成间隔的基准信息、资源生成方式信息 */
     spawnerInfo = {
-        /** 平均每个铁的基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔*每次生成的铁锭数/(1+速度加成)） */ ironInterval: 8,
-        /** 金基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔/(1+速度加成) */ goldInterval: 120,
+        /** 平均每个铁的基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔*每次生成的铁锭数/(1+速度加成)） */ ironInterval: 6,
+        /** 金基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔/(1+速度加成) */ goldInterval: 75,
         /** 钻石基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔-200*等级） */ diamondInterval: 800,
         /** 绿宝石基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔-200*等级） */ emeraldInterval: 1500,
         /** 钻石点等级 */ diamondLevel: 1,
         /** 绿宝石点等级 */ emeraldLevel: 1,
         /** 钻石生成倒计时，单位：游戏刻 */ diamondCountdown: 600,
         /** 绿宝石生成倒计时 */ emeraldCountdown: 1300,
-        /** 每次生成铁的数目 */ ironSpawnTimes: 1,
+        /** 每次生成铁的数目 */ ironSpawnTimes: 5,
         /** 钻石点位置与生成次数信息 @type {{ pos: import("@minecraft/server").Vector3, spawned: Number }[]} */ diamondInfo: [],
         /** 绿宝石点位置与生成次数信息 @type {{ pos: import("@minecraft/server").Vector3, spawned: Number }[]} */ emeraldInfo: [],
         /** 是否在每次生成时，在3*3范围内分散式地生成资源 */ distributeResource: true,
@@ -732,7 +732,7 @@ function createMapBoletum( ) {
 function createMapCarapace( ) {
 
     /** 队伍信息初始化 */
-    let mapCarapace = new BedwarsMap( "carapace", "甲壳", { maxHeightLimit: 91, distributeResource: false, clearResourceVelocity: false } );
+    let mapCarapace = new BedwarsMap( "carapace", "甲壳", { maxHeightLimit: 91, distributeResource: false, clearResourceVelocity: false, ironSpawnTimes: 1 } );
     let teamRed = new BedwarsTeam( "red", { x: 0, y: 66, z: -48 }, 3, { x: 0, y: 66, z: -64 }, { x: 0, y: 66, z: -58 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 48, y: 66, z: 0 }, 0, { x: 64, y: 66, z: 0 }, { x: 58, y: 66, z: 0 } );
     let teamGreen = new BedwarsTeam( "green", { x: 0, y: 66, z: 48 }, 1, { x: 0, y: 66, z: 64 }, { x: 0, y: 66, z: 58 } );
@@ -777,7 +777,7 @@ function createMapCarapace( ) {
 /** 【4队】拱形廊道 */
 function createMapArchway( ) {
     /** 队伍信息初始化 */
-    let mapArchway = new BedwarsMap( "archway", "拱形廊道", { maxHeightLimit: 91, healPoolRadius: 15, distributeResource: false } );
+    let mapArchway = new BedwarsMap( "archway", "拱形廊道", { maxHeightLimit: 91, healPoolRadius: 15, distributeResource: false, ironInterval: 1 } );
     let teamRed = new BedwarsTeam( "red", { x: -15, y: 66, z: -66 }, 3, { x: -14, y: 65, z: -79 }, { x: -14, y: 65, z: -75 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 66, y: 66, z: -15 }, 0, { x: 79, y: 65, z: -14 }, { x: 75, y: 65, z: -14 } );
     let teamGreen = new BedwarsTeam( "green", { x: 15, y: 66, z: 66 }, 1, { x: 14, y: 65, z: 79 }, { x: 14, y: 65, z: 75 } );
@@ -825,7 +825,7 @@ function createMapArchway( ) {
 function createMapCryptic( ) {
 
     /** 队伍信息初始化 */
-    let mapCryptic = new BedwarsMap( "cryptic", "神秘", { maxHeightLimit: 102, ironSpawnTimes: 5, distributeResource: false } );
+    let mapCryptic = new BedwarsMap( "cryptic", "神秘", { maxHeightLimit: 102, distributeResource: false } );
     let teamRed = new BedwarsTeam( "red", { x: 2, y: 77, z: 73 }, 1, { x: 2, y: 78, z: 90 }, { x: 2, y: 78, z: 85 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 2, y: 77, z: -73 }, 3, { x: 2, y: 78, z: -90 }, { x: 2, y: 78, z: -85 } );
     
@@ -859,7 +859,7 @@ function createMapCryptic( ) {
 function createMapFrost( ) {
 
     /** 队伍信息初始化 */
-    let mapFrost = new BedwarsMap( "frost", "极寒", { maxHeightLimit: 97, ironSpawnTimes: 5 } );
+    let mapFrost = new BedwarsMap( "frost", "极寒", { maxHeightLimit: 97 } );
     let teamRed = new BedwarsTeam( "red", { x: 0, y: 72, z: 59 }, 1, { x: 0, y: 72, z: 75 }, { x: 0, y: 72, z: 70 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 0, y: 72, z: -59 }, 3, { x: 0, y: 72, z: -75 }, { x: 0, y: 72, z: -70 } );
     
@@ -893,7 +893,7 @@ function createMapFrost( ) {
 function createMapGarden( ) {
 
     /** 队伍信息初始化 */
-    let mapGarden = new BedwarsMap( "garden", "花园", { maxHeightLimit: 97, ironSpawnTimes: 5 } );
+    let mapGarden = new BedwarsMap( "garden", "花园", { maxHeightLimit: 97 } );
     let teamRed = new BedwarsTeam( "red", { x: 79, y: 77, z: 0 }, 0, { x: 98, y: 79, z: 0 }, { x: 94, y: 79, z: 0 } );
     let teamBlue = new BedwarsTeam( "blue", { x: -79, y: 77, z: 0 }, 2, { x: -98, y: 79, z: 0 }, { x: -94, y: 79, z: 0 } );
     
@@ -927,7 +927,7 @@ function createMapGarden( ) {
 function createMapRuins( ) {
 
     /** 队伍信息初始化 */
-    let mapRuins = new BedwarsMap( "ruins", "废墟", { maxHeightLimit: 96, ironSpawnTimes: 5 } );
+    let mapRuins = new BedwarsMap( "ruins", "废墟", { maxHeightLimit: 96 } );
     let teamRed = new BedwarsTeam( "red", { x: -4, y: 71, z: -64 }, 3, { x: 0, y: 72, z: -82 }, { x: 0, y: 72, z: -78 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 4, y: 71, z: 64 }, 1, { x: 0, y: 72, z: 82 }, { x: 0, y: 72, z: 78 } );
     
@@ -961,7 +961,7 @@ function createMapRuins( ) {
 function createMapPicnic( ) {
 
     /** 队伍信息初始化 */
-    let mapPicnic = new BedwarsMap( "picnic", "野餐", { maxHeightLimit: 90, ironSpawnTimes: 5, distributeResource: false } );
+    let mapPicnic = new BedwarsMap( "picnic", "野餐", { maxHeightLimit: 90, distributeResource: false } );
     let teamRed = new BedwarsTeam( "red", { x: 0, y: 65, z: -62 }, 3, { x: 0, y: 64, z: -78 }, { x: 0, y: 64, z: -74 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 0, y: 65, z: 61 }, 1, { x: 0, y: 64, z: 77 }, { x: 0, y: 64, z: 73 } );
     
@@ -995,7 +995,7 @@ function createMapPicnic( ) {
 function createMapLionTemple( ) {
 
     /** 队伍信息初始化 */
-    let mapLionTemple = new BedwarsMap( "lion_temple", "狮庙", { maxHeightLimit: 100, distributeResource: false } );
+    let mapLionTemple = new BedwarsMap( "lion_temple", "狮庙", { maxHeightLimit: 100, distributeResource: false, ironSpawnTimes: 1 } );
     let teamRed = new BedwarsTeam( "red", { x: -2, y: 73, z: 58 }, 1, { x: -2, y: 75, z: 78 }, { x: -2, y: 75, z: 73 } );
     let teamBlue = new BedwarsTeam( "blue", { x: -2, y: 73, z: -58 }, 3, { x: -2, y: 75, z: -78 }, { x: -2, y: 75, z: -73 } );
     /** 移除多余实体，进行初始化 */
@@ -1030,7 +1030,7 @@ function createMapLionTemple( ) {
 function createMapGlacier() {
 
     /** 队伍信息初始化 */
-    let mapGlacier = new BedwarsMap( "glacier", "冰川", { maxHeightLimit: 106, distributeResource: false } );
+    let mapGlacier = new BedwarsMap( "glacier", "冰川", { maxHeightLimit: 106, distributeResource: false, ironInterval: 20, goldInterval: 120, ironSpawnTimes: 1 } );
     let teamRed = new BedwarsTeam( "red", { x: -32, y: 81, z: -65 }, 3, { x: -32, y: 81, z: -86 }, { x: -32, y: 81, z: -80 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 32, y: 81, z: -65 }, 3, { x: 32, y: 81, z: -86 }, { x: 32, y: 81, z: -80 } );
     let teamGreen = new BedwarsTeam( "green", { x: 65, y: 81, z: -32 }, 0, { x: 86, y: 81, z: -32 }, { x: 80, y: 81, z: -32 } );
@@ -1082,7 +1082,7 @@ function createMapGlacier() {
 function createMapRooftop() {
 
     /** 队伍信息初始化 */
-    let mapRooftop = new BedwarsMap( "rooftop", "屋顶", { maxHeightLimit: 91, minHeightLimit: 55, distributeResource: false, ironSpawnTimes: 5 } );
+    let mapRooftop = new BedwarsMap( "rooftop", "屋顶", { maxHeightLimit: 91, minHeightLimit: 55, distributeResource: false, ironInterval: 20, goldInterval: 120, ironSpawnTimes: 1 } );
     let teamRed = new BedwarsTeam( "red", { x: -34, y: 66, z: -79 }, 3, { x: -34, y: 66, z: -96 }, { x: -34, y: 66, z: -89 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 34, y: 66, z: -79 }, 3, { x: 34, y: 66, z: -96 }, { x: 34, y: 66, z: -89 } );
     let teamGreen = new BedwarsTeam( "green", { x: 79, y: 66, z: -34 }, 0, { x: 96, y: 66, z: -34 }, { x: 89, y: 66, z: -34 } );
@@ -1137,7 +1137,7 @@ function createMapRooftop() {
 function createMapAmazon() {
 
     /** 队伍信息初始化 */
-    let mapAmazon = new BedwarsMap( "amazon", "亚马逊", { maxHeightLimit: 90, minHeightLimit: 55, distributeResource: false, ironSpawnTimes: 5 } );
+    let mapAmazon = new BedwarsMap( "amazon", "亚马逊", { maxHeightLimit: 90, minHeightLimit: 55, distributeResource: false, ironInterval: 20, goldInterval: 120, ironSpawnTimes: 1 } );
     let teamRed = new BedwarsTeam( "red", { x: -33, y: 65, z: -80 }, 3, { x: -33, y: 65, z: -100 }, { x: -33, y: 65, z: -95 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 33, y: 65, z: -80 }, 3, { x: 33, y: 65, z: -100 }, { x: 33, y: 65, z: -95 } );
     let teamGreen = new BedwarsTeam( "green", { x: 80, y: 65, z: -33 }, 0, { x: 100, y: 65, z: -33 }, { x: 95, y: 65, z: -33 } );

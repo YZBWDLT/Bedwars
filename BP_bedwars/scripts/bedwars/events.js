@@ -74,7 +74,7 @@ export function waitingFunction() {
         /** 清除原场景 */
         if ( loadInfo.clearingLayer !== 0 ) {
             /** 记分板显示 */
-            map().waitingScoreboard( "§f清除原地图中...§r" );
+            map().waitingScoreboard( `§f清除原地图中... §7${tickToSecond(loadInfo.clearingLayer*loadInfo.clearTimePerLayer)}秒§r` );
             /** 每隔 loadInfo.clearTimePerLayer 刻，清理一层 */
             if ( system.currentTick % loadInfo.clearTimePerLayer === 0 ) {
                 loadInfo.clearingLayer--;
@@ -89,7 +89,7 @@ export function waitingFunction() {
         /** 加载结构等待 */
         else if ( loadInfo.structureLoadTime !== 0 ) {
             /** 记分板显示 */
-            map().waitingScoreboard( "§f生成地图中...§r" );
+            map().waitingScoreboard( `§f生成地图中... §7${tickToSecond(loadInfo.structureLoadTime)}秒§r` );
             /** 倒计时 */
             loadInfo.structureLoadTime--;
             /** 倒计时结束后，设置队伍岛屿颜色与床 */
@@ -98,11 +98,11 @@ export function waitingFunction() {
         /** 设置队伍岛屿颜色与床等待 */
         else {
             /** 记分板显示 */
-            map().waitingScoreboard( "§f生成地图中...§r" );
+            map().waitingScoreboard( "§f设置队伍岛屿中...§r" );
             /** 倒计时 */
-            loadInfo.structureLoadTime--;
+            loadInfo.setTeamIslandTime--;
             /** 倒计时结束后，设置等待时间，并关闭加载状态 */
-            if ( loadInfo.structureLoadTime === 0 ) {
+            if ( loadInfo.setTeamIslandTime === 0 ) {
                 loadInfo.isLoading = false;
                 map().gameStartCountdown = settings.gameStartWaitingTime;
             }
@@ -617,10 +617,11 @@ export function tradeFunction() {
     } )
 
     /** 设置玩家不得进入商人区域 */
-    eachPlayer( player => {
-        if ( playerIsAlive( player ) ) { player.runCommand( `function maps/${map().id}/player_into_shop` ) }
-    } )
-    
+    if ( !map().playerCouldIntoShop ) {
+        eachPlayer( player => {
+            if ( playerIsAlive( player ) ) { player.runCommand( `function maps/${map().id}/player_into_shop` ) }
+        } )
+    }
 }
 
 /**
@@ -787,9 +788,6 @@ export function gameEventFunction( ) {
  */
 export function teamFunction( ) {
     eachTeam( team => {
-
-        /** 如果一个队伍有床但没有玩家，则设置为无效的队伍 */
-        // if ( team.bedInfo.isExist === true && team.getTeamMember().length === 0 ) { team.setTeamInvalid() }
 
         /** 如果一个队伍没床并且没有玩家，则该队伍为被淘汰 */
         if ( team.bedInfo.isExist === false && team.getAliveTeamMember().length === 0 && team.isEliminated === false ) { team.setTeamEliminated() }

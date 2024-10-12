@@ -3,6 +3,7 @@
 - Glacier 冰川，8队地图
   - 8队地图中的物价略有调整，详情请见Hypixel服务器内售价情况
 - Rooftop 屋顶，8队地图
+- Amazon 亚马逊，8队地图
 
 ### 商品物价更改
 
@@ -18,6 +19,11 @@
 ### 最低高度限制
 
 - 现在所有地图都存在**最低高度限制**，玩家将不再允许在50格以下放置方块
+
+### 地图生成
+
+- 现在地图的加载时间视地图规模而决定
+- 现在地图的加载剩余时间会在屏幕右侧信息板上公示
 
 ### 漏洞修复
 
@@ -49,6 +55,8 @@
   - `validMapsFor4Teams`
   - `validMapsFor8Teams`
 - **新增** `map()`，获取当前地图信息
+- **新增** 变量`playerCouldIntoShop: Boolean`，玩家是否能够进入商人区域
+  - 因此，大部分地图中的`player_into_shop`的函数被移除
 - **更改** 现在`createMapArchway()`内部使用的变量使用正确的名称`mapArchway`而非`mapCarapace`
 
 #### `team.js`

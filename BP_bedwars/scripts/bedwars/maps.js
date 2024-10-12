@@ -12,7 +12,7 @@ export const validMapsFor2Teams = [ "cryptic", "frost", "garden", "ruins", "picn
 export const validMapsFor4Teams = [ "orchid", "chained", "boletum", "carapace", "archway" ];
 
 /** 【固定数据】可用 8 队地图列表 */
-export const validMapsFor8Teams = [ "glacier", "rooftop" ];
+export const validMapsFor8Teams = [ "glacier", "rooftop", "amazon" ];
 
 /** 【函数】打乱一个数组
  * @param {Array} array
@@ -81,6 +81,9 @@ export class BedwarsMap{
      */
     traderInfo = [];
 
+    /** 【属性】玩家是否可以进入商店 */
+    playerCouldIntoShop = true;
+
     /** 【属性】游戏事件，包括下一个事件的倒计时、下一个事件的ID、下一个事件的名称 */
     gameEvent = {
         /** 下一个事件的倒计时，单位：游戏刻 */ nextEventCountdown: 7200,
@@ -121,7 +124,8 @@ export class BedwarsMap{
      * minHeightLimit: Number
      * distributeResource: Boolean,
      * clearResourceVelocity: Boolean,
-     * ironSpawnTimes: Number
+     * ironSpawnTimes: Number,
+     * playerCouldIntoShop: Boolean
      * }} options 可选项
      */
     constructor( id, name, options = {} ) {
@@ -138,6 +142,7 @@ export class BedwarsMap{
         if ( options.healPoolRadius !== undefined ) { this.healPoolRadius = options.healPoolRadius; }
         if ( options.maxHeightLimit !== undefined ) { this.heightLimit.max = options.maxHeightLimit; }
         if ( options.minHeightLimit !== undefined ) { this.heightLimit.min = options.minHeightLimit; }
+        if ( options.playerCouldIntoShop !== undefined ) { this.playerCouldIntoShop = options.playerCouldIntoShop; }
     };
 
     /** 【方法】进行地图初始化 */
@@ -159,7 +164,6 @@ export class BedwarsMap{
         let infoBoardTitle = "§l§e     起床战争§r     ";
         let infoBoardMapName = `§f地图： §a${this.name}§r`;
         let infoBoardWaitingPlayer = `§f玩家： §a${getPlayerAmount()}/16§r`;
-        let infoBoardProgress = ``;
         let infoBoardTeamCount = `§f队伍数： §a${this.teamCount}§r`;
         let infoBoardMode = `§f模式： §a经典§r`;
         let infoBoardAuthor = `§e一只卑微的量筒§r`
@@ -577,6 +581,7 @@ export function regenerateMap( mapId = undefined ) {
 
         case "glacier": createMapGlacier(); break;
         case "rooftop": createMapRooftop(); break;
+        case "amazon": createMapAmazon(); break;
     }
 }
 
@@ -589,7 +594,7 @@ export let map = () => { return world.bedwarsMap };
 function createMapOrchid( ) {
 
     /** 队伍信息初始化 */
-    let mapOrchid = new BedwarsMap( "orchid", "兰花", { maxHeightLimit: 95, healPoolRadius: 21 } );
+    let mapOrchid = new BedwarsMap( "orchid", "兰花", { maxHeightLimit: 95, healPoolRadius: 21, playerCouldIntoShop: false } );
     let teamRed = new BedwarsTeam( "red", { x: 41, y: 71, z: -50 }, 0, { x: 62, y: 71, z: -50 }, { x: 58, y: 71, z: -49 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 41, y: 71, z: 50 }, 0, { x: 62, y: 71, z: 50 }, { x: 58, y: 71, z: 49 } );
     let teamGreen = new BedwarsTeam( "green", { x: -41, y: 71, z: 50 }, 2, { x: -62, y: 71, z: 50 }, { x: -58, y: 71, z: 49 } );
@@ -1077,7 +1082,7 @@ function createMapGlacier() {
 function createMapRooftop() {
 
     /** 队伍信息初始化 */
-    let mapRooftop = new BedwarsMap( "rooftop", "屋顶", { maxHeightLimit: 91, distributeResource: false, ironSpawnTimes: 5 } );
+    let mapRooftop = new BedwarsMap( "rooftop", "屋顶", { maxHeightLimit: 91, minHeightLimit: 55, distributeResource: false, ironSpawnTimes: 5 } );
     let teamRed = new BedwarsTeam( "red", { x: -34, y: 66, z: -79 }, 3, { x: -34, y: 66, z: -96 }, { x: -34, y: 66, z: -89 } );
     let teamBlue = new BedwarsTeam( "blue", { x: 34, y: 66, z: -79 }, 3, { x: 34, y: 66, z: -96 }, { x: 34, y: 66, z: -89 } );
     let teamGreen = new BedwarsTeam( "green", { x: 79, y: 66, z: -34 }, 0, { x: 96, y: 66, z: -34 }, { x: 89, y: 66, z: -34 } );
@@ -1125,5 +1130,57 @@ function createMapRooftop() {
 
     /** 在 world 类中插入地图信息 */
     world.bedwarsMap = mapRooftop;
+    
+}
+
+/** 【8队】亚马逊 */
+function createMapAmazon() {
+
+    /** 队伍信息初始化 */
+    let mapAmazon = new BedwarsMap( "amazon", "亚马逊", { maxHeightLimit: 90, minHeightLimit: 55, distributeResource: false, ironSpawnTimes: 5 } );
+    let teamRed = new BedwarsTeam( "red", { x: -33, y: 65, z: -80 }, 3, { x: -33, y: 65, z: -100 }, { x: -33, y: 65, z: -95 } );
+    let teamBlue = new BedwarsTeam( "blue", { x: 33, y: 65, z: -80 }, 3, { x: 33, y: 65, z: -100 }, { x: 33, y: 65, z: -95 } );
+    let teamGreen = new BedwarsTeam( "green", { x: 80, y: 65, z: -33 }, 0, { x: 100, y: 65, z: -33 }, { x: 95, y: 65, z: -33 } );
+    let teamYellow = new BedwarsTeam( "yellow", { x: 80, y: 65, z: 33 }, 0, { x: 100, y: 65, z: 33 }, { x: 95, y: 65, z: 33 } );
+    let teamCyan = new BedwarsTeam( "cyan", { x: 33, y: 65, z: 80 }, 1, { x: 33, y: 65, z: 100 }, { x: 33, y: 65, z: 95 } );
+    let teamWhite = new BedwarsTeam( "white", { x: -33, y: 65, z: 80 }, 1, { x: -33, y: 65, z: 100 }, { x: -33, y: 65, z: 95 } );
+    let teamPink = new BedwarsTeam( "pink", { x: -80, y: 65, z: 33 }, 2, { x: -100, y: 65, z: 33 }, { x: -95, y: 65, z: 33 } );
+    let teamGray = new BedwarsTeam( "gray", { x: -80, y: 65, z: -33 }, 2, { x: -100, y: 65, z: -33 }, { x: -95, y: 65, z: -33 } );
+
+    /** 移除多余实体，进行初始化 */
+    mapAmazon.init()
+    
+    /** 设置地图的队伍 */
+    mapAmazon.addTeam( teamRed );
+    mapAmazon.addTeam( teamBlue );
+    mapAmazon.addTeam( teamGreen );
+    mapAmazon.addTeam( teamYellow );
+    mapAmazon.addTeam( teamCyan );
+    mapAmazon.addTeam( teamWhite );
+    mapAmazon.addTeam( teamPink );
+    mapAmazon.addTeam( teamGray );
+
+    /** 设置地图钻石和绿宝石生成点 */
+    mapAmazon.addSpawner( "diamond", { x: 76, y: 63, z: 75 } );
+    mapAmazon.addSpawner( "diamond", { x: -75, y: 63, z: 76 } );
+    mapAmazon.addSpawner( "diamond", { x: 75, y: 63, z: -76 } );
+    mapAmazon.addSpawner( "diamond", { x: -76, y: 63, z: -75 } );
+    mapAmazon.addSpawner( "emerald", { x: 0, y: 80, z: 33 } );
+    mapAmazon.addSpawner( "emerald", { x: 0, y: 80, z: -33 } );
+    mapAmazon.addSpawner( "emerald", { x: 33, y: 80, z: 0 } );
+    mapAmazon.addSpawner( "emerald", { x: -33, y: 80, z: 0 } );
+
+    /** 设置地图商人 */
+    mapAmazon.addTrader( { x: -26, y: 66, z: -96 }, 90, "blocks_and_items" ); mapAmazon.addTrader( { x: -26, y: 66, z: -95 }, 90, "weapon_and_armor" ); mapAmazon.addTrader( { x: -39, y: 66, z: -95.5 }, 270, "team_upgrade" );
+    mapAmazon.addTrader( { x: 39, y: 66, z: -96 }, 90, "blocks_and_items" ); mapAmazon.addTrader( { x: 39, y: 66, z: -95 }, 90, "weapon_and_armor" ); mapAmazon.addTrader( { x: 26, y: 66, z: -95.5 }, 270, "team_upgrade" );
+    mapAmazon.addTrader( { x: 96, y: 66, z: -26 }, 180, "blocks_and_items" ); mapAmazon.addTrader( { x: 95, y: 66, z: -26 }, 180, "weapon_and_armor" ); mapAmazon.addTrader( { x: 95.5, y: 66, z: -39 }, 0, "team_upgrade" );
+    mapAmazon.addTrader( { x: 96, y: 66, z: 39 }, 180, "blocks_and_items" ); mapAmazon.addTrader( { x: 95, y: 66, z: 39 }, 180, "weapon_and_armor" ); mapAmazon.addTrader( { x: 95.5, y: 66, z: 26 }, 0, "team_upgrade" );
+    mapAmazon.addTrader( { x: 26, y: 66, z: 96 }, 270, "blocks_and_items" ); mapAmazon.addTrader( { x: 26, y: 66, z: 95 }, 270, "weapon_and_armor" ); mapAmazon.addTrader( { x: 39, y: 66, z: 95.5 }, 90, "team_upgrade" );
+    mapAmazon.addTrader( { x: -39, y: 66, z: 96 }, 270, "blocks_and_items" ); mapAmazon.addTrader( { x: -39, y: 66, z: 95 }, 270, "weapon_and_armor" ); mapAmazon.addTrader( { x: -26, y: 66, z: 95.5 }, 90, "team_upgrade" );
+    mapAmazon.addTrader( { x: -96, y: 66, z: 26 }, 0, "blocks_and_items" ); mapAmazon.addTrader( { x: -95, y: 66, z: 26 }, 0, "weapon_and_armor" ); mapAmazon.addTrader( { x: -95.5, y: 66, z: 39 }, 180, "team_upgrade" );
+    mapAmazon.addTrader( { x: -96, y: 66, z: -39 }, 0, "blocks_and_items" ); mapAmazon.addTrader( { x: -95, y: 66, z: -39 }, 0, "weapon_and_armor" ); mapAmazon.addTrader( { x: -95.5, y: 66, z: -26 }, 180, "team_upgrade" );
+
+    /** 在 world 类中插入地图信息 */
+    world.bedwarsMap = mapAmazon;
     
 }

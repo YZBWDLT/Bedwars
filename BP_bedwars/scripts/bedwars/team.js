@@ -1,9 +1,10 @@
 /** 起床战争队伍 */
 
 import { Player, world } from "@minecraft/server";
-import { BedwarsPlayer, centerPosition, copyPosition, eachPlayer, eachValidPlayer, getPlayerNearby, playerIsAlive, playerIsValid, randomInt, removeItem, resourceTypeToResourceId, warnPlayer, settings, spawnItem, showTitle } from "./methods"
+import { BedwarsPlayer, centerPosition, copyPosition, eachPlayer, eachValidPlayer, getPlayerNearby, playerIsAlive, playerIsValid, randomInt, removeItem, resourceTypeToResourceId, warnPlayer, spawnItem, showTitle } from "./methods"
 import { overworld } from "./constants";
 import { map } from "./maps";
+import { settings } from "./settings";
 
 /** @enum {validTeams[]} 可用队伍列表 */
 export const validTeams = [ "red", "blue", "yellow", "green", "pink", "cyan", "white", "gray", "purple", "brown", "orange" ];

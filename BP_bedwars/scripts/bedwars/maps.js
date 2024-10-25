@@ -1,9 +1,10 @@
 /** 地图类，及地图相关信息 */
 
-import { centerPosition, eachPlayer, eachTeam, eachValidPlayer, getPlayerAmount, initPlayer, playerIsValid, randomInt, removeItem, tickToSecond, settings, BedwarsPlayer, spawnItem, showTitle } from "./methods"
+import { centerPosition, eachPlayer, eachTeam, eachValidPlayer, getPlayerAmount, initPlayer, playerIsValid, randomInt, removeItem, tickToSecond, BedwarsPlayer, spawnItem, showTitle } from "./methods"
 import { world } from "@minecraft/server";
 import { BedwarsTeam, validTeams } from "./team.js"
 import { overworld } from "./constants.js";
+import { settings } from "./settings.js";
 
 /** 【固定数据】可用 2 队地图列表 */
 export const validMapsFor2Teams = [ "cryptic", "frost", "garden", "ruins", "picnic", "lion_temple" ];

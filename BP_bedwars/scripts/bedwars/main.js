@@ -1,6 +1,7 @@
 import { system, world } from "@minecraft/server";
 import { regenerateMap, map } from "./maps.js";
 import * as bedwarsEvents from "./events.js";
+import { settingsEvent } from "./settings.js";
 
 /** 地图创建 */
 regenerateMap();
@@ -20,7 +21,7 @@ if ( map() !== undefined ) {
     world.afterEvents.entityDie.subscribe( event => { bedwarsEvents.playerDieEvent( event ); } )
     world.afterEvents.playerSpawn.subscribe( event => { bedwarsEvents.playerRejoinEvent( event ); } )
     world.beforeEvents.playerLeave.subscribe( event => { bedwarsEvents.playerLeaveEvent( event ); } )
-    system.afterEvents.scriptEventReceive.subscribe( event => { bedwarsEvents.settingsEvent( event ) } )
+    system.afterEvents.scriptEventReceive.subscribe( event => { settingsEvent( event ) } )
 }
 
 system.runInterval( () => {

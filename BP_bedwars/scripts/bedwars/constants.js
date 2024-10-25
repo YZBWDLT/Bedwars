@@ -1,22 +1,5 @@
 import { world } from "@minecraft/server"
 
-/**
-import {
-    centerPosition, copyPosition,
-    eachPlayer, eachTeam, eachValidPlayer, entityHasItemAmount,
-    getEnchantmentLevel, getPlayerAmount, getPlayerNearby, giveItem,
-    hasItemTypeTest,
-    initPlayer, itemInfo,
-    object_print, object_print_actionbar, object_print_actionbar_no_method, object_print_no_method,
-    playerIsAlive, playerIsValid,
-    randomInt, removeItem, replaceEquipmentItem, replaceInventoryItem, resourceTypeToResourceId,
-    secondToMinute, sendMessage,
-    teamNameToTeamNumber, teamNumberToTeamName, tickToSecond,
-    warnPlayer
-} from "./methods"
-*/
-
-
 /** @enum {breakableVanillaBlocksByPlayer[]} 可由玩家破坏的原版方块 */
 export const breakableVanillaBlocksByPlayer = [ "minecraft:bed", "minecraft:short_grass", "minecraft:ladder", "minecraft:sponge", "minecraft:wet_sponge" ];
 

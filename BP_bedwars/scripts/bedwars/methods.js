@@ -4,6 +4,7 @@ import { world, system, Player, ItemStack, Entity, EnchantmentType, EquipmentSlo
 import { overworld, resourceType } from "./constants.js"
 import { map } from "./maps.js"
 import { BedwarsTeam } from "./team.js";
+import { settings } from "./settings.js";
 
 // ===== 常用方法区 =====
 
@@ -384,21 +385,7 @@ export function centerPosition( pos ) {
     return { ...pos, x: pos.x + 0.5, z: pos.z + 0.5 }
 }
 
-// ===== 地图类、队伍类、玩家类、设置 =====
-
-
-/**
- * 可用设置
- */
-export const settings = {
-    minWaitingPlayers: 2,
-    gameStartWaitingTime: 400,
-    resourceMaxSpawnTimes: { iron: 72, gold: 7, diamond: 8, emerald: 4 },
-    respawnTime: { normalPlayers: 110, rejoinedPlayers: 200 },
-    invalidTeamCouldSpawnResources: true,
-    randomMap:{ allow2Teams: true, allow4Teams: true, allow8Teams: true },
-    creativePlayerCanBreakBlocks: false
-}
+// ===== 玩家类 =====
 
 /**
  * 玩家类

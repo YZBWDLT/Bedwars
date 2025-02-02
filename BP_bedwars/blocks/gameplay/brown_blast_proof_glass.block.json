@@ -6,7 +6,8 @@
             "menu_category": { "category": "construction", "group": "itemGroup.name.glass", "is_hidden_in_commands": false }
         },
         "components": {
-            "minecraft:material_instances": { "*": { "render_method": "blend" } },
+            "minecraft:geometry": "geometry.glass",
+            "minecraft:material_instances": { "*": { "render_method": "blend", "texture": "bedwars_brown_blast_proof_glass" } },
             "minecraft:destructible_by_explosion": false,
             "minecraft:destructible_by_mining": { "seconds_to_destroy": 0.45 },
             "minecraft:light_dampening": 0,

@@ -1,5 +1,5 @@
 {
-    "format_version":"1.1.0",
+    "format_version": [ 1, 1, 0 ],
     "bedwars:shopitem_wool": { "sound": "cloth", "textures": "bedwars_shopitem_wool" },
     "bedwars:shopitem_planks": { "sound": "wood", "textures": "bedwars_shopitem_planks" },
     "bedwars:shopitem_end_stone": { "sound": "wood", "textures": "bedwars_shopitem_end_stone" },

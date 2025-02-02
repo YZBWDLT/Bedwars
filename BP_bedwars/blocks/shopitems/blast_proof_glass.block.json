@@ -6,7 +6,8 @@
             "menu_category": { "category": "items", "is_hidden_in_commands": false }
         },
         "components": {
-            "minecraft:material_instances": { "*": { "render_method": "blend" } }
+            "minecraft:geometry": "geometry.glass",
+            "minecraft:material_instances": { "*": { "render_method": "blend", "texture": "bedwars_white_blast_proof_glass" } }
         }
     }
 }

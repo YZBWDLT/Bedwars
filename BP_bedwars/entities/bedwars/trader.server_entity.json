@@ -76,6 +76,7 @@
 
             "blocks_and_items_trader":{ "add": { "component_groups": [ "blocks_and_items_trader" ] } },
             "weapon_and_armor_trader":{ "add": { "component_groups": [ "weapon_and_armor_trader" ] } },
+            "weapon_and_armor_capture_trader":{ "add": { "component_groups": [ "weapon_and_armor_capture_trader" ] } },
             "team_upgrade_trader":{ "add": { "component_groups": [ "team_upgrade_trader" ] } }
         },
         "component_groups": {
@@ -109,6 +110,10 @@
             "weapon_and_armor_trader": {
                 "minecraft:type_family": { "family": [ "npc", "trader", "weapon_and_armor_trader" ] },
                 "minecraft:inventory": { "container_type": "container", "inventory_size": 20 }
+            },
+            "weapon_and_armor_capture_trader": {
+                "minecraft:type_family": { "family": [ "npc", "trader", "weapon_and_armor_capture_trader" ] },
+                "minecraft:inventory": { "container_type": "container", "inventory_size": 21 }
             },
             "team_upgrade_trader": {
                 "minecraft:type_family": { "family": [ "npc", "trader", "team_upgrade_trader" ] },

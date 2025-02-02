@@ -105,6 +105,10 @@
         "bedwars_upgrade_dragon_buff": { "textures": "textures/items/ender_dragon_spawn_egg" },
         "bedwars_upgrade_its_a_trap": { "textures": "textures/blocks/trip_wire_source" },
         "bedwars_upgrade_miner_fatigue_trap": { "textures": "textures/items/iron_pickaxe" },
-        "bedwars_upgrade_alarm_trap": { "textures": "textures/blocks/redstone_torch_on" }
+        "bedwars_upgrade_alarm_trap": { "textures": "textures/blocks/redstone_torch_on" },
+
+        "bedwars_red_bed": { "textures": "textures/items/bed_red" },
+        "bedwars_blue_bed": { "textures": "textures/items/bed_blue" },
+        "bedwars_white_bed": { "textures": "textures/items/bed_white" }
     }
 }

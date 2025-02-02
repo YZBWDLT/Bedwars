@@ -1,26 +1,26 @@
 {
-    "format_version": 2,
-    "header": {
-        "name": "量筒的起床战争 资源包",
-        "description": "仿照Hypixel在基岩版上实现的起床战争！",
-        "uuid": "576eb433-71f6-45ec-a702-efd7cb2e8395",
-        "version": [ 1, 2, 2 ],
-        "min_engine_version": [ 1, 21, 0 ]
-    },
-    "modules": [
-        {
-            "type": "resources",
-            "uuid": "0c668597-ca38-439d-a9a9-464ffa7e3b26",
-            "version": [ 2, 0, 0 ]
-        }
-    ],
-    "metadata": {
-        "authors": [ "YZBWDLT" ]
-    },
-    "dependencies": [
-        {
-            "uuid": "459363a0-9008-4654-a350-496c402f2223",
-            "version": [ 1, 0, 0 ]
-        }
-    ]
+	"format_version": 2,
+	"header": {
+		"name": "量筒的起床战争 资源包",
+		"description": "仿照Hypixel在基岩版上实现的起床战争！",
+		"uuid": "576eb433-71f6-45ec-a702-efd7cb2e8395",
+		"version": [ 1, 2, 4 ],
+		"min_engine_version": [ 1, 21, 0 ]
+	},
+	"modules": [
+		{
+			"type": "resources",
+			"uuid": "0c668597-ca38-439d-a9a9-464ffa7e3b26",
+			"version": [ 2, 0, 0 ]
+		}
+	],
+	"metadata": {
+		"authors": [ "YZBWDLT" ]
+	},
+	"dependencies": [
+		{
+			"uuid": "459363a0-9008-4654-a350-496c402f2223",
+			"version": [ 1, 0, 2 ]
+		}
+	]
 }

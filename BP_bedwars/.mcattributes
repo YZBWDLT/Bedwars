@@ -1,2 +1,3 @@
 
 diagnostic.disable.behaviorpack.mcstructure.missing=true
+diagnostic.disable.behaviorpack.item.components.texture_not_found=true

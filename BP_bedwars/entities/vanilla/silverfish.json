@@ -26,7 +26,6 @@
             "minecraft:collision_box": { "width": 0.4, "height": 0.3 },
             "minecraft:despawn": { "despawn_from_distance": {} },
             "minecraft:behavior.float": { "priority": 1 },
-            "minecraft:behavior.silverfish_merge_with_stone": { "priority": 5 },
             "minecraft:behavior.nearest_attackable_target": { "priority": 2, "attack_interval": 10, "entity_types": [ { "filters": { "any_of": [ { "test" : "is_family", "subject" : "other", "value" : "player"}, { "test" : "is_family", "subject" : "other", "value" : "snowgolem"}, { "test" : "is_family", "subject" : "other", "value" : "irongolem"} ] }, "max_dist": 8 } ] },
             "minecraft:physics": { },
             "minecraft:pushable": { "is_pushable": true, "is_pushable_by_piston": true },
@@ -35,24 +34,27 @@
         },
 
         "events": {
-            "minecraft:entity_spawned": { "add": { "component_groups": [ "minecraft:silverfish_calm" ] } },
+            "minecraft:entity_spawned": { "add": { "component_groups": [ "minecraft:silverfish_calm", "vanilla_components" ] } },
             "minecraft:become_angry": { "remove": { "component_groups": [ "minecraft:silverfish_calm" ] }, "add": { "component_groups": [ "minecraft:silverfish_angry" ] } },
             "minecraft:on_calm": { "remove": { "component_groups": [ "minecraft:silverfish_angry" ] }, "add": { "component_groups": [ "minecraft:silverfish_calm" ] } },
             
-            "team_red": { "add": { "component_groups": [ "team_red", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry" ] } },
-            "team_blue": { "add": { "component_groups": [ "team_blue", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry" ] } },
-            "team_green": { "add": { "component_groups": [ "team_green", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry" ] } },
-            "team_yellow": { "add": { "component_groups": [ "team_yellow", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry" ] } },
-            "team_white": { "add": { "component_groups": [ "team_white", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry" ] } },
-            "team_pink": { "add": { "component_groups": [ "team_pink", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry" ] } },
-            "team_gray": { "add": { "component_groups": [ "team_gray", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry" ] } },
-            "team_cyan": { "add": { "component_groups": [ "team_cyan", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry" ] } },
-            "team_brown": { "add": { "component_groups": [ "team_brown", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry" ] } },
-            "team_purple": { "add": { "component_groups": [ "team_purple", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry" ] } },
-            "team_orange": { "add": { "component_groups": [ "team_orange", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry" ] } }
+            "team_red": { "add": { "component_groups": [ "team_red", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
+            "team_blue": { "add": { "component_groups": [ "team_blue", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
+            "team_green": { "add": { "component_groups": [ "team_green", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
+            "team_yellow": { "add": { "component_groups": [ "team_yellow", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
+            "team_white": { "add": { "component_groups": [ "team_white", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
+            "team_pink": { "add": { "component_groups": [ "team_pink", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
+            "team_gray": { "add": { "component_groups": [ "team_gray", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
+            "team_cyan": { "add": { "component_groups": [ "team_cyan", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
+            "team_brown": { "add": { "component_groups": [ "team_brown", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
+            "team_purple": { "add": { "component_groups": [ "team_purple", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
+            "team_orange": { "add": { "component_groups": [ "team_orange", "bedwars_silverfish" ] }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } }
         },
 
         "component_groups": {
+            "vanilla_components": {
+                "minecraft:behavior.silverfish_merge_with_stone": { "priority": 5 }
+            },
             "minecraft:silverfish_calm": {
                 "minecraft:on_target_acquired" : { "event": "minecraft:become_angry", "target": "self" }
             },

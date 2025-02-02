@@ -199,7 +199,7 @@
                 "minecraft:experience_reward": { "on_bred": 0, "on_death": 0 },
                 "minecraft:nameable": { "allow_name_tag_renaming": true, "always_show": true },
                 "minecraft:health": { "value": 30, "max": 30 },
-                "minecraft:attack": { "damage": { "range_min": 5, "range_max": 13 } },
+                "minecraft:attack": { "damage": { "range_min": 5, "range_max": 10 } },
                 "minecraft:loot": { "table": "loot_tables/empty.json" },
                 "minecraft:damage_sensor": {
                     "triggers": [

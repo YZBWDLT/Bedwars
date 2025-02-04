@@ -102,6 +102,10 @@ item.bedwars:iron_axe=铁斧
 item.bedwars:diamond_axe=钻石斧
 item.bedwars:shears=剪刀
 
+#### 床
+item.bedwars:red_bed=红色床
+item.bedwars:blue_bed=蓝色床
+
 #### 队服
 item.bedwars:red_helmet=红队帽子
 item.bedwars:red_chestplate=红队衣服
@@ -196,6 +200,8 @@ item.bedwars:shopitem_bridge_egg=§a搭桥蛋
 item.bedwars:shopitem_magic_milk=§a魔法牛奶
 tile.bedwars:shopitem_sponge.name=§a海绵
 item.bedwars:shopitem_compact_pop_up_tower=§a弹出式防御塔
+item.bedwars:shopitem_bed=§a床
+
 #### 团队升级物品
 item.bedwars:upgrade_sharpened_swords=§a锋利附魔
 item.bedwars:upgrade_reinforced_armor_tier_1=§a盔甲强化 I
@@ -270,6 +276,7 @@ message.beHitWhenInvisibility=§c你由于受到伤害而显形！
 message.eliminated=§c你已被淘汰！
 message.heightLimit=§c达到建筑高度限制！
 message.areaNotAllowed=§c你不能进入那里！
+message.capture.bedPositionNotInvalid=§c你不能将床放在这里！请放在有效的基岩点位上！
 
 title.trapTriggered=§c陷阱触发！
 subtitle.trapTriggered=你的%s已被触发！
@@ -301,11 +308,21 @@ title.victory=§l§6胜利！
 
 message.gameOver.endInATie=§r§c游戏以平局结束！没有赢家！
 message.greenLine=§a§l---------------
-message.gameStartTitle=§f§l起床战争（经典模式）
-message.gameStartIntroduction=§e§l保护你的床并摧毁敌人的床，收集铁锭、金锭、钻石和绿宝石来升级，使自身和队伍变得更强。
-message.gameStartTitle.capture=§f§l起床战争（夺床模式）
+message.gameStartTitle.classic=§f§l起床战争（经典模式）
+message.gameStartIntroduction.classic=§e§l保护你的床并摧毁敌人的床，收集铁锭、金锭、钻石和绿宝石来升级，使自身和队伍变得更强。
+message.gameStartTitle.capture=§f§l起床战争（夺点模式）
 message.gameStartIntroduction.capture=§e§l购买并放置更多的床以削减对方的分数，或者在他们放置更多的床之前摧毁他们所有的床并将他们全部淘汰以获取最终的胜利。
 
+title.capture.allBedDestroyed=%s队§c的床已全部被破坏！
+subtitle.capture.allBedDestroyed.other=淘汰所有敌方以获胜！
+subtitle.capture.allBedDestroyed.self=死亡后不能重生！
+message.capture.bedDestroyed=§r%s队§e失去了一张床！目前该队占据§a%s§e张床。
+message.capture.bedCaptured=§r%s队§e占据了一张床！目前该队占据§a%s§e张床。
+message.capture.allBedDestroyed.other=§c敌方的床已全部被破坏，淘汰所有敌方以获胜！
+message.capture.allBedDestroyed.self=§c己方的床已全部被破坏，死亡后不能重生！放置一张新床以重生被淘汰的队友！
+
+message.respawnTipWhenHaveBed=§c不要灰心，这有可能是暂时的！当你的队伍获得一张新床的时候，你将重生！
+message.respawn.newBed=§c因为该队伍获得了一张新床，该队伍被淘汰的成员将会重生！
 
 title.needsMorePlayer=§c等待玩家进入...
 message.needsMorePlayer=§c玩家数量不足！暂时取消游戏。
@@ -354,6 +371,7 @@ message.bedwars:shopitem_bridge_egg=搭桥蛋
 message.bedwars:shopitem_magic_milk=魔法牛奶
 message.bedwars:shopitem_sponge=海绵
 message.bedwars:shopitem_compact_pop_up_tower=弹出式防御塔
+message.bedwars:shopitem_bed=床
 message.bedwars:upgrade_sharpened_swords=锋利附魔
 message.bedwars:upgrade_reinforced_armor_tier_1=盔甲强化 I
 message.bedwars:upgrade_reinforced_armor_tier_2=盔甲强化 II

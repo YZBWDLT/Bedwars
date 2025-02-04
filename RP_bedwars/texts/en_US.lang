@@ -56,6 +56,8 @@ item.bedwars:shopitem_bridge_egg=§aBridge Egg
 item.bedwars:shopitem_magic_milk=§aMagic Milk
 tile.bedwars:shopitem_sponge.name=§aSponge
 item.bedwars:shopitem_compact_pop_up_tower=§aCompact Pop-up Tower
+item.bedwars:shopitem_bed=§aBed
+
 #### Team Upgrades
 item.bedwars:upgrade_sharpened_swords=§a锋利附魔
 item.bedwars:upgrade_reinforced_armor_tier_1=§a盔甲强化 I

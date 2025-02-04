@@ -1,57 +1,55 @@
 import { system, world } from "@minecraft/server";
-import { regenerateMap, map } from "./maps.js";
-import * as bedwarsEvents from "./events.js";
-import { settingsEvent } from "./settings.js";
+import { alwaysSaturation } from "./events/gaming/effects.js";
+import { playerBreakVanillaBlocksTest } from "./events/gaming/playerBreakBlockTest.js";
+import { regenerateMap } from "./methods/bedwarsMaps.js";
+import { createEvent } from "./methods/eventManager.js";
+import { createInterval } from "./methods/intervalManager.js";
+import { playerLeave, playerRejoin } from "./events/gaming/playerLeaveAndRejoin.js";
+import { settingsEvent } from "./methods/bedwarsSettings.js";
+import { waiting } from "./events/gaming/beforeGaming.js";
+import { beforeGamingInfoBoard } from "./events/gaming/infoBoard.js";
 
 /** 地图创建 */
 regenerateMap();
 
-/** 起床战争功能 */
+/** 所用到的标签含义 */
+const tags = {
+    /** 游戏前 */ beforeGaming: "beforeGaming",
+    /** 游戏时 */ gaming: "gaming",
+    /** 游戏后 */ afterGaming: "afterGaming",
+    
+    /** 游戏逻辑 */ gameLogic: "gameLogic",
+    /** 战斗相关 */ combat: "combat",
+    /** 药效 */ effects: "effects",
+    /** 装备检测 */ equipmentTest: "equipmentTest",
+    /** 爆炸 */ explosion: "explosion",
+    /** 游戏事件 */ gameEvents: "gameEvents",
+    /** 高度限制 */ heightLimit: "heightLimit",
+    /** 信息板 */ infoBoard: "infoBoard",
+    /** 破坏方块 */ playerBreakBlock: "playerBreakBlock",
+    /** 玩家退出重进 */ playerLeaveAndRejoin: "playerLeaveAndRejoin",
+    /** 资源生成 */ spawnResources: "spawnResources",
+    /** 交易 */ trading: "trading",
+    /** 陷阱 */ trap: "trap",
+    /** 设置 */ settings: "settings",
 
-if ( map() !== undefined ) {
-    world.beforeEvents.playerBreakBlock.subscribe( event => { bedwarsEvents.playerBreakBlockEvent( event ); } )
-    world.afterEvents.itemCompleteUse.subscribe( event => { bedwarsEvents.playerUsePotionAndMagicMilkEvent( event ); } )
-    world.afterEvents.projectileHitEntity.subscribe( event => { bedwarsEvents.bedBugEvent( event ); bedwarsEvents.hurtByFireballsEvent( event ) } )
-    world.afterEvents.projectileHitBlock.subscribe( event => { bedwarsEvents.bedBugEvent( event ); bedwarsEvents.hurtByFireballsEvent( event ) } )
-    world.beforeEvents.itemUseOn.subscribe( event => { bedwarsEvents.dreamDefenderEvent( event ); bedwarsEvents.playerUseItemOnHeightLimitEvent( event ) } )
-    world.afterEvents.itemUseOn.subscribe( event => { bedwarsEvents.playerUseWaterBucketEvent( event ); } )
-    world.afterEvents.playerPlaceBlock.subscribe( event => { bedwarsEvents.playerUseTNTEvent( event ); } )
-    world.beforeEvents.explosion.subscribe( event => { bedwarsEvents.explosionEvents( event ); } )
-    world.afterEvents.entityHurt.subscribe( event => { bedwarsEvents.hurtByPlayerEvent( event ); } )
-    world.afterEvents.entityDie.subscribe( event => { bedwarsEvents.playerDieEvent( event ); } )
-    world.afterEvents.playerSpawn.subscribe( event => { bedwarsEvents.playerRejoinEvent( event ); } )
-    world.beforeEvents.playerLeave.subscribe( event => { bedwarsEvents.playerLeaveEvent( event ); } )
-    system.afterEvents.scriptEventReceive.subscribe( event => { settingsEvent( event ) } )
+    /** 物品逻辑 */ itemLogic: "itemLogic",
+    /** 床虱 */ bedBug: "bedBug",
+    /** 搭桥蛋 */ bridgeEgg: "bridgeEgg",
+    /** 梦境守护者 */ dreamDefender: "dreamDefender",
+    /** 魔法牛奶 */ magicMilk: "magicMilk",
+    /** 药水 */ potions: "potions",
+    /** TNT */ tnt: "tnt",
+    /** 水桶 */ waterBucket: "waterBucket"
 }
 
-system.runInterval( () => {
-    if ( map !== undefined ) {
+/** ===== 常执行 ===== */
+createInterval( "alwaysSaturation", () => alwaysSaturation(), [ tags.gameLogic, tags.effects ], 20 );
+createEvent( "playerBreakVanillaBlockTest", world.beforeEvents.playerBreakBlock, event => playerBreakVanillaBlocksTest( event ), [ tags.gameLogic, tags.playerBreakBlock ] );
+createEvent( "playerLeave", world.beforeEvents.playerLeave, event => playerLeave( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
+createEvent( "playerRejoin", world.afterEvents.playerSpawn, event => playerRejoin( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
+createEvent( "settingsEvent", system.afterEvents.scriptEventReceive, event => settingsEvent( event ), [ tags.gameLogic, tags.settings ], { namespaces: [ "bs" ] } );
 
-        bedwarsEvents.effectFunction();
-        if ( map().gameStage === 0 ) {
-            bedwarsEvents.waitingFunction();
-        }
-        else if ( map().gameStage === 1 ) {
-            bedwarsEvents.magicMilkFunction();
-            bedwarsEvents.bedbugFunction();
-            bedwarsEvents.dreamDefenderFunction();
-            bedwarsEvents.bridgeEggFunction();
-            bedwarsEvents.equipmentFunction();
-            bedwarsEvents.explosionFunction();
-            bedwarsEvents.trapFunction();
-            bedwarsEvents.spawnResourceFunction();
-            bedwarsEvents.tradeFunction();
-            bedwarsEvents.playerHurtFunction();
-            bedwarsEvents.respawnFunction();
-            bedwarsEvents.voidDamageFunction();
-            bedwarsEvents.scoreboardFunction();
-            bedwarsEvents.gameEventFunction();
-            bedwarsEvents.teamFunction();
-        }
-        else {
-            bedwarsEvents.scoreboardFunction();
-            bedwarsEvents.gameOverEvent();
-        }
-        
-    }
-} )
+/** ===== 游戏前事件 ===== */
+createInterval( "waiting", () => waiting(), [ tags.beforeGaming ] );
+createInterval( "beforeGamingInfoBoard", () => beforeGamingInfoBoard(), [ tags.gameLogic, tags.beforeGaming, tags.infoBoard ], 3 );

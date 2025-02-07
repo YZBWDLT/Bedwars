@@ -27,7 +27,7 @@
 
 ## 可用设置命令
 
-> 本部分所介绍的内容基于最新版的 Alpha 1.0_01 版本。您必须使用 Alpha 1.0_01 版本才能够使用下面的内容。
+> 本部分所介绍的内容基于 Alpha 1.0_01 或更高版本。您必须使用 Alpha 1.0_01 或更高版本才能够使用下面的内容。
 
 我们在包中添加了一些您可以用于执行的命令，这些命令将允许你对包进行设置和调整！命令格式为
 
@@ -38,7 +38,7 @@
 
 所有`<命令>`列表如下。
 
-#### `bs:minWaitingPlayers <等待人数>`
+### `bs:minWaitingPlayers <等待人数>`
 
 控制至少需要多少玩家方可开始游戏。
 
@@ -46,7 +46,7 @@
 
 **例** `/scriptevent bs:minWaitingPlayers 5`：当玩家达到5人后开始倒计时。
 
-#### `bs:gameStartWaitingTime <时间>`
+### `bs:gameStartWaitingTime <时间>`
 
 控制玩家达到规定人数后，多久后开始游戏。
 
@@ -54,7 +54,7 @@
 
 **例** `/scriptevent bs:gameStartWaitingTime 1200`：当玩家达到规定人数后，开始60秒的倒计时。
 
-#### `bs:resourceMaxSpawnTimes <资源类型> <最大生成数>`
+### `bs:resourceMaxSpawnTimes <资源类型> <最大生成数>`
 
 控制各类资源的最大生成数。
 
@@ -63,7 +63,7 @@
 
 **例** `/scriptevent bs:resourceMaxSpawnTimes gold 10`：将金锭的最大生成数改为10个。
 
-#### `bs:respawnTime <玩家类型> <重生时长>`
+### `bs:respawnTime <玩家类型> <重生时长>`
 
 控制玩家（包括普通玩家或退出重进的玩家）的重生时间。
 
@@ -72,7 +72,7 @@
 
 **例** `/scriptevent bs:respawnTime rejoinedPlayers 1000`：退出重进的玩家需要在50秒后方可重生。
 
-#### `bs:invalidTeamCouldSpawnResources <可生成资源>`
+### `bs:invalidTeamCouldSpawnResources <可生成资源>`
 
 控制无效队伍是否允许生成资源。无效队伍是指在开始游戏后，没有分配到队员的队伍。
 
@@ -80,7 +80,7 @@
 
 **例** `/scriptevent bs:invalidTeamCouldSpawnResources false`：禁止无效队伍生成资源。
 
-#### `bs:randomMap <地图类型> <允许生成>`
+### `bs:randomMap <地图类型> <允许生成>`
 
 控制特定队伍数的地图是否允许生成。
 
@@ -89,7 +89,7 @@
 
 **例** `/scriptevent bs:randomMap allow4Teams false`：禁止4队地图生成。
 
-#### `bs:regenerateMap <生成地图>`
+### `bs:regenerateMap <生成地图>`
 
 立即生成地图。
 
@@ -98,11 +98,10 @@
 **例** `/scriptevent bs:regenerateMap true`：立即生成一张随机地图。
 `/scriptevent bs:regenerateMap lion_temple`：立即生成地图狮庙（必须在2队地图启用情况下才能生成）。
 
-#### `bs:creativePlayerCanBreakBlocks <可破坏方块>`
+### `bs:creativePlayerCanBreakBlocks <可破坏方块>`
 
 控制原版玩家是否可以破坏原版方块。
 
 - `<可破坏方块>`：布尔值，默认值为`false`。
 
 **例** `/scriptevent bs:creativePlayerCanBreakBlocks false`：禁止创造模式玩家破坏方块。
-

@@ -18,12 +18,12 @@ import { BedwarsTeam, getTeam } from "../../methods/bedwarsTeam";
  * @description 蓝队状态：（例）蓝 蓝队：✔ 1323 -2
  * @description 击杀数/旁观者提示：（例）击杀数：5 / （例）您现在为旁观者
  */
-export function CaptureInfoBoard() {
+export function captureInfoBoard() {
     eachValidPlayer( ( player, playerInfo ) => {
         /** 获取游戏结束的事件名：[游戏结束]/[xx队胜利] */
         function winningTeam() {
             let dominantTeam = getTeam( map().getCaptureInfo().dominantTeam );
-            if ( !dominantTeam || dominantTeam === "null" ) { return `§f游戏结束` }
+            if ( !dominantTeam || dominantTeam === "none" ) { return `§f游戏结束` }
             else { return `${dominantTeam.getTeamNameWithColor()}队§f胜利` }
         };
         /** 获取游戏结束的倒计时（如果两队都没有床，则返回∞） */

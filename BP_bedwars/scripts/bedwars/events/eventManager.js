@@ -19,7 +19,7 @@ import { applyResistanceNearby, applyYVelocity, dropLoot, preventBreakingVanilla
 import { trap } from "./gaming/trap";
 import { spawnResources } from "./gaming/spawnResources";
 import { combat, hurtByFireball, hurtByPlayer, playerDied } from "./gaming/combat";
-import { alwaysSaturation, invulnerableAfterGame, teamUpgradeEffects } from "./gaming/effects";
+import { alwaysSaturation, goldenAppleEffect, invulnerableAfterGame, teamUpgradeEffects } from "./gaming/effects";
 import { gameEvents, teamEliminateAndWin } from "./gaming/gameEvents";
 import { playerLeave, playerRejoin } from "./gaming/playerLeaveAndRejoin";
 import { beforeGamingInfoBoard, gamingInfoBoard, healthScoreboard } from "./gaming/infoBoard";
@@ -29,7 +29,7 @@ import { trading } from "./gaming/trading";
 import { playerBreakBedTestCapture } from "./capture/playerBreakBed";
 import { playerPlaceBedTest } from "./capture/playerPlaceBed";
 import { gameEventsCapture, supplyDragonBuff, teamEliminateAndWinCapture } from "./capture/gameEvents";
-import { CaptureInfoBoard } from "./capture/infoBoard";
+import { captureInfoBoard } from "./capture/infoBoard";
 import { convertKillCount, playerDiedCapture, respawnEliminatedPlayers } from "./capture/combat";
 
 /** 所用到的标签含义 */
@@ -134,6 +134,7 @@ export const eventManager = {
         
         /** 游戏逻辑：团队状态效果 */
         createInterval( "teamUpgradeEffects", () => teamUpgradeEffects(), [ tags.gameLogic, tags.gaming, tags.effects ], 20 );
+        createEvent( "goldenAppleEffect", world.afterEvents.itemCompleteUse, event => goldenAppleEffect(event), [ tags.gameLogic, tags.gaming, tags.effects ] )
 
         /** 游戏逻辑：装备检测 */
         createInterval( "equipmentTestMain", () => equipmentTest(), [ tags.gameLogic, tags.gaming, tags.equipmentTest ] );
@@ -215,7 +216,7 @@ export const eventManager = {
         createInterval( "supplyDragonBuff", () => supplyDragonBuff(), [ tags.gameLogic, tags.gaming, tags.gameEvents, "capture" ] )
         /** 使用夺点模式的信息板逻辑 */
         deleteIntervals( "gamingInfoBoard" );
-        createInterval( "captureInfoboard", () => CaptureInfoBoard(), [ tags.gameLogic, tags.afterGaming, tags.gaming, tags.infoBoard, "capture" ] );
+        createInterval( "captureInfoboard", () => captureInfoBoard(), [ tags.gameLogic, tags.afterGaming, tags.gaming, tags.infoBoard, "capture" ] );
         /** 使用夺点模式的战斗逻辑 */
         createEvent( "playerDiedCapture", world.afterEvents.entityDie, event => playerDiedCapture( event ), [ tags.gameLogic, tags.gaming, tags.combat, "capture" ] );
         createInterval( "respawnEliminatedPlayers", () => respawnEliminatedPlayers(), [ tags.gameLogic, tags.gaming, tags.combat, "capture" ] )
@@ -226,7 +227,7 @@ export const eventManager = {
     captureAfterEvents( ) {
         /** 使用夺点模式的信息板逻辑 */
         deleteIntervals( "gamingInfoBoard" );
-        createInterval( "captureInfoboard", () => CaptureInfoBoard(), [ tags.gameLogic, tags.afterGaming, tags.gaming, tags.infoBoard, "capture" ] );
+        createInterval( "captureInfoboard", () => captureInfoBoard(), [ tags.gameLogic, tags.afterGaming, tags.gaming, tags.infoBoard, "capture" ] );
     },
 
     /** 移除 Capture 模式 */

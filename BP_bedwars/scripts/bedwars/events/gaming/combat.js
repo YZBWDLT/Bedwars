@@ -98,13 +98,17 @@ export function hurtByFireball( event ) {
     /** 扔出火球的玩家 */ let thrower = bedwarsPlayerTest( event.source );
     if ( event.projectile.typeId === "bedwars:fireball" && thrower !== undefined ) {
 
-        /** 令火球击中点附近 4 格的玩家记录攻击者 */
-        eachNearbyPlayer( event.location, 4, player => { if ( playerIsValid( player ) ) {
-            let playerInfo = getPlayerBedwarsInfo( player );
-            playerInfo.addHurtInfo( thrower );
-            showArmor( player );
-        } } )
-
+        /** 令火球击中点附近 4 格的玩家记录攻击者（不包括该玩家及其队友） */
+        eachNearbyPlayer( event.location, 4, player => {
+            if ( playerIsValid( player ) ) {
+                let playerInfo = getPlayerBedwarsInfo( player );
+                let throwerInfo = getPlayerBedwarsInfo( thrower );
+                if ( playerInfo.team !== throwerInfo.team ) {
+                    playerInfo.addHurtInfo( thrower );
+                    showArmor( player );
+                }
+            }
+        } )
     }
 }
 

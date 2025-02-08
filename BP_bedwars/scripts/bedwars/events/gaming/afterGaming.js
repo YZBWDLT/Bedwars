@@ -17,36 +17,25 @@ import { world } from "@minecraft/server";
  * @param {BedwarsTeam|undefined} winningTeam - 获胜队伍，如若为undefined则为平局结束
  */
 export function gameOver( winningTeam ) {
-
     /** ===== 设置游戏结束 ===== */
     map().gameOver();
-    eventManager.deleteGamingEvents();
-    eventManager.createAfterGamingEvents();
+    eventManager.classicAfterEvents();
     if ( map().mode === "capture" ) { eventManager.captureAfterEvents(); }
-
+    /** 杀龙 */
+    overworld.getEntities( { type: "minecraft:ender_dragon" } ).forEach( dragon => { dragon.kill(); } );
     /** ===== 判断何队获胜 ===== */
-
     /** 平局结束 */
     if ( !winningTeam ) {
-
         /** 通报消息 */
         eachPlayer( player => {
             showTitle( player, { translate: "title.gameOver" } );
             player.sendMessage( { translate: "message.gameOver.endInATie" } );
         } )
-
-        /** 杀龙 */
-        overworld.getEntities( { type: "minecraft:ender_dragon" } ).forEach( dragon => {
-            dragon.kill();
-        } );
-
+        
     }
-
     /** 某队获胜 */
     else {
-        
         eachValidPlayer( ( player, playerInfo ) => {
-    
             /** 分别为获胜队伍和未获胜队伍展示标题 */
             if ( playerInfo.team === winningTeam.id ) {
                 showTitle( player, { translate: "title.victory" } );
@@ -54,14 +43,10 @@ export function gameOver( winningTeam ) {
             else {
                 showTitle( player, { translate: "title.gameOver" } );
             }
-    
         } )
-    
         /** 通报获胜队伍 <lang> */
         world.sendMessage( [ { translate: "message.greenLine" }, "\n§l§f      起床战争§r      ", "\n", `\n${winningTeam.getTeamNameWithColor()}队§7 - ${getWinningPlayers(winningTeam)}`, "\n\n", killCountRank().join( "\n" ), "\n\n", { translate: "message.greenLine" } ] )
-        
     }
-    
 }
 
 /** 游戏结束倒计时 */
@@ -70,8 +55,6 @@ export function gameOverCountdown() {
     map().nextGameCountdown--;
     if ( map().nextGameCountdown === 0 ) {
         regenerateMap();
-        eventManager.deleteAfterGamingEvents();
-        eventManager.createBeforeGamingEvents();
     };
 
     /** 如果玩家跌入虚空，就传送上来 */

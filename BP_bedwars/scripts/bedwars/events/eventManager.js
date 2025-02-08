@@ -63,13 +63,11 @@ const tags = {
     /** 水桶 */ waterBucket: "waterBucket"
 }
 
-/** 事件控制器
- * @remark 如果需要同时移除和添加一类事件，请先移除再添加事件！
- */
+/** 事件控制器 */
 export const eventManager = {
 
-    /** 添加全局事件 */
-    createGeneralEvents() {
+    /** 全局事件 */
+    generalEvents() {
 
         /** 游戏逻辑：饱和药效 */
         createInterval( "alwaysSaturation", () => alwaysSaturation(), [ tags.gameLogic, tags.effects ], 20 );
@@ -85,126 +83,87 @@ export const eventManager = {
         createEvent( "settingsEvent", system.afterEvents.scriptEventReceive, event => settingsEvent( event ), [ tags.gameLogic, tags.settings ] );
         
     },
-
-    /** 添加游戏前事件 */
-    createBeforeGamingEvents() {
-
+    /** 经典模式游戏前事件 */
+    classicBeforeEvents() {
+        /** 移除游戏时和游戏后事件 */
+        deleteEventsWithTag( tags.gaming, tags.afterGaming );
+        deleteIntervalsWithTag( tags.gaming, tags.afterGaming );
         /** 大厅等待中 */
         createInterval( "waiting", () => waiting(), [ tags.beforeGaming ] );
-
         /** 大厅信息板 */
         createInterval( "beforeGamingInfoBoard", () => beforeGamingInfoBoard(), [ tags.gameLogic, tags.beforeGaming, tags.infoBoard ], 3 );
-
     },
-
-    /** 添加游戏中事件 */
-    createGamingEvents() {
-
+    /** 经典模式游戏时事件 */
+    classicEvents() {
+        /** 移除游戏前和游戏后事件 */
+        deleteEventsWithTag( tags.beforeGaming, tags.afterGaming );
+        deleteIntervalsWithTag( tags.beforeGaming, tags.afterGaming );
         /** 物品：床虱 */
         createEvent( "summonSilverfishB", world.afterEvents.projectileHitBlock, event => summonSilverfish( event ), [ tags.itemLogic, tags.gaming, tags.bedBug, "summonSilverfish" ] );
         createEvent( "summonSilverfishE", world.afterEvents.projectileHitEntity, event => summonSilverfish( event ), [ tags.itemLogic, tags.gaming, tags.bedBug, "summonSilverfish" ] );
         createInterval( "silverfishCountdown", () => silverfishCountdown(), [ tags.itemLogic, tags.gaming, tags.bedBug ] );
-        
         /** 物品：搭桥蛋 */
         createInterval( "createBridge", () => createBridge(), [ tags.itemLogic, tags.gaming, tags.bridgeEgg ] );
-
         /** 物品：梦境守护者 */
         createEvent( "summonIronGolem", world.beforeEvents.itemUseOn, event => summonIronGolem( event ), [ tags.itemLogic, tags.gaming, tags.dreamDefender ] );
         createInterval( "ironGolemCountdown", () => ironGolemCountdown(), [ tags.itemLogic, tags.gaming, tags.dreamDefender ] );        
-
         /** 物品：魔法牛奶 */
         createEvent( "playerDrinkMagicMilkTest", world.afterEvents.itemCompleteUse, event => playerDrinkMagicMilkTest( event ), [ tags.itemLogic, tags.gaming, tags.magicMilk ] );
         createInterval( "magicMilkCountdown", () => magicMilkCountdown(), [ tags.itemLogic, tags.gaming, tags.magicMilk ] );
-        
         /** 物品：药水 */
         createEvent( "playerDrinkPotionTest", world.afterEvents.itemCompleteUse, event => playerDrinkPotionTest( event ), [ tags.itemLogic, tags.gaming, tags.potions ] );
-
         /** 物品：TNT */
         createEvent( "tntIgniteImmediately", world.afterEvents.playerPlaceBlock, event => igniteImmediately( event ), [ tags.itemLogic, tags.gaming, tags.tnt, tags.explosion ] );
-
         /** 物品：水桶 */
         createEvent( "clearBucket", world.afterEvents.itemUseOn, event => clearBucket( event ), [ tags.itemLogic, tags.gaming, tags.explosion ] );
-
         /** 游戏逻辑：战斗系统 */
         createInterval( "combatMain", () => combat(), [ tags.gameLogic, tags.gaming, tags.combat ] );
         createEvent( "hurtByFireballB", world.afterEvents.projectileHitBlock, event => hurtByFireball( event ), [ tags.gameLogic, tags.gaming, tags.combat ] );
         createEvent( "hurtByFireballE", world.afterEvents.projectileHitEntity, event => hurtByFireball( event ), [ tags.gameLogic, tags.gaming, tags.combat ] );
         createEvent( "hurtByPlayer", world.afterEvents.entityHurt, event => hurtByPlayer( event ), [ tags.gameLogic, tags.gaming, tags.combat ] );
         createEvent( "playerDied", world.afterEvents.entityDie, event => playerDied( event ), [ tags.gameLogic, tags.gaming, tags.combat ] );
-        
         /** 游戏逻辑：团队状态效果 */
         createInterval( "teamUpgradeEffects", () => teamUpgradeEffects(), [ tags.gameLogic, tags.gaming, tags.effects ], 20 );
         createEvent( "goldenAppleEffect", world.afterEvents.itemCompleteUse, event => goldenAppleEffect(event), [ tags.gameLogic, tags.gaming, tags.effects ] )
-
         /** 游戏逻辑：装备检测 */
         createInterval( "equipmentTestMain", () => equipmentTest(), [ tags.gameLogic, tags.gaming, tags.equipmentTest ] );
-
         /** 游戏逻辑：爆炸 */
         createEvent( "preventBreakingVanillaBlocks", world.beforeEvents.explosion, event => preventBreakingVanillaBlocks(event), [ tags.gameLogic, tags.gaming, tags.explosion ] );
         createEvent( "dropLoot", world.beforeEvents.explosion, event => dropLoot(event), [ tags.gameLogic, tags.gaming, tags.explosion ] );
         createEvent( "applyYVelocity", world.beforeEvents.explosion, event => applyYVelocity(event), [ tags.gameLogic, tags.gaming, tags.explosion ] );
         createInterval( "applyResistanceNearby", () => applyResistanceNearby(), [ tags.gameLogic, tags.gaming, tags.explosion ] );
-
         /** 游戏逻辑：游戏事件 */
         createInterval( "gameEventsMain", () => gameEvents(), [ tags.gameLogic, tags.gaming, tags.gameEvents ] );
         createInterval( "teamEliminateAndWin", () => teamEliminateAndWin(), [ tags.gameLogic, tags.gaming, tags.gameEvents ] )
-
         /** 游戏逻辑：高度限制 */
         createEvent( "maxHeightLimit", world.beforeEvents.itemUseOn, event => maxHeightLimit( event ), [ tags.gameLogic, tags.gaming, tags.heightLimit ] );
         createEvent( "minHeightLimit", world.beforeEvents.itemUseOn, event => minHeightLimit( event ), [ tags.gameLogic, tags.gaming, tags.heightLimit ] );
-
         /** 游戏逻辑：信息板 */
         createInterval( "gamingInfoBoard", () => gamingInfoBoard(), [ tags.gameLogic, tags.afterGaming, tags.gaming, tags.infoBoard ], 3 );
         createInterval( "healthScoreboard", () => healthScoreboard(), [ tags.gameLogic, tags.gaming, tags.infoBoard ] );
-
         /** 游戏逻辑：玩家破坏方块 */
         createEvent( "playerBreakBedTest", world.afterEvents.playerBreakBlock, event => playerBreakBedTest( event ), [ tags.gameLogic, tags.gaming, tags.playerBreakBlock ] );
-
         /** 游戏逻辑：陷阱 */
         createInterval( "trap", () => trap(), [ tags.gameLogic, tags.gaming, tags.trap ] );
-
         /** 游戏逻辑：交易 */
         createInterval( "trading", () => trading(), [ tags.gameLogic, tags.gaming, tags.trading ] )
-
         /** 游戏逻辑：资源生成 */
         createInterval( "spawnResources", () => spawnResources(), [ tags.gameLogic, tags.gaming, tags.spawnResources ] );
-
     },
-
-    /** 添加游戏后事件 */
-    createAfterGamingEvents() {
-
+    /** 经典模式游戏后事件 */
+    classicAfterEvents() {
+        /** 移除游戏前和游戏时事件 */
+        deleteEventsWithTag( tags.beforeGaming, tags.gaming );
+        deleteIntervalsWithTag( tags.beforeGaming, tags.gaming );
         /** 游戏逻辑：游戏结束 */
         createInterval( "gameOverCountdown", () => gameOverCountdown(), [ tags.gameLogic, tags.afterGaming, "gameOver" ] );
-
         /** 游戏逻辑：信息板 */
         createInterval( "gamingInfoBoard", () => gamingInfoBoard(), [ tags.gameLogic, tags.gaming, tags.afterGaming, tags.infoBoard ], 3 );
-
         /** 游戏逻辑：状态效果 */
         createInterval( "invulnerableAfterGame", () => invulnerableAfterGame(), [ tags.gameLogic, tags.afterGaming, tags.effects ], 20 );
-
     },
-
-    /** 移除游戏前事件 */
-    deleteBeforeGamingEvents() {
-        deleteEventsWithTag( tags.beforeGaming );
-        deleteIntervalsWithTag( tags.beforeGaming );
-    },
-
-    /** 移除游戏时事件 */
-    deleteGamingEvents() {
-        deleteEventsWithTag( tags.gaming );
-        deleteIntervalsWithTag( tags.gaming );
-    },
-
-    /** 移除游戏后事件 */
-    deleteAfterGamingEvents() {
-        deleteEventsWithTag( tags.afterGaming );
-        deleteIntervalsWithTag( tags.afterGaming );
-    },
-
-    /** Capture 模式 */
-    captureGamingEvents( ) {
+    /** 夺点模式游戏时事件 */
+    captureEvents( ) {
         /** 使用夺点模式的床破坏与放置逻辑 */
         deleteEvents( "playerBreakBedTest" );
         createEvent( "playerBreakBedTestCapture", world.afterEvents.playerBreakBlock, event => playerBreakBedTestCapture( event ), [ tags.gameLogic, tags.gaming, tags.playerBreakBlock, "capture" ] );
@@ -222,19 +181,10 @@ export const eventManager = {
         createInterval( "respawnEliminatedPlayers", () => respawnEliminatedPlayers(), [ tags.gameLogic, tags.gaming, tags.combat, "capture" ] )
         createInterval( "convertKillCount", () => convertKillCount(), [ tags.gameLogic, tags.gaming, tags.combat, "capture" ] )
     },
-
-    /** 夺点模式游戏结束后 */
+    /** 夺点模式游戏后事件 */
     captureAfterEvents( ) {
         /** 使用夺点模式的信息板逻辑 */
         deleteIntervals( "gamingInfoBoard" );
         createInterval( "captureInfoboard", () => captureInfoBoard(), [ tags.gameLogic, tags.afterGaming, tags.gaming, tags.infoBoard, "capture" ] );
-    },
-
-    /** 移除 Capture 模式 */
-    deleteCaptureEvents( ) {
-
     }
-
 }
-
-

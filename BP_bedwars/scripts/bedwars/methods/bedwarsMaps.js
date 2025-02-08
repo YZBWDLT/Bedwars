@@ -8,6 +8,7 @@ import { randomInt, shuffleArray } from "./number.js";
 import { getPlayerAmount, eachPlayer } from "./playerManager.js";
 import { BedwarsPlayer, initPlayer } from "./bedwarsPlayer.js";
 import { overworld, positionManager, Vector } from "./positionManager.js";
+import { eventManager } from "../events/eventManager.js";
 
 /** 
  * @typedef mapOptions 地图设置选项
@@ -161,7 +162,8 @@ export class BedwarsMap{
         /** 设置为禁止 PVP */ world.gameRules.pvp = false;
         /** 移除多余实体 */ overworld.getEntities().filter( entity => { return entity.typeId !== "minecraft:player" } ).forEach( entity => { entity.remove() } )
         /** 移除多余记分板 */ world.scoreboard.getObjectives().forEach( objective => { if ( objective !== undefined ) { world.scoreboard.removeObjective( objective ) } } )
-        /** 进行初始化命令函数 */ overworld.runCommand( `function lib/init/map` )
+        /** 进行初始化命令函数 */ overworld.runCommand( `function lib/init/map` );
+        /** 重新开始游戏 */ eventManager.classicBeforeEvents();
     }
 
     /** 生成地图 */
@@ -311,7 +313,7 @@ export class BedwarsMap{
     getCaptureInfo( ) {
         /** 各队伍数据 @type {{[id:String]:Number}} */ let teamData = {};
         eachTeam( team => {
-            teamData[team.id] = Math.ceil(team.captureModeInfo.score/team.captureModeInfo.otherTeamBedAmount); // 令某队的游戏结束倒计时等于其分数除以其他队床数，向上取整。例如：752分，对面3床，则本队还有251秒分数归零。
+            teamData[team.id] = Math.ceil(team.captureInfo.score/team.captureInfo.otherTeamBedAmount); // 令某队的游戏结束倒计时等于其分数除以其他队床数，向上取整。例如：752分，对面3床，则本队还有251秒分数归零。
         } )
         /** 所有倒计时数据 */ let countdownDatas = Object.values( teamData );
         /** 获取所有队伍中的所有优势方 */ let dominantTeams = Object.keys(teamData).filter(key => teamData[key] === Math.max(...countdownDatas));
@@ -324,7 +326,7 @@ export class BedwarsMap{
 
 }
 
-/** 【函数】重新生成地图
+/** 重新生成地图并启用经典模式的游戏前事件
  * @param {String} mapId - 如果提供了此参数，则将生成这张固定的地图
  */
 export function regenerateMap( mapId = undefined ) {
@@ -1082,8 +1084,8 @@ function createMapPicnicCapture( ) {
         { x: 0, y: 64, z: -1 },
         { x: -48, y: 64, z: -11 }
     ],
-    teamRed.captureModeInfo.bedsPos.push( teamRed.bedInfo.pos );
-    teamBlue.captureModeInfo.bedsPos.push( teamBlue.bedInfo.pos );
+    teamRed.captureInfo.bedsPos.push( teamRed.bedInfo.pos );
+    teamBlue.captureInfo.bedsPos.push( teamBlue.bedInfo.pos );
     mapPicnic.init()
 
     /** 设置地图的队伍 */

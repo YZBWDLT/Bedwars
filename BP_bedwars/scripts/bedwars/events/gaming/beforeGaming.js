@@ -164,8 +164,7 @@ function gameStart() {
     overworld.runCommand( `fill -12 117 -12 12 127 12 air` );
 
     /** 激活游戏中事件 */
-    eventManager.deleteBeforeGamingEvents();
-    eventManager.createGamingEvents();
-    if ( map().mode === "capture" ) { eventManager.captureGamingEvents(); }
+    eventManager.classicEvents();
+    if ( map().mode === "capture" ) { eventManager.captureEvents(); }
 
 }

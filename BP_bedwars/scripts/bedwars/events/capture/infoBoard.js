@@ -35,8 +35,8 @@ export function captureInfoBoard() {
         /** @param {BedwarsTeam} team1 @param {BedwarsTeam} team2   */
         function bedAmountIndicator( team1, team2 ) {
             let result = ``;
-            let team1BedAmount = team1.captureModeInfo.bedsPos.length;
-            let team2BedAmount = team2.captureModeInfo.bedsPos.length;
+            let team1BedAmount = team1.captureInfo.bedsPos.length;
+            let team2BedAmount = team2.captureInfo.bedsPos.length;
             let emptyBedAmount = 5 - team1BedAmount - team2BedAmount;
             for ( let i = 0; i < team1BedAmount; i++ ) { result += `${team1.getTeamColor()}⬢`; }
             for ( let i = 0; i < emptyBedAmount; i++ ) { result += `§f⬡`; }
@@ -45,7 +45,7 @@ export function captureInfoBoard() {
         }
         /** 队伍状态 @param {BedwarsTeam} team  */
         function teamState( team ) {
-            if ( team.captureModeInfo.bedsPos.length > 0 ) { return "§a✔"; }
+            if ( team.captureInfo.bedsPos.length > 0 ) { return "§a✔"; }
             else if ( team.getAliveTeamMember().length > 0 ) { return `§a${team.getAliveTeamMember().length}`; }
             else { return "§c✘"; }
         };
@@ -62,8 +62,8 @@ export function captureInfoBoard() {
         let gameEvent = `§f${map().gameEvent.nextEventName} - §a${timeString( "ms", secondToMinute( tickToSecond( map().gameEvent.nextEventCountdown ) ) )}`; // 游戏事件
         let gameOverCountdown = `${winningTeam()} - §a${getCountdownString()}`;
         let bedAmount = `${team1.getTeamNameWithColor()} ${ bedAmountIndicator( team1, team2 ) } ${team2.getTeamNameWithColor()}`;
-        let team1State = `${team1.getTeamNameWithColor()} §f${team1.getTeamName()}队：${teamState(team1)} ${playerInTeam(team1)} §f${team1.captureModeInfo.score} §7-${team1.captureModeInfo.otherTeamBedAmount}`;
-        let team2State = `${team2.getTeamNameWithColor()} §f${team2.getTeamName()}队：${teamState(team2)} ${playerInTeam(team2)} §f${team2.captureModeInfo.score} §7-${team2.captureModeInfo.otherTeamBedAmount}`;
+        let team1State = `${team1.getTeamNameWithColor()} §f${team1.getTeamName()}队：${teamState(team1)} ${playerInTeam(team1)} §f${team1.captureInfo.score} §7-${team1.captureInfo.otherTeamBedAmount}`;
+        let team2State = `${team2.getTeamNameWithColor()} §f${team2.getTeamName()}队：${teamState(team2)} ${playerInTeam(team2)} §f${team2.captureInfo.score} §7-${team2.captureInfo.otherTeamBedAmount}`;
         let killInfo = `§f击杀数 ： §a${playerInfo.killCount.kill}`
         let spectator = "§f您当前为旁观者"
         let author = "§e一只卑微的量筒"

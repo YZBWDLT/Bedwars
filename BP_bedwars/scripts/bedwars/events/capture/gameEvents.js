@@ -34,7 +34,7 @@ export function gameEventsCapture() {
     eachTeam( team => {
         if ( system.currentTick % 20 === 0 ) {
             let otherBed = team.getOtherTeamBed(); // 获取其他队伍床的数目
-            team.captureModeInfo.score -= otherBed; // 减分（每秒执行一次）
+            team.captureInfo.score -= otherBed; // 减分（每秒执行一次）
         }
     } )
 }
@@ -48,18 +48,18 @@ export function gameEventsCapture() {
 export function teamEliminateAndWinCapture() {
     /** ===== 平局判定 ===== */
     let teamScoreData = [];
-    eachTeam( team => teamScoreData.push( team.captureModeInfo.score ) );
+    eachTeam( team => teamScoreData.push( team.captureInfo.score ) );
     if ( teamScoreData.every( score => score <= 0 ) ) {
         gameOver( );
         return; // 终止判定，直接定为平局
     }
     /** ===== 淘汰判定 ===== */
     eachTeam( team => { if ( !team.isEliminated ) {
-        if ( team.captureModeInfo.score <= 0 ) {
+        if ( team.captureInfo.score <= 0 ) {
             team.getTeamMember().forEach( player => { setPlayerGamemode( player, "spectator" ) } );
             team.setTeamEliminated();
         }
-        else if ( team.captureModeInfo.bedsPos.length === 0 && team.getAliveTeamMember().length === 0 ) {
+        else if ( team.captureInfo.bedsPos.length === 0 && team.getAliveTeamMember().length === 0 ) {
             team.setTeamEliminated();
         }
     } } );

@@ -27,7 +27,7 @@ export function playerBreakBedTestCapture( event ) {
         /** 破坏床的玩家的起床战争信息 @type {BedwarsPlayer}*/ let breakerInfo = breaker.bedwarsInfo;
         /** 被破坏床的队伍 */ let team = map().teamList.filter( team => {
             let bedDestroyed = false;
-            team.captureModeInfo.bedsPos.forEach( pos => { if ( overworld.getBlock( pos ).typeId === "minecraft:air" ) { bedDestroyed = true; } } )
+            team.captureInfo.bedsPos.forEach( pos => { if ( overworld.getBlock( pos ).typeId === "minecraft:air" ) { bedDestroyed = true; } } )
             return bedDestroyed;
         } )[0];
 
@@ -78,16 +78,16 @@ function selfPlayerBreakBed( team, breaker ) {
 function otherPlayerBreakBed( team ) {
 
     /** 更新床状态 | 如果床被破坏，则将空床附近的方块染色 */
-    team.captureModeInfo.bedsPos.forEach( bedPos => {
+    team.captureInfo.bedsPos.forEach( bedPos => {
         if ( overworld.getBlock( bedPos ).typeId === "minecraft:air" ) {
-            removeElementOfArray( team.captureModeInfo.bedsPos, bedPos );
+            removeElementOfArray( team.captureInfo.bedsPos, bedPos );
             recolorBlocks( bedPos );
         }
     } )
 
     /** 全体玩家通报 */
-    world.sendMessage( { translate: "message.capture.bedDestroyed", with: { rawtext: [ { translate: `team.${team.id}` }, { text: `${team.captureModeInfo.bedsPos.length}` } ] } } );
-    if ( team.captureModeInfo.bedsPos.length === 0 ) {
+    world.sendMessage( { translate: "message.capture.bedDestroyed", with: { rawtext: [ { translate: `team.${team.id}` }, { text: `${team.captureInfo.bedsPos.length}` } ] } } );
+    if ( team.captureInfo.bedsPos.length === 0 ) {
         eachValidPlayer( ( player, playerInfo ) => {
             /** 本队玩家播放标题 */
             if ( playerInfo.team === team.id ) {

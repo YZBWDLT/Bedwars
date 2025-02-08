@@ -181,7 +181,7 @@ export class BedwarsPlayer{
 
     /** 获取玩家是否有床 */
     getBedState( ) {
-        if ( map().mode === "capture" ) { return this.getTeam().captureModeInfo.bedsPos.length !== 0; }
+        if ( map().mode === "capture" ) { return this.getTeam().captureInfo.bedsPos.length !== 0; }
         else { return this.getTeam().bedInfo.isExist; }
     };
 

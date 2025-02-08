@@ -57,7 +57,7 @@ export class BedwarsTeam{
         /** 是否正在报警 */ isAlarming: false,
         /** 报警次数 */ alarmedTimes: 0
     };
-    /** Capture 模式信息 */ captureModeInfo = {
+    /** Capture 模式信息 */ captureInfo = {
         /** 床位置 @type {Vector[]} */ bedsPos: [],
         /** 队伍当前积分 */ score: 1500,
         /** 其他队伍合计的床数 */ otherTeamBedAmount: 1,
@@ -149,7 +149,7 @@ export class BedwarsTeam{
 
         /** 加载结构，如果是夺点模式，则对于每一个该队伍已有的点位都重新设置床；否则，在该队的床点位设置床 */
         if ( map().mode === "capture" ) {
-            this.captureModeInfo.bedsPos.forEach( bedPos => {
+            this.captureInfo.bedsPos.forEach( bedPos => {
                 world.structureManager.place( `beds:${this.id}_bed`, overworld, pos( bedPos, false ), { rotation: rotation() } );
             } )
         }
@@ -173,11 +173,11 @@ export class BedwarsTeam{
     };
     /** 获取其他队伍的床数 */
     getOtherTeamBed() {
-        this.captureModeInfo.otherTeamBedAmount = 0;
+        this.captureInfo.otherTeamBedAmount = 0;
         map().teamList.filter( otherTeam => otherTeam.id !== this.id ).forEach( otherTeam => {
-            this.captureModeInfo.otherTeamBedAmount += otherTeam.captureModeInfo.bedsPos.length;
+            this.captureInfo.otherTeamBedAmount += otherTeam.captureInfo.bedsPos.length;
         } );
-        return this.captureModeInfo.otherTeamBedAmount;
+        return this.captureInfo.otherTeamBedAmount;
     };
 }
 

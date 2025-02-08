@@ -29,14 +29,14 @@ export function playerPlaceBedTest( event ) {
         /** 当玩家使用床后，如果是对基岩使用并且为有效点位则放置床 */
         if ( bedPos !== undefined ) {
             /** 为该队伍添加该点位 */
-            team.captureModeInfo.bedsPos.push( bedPos );
+            team.captureInfo.bedsPos.push( bedPos );
             /** 更换附近方块的颜色 */
             recolorBlocks( bedPos, team.id );
             /** 重新放置床 */
             team.setBed();
             /** 通报消息 | 特殊地，如果有队伍获得了新床之后只有 1 张床，则通报该队队员将全体重生 */
-            world.sendMessage( { translate: "message.capture.bedCaptured", with: { rawtext: [ { translate: `team.${team.id}` }, { text: `${team.captureModeInfo.bedsPos.length}` } ] } } );
-            if ( team.captureModeInfo.bedsPos.length === 1 ) { world.sendMessage( { translate: `message.respawn.newBed` } ) }
+            world.sendMessage( { translate: "message.capture.bedCaptured", with: { rawtext: [ { translate: `team.${team.id}` }, { text: `${team.captureInfo.bedsPos.length}` } ] } } );
+            if ( team.captureInfo.bedsPos.length === 1 ) { world.sendMessage( { translate: `message.respawn.newBed` } ) }
         }
     }
 }

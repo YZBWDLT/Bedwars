@@ -305,7 +305,7 @@ export class BedwarsMap{
     };
 
     /** 获取夺点模式优势方信息和游戏结束倒计时
-     * @description 优势方：返回距离淘汰倒计时最久的队伍，如果有队伍一样最久，则返回"null"。例如，红队500秒后淘汰，蓝队350秒后淘汰，则返回"red"。
+     * @description 优势方：返回距离淘汰倒计时最久的队伍，如果有队伍一样最久，则返回"none"。例如，红队500秒后淘汰，蓝队350秒后淘汰，则返回"red"。
      * @description 游戏结束倒计时：返回距离淘汰倒计时最近的队伍。例如上例，返回350。
      */
     getCaptureInfo( ) {
@@ -315,7 +315,7 @@ export class BedwarsMap{
         } )
         /** 所有倒计时数据 */ let countdownDatas = Object.values( teamData );
         /** 获取所有队伍中的所有优势方 */ let dominantTeams = Object.keys(teamData).filter(key => teamData[key] === Math.max(...countdownDatas));
-        /** 获取优势方，如果有多个则返回"null" */ let dominantTeam = dominantTeams.length > 1 ? "null" : dominantTeams[0];
+        /** 获取优势方，如果有多个则返回"none" */ let dominantTeam = dominantTeams.length > 1 ? "none" : dominantTeams[0];
         /** 获取游戏结束倒计时 */ let gameOverCountdown = countdownDatas.reduce( ( a, b ) => Math.min( a, b ) );
         this.captureInfo.dominantTeam = dominantTeam;
         this.captureInfo.gameOverCountdown = gameOverCountdown;

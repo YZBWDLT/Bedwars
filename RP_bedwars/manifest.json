@@ -4,7 +4,7 @@
 		"name": "量筒的起床战争 资源包",
 		"description": "仿照Hypixel在基岩版上实现的起床战争！",
 		"uuid": "576eb433-71f6-45ec-a702-efd7cb2e8395",
-		"version": [ 1, 2, 4 ],
+		"version": [ 1, 2, 5 ],
 		"min_engine_version": [ 1, 21, 0 ]
 	},
 	"modules": [

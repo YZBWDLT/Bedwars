@@ -30,7 +30,8 @@ export class BedwarsPlayer{
         /** 是否处于死亡状态 */ isDeath: false,
         /** 重生倒计时，单位：刻 */ respawnCountdown: 100,
         /** 死亡类型 @type {""|"entityAttack"|"projectile"|"fall"|"void"|"entityExplosion"|"other"} */ deathType: "",
-        /** 是否为退出重进的玩家 */ isRejoinedPlayer: false
+        /** 是否为退出重进的玩家 */ isRejoinedPlayer: false,
+        /** 保持死亡状态的时长，单位：刻 */ stayDeadTime: 0,
     };
     /** 击杀数 */ killCount = {
         /** 普通击杀 */ kill: 0,

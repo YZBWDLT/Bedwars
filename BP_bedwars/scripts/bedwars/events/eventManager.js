@@ -18,7 +18,7 @@ import { equipmentTest } from "./gaming/equipmentTest";
 import { applyResistanceNearby, applyYVelocity, dropLoot, preventBreakingVanillaBlocks } from "./gaming/explosion";
 import { trap } from "./gaming/trap";
 import { spawnResources } from "./gaming/spawnResources";
-import { combat, hurtByFireball, hurtByPlayer, playerDied } from "./gaming/combat";
+import { combat, deadPlayer, hurtByFireball, hurtByPlayer, playerDied } from "./gaming/combat";
 import { alwaysSaturation, goldenAppleEffect, invulnerableAfterGame, teamUpgradeEffects } from "./gaming/effects";
 import { gameEvents, teamEliminateAndWin } from "./gaming/gameEvents";
 import { playerLeave, playerRejoin } from "./gaming/playerLeaveAndRejoin";
@@ -122,6 +122,7 @@ export const eventManager = {
         createEvent( "hurtByFireballE", world.afterEvents.projectileHitEntity, event => hurtByFireball( event ), [ tags.gameLogic, tags.gaming, tags.combat ] );
         createEvent( "hurtByPlayer", world.afterEvents.entityHurt, event => hurtByPlayer( event ), [ tags.gameLogic, tags.gaming, tags.combat ] );
         createEvent( "playerDied", world.afterEvents.entityDie, event => playerDied( event ), [ tags.gameLogic, tags.gaming, tags.combat ] );
+        createInterval( "deadPlayer", () => deadPlayer(), [ tags.gameLogic, tags.gaming, tags.combat ] )
         /** 游戏逻辑：团队状态效果 */
         createInterval( "teamUpgradeEffects", () => teamUpgradeEffects(), [ tags.gameLogic, tags.gaming, tags.effects ], 20 );
         createEvent( "goldenAppleEffect", world.afterEvents.itemCompleteUse, event => goldenAppleEffect(event), [ tags.gameLogic, tags.gaming, tags.effects ] )

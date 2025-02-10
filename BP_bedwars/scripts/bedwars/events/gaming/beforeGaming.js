@@ -163,6 +163,9 @@ function gameStart() {
     /** 移除等待大厅 */
     overworld.runCommand( `fill -12 117 -12 12 127 12 air` );
 
+    /** 在重生点下方放置一块屏障 | 防止薛定谔玩家复活时判定失败 */
+    overworld.runCommand( `setblock 0 ${map().spawnpointPos.y - 2} 0 barrier` );
+
     /** 激活游戏中事件 */
     eventManager.classicEvents();
     if ( map().mode === "capture" ) { eventManager.captureEvents(); }

@@ -10,7 +10,6 @@ import { eachPlayer, showTitle } from "../../methods/playerManager";
 import { overworld } from "../../methods/positionManager";
 import { getValidPlayers, eachValidPlayer, getPlayerBedwarsInfo } from "../../methods/bedwarsPlayer";
 import { BedwarsTeam } from "../../methods/bedwarsTeam";
-import { eventManager } from "../eventManager";
 import { world } from "@minecraft/server";
 
 /** 游戏结束事件
@@ -19,8 +18,6 @@ import { world } from "@minecraft/server";
 export function gameOver( winningTeam ) {
     /** ===== 设置游戏结束 ===== */
     map().gameOver();
-    eventManager.classicAfterEvents();
-    if ( map().mode === "capture" ) { eventManager.captureAfterEvents(); }
     /** 杀龙 */
     overworld.getEntities( { type: "minecraft:ender_dragon" } ).forEach( dragon => { dragon.kill(); } );
     /** ===== 判断何队获胜 ===== */

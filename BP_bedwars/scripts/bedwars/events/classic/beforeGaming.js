@@ -16,7 +16,6 @@ import { tickToSecond } from "../../methods/time.js";
 import { getPlayerAmount, showTitle, eachPlayer, setPlayerGamemode } from "../../methods/playerManager.js";
 import { overworld, Vector } from "../../methods/positionManager.js";
 import { eachValidPlayer } from "../../methods/bedwarsPlayer.js";
-import { eventManager } from "../eventManager.js";
 import { eachTeam } from "../../methods/bedwarsTeam.js";
 
 /** ===== 等待时 ===== */
@@ -167,7 +166,6 @@ function gameStart() {
     overworld.runCommand( `setblock 0 ${map().spawnpointPos.y - 2} 0 barrier` );
 
     /** 激活游戏中事件 */
-    eventManager.classicEvents();
-    if ( map().mode === "capture" ) { eventManager.captureEvents(); }
+    map().triggerGamingEvents();
 
 }

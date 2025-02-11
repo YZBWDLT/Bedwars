@@ -156,6 +156,8 @@ export class BedwarsMap{
         this.spawnpointPos = new Vector( 0, this.heightLimit.max + 5, 0 );
     };
 
+    /** ===== 基本方法 ===== */
+
     /** 进行地图初始化 */
     init( ) {
         /** 设置地图阶段 */ this.gameStage = 0;
@@ -164,20 +166,20 @@ export class BedwarsMap{
         /** 移除多余实体 */ overworld.getEntities().filter( entity => { return entity.typeId !== "minecraft:player" } ).forEach( entity => { entity.remove() } )
         /** 移除多余记分板 */ world.scoreboard.getObjectives().forEach( objective => { if ( objective !== undefined ) { world.scoreboard.removeObjective( objective ) } } )
         /** 进行初始化命令函数 */ overworld.runCommand( `function lib/init/map` );
-        /** 重新开始游戏 */ eventManager.classicBeforeEvents();
-    }
+        /** 重新开始游戏 */ this.triggerBeforeEvents();
+    };
 
     /** 生成地图 */
     generateMap( ) {
         overworld.runCommand( `function maps/${this.id}/generate` )
         overworld.runCommand( `function lib/modify_data/set_border` )
-    }
+    };
 
     /** 设置队伍岛的羊毛颜色与床 */
     teamIslandInit( ) {
         /** 羊毛颜色 */ overworld.runCommand( `function maps/${this.id}/team_island` )
         /** 放置床 */ eachTeam( team => { team.setBed( ) } )
-    }
+    };
 
     /** 随机分配玩家的队伍 */
     assignPlayersRandomly(  ){
@@ -281,22 +283,43 @@ export class BedwarsMap{
 
     };
 
-    /** 游戏结束事件 */
-    gameOver( ) {
-        this.gameStage = 2;
-        this.nextGameCountdown = 200;
-    };
-
     /** 获取未被淘汰的队伍 */
     getAliveTeam( ) {
         return this.teamList.filter( team => team.isEliminated === false )
     };
 
+    /** ===== 游戏阶段转换方法 ===== */
+
+    /** 进行地图初始化 */
+    gameReady() {
+        /** 设置地图阶段 */ this.gameStage = 0;
+        /** 移除玩家的bedwarsInfo，还原玩家名字颜色 */ eachPlayer( player => { initPlayer( player ) } )
+        /** 设置为禁止 PVP */ world.gameRules.pvp = false;
+        /** 移除多余实体 */ overworld.getEntities().filter( entity => { return entity.typeId !== "minecraft:player" } ).forEach( entity => { entity.remove() } )
+        /** 移除多余记分板 */ world.scoreboard.getObjectives().forEach( objective => { if ( objective !== undefined ) { world.scoreboard.removeObjective( objective ) } } )
+        /** 进行初始化命令函数 */ overworld.runCommand( `function lib/init/map` );
+        /** 重新开始游戏 */ this.triggerBeforeEvents();
+    };
+
+    /** 游戏开始 */
+    gameStart() {
+
+    };
+
+    /** 游戏结束 */
+    gameOver() {
+        this.gameStage = 2;
+        this.nextGameCountdown = 200;
+        this.triggerAfterEvents();
+    }
+
+    /** ===== 不同模式适配方法 ===== */
+
     /** 获取地图是否为solo模式 */
     isSolo( ) {
         return this.teamCount > 4
     };
-
+    
     /** 获取地图模式名 */
     modeName( ) {
         if ( this.mode === "classic" ) { return "经典"; } else { return "夺点" }
@@ -306,6 +329,31 @@ export class BedwarsMap{
     getStartIntro() {
         return { title: { translate: `message.gameStartTitle.${this.mode}` }, intro: { translate: `message.gameStartIntroduction.${this.mode}` } }
     };
+
+    /** 触发游戏前事件
+     * @description 不同模式下触发的事件也不尽相同
+     */
+    triggerBeforeEvents() {
+        eventManager.classicBeforeEvents();
+    };
+
+    /** 触发游戏时事件
+     * @description 不同模式下触发的事件也不尽相同
+     */
+    triggerGamingEvents() {
+        eventManager.classicEvents();
+        if ( this.mode === "capture" ) { eventManager.captureEvents(); }
+    };
+
+    /** 触发游戏后事件
+     * @description 不同模式下触发的事件也不尽相同
+     */
+    triggerAfterEvents() {
+        eventManager.classicAfterEvents();
+        if ( this.mode === "capture" ) { eventManager.captureAfterEvents(); }
+    };
+
+    /** ===== 夺点模式方法 ===== */
 
     /** 获取夺点模式优势方信息和游戏结束倒计时
      * @description 优势方：返回距离淘汰倒计时最久的队伍，如果有队伍一样最久，则返回"none"。例如，红队500秒后淘汰，蓝队350秒后淘汰，则返回"red"。
@@ -386,7 +434,7 @@ function createMapOrchid( ) {
     let teamYellow = new BedwarsTeam( "yellow", new Vector( -41, 71, -50 ), 2, new Vector( -62, 71, -50 ), new Vector( -58, 71, -49 ) );
 
     /** 移除多余实体，进行初始化 */
-    mapOrchid.init()
+    mapOrchid.gameReady()
 
     /** 设置地图的队伍 */
     mapOrchid.addTeam( teamRed ); 
@@ -432,7 +480,7 @@ function createMapChained( ) {
     let teamYellow = new BedwarsTeam( "yellow", new Vector( 0, 65, -69 ), 3, new Vector( 0, 64, -86 ), new Vector( 0, 64, -81 ) );
     
     /** 移除多余实体，进行初始化 */
-    mapChained.init()
+    mapChained.gameReady()
     
     /** 设置地图的队伍 */
     mapChained.addTeam( teamRed ); 
@@ -478,7 +526,7 @@ function createMapBoletum( ) {
     let teamYellow = new BedwarsTeam( "yellow", new Vector( 66, 69, -2 ), 0, new Vector( 82, 68, -2 ), new Vector( 78, 68, -2 ) );
     
     /** 移除多余实体，进行初始化 */
-    mapBoletum.init()
+    mapBoletum.gameReady()
     
     /** 设置地图的队伍 */
     mapBoletum.addTeam( teamRed ); 
@@ -524,7 +572,7 @@ function createMapCarapace( ) {
     let teamYellow = new BedwarsTeam( "yellow", new Vector( -48, 66, 0 ), 2, new Vector( -64, 66, 0 ), new Vector( -58, 66, 0 ) );
     
     /** 移除多余实体，进行初始化 */
-    mapCarapace.init()
+    mapCarapace.gameReady()
     
     /** 设置地图的队伍 */
     mapCarapace.addTeam( teamRed ); 
@@ -569,7 +617,7 @@ function createMapArchway( ) {
     let teamYellow = new BedwarsTeam( "yellow", new Vector( -66, 66, 15 ), 2, new Vector( -79, 65, 14 ), new Vector( -75, 65, 14 ) );
     
     /** 移除多余实体，进行初始化 */
-    mapArchway.init()
+    mapArchway.gameReady()
     
     /** 设置地图的队伍 */
     mapArchway.addTeam( teamRed ); 
@@ -614,7 +662,7 @@ function createMapAquarium( ) {
     let teamYellow = new BedwarsTeam( "yellow", new Vector( -48, 87, 0 ), 2, new Vector( -64, 87, 0 ), new Vector( -58, 87, 0 ) );
     
     /** 移除多余实体，进行初始化 */
-    mapAquarium.init()
+    mapAquarium.gameReady()
     
     /** 设置地图的队伍 */
     mapAquarium.addTeam( teamRed ); 
@@ -660,7 +708,7 @@ function createMapCryptic( ) {
     let teamBlue = new BedwarsTeam( "blue", new Vector( 2, 77, -73 ), 3, new Vector( 2, 78, -90 ), new Vector( 2, 78, -85 ) );
     
     /** 移除多余实体，进行初始化 */
-    mapCryptic.init()
+    mapCryptic.gameReady()
     
     /** 设置地图的队伍 */
     mapCryptic.addTeam( teamRed ); 
@@ -694,7 +742,7 @@ function createMapFrost( ) {
     let teamBlue = new BedwarsTeam( "blue", new Vector( 0, 72, -59 ), 3, new Vector( 0, 72, -75 ), new Vector( 0, 72, -70 ) );
     
     /** 移除多余实体，进行初始化 */
-    mapFrost.init()
+    mapFrost.gameReady()
     
     /** 设置地图的队伍 */
     mapFrost.addTeam( teamRed ); 
@@ -728,7 +776,7 @@ function createMapGarden( ) {
     let teamBlue = new BedwarsTeam( "blue", new Vector( -79, 77, 0 ), 2, new Vector( -98, 79, 0 ), new Vector( -94, 79, 0 ) );
     
     /** 移除多余实体，进行初始化 */
-    mapGarden.init()
+    mapGarden.gameReady()
     
     /** 设置地图的队伍 */
     mapGarden.addTeam( teamRed ); 
@@ -762,7 +810,7 @@ function createMapRuins( ) {
     let teamBlue = new BedwarsTeam( "blue", new Vector( 4, 71, 64 ), 1, new Vector( 0, 72, 82 ), new Vector( 0, 72, 78 ) );
     
     /** 移除多余实体，进行初始化 */
-    mapRuins.init()
+    mapRuins.gameReady()
     
     /** 设置地图的队伍 */
     mapRuins.addTeam( teamRed ); 
@@ -796,7 +844,7 @@ function createMapPicnic( ) {
     let teamBlue = new BedwarsTeam( "blue", new Vector( 0, 65, 61 ), 1, new Vector( 0, 64, 77 ), new Vector( 0, 64, 73 ) );
     
     /** 移除多余实体，进行初始化 */
-    mapPicnic.init()
+    mapPicnic.gameReady()
     
     /** 设置地图的队伍 */
     mapPicnic.addTeam( teamRed ); 
@@ -829,7 +877,7 @@ function createMapLionTemple( ) {
     let teamRed = new BedwarsTeam( "red", new Vector( -2, 73, 58 ), 1, new Vector( -2, 75, 78 ), new Vector( -2, 75, 73 ) );
     let teamBlue = new BedwarsTeam( "blue", new Vector( -2, 73, -58 ), 3, new Vector( -2, 75, -78 ), new Vector( -2, 75, -73 ) );
     /** 移除多余实体，进行初始化 */
-    mapLionTemple.init()
+    mapLionTemple.gameReady()
     
     /** 设置地图的队伍 */
     mapLionTemple.addTeam( teamRed ); 
@@ -871,7 +919,7 @@ function createMapGlacier() {
     let teamGray = new BedwarsTeam( "gray", new Vector( -65, 81, -32 ), 2, new Vector( -86, 81, -32 ), new Vector( -80, 81, -32 ) );
 
     /** 移除多余实体，进行初始化 */
-    mapGlacier.init()
+    mapGlacier.gameReady()
     
     /** 设置地图的队伍 */
     mapGlacier.addTeam( teamRed );
@@ -923,7 +971,7 @@ function createMapRooftop() {
     let teamGray = new BedwarsTeam( "gray", new Vector( -79, 66, -34 ), 2, new Vector( -96, 66, -34 ), new Vector( -89, 66, -34 ) );
 
     /** 移除多余实体，进行初始化 */
-    mapRooftop.init()
+    mapRooftop.gameReady()
     
     /** 设置地图的队伍 */
     mapRooftop.addTeam( teamRed );
@@ -978,7 +1026,7 @@ function createMapAmazon() {
     let teamGray = new BedwarsTeam( "gray", new Vector( -80, 65, -33 ), 2, new Vector( -100, 65, -33 ), new Vector( -95, 65, -33 ) );
 
     /** 移除多余实体，进行初始化 */
-    mapAmazon.init()
+    mapAmazon.gameReady()
     
     /** 设置地图的队伍 */
     mapAmazon.addTeam( teamRed );
@@ -1030,7 +1078,7 @@ function createMapDeadwood() {
     let teamGray = new BedwarsTeam( "gray", new Vector( -82, 64, -30 ), 2, new Vector( -99, 66, -30 ), new Vector( -94, 66, -30 ) );
 
     /** 移除多余实体，进行初始化 */
-    mapDeadwood.init()
+    mapDeadwood.gameReady()
     
     /** 设置地图的队伍 */
     mapDeadwood.addTeam( teamRed );
@@ -1087,7 +1135,7 @@ function createMapPicnicCapture( ) {
     ],
     teamRed.captureInfo.bedsPos.push( teamRed.bedInfo.pos );
     teamBlue.captureInfo.bedsPos.push( teamBlue.bedInfo.pos );
-    mapPicnic.init()
+    mapPicnic.gameReady()
 
     /** 设置地图的队伍 */
     mapPicnic.addTeam( teamRed ); 

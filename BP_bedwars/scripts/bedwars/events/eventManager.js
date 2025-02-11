@@ -11,10 +11,11 @@ import { createInterval, deleteIntervals, deleteIntervalsWithTag } from "../meth
 import { magicMilkCountdown, playerDrinkMagicMilkTest } from "./items/magicMilk";
 import { silverfishCountdown, summonSilverfish } from "./items/bedBug";
 import { summonIronGolem, ironGolemCountdown } from "./items/dreamDefender";
-import { createBridge } from "./items/bridgeEgg";
+import { createBridge, removeBridgeEgg } from "./items/bridgeEgg";
 import { igniteImmediately } from "./items/tnt";
 import { clearBucket } from "./items/waterBucket";
 import { playerDrinkPotionTest } from "./items/potions";
+import { removeEnderPearl } from "./items/enderPearl";
 
 /** 经典模式函数调用 */
 import { waiting } from "./classic/beforeGaming";
@@ -70,7 +71,8 @@ const tags = {
     /** 魔法牛奶 */ magicMilk: "magicMilk",
     /** 药水 */ potions: "potions",
     /** TNT */ tnt: "tnt",
-    /** 水桶 */ waterBucket: "waterBucket"
+    /** 水桶 */ waterBucket: "waterBucket",
+    /** 末影珍珠 */ enderPearl: "enderPearl",
 }
 
 /** 事件控制器 */
@@ -113,6 +115,7 @@ export const eventManager = {
         createInterval( "silverfishCountdown", () => silverfishCountdown(), [ tags.itemLogic, tags.gaming, tags.bedBug ] );
         /** 物品：搭桥蛋 */
         createInterval( "createBridge", () => createBridge(), [ tags.itemLogic, tags.gaming, tags.bridgeEgg ] );
+        createInterval( "removeBridgeEgg", () => removeBridgeEgg(), [ tags.itemLogic, tags.gaming, tags.bridgeEgg ] )
         /** 物品：梦境守护者 */
         createEvent( "summonIronGolem", world.beforeEvents.itemUseOn, event => summonIronGolem( event ), [ tags.itemLogic, tags.gaming, tags.dreamDefender ] );
         createInterval( "ironGolemCountdown", () => ironGolemCountdown(), [ tags.itemLogic, tags.gaming, tags.dreamDefender ] );        
@@ -125,6 +128,8 @@ export const eventManager = {
         createEvent( "tntIgniteImmediately", world.afterEvents.playerPlaceBlock, event => igniteImmediately( event ), [ tags.itemLogic, tags.gaming, tags.tnt, tags.explosion ] );
         /** 物品：水桶 */
         createEvent( "clearBucket", world.afterEvents.itemUseOn, event => clearBucket( event ), [ tags.itemLogic, tags.gaming, tags.explosion ] );
+        /** 物品：末影珍珠 */
+        createInterval( "removeEnderPearl", () => removeEnderPearl(), [ tags.itemLogic, tags.gaming, tags.enderPearl ] )
         /** 游戏逻辑：战斗系统 */
         createInterval( "combatMain", () => combat(), [ tags.gameLogic, tags.gaming, tags.combat ] );
         createEvent( "hurtByFireballB", world.afterEvents.projectileHitBlock, event => hurtByFireball( event ), [ tags.gameLogic, tags.gaming, tags.combat ] );
@@ -160,7 +165,7 @@ export const eventManager = {
         /** 游戏逻辑：资源生成 */
         createInterval( "spawnResources", () => spawnResources(), [ tags.gameLogic, tags.gaming, tags.spawnResources ] );
         /** 游戏逻辑：物品锁定 */
-        createInterval( "playerItemLocker", () => playerItemLocker(), [ tags.gameLogic, tags.gaming, tags.itemLock ] )
+        createInterval( "playerItemLocker", () => playerItemLocker(), [ tags.gameLogic, tags.gaming, tags.itemLock ] );
     },
     /** 经典模式游戏后事件 */
     classicAfterEvents() {

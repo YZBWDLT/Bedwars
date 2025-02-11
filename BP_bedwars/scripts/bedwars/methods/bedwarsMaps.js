@@ -213,6 +213,19 @@ export class BedwarsMap{
         return this.teamList.filter( team => team.isEliminated === false )
     };
 
+    /** 移除边界外的实体
+     * @param {String} entityId 要移除的实体ID
+     * @param {number} range 检测的范围，默认值：0。例：若填写为-5，则检测到离边界5格以外则移除。
+     */
+    removeEntityOutOfBorder( entityId, range = 0 ) {
+        overworld.getEntities( { type: entityId } ).forEach( entity => {    
+            /** 如果该实体将欲出界，移除之 */
+            if ( Math.abs( entity.location.x ) > 105 + range || Math.abs( entity.location.z ) > 105 + range || entity.location.y > map().heightLimit.max + range || entity.location.y < 0 + range ) {
+                entity.remove();
+            }
+        } )
+    }
+
     /** ===== 游戏阶段转换方法 ===== */
 
     /** 进行地图初始化
@@ -302,7 +315,7 @@ export class BedwarsMap{
 
         /** 设置下一场游戏的倒计时 */ this.nextGameCountdown = 200;
         /** 清除所有的末影龙 */ overworld.getEntities( { type: "minecraft:ender_dragon" } ).forEach( dragon => { dragon.kill(); } );
-    }
+    };
 
     /** ===== 不同模式适配方法 ===== */
 

@@ -8,29 +8,28 @@
 
 import { Entity, Player } from "@minecraft/server";
 import { eachPlayer } from "../../methods/playerManager";
-import { playerIsValid } from "../../methods/bedwarsPlayer";
+import { getPlayerBedwarsInfo, playerIsValid } from "../../methods/bedwarsPlayer";
 import { overworld } from "../../methods/positionManager";
+import { map } from "../../methods/bedwarsMaps";
 
 /** 在搭桥蛋途经之处创建一座桥 */
 export function createBridge() {
-
     /** 使每个搭桥蛋执行 */
     overworld.getEntities( { type: "bedwars:bridge_egg" } ).forEach( bridgeEgg => {
-
         /** 获取投掷者信息 @type {Entity} */
         let thrower = bridgeEgg.getComponent( "minecraft:projectile" ).owner
-
         /** 设置搭桥蛋属性 */
-        setBridgeEggProperties( bridgeEgg, thrower )
-
+        setBridgeEggProperties( bridgeEgg, thrower );
         /** 创造桥面 */
-        fillBlocksEachLayer( bridgeEgg, bridgeEgg.color, 0.85 )
-
+        fillBlocksEachLayer( bridgeEgg, bridgeEgg.color, 0.85 );
         /** 播放音效 */
-        eachPlayer( player => { player.playSound( "random.pop", { location: bridgeEgg.location } ) } )
+        eachPlayer( player => { player.playSound( "random.pop", { location: bridgeEgg.location } ) } );
+    } );
+}
 
-    } )
-
+/** 移除出界的搭桥蛋 */
+export function removeBridgeEgg() {
+    map().removeEntityOutOfBorder( "bedwars:bridge_egg", -5 );
 }
 
 /** 设置搭桥蛋的属性
@@ -38,11 +37,9 @@ export function createBridge() {
  * @param {Player} thrower 掷出者
  */
 function setBridgeEggProperties( bridgeEgg, thrower ) {
-
     /** 设定颜色 */
     bridgeEgg.color = "white";
-    if ( playerIsValid( thrower ) ) { bridgeEgg.color = thrower.bedwarsInfo.team; }
-
+    if ( playerIsValid( thrower ) ) { bridgeEgg.color = getPlayerBedwarsInfo( thrower ).team; }
 }
 
 /** 放置每层羊毛

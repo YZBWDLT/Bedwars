@@ -15,6 +15,7 @@ import { spawnItem } from "../../methods/itemManager";
 import { overworld, positionManager, Vector } from "../../methods/positionManager";
 import { intToRoman, randomInt } from "../../methods/number";
 import { tickToSecond } from "../../methods/time";
+import { getPlayerBedwarsInfo, playerIsAlive } from "../../methods/bedwarsPlayer";
 
 /** 资源生成函数 */
 export function spawnResources() {
@@ -258,14 +259,15 @@ function getForgeBonus( tier ) {
 /** 在某个队伍生成资源
  * @param {BedwarsTeam} team 生成资源的队伍
  * @param {Player[]} nearbyPlayers 生成点附近的玩家
- * @param {function(Player)} playerNearbyFunc 如果生成点附近有玩家，则该玩家执行的函数
+ * @param {function(Player)} playerNearbyFunc 如果生成点附近有存活的玩家，则该玩家执行的函数
  * @param {function(Vector)} nonPlayerNearbyFunc 如果生成点附近没有玩家时执行的函数，若启用了分散式生成则参数位置为生成点附近的位置，若未启用分散式生成则参数位置为生成点位置
  */
 function spawnTeamResource( team, nearbyPlayers, playerNearbyFunc, nonPlayerNearbyFunc ) {
 
-    /** 如果生成点附近有玩家，则直接给予玩家物品 */
-    if ( nearbyPlayers.length !== 0 ) {
-        nearbyPlayers.forEach( player => { playerNearbyFunc( player ) } );
+    /** 如果生成点附近有玩家，并且为存活的玩家，则直接给予玩家物品 */
+    let nearbyAlivePlayers = nearbyPlayers.filter( player => playerIsAlive( player ) );
+    if ( nearbyAlivePlayers.length !== 0 ) {
+        nearbyAlivePlayers.forEach( player => { playerNearbyFunc( player ) } );
     }
 
     /** 否则，生成掉落物（以 3*3 分散式生成） */

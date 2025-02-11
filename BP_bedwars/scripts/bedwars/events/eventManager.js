@@ -41,6 +41,7 @@ import { playerPlaceBedTest } from "./capture/playerPlaceBed";
 import { gameEventsCapture, supplyDragonBuff, teamEliminateAndWinCapture } from "./capture/gameEvents";
 import { captureInfoBoard } from "./capture/infoBoard";
 import { convertKillCount, playerDiedCapture, respawnEliminatedPlayers } from "./capture/combat";
+import { playSoundWhenShot } from "./items/bow";
 
 /** 所用到的标签含义 */
 const tags = {
@@ -73,6 +74,7 @@ const tags = {
     /** TNT */ tnt: "tnt",
     /** 水桶 */ waterBucket: "waterBucket",
     /** 末影珍珠 */ enderPearl: "enderPearl",
+    /** 弓 */ bow: "bow",
 }
 
 /** 事件控制器 */
@@ -129,7 +131,9 @@ export const eventManager = {
         /** 物品：水桶 */
         createEvent( "clearBucket", world.afterEvents.itemUseOn, event => clearBucket( event ), [ tags.itemLogic, tags.gaming, tags.explosion ] );
         /** 物品：末影珍珠 */
-        createInterval( "removeEnderPearl", () => removeEnderPearl(), [ tags.itemLogic, tags.gaming, tags.enderPearl ] )
+        createInterval( "removeEnderPearl", () => removeEnderPearl(), [ tags.itemLogic, tags.gaming, tags.enderPearl ] );
+        /** 物品：弓 */
+        createEvent( "playSoundWhenShot", world.afterEvents.projectileHitEntity, event => playSoundWhenShot( event ), [ tags.itemLogic, tags.gaming, tags.bow ] );
         /** 游戏逻辑：战斗系统 */
         createInterval( "combatMain", () => combat(), [ tags.gameLogic, tags.gaming, tags.combat ] );
         createEvent( "hurtByFireballB", world.afterEvents.projectileHitBlock, event => hurtByFireball( event ), [ tags.gameLogic, tags.gaming, tags.combat ] );
@@ -139,7 +143,7 @@ export const eventManager = {
         createInterval( "deadPlayer", () => deadPlayer(), [ tags.gameLogic, tags.gaming, tags.combat ] )
         /** 游戏逻辑：团队状态效果 */
         createInterval( "teamUpgradeEffects", () => teamUpgradeEffects(), [ tags.gameLogic, tags.gaming, tags.effects ], 20 );
-        createEvent( "goldenAppleEffect", world.afterEvents.itemCompleteUse, event => goldenAppleEffect(event), [ tags.gameLogic, tags.gaming, tags.effects ] )
+        createEvent( "goldenAppleEffect", world.afterEvents.itemCompleteUse, event => goldenAppleEffect(event), [ tags.gameLogic, tags.gaming, tags.effects ] );
         /** 游戏逻辑：装备检测 */
         createInterval( "equipmentTestMain", () => equipmentTest(), [ tags.gameLogic, tags.gaming, tags.equipmentTest ] );
         /** 游戏逻辑：爆炸 */
@@ -149,7 +153,7 @@ export const eventManager = {
         createInterval( "applyResistanceNearby", () => applyResistanceNearby(), [ tags.gameLogic, tags.gaming, tags.explosion ] );
         /** 游戏逻辑：游戏事件 */
         createInterval( "gameEventsMain", () => gameEvents(), [ tags.gameLogic, tags.gaming, tags.gameEvents ] );
-        createInterval( "teamEliminateAndWin", () => teamEliminateAndWin(), [ tags.gameLogic, tags.gaming, tags.gameEvents ] )
+        createInterval( "teamEliminateAndWin", () => teamEliminateAndWin(), [ tags.gameLogic, tags.gaming, tags.gameEvents ] );
         /** 游戏逻辑：高度限制 */
         createEvent( "maxHeightLimit", world.beforeEvents.itemUseOn, event => maxHeightLimit( event ), [ tags.gameLogic, tags.gaming, tags.heightLimit ] );
         createEvent( "minHeightLimit", world.beforeEvents.itemUseOn, event => minHeightLimit( event ), [ tags.gameLogic, tags.gaming, tags.heightLimit ] );

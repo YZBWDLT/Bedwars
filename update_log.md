@@ -13,6 +13,8 @@
 
 ## 底层更新
 
+- 行为包的清单文件`manifest.json`现在更新到了`1.0.3`版本。
+- 资源包的清单文件`manifest.json`现在更新到了`1.2.5`版本。
 - **更改** 将`events/gaming/`文件夹重命名为`events/classic/`文件夹。
 - **更改** 重命名`BedwarsMap`类方法`init() {}`→`gameReady() {}`，用于转换游戏状态并调用游戏前事件。
 - **新增** `BedwarsMap`类方法`gameStart() {}`，用于转换游戏状态并调用游戏时事件。

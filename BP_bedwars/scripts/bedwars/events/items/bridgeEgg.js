@@ -14,6 +14,10 @@ import { map } from "../../methods/bedwarsMaps";
 
 /** 在搭桥蛋途经之处创建一座桥 */
 export function createBridge() {
+
+    /** 在搭桥之前，如果已经出界，则直接移除之 */
+    map().removeEntityOutOfBorder( "bedwars:bridge_egg", -5 );
+
     /** 使每个搭桥蛋执行 */
     overworld.getEntities( { type: "bedwars:bridge_egg" } ).forEach( bridgeEgg => {
         /** 获取投掷者信息 @type {Entity} */
@@ -25,11 +29,6 @@ export function createBridge() {
         /** 播放音效 */
         eachPlayer( player => { player.playSound( "random.pop", { location: bridgeEgg.location } ) } );
     } );
-}
-
-/** 移除出界的搭桥蛋 */
-export function removeBridgeEgg() {
-    map().removeEntityOutOfBorder( "bedwars:bridge_egg", -5 );
 }
 
 /** 设置搭桥蛋的属性

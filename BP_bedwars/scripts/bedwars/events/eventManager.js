@@ -11,7 +11,7 @@ import { createInterval, deleteIntervals, deleteIntervalsWithTag } from "../meth
 import { magicMilkCountdown, playerDrinkMagicMilkTest } from "./items/magicMilk";
 import { silverfishCountdown, summonSilverfish } from "./items/bedBug";
 import { summonIronGolem, ironGolemCountdown } from "./items/dreamDefender";
-import { createBridge, removeBridgeEgg } from "./items/bridgeEgg";
+import { createBridge } from "./items/bridgeEgg";
 import { igniteImmediately } from "./items/tnt";
 import { clearBucket } from "./items/waterBucket";
 import { playerDrinkPotionTest } from "./items/potions";
@@ -117,7 +117,6 @@ export const eventManager = {
         createInterval( "silverfishCountdown", () => silverfishCountdown(), [ tags.itemLogic, tags.gaming, tags.bedBug ] );
         /** 物品：搭桥蛋 */
         createInterval( "createBridge", () => createBridge(), [ tags.itemLogic, tags.gaming, tags.bridgeEgg ] );
-        createInterval( "removeBridgeEgg", () => removeBridgeEgg(), [ tags.itemLogic, tags.gaming, tags.bridgeEgg ] )
         /** 物品：梦境守护者 */
         createEvent( "summonIronGolem", world.beforeEvents.itemUseOn, event => summonIronGolem( event ), [ tags.itemLogic, tags.gaming, tags.dreamDefender ] );
         createInterval( "ironGolemCountdown", () => ironGolemCountdown(), [ tags.itemLogic, tags.gaming, tags.dreamDefender ] );        

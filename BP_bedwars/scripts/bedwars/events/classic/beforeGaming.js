@@ -8,14 +8,13 @@
  * 如果有玩家退出导致等待人数不足，则停止倒计时。
  */
 
-import { system, world } from "@minecraft/server";
+import { system } from "@minecraft/server";
 import { map } from "../../methods/bedwarsMaps.js";
 import { settings } from "../../methods/bedwarsSettings.js";
 
 import { tickToSecond } from "../../methods/time.js";
 import { getPlayerAmount, showTitle, eachPlayer, setPlayerGamemode } from "../../methods/playerManager.js";
 import { overworld, Vector } from "../../methods/positionManager.js";
-import { eachValidPlayer } from "../../methods/bedwarsPlayer.js";
 import { eachTeam } from "../../methods/bedwarsTeam.js";
 
 /** ===== 等待时 ===== */
@@ -47,7 +46,10 @@ function reloadMap( ) {
             /** 清除本层 */ clearLayer( loadInfo.clearingLayer );
         }
         /** 清除完毕后，加载结构 */
-        if ( loadInfo.clearingLayer === 0 ) { map().generateMap(); };
+        if ( loadInfo.clearingLayer === 0 ) {
+            overworld.runCommand( `function maps/${map().id}/generate` )
+            overworld.runCommand( `function lib/modify_data/set_border` )
+        };
     }
     /** 加载结构等待 */
     else if ( loadInfo.structureLoadTime !== 0 ) {
@@ -55,7 +57,8 @@ function reloadMap( ) {
         loadInfo.structureLoadTime--;
         /** 倒计时结束后，设置队伍岛屿颜色与床 */
         if ( loadInfo.structureLoadTime === 0 ) {
-            map().teamIslandInit();
+            /** 羊毛颜色 */ overworld.runCommand( `function maps/${map().id}/team_island` )
+            /** 放置床 */ eachTeam( team => { team.setBed() } )
             overworld.runCommand( `kill @e[type=item]` );
         };
     }
@@ -92,7 +95,7 @@ function startCountdown( ) {
         }
     } )
     /** 倒计时结束后，开始游戏 */
-    if ( map().gameStartCountdown === 0 ) { gameStart(); }
+    if ( map().gameStartCountdown === 0 ) { map().gameStart(); }
 }
 
 /** 停止游戏倒计时 */
@@ -126,46 +129,4 @@ export function waiting() {
         /** 人数不足时，且已经开始倒计时，则取消倒计时 */
         else if ( map().gameStartCountdown < settings.gameStartWaitingTime ) { cancelCountdown( ); }
     }
-}
-
-/** ===== 游戏开始 ===== */
-
-function gameStart() {
-
-    /** 开始游戏 */
-    map().gameStage = 1;
-
-    /** 分配玩家队伍 */
-    map().assignPlayersRandomly();
-
-    /** 设置商人 */
-    map().setTrader();
-
-    /** 设置为可PVP */
-    world.gameRules.pvp = true;
-
-    eachValidPlayer( ( player, playerInfo ) => {
-
-        /** 将玩家传送到队伍中 */
-        playerInfo.teleportPlayerToSpawnpoint();
-
-        /** 调整玩家的游戏模式 */
-        setPlayerGamemode( player, "survival" );
-
-        /** 播报消息 */
-        player.sendMessage( [ { translate: "message.greenLine" }, "\n", map().getStartIntro().title, "\n\n", map().getStartIntro().intro, "\n\n", { translate: "message.greenLine" } ] )
-    } )
-
-    /** 如果一个队伍没有分配到人，则设置为无效的队伍 */
-    eachTeam( team => { if ( team.getTeamMember().length === 0 ) { team.setTeamInvalid(); }; } );
-
-    /** 移除等待大厅 */
-    overworld.runCommand( `fill -12 117 -12 12 127 12 air` );
-
-    /** 在重生点下方放置一块屏障 | 防止薛定谔玩家复活时判定失败 */
-    overworld.runCommand( `setblock 0 ${map().spawnpointPos.y - 2} 0 barrier` );
-
-    /** 激活游戏中事件 */
-    map().triggerGamingEvents();
-
 }

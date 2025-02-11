@@ -18,8 +18,6 @@ import { world } from "@minecraft/server";
 export function gameOver( winningTeam ) {
     /** ===== 设置游戏结束 ===== */
     map().gameOver();
-    /** 杀龙 */
-    overworld.getEntities( { type: "minecraft:ender_dragon" } ).forEach( dragon => { dragon.kill(); } );
     /** ===== 判断何队获胜 ===== */
     /** 平局结束 */
     if ( !winningTeam ) {

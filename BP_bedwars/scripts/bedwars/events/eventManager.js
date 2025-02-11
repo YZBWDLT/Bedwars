@@ -1,31 +1,39 @@
 /** ===== 事件主文件 ===== */
 
+/** MC 核心事件 */
 import { system, world } from "@minecraft/server";
+
+/** 方法类函数调用 */
 import { createEvent, deleteEvents, deleteEventsWithTag } from "../methods/eventManager";
 import { createInterval, deleteIntervals, deleteIntervalsWithTag } from "../methods/intervalManager";
 
-import { waiting } from "./gaming/beforeGaming";
-import { playerBreakBedTest, playerBreakVanillaBlocksTest } from "./gaming/playerBreakBlockTest";
-import { playerDrinkPotionTest } from "./items/potions";
+/** 物品事件函数调用 */
 import { magicMilkCountdown, playerDrinkMagicMilkTest } from "./items/magicMilk";
 import { silverfishCountdown, summonSilverfish } from "./items/bedBug";
 import { summonIronGolem, ironGolemCountdown } from "./items/dreamDefender";
-import { maxHeightLimit, minHeightLimit } from "./gaming/heightLimit";
 import { createBridge } from "./items/bridgeEgg";
 import { igniteImmediately } from "./items/tnt";
 import { clearBucket } from "./items/waterBucket";
-import { equipmentTest } from "./gaming/equipmentTest";
-import { applyResistanceNearby, applyYVelocity, dropLoot, preventBreakingVanillaBlocks } from "./gaming/explosion";
-import { trap } from "./gaming/trap";
-import { spawnResources } from "./gaming/spawnResources";
-import { combat, deadPlayer, hurtByFireball, hurtByPlayer, playerDied } from "./gaming/combat";
-import { alwaysSaturation, goldenAppleEffect, invulnerableAfterGame, teamUpgradeEffects } from "./gaming/effects";
-import { gameEvents, teamEliminateAndWin } from "./gaming/gameEvents";
-import { playerLeave, playerRejoin } from "./gaming/playerLeaveAndRejoin";
-import { beforeGamingInfoBoard, gamingInfoBoard, healthScoreboard } from "./gaming/infoBoard";
-import { gameOverCountdown } from "./gaming/afterGaming";
+import { playerDrinkPotionTest } from "./items/potions";
+
+/** 经典模式函数调用 */
+import { waiting } from "./classic/beforeGaming";
+import { playerBreakBedTest, playerBreakVanillaBlocksTest } from "./classic/playerBreakBlockTest";
+import { maxHeightLimit, minHeightLimit } from "./classic/heightLimit";
+import { equipmentTest } from "./classic/equipmentTest";
+import { applyResistanceNearby, applyYVelocity, dropLoot, preventBreakingVanillaBlocks } from "./classic/explosion";
+import { trap } from "./classic/trap";
+import { spawnResources } from "./classic/spawnResources";
+import { combat, deadPlayer, hurtByFireball, hurtByPlayer, playerDied } from "./classic/combat";
+import { alwaysSaturation, goldenAppleEffect, invulnerableAfterGame, teamUpgradeEffects } from "./classic/effects";
+import { gameEvents, teamEliminateAndWin } from "./classic/gameEvents";
+import { playerLeave, playerRejoin } from "./classic/playerLeaveAndRejoin";
+import { beforeGamingInfoBoard, gamingInfoBoard, healthScoreboard } from "./classic/infoBoard";
+import { gameOverCountdown } from "./classic/afterGaming";
 import { settingsEvent } from "../methods/bedwarsSettings";
-import { trading } from "./gaming/trading";
+import { trading } from "./classic/trading";
+
+/** 夺点模式函数调用 */
 import { playerBreakBedTestCapture } from "./capture/playerBreakBed";
 import { playerPlaceBedTest } from "./capture/playerPlaceBed";
 import { gameEventsCapture, supplyDragonBuff, teamEliminateAndWinCapture } from "./capture/gameEvents";
@@ -65,7 +73,6 @@ const tags = {
 
 /** 事件控制器 */
 export const eventManager = {
-
     /** 全局事件 */
     generalEvents() {
 

@@ -8,7 +8,7 @@ import { map } from "../../methods/bedwarsMaps"
 import { eachTeam } from "../../methods/bedwarsTeam";
 import { setPlayerGamemode } from "../../methods/playerManager";
 import { diamondTier2, diamondTier3, emeraldTier2, emeraldTier3 } from "../gaming/gameEvents";
-import { gameOver } from "../gaming/afterGaming";
+import { gameOver } from "../classic/afterGaming";
 
 /** ===== 主事件 ===== */
 

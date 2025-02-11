@@ -64,7 +64,7 @@ export function deadPlayer() {
     /** 令死亡玩家执行： */
     eachValidPlayer( ( player, playerInfo ) => {
         let isDead = !player.hasTag( "isAlive" );
-        let nearSpawnpoint = entityIsNearby( player, map().spawnpointPos, 4 );
+        let nearSpawnpoint = entityIsNearby( player, map().spawnpointPos, 2 );
         /** 如果玩家不处于死亡状态，则重置其死亡状态的时长 */
         if ( !isDead ) { playerInfo.deathState.stayDeadTime = 0; }
         /** 如果玩家在重生点重生时为生存模式，则强制重新使其生成 */

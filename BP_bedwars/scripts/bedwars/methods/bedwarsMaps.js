@@ -153,7 +153,7 @@ export class BedwarsMap{
         if ( options.minHeightLimit !== undefined ) { this.heightLimit.min = options.minHeightLimit; }
         if ( options.playerCouldIntoShop !== undefined ) { this.playerCouldIntoShop = options.playerCouldIntoShop; }
         if ( options.mode !== undefined ) { this.mode = options.mode; }
-        this.spawnpointPos = new Vector( 0, this.heightLimit.max + 5, 0 );
+        this.spawnpointPos = new Vector( 0, this.heightLimit.max + 7, 0 );
     };
 
     /** ===== 基本方法 ===== */

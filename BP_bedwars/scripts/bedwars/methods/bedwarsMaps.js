@@ -5,8 +5,8 @@ import { BedwarsTeam, validTeams, eachTeam } from "./bedwarsTeam.js"
 import { settings } from "./bedwarsSettings.js";
 
 import { randomInt, shuffleArray } from "./number.js";
-import { getPlayerAmount, eachPlayer } from "./playerManager.js";
-import { BedwarsPlayer, initPlayer } from "./bedwarsPlayer.js";
+import { getPlayerAmount, eachPlayer, setPlayerGamemode } from "./playerManager.js";
+import { BedwarsPlayer, eachValidPlayer, initPlayer } from "./bedwarsPlayer.js";
 import { overworld, positionManager, Vector } from "./positionManager.js";
 import { eventManager } from "../events/eventManager.js";
 
@@ -158,58 +158,6 @@ export class BedwarsMap{
 
     /** ===== 基本方法 ===== */
 
-    /** 进行地图初始化 */
-    init( ) {
-        /** 设置地图阶段 */ this.gameStage = 0;
-        /** 移除玩家的bedwarsInfo，还原玩家名字颜色 */ eachPlayer( player => { initPlayer( player ) } )
-        /** 设置为禁止 PVP */ world.gameRules.pvp = false;
-        /** 移除多余实体 */ overworld.getEntities().filter( entity => { return entity.typeId !== "minecraft:player" } ).forEach( entity => { entity.remove() } )
-        /** 移除多余记分板 */ world.scoreboard.getObjectives().forEach( objective => { if ( objective !== undefined ) { world.scoreboard.removeObjective( objective ) } } )
-        /** 进行初始化命令函数 */ overworld.runCommand( `function lib/init/map` );
-        /** 重新开始游戏 */ this.triggerBeforeEvents();
-    };
-
-    /** 生成地图 */
-    generateMap( ) {
-        overworld.runCommand( `function maps/${this.id}/generate` )
-        overworld.runCommand( `function lib/modify_data/set_border` )
-    };
-
-    /** 设置队伍岛的羊毛颜色与床 */
-    teamIslandInit( ) {
-        /** 羊毛颜色 */ overworld.runCommand( `function maps/${this.id}/team_island` )
-        /** 放置床 */ eachTeam( team => { team.setBed( ) } )
-    };
-
-    /** 随机分配玩家的队伍 */
-    assignPlayersRandomly(  ){
-
-        /**
-         * 分配逻辑为，现在有玩家数目playerAmount、分配队伍数teamCount和随机玩家列表Player[]，
-         * 先用玩家数目除以分配队伍数，playerAmount / teamCount = a ... b
-         * 然后，先为所有队伍分配 a 人，这样还剩下 b 人，将这 b 人每人随机插入到随机队伍中，插入后即移除该队伍以防止某个队伍比别队多出2人或更多人
-         */
-
-        /** 获取所有玩家和队伍 */
-        let players = world.getPlayers(); players = shuffleArray( players );
-        let copiedTeamList = [ ...this.teamList ]; copiedTeamList = shuffleArray( copiedTeamList );
-
-        let a = getPlayerAmount() / this.teamCount;
-        eachTeam( team => {
-            for ( let i = 0; i < a; i++ ) {
-                new BedwarsPlayer( players[i].name, team.id );
-            };
-            players.splice( 0, a );
-        } )
-        if ( players.length !== 0 ) {
-            players.forEach( player => {
-                new BedwarsPlayer( player.name, copiedTeamList[0].id )
-                copiedTeamList.splice( 0, 1 );
-            } )
-        }
-
-    };
-
     /** 将本地图中可能需要用于检测的队伍加入到地图信息中
      * @param {BedwarsTeam} team - 要加入的队伍信息
      */
@@ -260,29 +208,6 @@ export class BedwarsMap{
         this.gameEvent.nextEventName = nextEventName;
     };
 
-    /** 生成商人 */
-    setTrader() {
-
-        this.traderInfo.forEach( traderInfo => {
-
-            /** 设置新的商人的位置和朝向 */
-            let trader = overworld.spawnEntity( "bedwars:trader", traderInfo.pos );
-            trader.setRotation( new Vector( 0, traderInfo.direction ) );
-
-            /** 设置商人的类型和皮肤 */
-            trader.triggerEvent( `${traderInfo.type}_trader` );
-            trader.triggerEvent( `assign_skin_randomly` );
-    
-            /** 设置商人的名字 <lang> */
-            if ( traderInfo.type === "blocks_and_items" ) { trader.nameTag = `§a方块与物品`; }
-            else if ( traderInfo.type === "weapon_and_armor" ) { trader.nameTag = `§c武器与盔甲`; }
-            else if ( traderInfo.type === "weapon_and_armor_capture" ) { trader.nameTag = `§c武器与盔甲`; }
-            else { trader.nameTag = `§b团队升级`; }
-
-        } )
-
-    };
-
     /** 获取未被淘汰的队伍 */
     getAliveTeam( ) {
         return this.teamList.filter( team => team.isEliminated === false )
@@ -290,27 +215,93 @@ export class BedwarsMap{
 
     /** ===== 游戏阶段转换方法 ===== */
 
-    /** 进行地图初始化 */
+    /** 进行地图初始化
+     * @description 基础功能：设置地图阶段为0，触发游戏前事件。
+     * @description 额外功能：禁止PVP，移除实体，移除玩家信息等
+     */
     gameReady() {
         /** 设置地图阶段 */ this.gameStage = 0;
-        /** 移除玩家的bedwarsInfo，还原玩家名字颜色 */ eachPlayer( player => { initPlayer( player ) } )
+        /** 触发游戏前事件 */ eventManager.classicBeforeEvents();
+
         /** 设置为禁止 PVP */ world.gameRules.pvp = false;
         /** 移除多余实体 */ overworld.getEntities().filter( entity => { return entity.typeId !== "minecraft:player" } ).forEach( entity => { entity.remove() } )
+        /** 移除玩家的bedwarsInfo，还原玩家名字颜色 */ eachPlayer( player => { initPlayer( player ) } )
         /** 移除多余记分板 */ world.scoreboard.getObjectives().forEach( objective => { if ( objective !== undefined ) { world.scoreboard.removeObjective( objective ) } } )
-        /** 进行初始化命令函数 */ overworld.runCommand( `function lib/init/map` );
-        /** 重新开始游戏 */ this.triggerBeforeEvents();
+        /** 执行初始化命令函数 */ overworld.runCommand( `function lib/init/map` );
     };
 
-    /** 游戏开始 */
+    /** 游戏开始
+     * @description 基础功能：设置地图阶段为1，触发游戏时事件。
+     * @description 额外功能：允许PVP，随机分配队伍，安置实体等
+     */
     gameStart() {
 
+        /** 随机分配玩家的队伍
+         * @description 分配逻辑为，现在有玩家数目playerAmount、分配队伍数teamCount和随机玩家列表Player[]，先用玩家数目除以分配队伍数，playerAmount / teamCount = a ... b，然后，先为所有队伍分配 a 人，这样还剩下 b 人，将这 b 人每人随机插入到随机队伍中，插入后即移除该队伍以防止某个队伍比别队多出2人或更多人
+         */
+        let assignPlayersRandomly = () => {
+            let players = shuffleArray( world.getPlayers() );
+            let copiedTeamList = shuffleArray( [ ...this.teamList ] );
+            let a = getPlayerAmount() / this.teamCount;
+            eachTeam( team => {
+                for ( let i = 0; i < a; i++ ) { new BedwarsPlayer( players[i].name, team.id ); };
+                players.splice( 0, a );
+            } );
+            if ( players.length !== 0 ) {
+                players.forEach( player => { 
+                    new BedwarsPlayer( player.name, copiedTeamList[0].id ); 
+                    copiedTeamList.splice( 0, 1 );
+                } );
+            };
+        };
+
+        /** 生成商人
+         * @description 按照设定的商人数据，设置其位置、朝向、类型、皮肤、名字。
+         */
+        let setTrader = () => {
+            this.traderInfo.forEach( traderInfo => {
+                let trader = overworld.spawnEntity( "bedwars:trader", traderInfo.pos );
+                trader.setRotation( new Vector( 0, traderInfo.direction ) );
+                trader.triggerEvent( `${traderInfo.type}_trader` );
+                trader.triggerEvent( `assign_skin_randomly` );
+                if ( traderInfo.type === "blocks_and_items" ) { trader.nameTag = `§a方块与物品`; }
+                else if ( traderInfo.type === "weapon_and_armor" ) { trader.nameTag = `§c武器与盔甲`; }
+                else if ( traderInfo.type === "weapon_and_armor_capture" ) { trader.nameTag = `§c武器与盔甲`; }
+                else { trader.nameTag = `§b团队升级`; }
+            } )
+        };
+    
+
+        /** 设置地图阶段 */ this.gameStage = 1;
+        /** 触发游戏时事件 */
+        eventManager.classicEvents();
+        if ( this.mode === "capture" ) { eventManager.captureEvents(); }
+
+        /** 设置为允许 PVP */ world.gameRules.pvp = true;
+        /** 随机分配玩家队伍 */ assignPlayersRandomly();
+        /** 安置商人 */ setTrader();
+        /** 移除等待大厅 */ overworld.runCommand( `fill -12 117 -12 12 127 12 air` );
+        /** 在重生点下方放置一块屏障（防止薛定谔玩家复活时判定失败） */ overworld.runCommand( `setblock 0 ${this.spawnpointPos.y - 2} 0 barrier` );
+        /** 如果一个队伍没有分配到人，则设置为无效的队伍 */ eachTeam( team => { if ( team.getTeamMember().length === 0 ) { team.setTeamInvalid(); }; } );
+        /** 玩家命令 */ eachValidPlayer( ( player, playerInfo ) => {
+            /** 将玩家传送到队伍中 */ playerInfo.teleportPlayerToSpawnpoint();
+            /** 调整玩家的游戏模式 */ setPlayerGamemode( player, "survival" );
+            /** 播报消息 */ player.sendMessage( [ { translate: "message.greenLine" }, "\n", this.getStartIntro().title, "\n\n", this.getStartIntro().intro, "\n\n", { translate: "message.greenLine" } ] )
+        } )
     };
 
-    /** 游戏结束 */
+    /** 游戏结束
+     * @description 基础功能：设置地图阶段为1，触发游戏时事件。
+     * @description 额外功能：设置下一场游戏的倒计时，清除所有的末影龙。
+     */
     gameOver() {
-        this.gameStage = 2;
-        this.nextGameCountdown = 200;
-        this.triggerAfterEvents();
+        /** 设置地图阶段 */ this.gameStage = 2;
+        /** 触发游戏后事件 */
+        eventManager.classicAfterEvents();
+        if ( this.mode === "capture" ) { eventManager.captureAfterEvents(); }
+
+        /** 设置下一场游戏的倒计时 */ this.nextGameCountdown = 200;
+        /** 清除所有的末影龙 */ overworld.getEntities( { type: "minecraft:ender_dragon" } ).forEach( dragon => { dragon.kill(); } );
     }
 
     /** ===== 不同模式适配方法 ===== */
@@ -328,29 +319,6 @@ export class BedwarsMap{
     /** 获取游戏开始介绍 @returns { { title: import("@minecraft/server").RawMessage, intro: import("@minecraft/server").RawMessage } } */
     getStartIntro() {
         return { title: { translate: `message.gameStartTitle.${this.mode}` }, intro: { translate: `message.gameStartIntroduction.${this.mode}` } }
-    };
-
-    /** 触发游戏前事件
-     * @description 不同模式下触发的事件也不尽相同
-     */
-    triggerBeforeEvents() {
-        eventManager.classicBeforeEvents();
-    };
-
-    /** 触发游戏时事件
-     * @description 不同模式下触发的事件也不尽相同
-     */
-    triggerGamingEvents() {
-        eventManager.classicEvents();
-        if ( this.mode === "capture" ) { eventManager.captureEvents(); }
-    };
-
-    /** 触发游戏后事件
-     * @description 不同模式下触发的事件也不尽相同
-     */
-    triggerAfterEvents() {
-        eventManager.classicAfterEvents();
-        if ( this.mode === "capture" ) { eventManager.captureAfterEvents(); }
     };
 
     /** ===== 夺点模式方法 ===== */

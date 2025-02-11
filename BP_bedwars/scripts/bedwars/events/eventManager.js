@@ -32,6 +32,7 @@ import { beforeGamingInfoBoard, gamingInfoBoard, healthScoreboard } from "./clas
 import { gameOverCountdown } from "./classic/afterGaming";
 import { settingsEvent } from "../methods/bedwarsSettings";
 import { trading } from "./classic/trading";
+import { playerItemLocker } from "./classic/itemLock";
 
 /** 夺点模式函数调用 */
 import { playerBreakBedTestCapture } from "./capture/playerBreakBed";
@@ -59,6 +60,7 @@ const tags = {
     /** 资源生成 */ spawnResources: "spawnResources",
     /** 交易 */ trading: "trading",
     /** 陷阱 */ trap: "trap",
+    /** 物品锁定 */ itemLock: "itemLock",
     /** 设置 */ settings: "settings",
 
     /** 物品逻辑 */ itemLogic: "itemLogic",
@@ -157,6 +159,8 @@ export const eventManager = {
         createInterval( "trading", () => trading(), [ tags.gameLogic, tags.gaming, tags.trading ] )
         /** 游戏逻辑：资源生成 */
         createInterval( "spawnResources", () => spawnResources(), [ tags.gameLogic, tags.gaming, tags.spawnResources ] );
+        /** 游戏逻辑：物品锁定 */
+        createInterval( "playerItemLocker", () => playerItemLocker(), [ tags.gameLogic, tags.gaming, tags.itemLock ] )
     },
     /** 经典模式游戏后事件 */
     classicAfterEvents() {

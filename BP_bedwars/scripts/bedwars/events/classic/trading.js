@@ -4,7 +4,6 @@
 
 import { ContainerSlot, Entity, Player } from "@minecraft/server";
 import { eachValidSlot, getItemAmount, giveItem, hasItem, replaceInventoryItem } from "../../methods/itemManager";
-import { eachPlayer } from "../../methods/playerManager";
 import { overworld } from "../../methods/positionManager";
 import { blocksAndItemsShopitems, Shopitem, teamUpgradeShopitems, weaponAndArmorCaptureShopitems, weaponAndArmorShopitems } from "../../methods/bedwarsShopitem";
 import { BedwarsPlayer, eachAlivePlayer, eachValidPlayer, warnPlayer } from "../../methods/bedwarsPlayer";
@@ -12,9 +11,6 @@ import { map } from "../../methods/bedwarsMaps";
 
 /** 交易功能 */
 export function trading() {
-
-    /** 玩家物品锁定（防止交易界面吞物品） */
-    playerItemLocker();
 
     /** 商人物品供应 */
     supplyShopitem();
@@ -34,31 +30,6 @@ export function trading() {
 
 /** 始终锁定的物品 */
 const alwaysLockInInventory = [ "bedwars:wooden_sword", "bedwars:wooden_pickaxe", "bedwars:iron_pickaxe", "bedwars:golden_pickaxe", "bedwars:diamond_pickaxe", "bedwars:wooden_axe", "bedwars:stone_axe", "bedwars:iron_axe", "bedwars:diamond_axe", "bedwars:shears" ];
-
-/** 玩家物品锁定控制器
- * @description 当玩家与商人交互后，锁定玩家物品；当玩家离开商人 3 格后，开放玩家物品
- */
-function playerItemLocker() {
-
-    eachPlayer( player => {
-
-        /** 玩家附近3.5格是否有商人 */
-        let haveTraderNearby = player.runCommand( "execute if entity @e[r=3.5,type=bedwars:trader]" ).successCount === 1;
-
-        /** 玩家视野内是否有商人 */
-        let haveTraderInView = player.getEntitiesFromViewDirection( { type: "bedwars:trader", maxDistance: 3.5 } );
-
-        /** 玩家视野内是否有箱子 */
-        let blockInView = player.getBlockFromViewDirection( { maxDistance: 7.5 } );
-        let haveChestInView = false;
-        if ( blockInView ) { haveChestInView = [ "minecraft:chest", "minecraft:ender_chest" ].includes( blockInView.block.typeId ) };
-
-        /** 当玩家附近有商人、视线内有商人并且视线内没有箱子时，则锁定，否则解锁之 */
-        if ( haveTraderNearby && !haveChestInView ) { lockItem( player ); } else { unlockItem( player ); };
-
-    } )
-
-}
 
 /** 为商人供应物品 */
 function supplyShopitem() {

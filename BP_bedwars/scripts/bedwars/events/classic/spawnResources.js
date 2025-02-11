@@ -15,7 +15,7 @@ import { spawnItem } from "../../methods/itemManager";
 import { overworld, positionManager, Vector } from "../../methods/positionManager";
 import { intToRoman, randomInt } from "../../methods/number";
 import { tickToSecond } from "../../methods/time";
-import { getPlayerBedwarsInfo, playerIsAlive } from "../../methods/bedwarsPlayer";
+import { playerIsAlive } from "../../methods/bedwarsPlayer";
 
 /** 资源生成函数 */
 export function spawnResources() {
@@ -161,8 +161,8 @@ function spawnIron( team, nearbyPlayers ) {
     /** 生成资源 */
     spawnTeamResource( team, nearbyPlayers,
         player => {
-            /** 玩家附近3.5格是否有商人 */
-            let haveTraderNearby = player.runCommand( "execute if entity @e[r=3.5,type=bedwars:trader]" ).successCount === 1;
+            /** 玩家附近4格是否有商人 */
+            let haveTraderNearby = player.runCommand( "execute if entity @e[r=4,type=bedwars:trader]" ).successCount === 1;
             if ( haveTraderNearby ) { player.runCommand( `give @s bedwars:iron_ingot 1 0 {"item_lock":{"mode":"lock_in_inventory"}}` ); } else { player.runCommand( `give @s bedwars:iron_ingot` ); }
         },
         pos => { spawnItem( pos, "bedwars:iron_ingot", { clearVelocity: map().spawnerInfo.clearResourceVelocity } ) }
@@ -182,8 +182,8 @@ function spawnGold( team, nearbyPlayers ) {
     /** 生成资源 */
     spawnTeamResource( team, nearbyPlayers,
         player => {
-            /** 玩家附近3.5格是否有商人 */
-            let haveTraderNearby = player.runCommand( "execute if entity @e[r=3.5,type=bedwars:trader]" ).successCount === 1;
+            /** 玩家附近4格是否有商人 */
+            let haveTraderNearby = player.runCommand( "execute if entity @e[r=4,type=bedwars:trader]" ).successCount === 1;
             if ( haveTraderNearby ) { player.runCommand( `give @s bedwars:gold_ingot 1 0 {"item_lock":{"mode":"lock_in_inventory"}}` ); } else { player.runCommand( `give @s bedwars:gold_ingot` ); }
         },
         pos => { spawnItem( pos, "bedwars:gold_ingot", { clearVelocity: map().spawnerInfo.clearResourceVelocity } ) }
@@ -203,8 +203,8 @@ function spawnEmeraldTeam( team, nearbyPlayers ) {
     /** 生成资源 */
     spawnTeamResource( team, nearbyPlayers,
         player => {
-            /** 玩家附近3.5格是否有商人 */
-            let haveTraderNearby = player.runCommand( "execute if entity @e[r=3.5,type=bedwars:trader]" ).successCount === 1;
+            /** 玩家附近4格是否有商人 */
+            let haveTraderNearby = player.runCommand( "execute if entity @e[r=4,type=bedwars:trader]" ).successCount === 1;
             if ( haveTraderNearby ) { player.runCommand( `give @s bedwars:emerald 1 0 {"item_lock":{"mode":"lock_in_inventory"}}` ); } else { player.runCommand( `give @s bedwars:emerald` ); }
         },
         pos => { spawnItem( pos, "bedwars:emerald", { clearVelocity: map().spawnerInfo.clearResourceVelocity } ) }

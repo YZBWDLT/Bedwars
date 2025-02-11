@@ -7,7 +7,7 @@ import { Entity, EntityDieAfterEvent, EntityHurtAfterEvent, Player, ProjectileHi
 import { overworld } from "../../methods/positionManager";
 import { map } from "../../methods/bedwarsMaps";
 import { BedwarsPlayer, eachValidPlayer, getPlayerBedwarsInfo, playerIsValid } from "../../methods/bedwarsPlayer";
-import { eachNearbyPlayer, entityIsNearby, getPlayerNearby, setPlayerGamemode, showTitle } from "../../methods/playerManager";
+import { eachNearbyPlayer, entityIsNearby, setPlayerGamemode, showTitle } from "../../methods/playerManager";
 import { tickToSecond } from "../../methods/time";
 import { getItemAmount } from "../../methods/itemManager";
 

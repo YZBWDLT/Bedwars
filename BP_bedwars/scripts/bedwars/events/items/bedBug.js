@@ -9,7 +9,7 @@
  */
 
 import { Entity, ProjectileHitBlockAfterEvent, ProjectileHitEntityAfterEvent } from "@minecraft/server"
-import { BedwarsPlayer, playerIsValid } from "../../methods/bedwarsPlayer";
+import { BedwarsPlayer, getPlayerBedwarsInfo, playerIsValid } from "../../methods/bedwarsPlayer";
 import { overworld } from "../../methods/positionManager";
 
 /** 设定蠹虫额外属性
@@ -50,7 +50,7 @@ export function summonSilverfish( event ) {
         let silverfish = event.dimension.spawnEntity( "minecraft:silverfish", event.location );
 
         /** 如果掷出者是拥有正常起床信息的玩家，则设定其额外属性 */
-        if ( playerIsValid( event.source ) ) { setSilverfishProperties( silverfish, event.source.bedwarsInfo ) }
+        if ( playerIsValid( event.source ) ) { setSilverfishProperties( silverfish, getPlayerBedwarsInfo( event.source ) ) }
 
     }
 

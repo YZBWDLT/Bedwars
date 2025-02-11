@@ -4,7 +4,7 @@
  */
 
 import { PlayerBreakBlockAfterEvent, Player, world } from "@minecraft/server";
-import { BedwarsPlayer, eachValidPlayer, playerIsValid, warnPlayer } from "../../methods/bedwarsPlayer";
+import { BedwarsPlayer, eachValidPlayer, getPlayerBedwarsInfo, playerIsValid, warnPlayer } from "../../methods/bedwarsPlayer";
 import { map } from "../../methods/bedwarsMaps";
 
 import { removeItemEntity } from "../../methods/itemManager";
@@ -24,7 +24,7 @@ export function playerBreakBedTestCapture( event ) {
         /** ===== 获取基本信息 ===== */
 
         /** 破坏床的玩家 */ let breaker = event.player;
-        /** 破坏床的玩家的起床战争信息 @type {BedwarsPlayer}*/ let breakerInfo = breaker.bedwarsInfo;
+        /** 破坏床的玩家的起床战争信息 */ let breakerInfo = getPlayerBedwarsInfo( breaker );
         /** 被破坏床的队伍 */ let team = map().teamList.filter( team => {
             let bedDestroyed = false;
             team.captureInfo.bedsPos.forEach( pos => { if ( overworld.getBlock( pos ).typeId === "minecraft:air" ) { bedDestroyed = true; } } )

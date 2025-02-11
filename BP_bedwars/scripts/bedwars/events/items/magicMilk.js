@@ -5,15 +5,15 @@
  */
 
 import { ItemCompleteUseAfterEvent } from "@minecraft/server";
-import { BedwarsPlayer, playerIsValid, eachValidPlayer } from "../../methods/bedwarsPlayer";
+import { BedwarsPlayer, playerIsValid, eachValidPlayer, getPlayerBedwarsInfo } from "../../methods/bedwarsPlayer";
 
 /** 玩家饮用魔法牛奶检测
  * @param {ItemCompleteUseAfterEvent} event 
  */
 export function playerDrinkMagicMilkTest( event ) {
     if ( event.itemStack.typeId === "bedwars:magic_milk" && playerIsValid( event.source ) ) {
-        event.source.bedwarsInfo.magicMilk.enabled = true;
-        event.source.bedwarsInfo.magicMilk.remainingTime = 600;
+        getPlayerBedwarsInfo( event.source ).magicMilk.enabled = true;
+        getPlayerBedwarsInfo( event.source ).magicMilk.remainingTime = 600;
     }
 }
 

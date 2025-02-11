@@ -103,8 +103,8 @@ function alarmTrap( teamMember, enemy, team ) {
 
     /** 报警信息 */
     teamMember.forEach( player => {
-        showTitle( player, { translate: "title.trapTriggered.alarmTrap" }, { translate: "subtitle.trapTriggered.alarmTrap", with: [ `${enemy.bedwarsInfo.getTeam().getTeamNameWithColor()}`, `${enemy.nameTag}` ] } )
-        warnPlayer( player, { translate: "message.trapTriggered.alarmTrap", with: [ `${enemy.bedwarsInfo.getTeam().getTeamNameWithColor()}`, `${enemy.nameTag}` ] } )    
+        showTitle( player, { translate: "title.trapTriggered.alarmTrap" }, { translate: "subtitle.trapTriggered.alarmTrap", with: [ `${getPlayerBedwarsInfo( enemy ).getTeam().getTeamNameWithColor()}`, `${enemy.nameTag}` ] } )
+        warnPlayer( player, { translate: "message.trapTriggered.alarmTrap", with: [ `${getPlayerBedwarsInfo( enemy ).getTeam().getTeamNameWithColor()}`, `${enemy.nameTag}` ] } )    
     } );
 
     /** 移除敌人的隐身效果 */

@@ -113,7 +113,7 @@ export function playerDied( event ) {
             let killer = getKillerAndDeathMessage( player, playerInfo, event.damageSource.damagingEntity ).killer;
             /** 给予击杀者击杀奖励 */
             if ( killer !== undefined && killer.typeId === "minecraft:player" && playerIsValid( killer ) ) { 
-                killBonus( player, playerInfo, killer, killer.bedwarsInfo );
+                killBonus( player, playerInfo, killer, getPlayerBedwarsInfo( killer ) );
             }
             player.runCommand( `clear @s` ); // 清空死亡玩家的物品
         }

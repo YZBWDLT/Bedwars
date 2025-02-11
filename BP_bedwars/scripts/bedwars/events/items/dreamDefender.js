@@ -9,7 +9,7 @@
  */
 
 import { ItemUseOnBeforeEvent, system } from "@minecraft/server";
-import { BedwarsPlayer, playerIsValid } from "../../methods/bedwarsPlayer";
+import { BedwarsPlayer, getPlayerBedwarsInfo, playerIsValid } from "../../methods/bedwarsPlayer";
 import { overworld, positionManager } from "../../methods/positionManager";
 
 /** 设定铁傀儡额外属性
@@ -60,7 +60,7 @@ export function summonIronGolem( event ) {
             if ( event.source.getGameMode() !== "creative" ) { event.source.runCommand( `clear @s bedwars:dream_defender -1 1` ) };
 
             /** 如果使用者是拥有正常起床信息的玩家，则设定其额外属性 */
-            if ( playerIsValid( event.source ) ) { setIronGolemProperties( ironGolem, event.source.bedwarsInfo ) }
+            if ( playerIsValid( event.source ) ) { setIronGolemProperties( ironGolem, getPlayerBedwarsInfo( event.source ) ) }
 
         } )
     }

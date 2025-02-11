@@ -2,13 +2,13 @@
 
 import { system, PlayerBreakBlockBeforeEvent, PlayerBreakBlockAfterEvent, Player } from "@minecraft/server";
 import { settings } from "../../methods/bedwarsSettings";
-import { BedwarsPlayer, eachValidPlayer, playerIsValid, warnPlayer } from "../../methods/bedwarsPlayer";
+import { BedwarsPlayer, eachValidPlayer, getPlayerBedwarsInfo, playerIsValid, warnPlayer } from "../../methods/bedwarsPlayer";
 import { map } from "../../methods/bedwarsMaps";
 
 import { removeItemEntity } from "../../methods/itemManager";
 import { overworld, positionManager } from "../../methods/positionManager";
 import { BedwarsTeam } from "../../methods/bedwarsTeam";
-import { showTitle } from "../../methods/playerManager";
+import { getPlayerAmount, showTitle } from "../../methods/playerManager";
 
 /** 玩家破坏原版方块检测
  * @param {PlayerBreakBlockBeforeEvent} event 破坏方块检测事件
@@ -38,7 +38,7 @@ export function playerBreakBedTest( event ) {
         /** ===== 获取基本信息 ===== */
 
         /** 破坏床的玩家 */ let breaker = event.player;
-        /** 破坏床的玩家的起床战争信息 @type {BedwarsPlayer}*/ let breakerInfo = breaker.bedwarsInfo;
+        /** 破坏床的玩家的起床战争信息 */ let breakerInfo = getPlayerBedwarsInfo( breaker );
         /** 被破坏床的队伍 */ let team = map().teamList.filter( team => overworld.getBlock( team.bedInfo.pos ).typeId === "minecraft:air" && team.bedInfo.isExist )[0];
 
         /** ===== 判断逻辑 ===== */

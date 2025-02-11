@@ -7,7 +7,7 @@ import { system } from "@minecraft/server";
 import { map } from "../../methods/bedwarsMaps"
 import { eachTeam } from "../../methods/bedwarsTeam";
 import { setPlayerGamemode } from "../../methods/playerManager";
-import { diamondTier2, diamondTier3, emeraldTier2, emeraldTier3 } from "../gaming/gameEvents";
+import { diamondTier2, diamondTier3, emeraldTier2, emeraldTier3 } from "../classic/gameEvents";
 import { gameOver } from "../classic/afterGaming";
 
 /** ===== 主事件 ===== */

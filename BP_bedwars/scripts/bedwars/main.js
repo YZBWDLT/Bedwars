@@ -1,13 +1,13 @@
 import { system, world } from "@minecraft/server";
-import { alwaysSaturation } from "./events/gaming/effects.js";
-import { playerBreakVanillaBlocksTest } from "./events/gaming/playerBreakBlockTest.js";
+import { alwaysSaturation } from "./events/classic/effects.js";
+import { playerBreakVanillaBlocksTest } from "./events/classic/playerBreakBlockTest.js";
 import { regenerateMap } from "./methods/bedwarsMaps.js";
 import { createEvent } from "./methods/eventManager.js";
 import { createInterval } from "./methods/intervalManager.js";
-import { playerLeave, playerRejoin } from "./events/gaming/playerLeaveAndRejoin.js";
+import { playerLeave, playerRejoin } from "./events/classic/playerLeaveAndRejoin.js";
 import { settingsEvent } from "./methods/bedwarsSettings.js";
-import { waiting } from "./events/gaming/beforeGaming.js";
-import { beforeGamingInfoBoard } from "./events/gaming/infoBoard.js";
+import { waiting } from "./events/classic/beforeGaming.js";
+import { beforeGamingInfoBoard } from "./events/classic/infoBoard.js";
 
 /** 地图创建 */
 regenerateMap();

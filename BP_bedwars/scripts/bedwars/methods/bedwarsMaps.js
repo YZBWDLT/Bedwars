@@ -215,7 +215,7 @@ export class BedwarsMap{
 
     /** 移除边界外的实体
      * @param {String} entityId 要移除的实体ID
-     * @param {number} range 检测的范围，默认值：0。例：若填写为-5，则检测到离边界5格以外则移除。
+     * @param {number} range 检测的范围，默认值：0。例：若填写为-5，则检测到离边界5格以内则移除。
      */
     removeEntityOutOfBorder( entityId, range = 0 ) {
         overworld.getEntities( { type: entityId } ).forEach( entity => {    

@@ -66,10 +66,11 @@ function reloadMap( ) {
     else {
         /** 倒计时 */
         loadInfo.setTeamIslandTime--;
-        /** 倒计时结束后，设置等待时间，并关闭加载状态 */
+        /** 倒计时结束后，设置等待时间，重新移除一次所有实体，并关闭加载状态 */
         if ( loadInfo.setTeamIslandTime === 0 ) {
             loadInfo.isLoading = false;
             map().gameStartCountdown = settings.gameStartWaitingTime;
+            overworld.getEntities().filter( entity => { return entity.typeId !== "minecraft:player" } ).forEach( entity => { entity.remove() } );
         }
     }
 

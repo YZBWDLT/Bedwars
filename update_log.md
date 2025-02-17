@@ -26,5 +26,4 @@
 - **移除** `BedwarsMap`类方法`setTrader() {}`，因为该方法在全局仅调用了 1 次。现在相关代码已直接写入`gameStart() {}`方法。
 - **更改** 移动`playerItemLock() {}`函数，从`events/classic/trading.js`→`event/classic/itemLock.js`，该新文件用于控制物品的锁定。
 - **新增** `removeEnderPearl() {}`函数，位于`events/items/enderPearl.js`，用于移除出界的末影珍珠。
-- **新增** `removeBridgeEgg() {}`函数，位于`events/items/bridgeEgg.js`，用于移除出界的搭桥蛋。
 - **新增** `playSoundWhenShot(event) {}`函数，位于`events/items/bow.js`，用于对射击者和被射击者播放经验球的音效。

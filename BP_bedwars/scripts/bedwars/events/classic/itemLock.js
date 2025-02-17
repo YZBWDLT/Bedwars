@@ -10,6 +10,7 @@
  * - 不处于锁定模式的其他情况。
  */
 
+import { Player } from "@minecraft/server";
 import { eachValidSlot } from "../../methods/itemManager";
 import { eachPlayer } from "../../methods/playerManager";
 
@@ -43,7 +44,7 @@ export function playerItemLocker() {
         let isFalling = player.isFalling;
 
         /** 当玩家附近有商人、视线内有商人并且视线内没有箱子时；或者，玩家正在掉落状态，则锁定，否则解锁之。 */
-        if ( ( haveTraderNearby && !haveChestInView ) || isFalling ) { lockItem( player ); }
+        if ( ( haveTraderNearby && !haveChestInView ) || ( isFalling && isVoidBelow( player ) ) ) { lockItem( player ); }
         else { unlockItem( player ); };
 
     } )
@@ -70,3 +71,13 @@ function unlockItem( player ) {
     } );
 }
 
+/** 检测玩家脚下是否为虚空
+ * @param {Player} player 待检测玩家
+ */
+function isVoidBelow( player ) {
+    let { x, y, z } = player.location
+    for ( let y0 = y; y0 >= 0; y0-- ) {
+        if ( !player.dimension.getBlock( { x, y: y0, z } ).isAir ) { return false; }
+    }
+    return true;
+}

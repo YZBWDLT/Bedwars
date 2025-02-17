@@ -65,7 +65,7 @@ function getValidBedPoint( usingBlockPos ) {
 /**
  * 将床点位附近的方块重新染色
  * @param {Vector} bedPoint 有效的床点位信息
- * @param {"red"|"blue"} teamId 放置床的队员所在的队伍ID
+ * @param {import("../../methods/bedwarsTeam").validTeams} teamId 放置床的队员所在的队伍ID
  */
 function recolorBlocks( bedPoint, teamId ) {
 

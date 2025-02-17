@@ -12,7 +12,7 @@ import { getTeam as getTeamFunc } from "./bedwarsTeam";
 export class BedwarsPlayer{
 
     /** 玩家名称 */ name = "";
-    /** 玩家队伍 @type {"red"|"blue"|"yellow"|"green"|"pink"|"cyan"|"white"|"gray"|"purple"|"brown"|"orange"|undefined} */ team = void 0;
+    /** 玩家队伍 @type {import("./bedwarsTeam").validTeams|undefined} */ team = void 0;
     /** 玩家运行时 ID */ runtimeId = 0;
     /** 玩家是否正在旁观 */ isSpectator = false;
     /** 玩家是否被淘汰 */ isEliminated = false;
@@ -45,7 +45,7 @@ export class BedwarsPlayer{
 
     /** 构建并初始化一个起床战争信息实例，并且按照输入的队伍自动设置玩家信息
      * @param {String} name 玩家名称
-     * @param {"red"|"blue"|"yellow"|"green"|"pink"|"cyan"|"white"|"gray"|"purple"|"brown"|"orange"|undefined} team 玩家队伍
+     * @param {import("./bedwarsTeam").validTeams|undefined} team 玩家队伍
      */
     constructor( name, team ) {
         this.name = name;

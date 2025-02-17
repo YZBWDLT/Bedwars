@@ -10,13 +10,12 @@ import { overworld, positionManager, Vector } from "./positionManager.js";
 import { removeItemEntity } from "./itemManager.js";
 import { map } from "./bedwarsMaps.js";
 
-/** @enum {validTeams[]} 可用队伍列表 */
-export const validTeams = [ "red", "blue", "yellow", "green", "pink", "cyan", "white", "gray", "purple", "brown", "orange" ];
+/** @typedef {"red"|"blue"|"yellow"|"green"|"pink"|"cyan"|"white"|"gray"|"purple"|"brown"|"orange"} validTeams 所有可用的队伍 */
 
 /** 【类】队伍类 */
 export class BedwarsTeam{
 
-    /** 队伍 ID  @type {"red"|"blue"|"yellow"|"green"|"pink"|"cyan"|"white"|"gray"|"purple"|"brown"|"orange"} */ id = "red";
+    /** 队伍 ID  @type {validTeams} */ id = "red";
     /** 床信息，包括床位置、朝向、存在信息 */ bedInfo = {
         /** 床脚位置 */ pos: new Vector( 0, 0, 0 ),
         /** 朝向 @type {0|1|2|3} */ direction: 0,
@@ -63,14 +62,14 @@ export class BedwarsTeam{
         /** 其他队伍合计的床数 */ otherTeamBedAmount: 1,
     };
     /** 
-     * @param {"red"|"blue"|"yellow"|"green"|"pink"|"cyan"|"white"|"gray"|"purple"|"brown"|"orange"} id - 队伍 ID ，必须为选定值的某一个
+     * @param {validTeams} id - 队伍 ID ，必须为选定值的某一个
      * @param {Vector} bedPos - 床的位置
      * @param {0|1|2|3} bedDirection - 床的方向
      * @param {Vector} resourceSpawnerPos - 资源点位置
      * @param {Vector} spawnpointPos - 重生点位置
      */
     constructor( id, bedPos, bedDirection, resourceSpawnerPos, spawnpointPos ) {
-        this.id = ( validTeams.includes( id ) ) ? id : undefined;
+        this.id = id;
         this.bedInfo.pos = bedPos;
         this.bedInfo.direction = bedDirection;
         this.spawnerInfo.spawnerPos = positionManager.center( resourceSpawnerPos );
@@ -189,7 +188,7 @@ export function eachTeam( func ) {
 }
 
 /** 从队伍 ID 获取队伍信息
- * @param {"red"|"blue"|"yellow"|"green"|"pink"|"cyan"|"white"|"gray"|"purple"|"brown"|"orange"} id 输入队伍的 ID
+ * @param {validTeams} id 输入队伍的 ID
  */
 export function getTeam( id ) {
     return map().teamList.find( team => team.id === id );

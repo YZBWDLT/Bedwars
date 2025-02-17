@@ -98,7 +98,7 @@ export class Shopitem{
     }
 
     /** 为有色方块设立单独的物品 ID
-     * @param {"red"|"blue"|"yellow"|"green"|"pink"|"cyan"|"white"|"gray"|"purple"|"brown"|"orange"} color - 要设定的颜色
+     * @param {import("./bedwarsTeam.js").validTeams} color - 要设定的颜色
      */
     setColoredId( color ) {
         if ( this.itemType === "coloredBlock" ) { this.itemId = `bedwars:${color}_${this.id}` }

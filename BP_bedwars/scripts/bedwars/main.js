@@ -1,7 +1,7 @@
 import { system, world } from "@minecraft/server";
 import { alwaysSaturation } from "./events/classic/effects.js";
 import { playerBreakVanillaBlocksTest } from "./events/classic/playerBreakBlockTest.js";
-import { regenerateMap } from "./methods/bedwarsMaps.js";
+import { regenerateMap } from "./maps/mapGenerator.js";
 import { createEvent } from "./methods/eventManager.js";
 import { createInterval } from "./methods/intervalManager.js";
 import { playerLeave, playerRejoin } from "./events/classic/playerLeaveAndRejoin.js";

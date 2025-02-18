@@ -1,8 +1,8 @@
 /** 所有设置 */
 
 import { ScriptEventCommandMessageAfterEvent } from "@minecraft/server"
-import { regenerateMap, validMapsFor2Teams, validMapsFor4Teams, validMapsFor8Teams, validMapsForCaptureMode } from "./bedwarsMaps"
 import { map } from "./bedwarsMaps"
+import { regenerateMap, validMapsFor2Teams, validMapsFor4Teams, validMapsFor8Teams, validMapsForCaptureMode } from "../maps/mapGenerator"
 
 /** 可用设置列表 */
 export const settings = {

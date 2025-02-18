@@ -5,9 +5,9 @@
  * 倒计时结束后，重新开启下一局。
  */
 
-import { map, regenerateMap } from "../../methods/bedwarsMaps";
+import { map } from "../../methods/bedwarsMaps";
+import { regenerateMap } from "../../maps/mapGenerator";
 import { eachPlayer, showTitle } from "../../methods/playerManager";
-import { overworld } from "../../methods/positionManager";
 import { getValidPlayers, eachValidPlayer, getPlayerBedwarsInfo } from "../../methods/bedwarsPlayer";
 import { BedwarsTeam } from "../../methods/bedwarsTeam";
 import { world } from "@minecraft/server";

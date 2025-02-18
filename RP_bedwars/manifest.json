@@ -29,15 +29,7 @@
 	"metadata": {
 		"authors": [
 			"YZBWDLT"
-		],
-		"generated_with": {
-			"bridge": [
-				"2.7.42"
-			],
-			"dash": [
-				"0.11.7"
-			]
-		}
+		]
 	},
 	"dependencies": [
 		{

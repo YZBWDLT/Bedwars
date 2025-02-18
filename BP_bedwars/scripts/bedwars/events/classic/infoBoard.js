@@ -14,8 +14,8 @@ import { BedwarsTeam } from "../../methods/bedwarsTeam";
 export function beforeGamingInfoBoard() {
     let loadInfo = map().loadInfo;
     if ( loadInfo.isLoading ) {
-        if ( loadInfo.clearingLayer !== 0 ) { waitingInfoBoard( `§f清除原地图中... §7${tickToSecond(loadInfo.clearingLayer*loadInfo.clearTimePerLayer)}秒§r` ); }
-        else if ( loadInfo.structureLoadTime !== 0 ) { waitingInfoBoard( `§f生成地图中... §7${tickToSecond(loadInfo.structureLoadTime)}秒§r` ); }
+        if ( loadInfo.mapClear.currentLayer !== 0 ) { waitingInfoBoard( `§f清除原地图中... §7${tickToSecond(loadInfo.mapClear.currentLayer*loadInfo.mapClear.timeCostPerLayer)}秒§r` ); }
+        else if ( loadInfo.mapReload.countdown !== 0 ) { waitingInfoBoard( `§f生成地图中... §7${tickToSecond(loadInfo.mapReload.countdown)}秒§r` ); }
         else { waitingInfoBoard( "§f设置队伍岛屿中...§r" ); }
     }
     else {

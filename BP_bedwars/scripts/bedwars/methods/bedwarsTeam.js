@@ -12,14 +12,22 @@ import { map } from "./bedwarsMaps.js";
 
 /** @typedef {"red"|"blue"|"yellow"|"green"|"pink"|"cyan"|"white"|"gray"|"purple"|"brown"|"orange"} validTeams 所有可用的队伍 */
 
+/**
+ * @typedef teamInfo 队伍信息
+ * @property { Vector } bedPos 床脚所在的位置
+ * @property { "None" | "Rotate90" | "Rotate180" | "Rotate270" } bedRotation 床的旋转
+ * @property { Vector } spawnpointPos 重生点所在位置
+ * @property { Vector } resourceSpawnerPos 资源点所在位置，应设置为对应半砖的上方1格
+ */
+
 /** 【类】队伍类 */
 export class BedwarsTeam{
 
     /** 队伍 ID  @type {validTeams} */ id = "red";
     /** 床信息，包括床位置、朝向、存在信息 */ bedInfo = {
         /** 床脚位置 */ pos: new Vector( 0, 0, 0 ),
-        /** 朝向 @type {0|1|2|3} */ direction: 0,
-        /** 床是否存在 */ isExist: true
+        /** 朝向 @type { "None" | "Rotate90" | "Rotate180" | "Rotate270" } */ rotation: "None",
+        /** 床是否存在 */ isExist: true,
     }
     /** 资源点信息，包括资源点位置和各类资源生成次数、倒计时 */ spawnerInfo = {
         /** 资源生成位置 */ spawnerPos: new Vector( 0, 0, 0 ),
@@ -62,16 +70,18 @@ export class BedwarsTeam{
         /** 其他队伍合计的床数 */ otherTeamBedAmount: 1,
     };
     /** 
-     * @param {validTeams} id - 队伍 ID ，必须为选定值的某一个
+     * @param {validTeams} id 队伍 ID
+     * @param {teamInfo} teamInfo 队伍基本信息
      * @param {Vector} bedPos - 床的位置
      * @param {0|1|2|3} bedDirection - 床的方向
      * @param {Vector} resourceSpawnerPos - 资源点位置
      * @param {Vector} spawnpointPos - 重生点位置
      */
-    constructor( id, bedPos, bedDirection, resourceSpawnerPos, spawnpointPos ) {
+    constructor( id, teamInfo ) {
+        const { bedPos, bedRotation, resourceSpawnerPos, spawnpointPos } = teamInfo
         this.id = id;
         this.bedInfo.pos = bedPos;
-        this.bedInfo.direction = bedDirection;
+        this.bedInfo.rotation = bedRotation;
         this.spawnerInfo.spawnerPos = positionManager.center( resourceSpawnerPos );
         this.spawnpoint = positionManager.center( spawnpointPos );
     };
@@ -133,27 +143,20 @@ export class BedwarsTeam{
             let placePos = positionManager.copy( bedFeetPos );
 
             /** 若为0°/90°，则床不会有任何偏移，直接在床脚处生成 */
-            if ( !correctPos || this.bedInfo.direction === 0 || this.bedInfo.direction === 1 ) { return placePos; }
-            else if ( this.bedInfo.direction === 2 ) { return positionManager.add( placePos, -1, 0, 0 ); }
-            else if ( this.bedInfo.direction === 3 ) { return positionManager.add( placePos, 0, 0, -1 ); }
+            if ( !correctPos || this.bedInfo.rotation === "None" || this.bedInfo.rotation === "Rotate90" ) { return placePos; }
+            else if ( this.bedInfo.rotation === "Rotate180" ) { return positionManager.add( placePos, -1, 0, 0 ); }
+            else if ( this.bedInfo.rotation === "Rotate270" ) { return positionManager.add( placePos, 0, 0, -1 ); }
 
-        }
-        /** 设置床旋转，不同旋转角度可能会导致床产生偏移 */
-        let rotation = () => {
-            if ( this.bedInfo.direction === 1 ) { return "Rotate90"; }
-            else if ( this.bedInfo.direction === 2 ) { return "Rotate180"; }
-            else if ( this.bedInfo.direction === 3 ) { return "Rotate270"; }
-            else { return "None"; }
         }
 
         /** 加载结构，如果是夺点模式，则对于每一个该队伍已有的点位都重新设置床；否则，在该队的床点位设置床 */
         if ( map().mode === "capture" ) {
             this.captureInfo.bedsPos.forEach( bedPos => {
-                world.structureManager.place( `beds:${this.id}_bed`, overworld, pos( bedPos, false ), { rotation: rotation() } );
+                world.structureManager.place( `beds:${this.id}_bed`, overworld, pos( bedPos, false ), { rotation: this.bedInfo.rotation } );
             } )
         }
         else {
-            world.structureManager.place( `beds:${this.id}_bed`, overworld, pos( this.bedInfo.pos ), { rotation: rotation() } );
+            world.structureManager.place( `beds:${this.id}_bed`, overworld, pos( this.bedInfo.pos ), { rotation: this.bedInfo.rotation } );
         }
         
     };

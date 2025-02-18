@@ -3,6 +3,7 @@
  * 2 队地图。
  */
 
+import { world } from "@minecraft/server";
 import { BedwarsMap } from "../../methods/bedwarsMaps";
 import { BedwarsTeam } from "../../methods/bedwarsTeam";
 import { Vector } from "../../methods/positionManager";
@@ -44,14 +45,14 @@ export function createMapCryptic( ) {
     );
 
     /** 设置地图商人 */
-    map.traderInfo = [
+    map.addTraders(
         { pos: new Vector( -2, 78, 87 ), direction: 270, type: "blocks_and_items" },
         { pos: new Vector( 6, 78, -87 ), direction: 90, type: "blocks_and_items" },
         { pos: new Vector( -2, 78, 85 ), direction: 270, type: "weapon_and_armor" },
         { pos: new Vector( 6, 78, -85 ), direction: 90, type: "weapon_and_armor" },
         { pos: new Vector( 6, 78, 86 ), direction: 90, type: "team_upgrade" },
         { pos: new Vector( -3, 78, -86 ), direction: 270, type: "team_upgrade" },
-    ];
+    );
 
     /** 设置地图钻石和绿宝石生成点 */
     map.addSpawners(

@@ -119,7 +119,12 @@ export function setScore( objective, participant, score ) {
  * @param {Entity | ScoreboardIdentity | String} participant 追踪对象
  */
 export function getScore( objective, participant ) {
-    return getScoreboard( objective ).getScore( participant );
+    try {
+        return getScoreboard( objective ).getScore( participant );
+    }
+    catch {
+        return void 0;
+    }
 }
 
 /** 获取被追踪对象的全部记分项数据

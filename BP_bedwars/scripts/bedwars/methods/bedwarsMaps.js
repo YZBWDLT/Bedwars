@@ -145,7 +145,7 @@ export class BedwarsMap{
             /** 加载岛屿 */ loadStructure: () => {
                 this.loadInfo.mapReload.islands.forEach( island => {
                     const { pos, rotation, mirror, type } = island;
-                    world.structureManager.place( `${this.id}:${type}`, overworld, pos, { animationMode: "Layers", animationSeconds: ( this.loadInfo.mapReload.totalTime / 20 ).toFixed( 2 ), mirror, rotation, } )
+                    world.structureManager.place( `${this.id}:${type}`, overworld, pos, { animationMode: "Layers", animationSeconds: parseFloat( ( this.loadInfo.mapReload.totalTime / 20 ).toFixed( 2 ) ), mirror, rotation, } )
                 } )
             },
             /** 设置边界 */ loadBorder: () => {
@@ -233,6 +233,16 @@ export class BedwarsMap{
             this.spawnerInfo[`${type}Info`].push( { pos: changedPos, spawned: 0, } );
         } );
     };
+
+    /** 添加商人信息
+     * @param {...traderInfo} traders 商人信息
+     */
+    addTraders( ...traders ) {
+        traders.forEach( trader => {
+            const { pos, direction, type } = trader;
+            this.traderInfo.push( { pos: positionManager.center( pos ), direction, type } );
+        } )
+    }
 
     /** 设置下一个事件
      * @param {Number} nextEventCountdown 距离下一个事件的倒计时，单位：游戏刻

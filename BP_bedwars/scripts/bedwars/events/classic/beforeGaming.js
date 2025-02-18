@@ -15,124 +15,129 @@ import { eachTeam } from "../../methods/bedwarsTeam.js";
  */
 export function waiting() {
 
-    /** 地图加载信息 */
-    let loadInfo = map().loadInfo;
+    if ( map() ) {
 
-    eachPlayer( player => {
+        /** 地图加载信息 */
+        let loadInfo = map().loadInfo;
 
-        // 将出界的非创造模式玩家传送回来
-        if ( player.getGameMode() !== "creative" && player.runCommand( `execute if entity @s[x=-12,y=119,z=-12,dx=25,dy=10,dz=25]` ).successCount === 0 ) {
-            player.teleport( new Vector( 0, 121, 0 ) );
-        }
+        eachPlayer( player => {
 
-        // 将非创造模式的玩家改为冒险模式
-        setPlayerGamemode( player, "adventure" );
-
-    } )
-
-    // 加载阶段下，重新加载地图
-    if ( loadInfo.isLoading ) {
-
-        /** 下一个阶段的加载逻辑 @param {Boolean} condition 加载条件 @param {function()} func 执行的函数 */
-        let nextStage = ( condition, func ) => { if ( condition ) { loadInfo.loadStage++; func(); } }
-
-        /** 清除前的准备工作 */
-        if ( loadInfo.loadStage === 0 ) {
-            nextStage( true, () => {} );
-        }
-
-        /** 清除原场景 */
-        else if ( loadInfo.loadStage === 1 ) {
-            if ( system.currentTick % loadInfo.mapClear.timeCostPerLayer === 0 ) {
-                loadInfo.mapClear.clear();
+            // 将出界的非创造模式玩家传送回来
+            if ( player.getGameMode() !== "creative" && player.runCommand( `execute if entity @s[x=-12,y=119,z=-12,dx=25,dy=10,dz=25]` ).successCount === 0 ) {
+                player.teleport( new Vector( 0, 121, 0 ) );
             }
-            nextStage(
-                loadInfo.mapClear.currentLayer === 0,
-                () => {
-                    loadInfo.mapReload.loadBorder();
-                    loadInfo.mapReload.loadStructure();
+
+            // 将非创造模式的玩家改为冒险模式
+            setPlayerGamemode( player, "adventure" );
+
+        } )
+
+        // 加载阶段下，重新加载地图
+        if ( loadInfo.isLoading ) {
+
+            /** 下一个阶段的加载逻辑 @param {Boolean} condition 加载条件 @param {function()} func 执行的函数 */
+            let nextStage = ( condition, func ) => { if ( condition ) { loadInfo.loadStage++; func(); } }
+
+            /** 清除前的准备工作 */
+            if ( loadInfo.loadStage === 0 ) {
+                nextStage( true, () => {} );
+            }
+
+            /** 清除原场景 */
+            else if ( loadInfo.loadStage === 1 ) {
+                if ( system.currentTick % loadInfo.mapClear.timeCostPerLayer === 0 ) {
+                    loadInfo.mapClear.clear();
                 }
-            );
+                nextStage(
+                    loadInfo.mapClear.currentLayer === 0,
+                    () => {
+                        loadInfo.mapReload.loadBorder();
+                        loadInfo.mapReload.loadStructure();
+                    }
+                );
+            }
+
+            /** 加载结构时 */
+            else if ( loadInfo.loadStage === 2 ) {
+                loadInfo.mapReload.countdown--;
+                nextStage(
+                    loadInfo.mapReload.countdown === 0,
+                    () => {
+                        if ( loadInfo.teamIslandColor.isEnabled ) { loadInfo.teamIslandColor.load(); };
+                        eachTeam( team => { team.setBed() } );
+                        overworld.getEntities().filter( entity => { return entity.typeId !== "minecraft:player" } ).forEach( entity => { entity.remove() } );
+                    }
+                );
+            }
+
+            /** 设置队伍岛屿颜色与床等待时 */
+            else if ( loadInfo.loadStage === 3 ) {
+                loadInfo.teamIslandColor.countdown--;
+                nextStage(
+                    loadInfo.teamIslandColor.countdown === 0,
+                    () => {
+                        loadInfo.isLoading = false;
+                        map().gameStartCountdown = settings.gameStartWaitingTime;
+                    }
+                )
+            }
+
+
         }
 
-        /** 加载结构时 */
-        else if ( loadInfo.loadStage === 2 ) {
-            loadInfo.mapReload.countdown--;
-            nextStage(
-                loadInfo.mapReload.countdown === 0,
-                () => {
-                    if ( loadInfo.teamIslandColor.isEnabled ) { loadInfo.teamIslandColor.load(); };
-                    eachTeam( team => { team.setBed() } );
-                    overworld.getEntities().filter( entity => { return entity.typeId !== "minecraft:player" } ).forEach( entity => { entity.remove() } );
-                }
-            );
-        }
+        // 加载地图结束后，等待时
+        else {
 
-        /** 设置队伍岛屿颜色与床等待时 */
-        else if ( loadInfo.loadStage === 3 ) {
-            loadInfo.teamIslandColor.countdown--;
-            nextStage(
-                loadInfo.teamIslandColor.countdown === 0,
-                () => {
-                    loadInfo.isLoading = false;
-                    map().gameStartCountdown = settings.gameStartWaitingTime;
-                }
-            )
-        }
+            // 大于规定的人数时，开始倒计时
+            if ( getPlayerAmount() >= settings.minWaitingPlayers ) {
 
+                // 倒计时
+                map().gameStartCountdown--;
+
+                // 提醒玩家还有多长时间开始游戏
+                eachPlayer( player => {
+
+                    if ( map().gameStartCountdown === 399 ) {
+                        player.sendMessage( { translate: "message.gameStart", with: [ `20` ] } );
+                        player.playSound( "note.hat", { location: player.location } );
+                    }
+                    else if ( map().gameStartCountdown === 199 ) {
+                        player.sendMessage( { translate: "message.gameStart", with: [ `§610` ] } );
+                        showTitle( player, `§a10`, "", { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 } );
+                        player.playSound( "note.hat", { location: player.location } );
+                    }
+                    else if ( map().gameStartCountdown < 100 && map().gameStartCountdown % 20 === 19 ) {
+                        player.sendMessage( { translate: "message.gameStart", with: [ `§c${tickToSecond( map().gameStartCountdown )}` ] } );
+                        showTitle( player, `§c${tickToSecond( map().gameStartCountdown )}`, "", { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 } );
+                        player.playSound( "note.hat", { location: player.location } );
+                    }
+
+                } );
+
+                // 倒计时结束后，开始游戏
+                if ( map().gameStartCountdown === 0 ) {
+                    map().gameStart();
+                };
+
+            }
+
+            // 人数不足时，且已经开始倒计时，则取消倒计时
+            else if ( map().gameStartCountdown < settings.gameStartWaitingTime ) {
+
+                // 重置倒计时
+                map().gameStartCountdown = settings.gameStartWaitingTime;
+
+                // 提醒玩家倒计时已取消
+                eachPlayer( player => {
+                    player.sendMessage( { translate: "message.needsMorePlayer" } );
+                    showTitle( player, { translate: "title.needsMorePlayer" }, "", { fadeInDuration: 0, stayDuration: 40, fadeOutDuration: 0 } );
+                    player.playSound( "note.hat", { location: player.location } );
+                } );
+
+            }
+
+        }
 
     }
 
-    // 加载地图结束后，等待时
-    else {
-
-        // 大于规定的人数时，开始倒计时
-        if ( getPlayerAmount() >= settings.minWaitingPlayers ) {
-
-            // 倒计时
-            map().gameStartCountdown--;
-
-            // 提醒玩家还有多长时间开始游戏
-            eachPlayer( player => {
-
-                if ( map().gameStartCountdown === 399 ) {
-                    player.sendMessage( { translate: "message.gameStart", with: [ `20` ] } );
-                    player.playSound( "note.hat", { location: player.location } );
-                }
-                else if ( map().gameStartCountdown === 199 ) {
-                    player.sendMessage( { translate: "message.gameStart", with: [ `§610` ] } );
-                    showTitle( player, `§a10`, "", { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 } );
-                    player.playSound( "note.hat", { location: player.location } );
-                }
-                else if ( map().gameStartCountdown < 100 && map().gameStartCountdown % 20 === 19 ) {
-                    player.sendMessage( { translate: "message.gameStart", with: [ `§c${tickToSecond( map().gameStartCountdown )}` ] } );
-                    showTitle( player, `§c${tickToSecond( map().gameStartCountdown )}`, "", { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 } );
-                    player.playSound( "note.hat", { location: player.location } );
-                }
-
-            } );
-
-            // 倒计时结束后，开始游戏
-            if ( map().gameStartCountdown === 0 ) {
-                map().gameStart();
-            };
-
-        }
-
-        // 人数不足时，且已经开始倒计时，则取消倒计时
-        else if ( map().gameStartCountdown < settings.gameStartWaitingTime ) {
-
-            // 重置倒计时
-            map().gameStartCountdown = settings.gameStartWaitingTime;
-
-            // 提醒玩家倒计时已取消
-            eachPlayer( player => {
-                player.sendMessage( { translate: "message.needsMorePlayer" } );
-                showTitle( player, { translate: "title.needsMorePlayer" }, "", { fadeInDuration: 0, stayDuration: 40, fadeOutDuration: 0 } );
-                player.playSound( "note.hat", { location: player.location } );
-            } );
-
-        }
-
-    }
 }

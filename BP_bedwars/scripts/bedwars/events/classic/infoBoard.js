@@ -12,15 +12,17 @@ import { BedwarsTeam } from "../../methods/bedwarsTeam";
 
 /** 游戏前信息板 */
 export function beforeGamingInfoBoard() {
-    let loadInfo = map().loadInfo;
-    if ( loadInfo.isLoading ) {
-        if ( loadInfo.mapClear.currentLayer !== 0 ) { waitingInfoBoard( `§f清除原地图中... §7${tickToSecond(loadInfo.mapClear.currentLayer*loadInfo.mapClear.timeCostPerLayer)}秒§r` ); }
-        else if ( loadInfo.mapReload.countdown !== 0 ) { waitingInfoBoard( `§f生成地图中... §7${tickToSecond(loadInfo.mapReload.countdown)}秒§r` ); }
-        else { waitingInfoBoard( "§f设置队伍岛屿中...§r" ); }
-    }
-    else {
-        if ( getPlayerAmount() >= settings.minWaitingPlayers ) { waitingInfoBoard( `§f即将开始： §a${tickToSecond(map().gameStartCountdown)}秒§r` ); }
-        else { waitingInfoBoard( "§f等待中...§r" ); }
+    if ( map() ) {
+        let loadInfo = map().loadInfo;
+        if ( loadInfo.isLoading ) {
+            if ( loadInfo.mapClear.currentLayer !== 0 ) { waitingInfoBoard( `§f清除原地图中... §7${tickToSecond(loadInfo.mapClear.currentLayer*loadInfo.mapClear.timeCostPerLayer)}秒§r` ); }
+            else if ( loadInfo.mapReload.countdown !== 0 ) { waitingInfoBoard( `§f生成地图中... §7${tickToSecond(loadInfo.mapReload.countdown)}秒§r` ); }
+            else { waitingInfoBoard( "§f设置队伍岛屿中...§r" ); }
+        }
+        else {
+            if ( getPlayerAmount() >= settings.minWaitingPlayers ) { waitingInfoBoard( `§f即将开始： §a${tickToSecond(map().gameStartCountdown)}秒§r` ); }
+            else { waitingInfoBoard( "§f等待中...§r" ); }
+        }
     }
 }
 

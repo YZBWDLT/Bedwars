@@ -3,6 +3,7 @@
  * 2 队地图，夺点模式。
  */
 
+import { world } from "@minecraft/server";
 import { BedwarsMap } from "../../methods/bedwarsMaps";
 import { BedwarsTeam } from "../../methods/bedwarsTeam";
 import { Vector } from "../../methods/positionManager";
@@ -52,14 +53,14 @@ export function createMapPicnicCapture( ) {
     );
 
     /** 设置地图商人 */
-    map.traderInfo = [
+    map.addTraders(
         { pos: new Vector( 6, 63, -76 ), direction: 90, type: "blocks_and_items" },
         { pos: new Vector( -6, 63, 75 ), direction: 270, type: "blocks_and_items" },
         { pos: new Vector( 6, 63, -75 ), direction: 90, type: "weapon_and_armor_capture" },
         { pos: new Vector( -6, 63, 74 ), direction: 270, type: "weapon_and_armor_capture" },
         { pos: new Vector( -6, 63, -75.5 ), direction: 270, type: "team_upgrade" },
         { pos: new Vector( 6, 63, 74.5 ), direction: 90, type: "team_upgrade" },
-    ];
+    );
 
     /** 设置地图钻石和绿宝石生成点 */
     map.addSpawners(

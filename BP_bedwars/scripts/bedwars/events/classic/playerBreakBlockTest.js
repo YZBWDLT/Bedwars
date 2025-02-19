@@ -43,8 +43,12 @@ export function playerBreakBedTest( event ) {
 
         /** ===== 判断逻辑 ===== */
 
+        /** 如果床不是有效的床，则直接跳过 */
+        if ( !team ) {
+
+        }
         /** 如果玩家不是有效玩家，或是无队伍的玩家，则还原床 */
-        if ( !playerIsValid( breaker ) || !breakerInfo.team ) {
+        else if ( !playerIsValid( breaker ) || !breakerInfo.team ) {
             invalidPlayerBreakBed( team, breaker );
         }
         /** 如果是被自家玩家破坏，则还原床 */

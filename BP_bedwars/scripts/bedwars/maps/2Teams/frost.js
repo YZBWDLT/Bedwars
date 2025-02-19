@@ -53,7 +53,7 @@ export function createMapFrost( ) {
     /** 设置地图钻石和绿宝石生成点 */
     map.addSpawners(
         { type: "diamond", pos: new Vector( 38, 75, -10 ) },
-        { type: "diamond", pos: new Vector( -38, 75, 8 ) },
+        { type: "diamond", pos: new Vector( -38, 75, 10 ) },
         { type: "emerald", pos: new Vector( 0, 76, -12 ) },
         { type: "emerald", pos: new Vector( 0, 76, 12 ) },
     );

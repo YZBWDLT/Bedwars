@@ -14,6 +14,7 @@ import { createMapArchway } from "./4Teams/archway";
 import { createMapBoletum } from "./4Teams/boletum";
 import { createMapCarapace } from "./4Teams/carapace";
 import { createMapChained } from "./4Teams/chained";
+import { createMapEastwood } from "./4Teams/eastwood";
 import { createMapOrchid } from "./4Teams/orchid";
 
 import { createMapAmazon } from "./8Teams/amazon";
@@ -23,17 +24,35 @@ import { createMapRooftop } from "./8Teams/rooftop";
 
 import { createMapPicnicCapture } from "./capture/picnicCapture";
 
-/** 可用 2 队地图列表 */
-export const validMapsFor2Teams = [ "cryptic", "frost", "garden", "ruins", "picnic", "lion_temple" ];
+/** 可用地图列表 */
+export const validMaps = {
+    /** 经典模式地图 */ classic: {
+        /** 两队模式 */ twoTeams: [ "cryptic", "frost", "garden", "ruins", "picnic", "lion_temple", ],
+        /** 四队模式 */ fourTeams: [ "orchid", "chained", "boletum", "carapace", "archway", "aquarium", "eastwood", ],
+        /** 八队模式 */ eightTeams: [ "glacier", "rooftop", "amazon", "deadwood", ],
+    },
+    /** 夺点模式地图 */ capture: {
+        /** 两队模式 */ twoTeams: [ "picnic_capture", ]
+    },
+}
 
-/** 可用 4 队地图列表 */
-export const validMapsFor4Teams = [ "orchid", "chained", "boletum", "carapace", "archway", "aquarium" ];
+/** 获取所有可用地图的 ID */
+export function getValidMaps() {
 
-/** 可用 8 队地图列表 */
-export const validMapsFor8Teams = [ "glacier", "rooftop", "amazon", "deadwood" ];
+    /** 获取所有可用地图 @type {String[]} */
+    let currentValidMaps = [];
+    if ( settings.randomMap.allow2Teams ) {
+        currentValidMaps = [ ...currentValidMaps, ...validMaps.classic.twoTeams, ...validMaps.capture.twoTeams ];
+    };
+    if ( settings.randomMap.allow4Teams ) {
+        currentValidMaps = [ ...currentValidMaps, ...validMaps.classic.fourTeams ];
+    };
+    if ( settings.randomMap.allow8Teams ) {
+        currentValidMaps = [ ...currentValidMaps, ...validMaps.classic.eightTeams ];
+    };
+    return currentValidMaps;
 
-/** 可用夺点模式地图列表 */
-export const validMapsForCaptureMode = [ "picnic_capture" ]
+}
 
 /** 重新生成地图并启用经典模式的游戏前事件
  * @param {String} mapId - 如果提供了此参数，则将生成这张固定的地图
@@ -41,16 +60,13 @@ export const validMapsForCaptureMode = [ "picnic_capture" ]
 export function regenerateMap( mapId = undefined ) {
 
     /** 获取所有可用地图 @type {String} */
-    let mapList = [];
-    if (settings.randomMap.allow2Teams) { mapList = mapList.concat(validMapsFor2Teams).concat(validMapsForCaptureMode); };
-    if (settings.randomMap.allow4Teams) { mapList = mapList.concat(validMapsFor4Teams); };
-    if (settings.randomMap.allow8Teams) { mapList = mapList.concat(validMapsFor8Teams); };
+    let currentValidMaps = getValidMaps();
 
     /** 在所有可用地图中选择一个 */
-    let randomMap = mapList[ Math.floor( Math.random() * mapList.length ) ];
+    let randomMap = currentValidMaps[ Math.floor( Math.random() * currentValidMaps.length ) ];
 
     /** 如果已经传入参数并确定生成的地图，则使用确定的地图 */
-    if ( mapList.includes( mapId ) ) { randomMap = mapId };
+    if ( currentValidMaps.includes( mapId ) ) { randomMap = mapId };
 
     /** 生成之 */
     switch ( randomMap ) {
@@ -61,6 +77,7 @@ export function regenerateMap( mapId = undefined ) {
         case "carapace": createMapCarapace(); break;
         case "archway": createMapArchway(); break;
         case "aquarium": createMapAquarium(); break;
+        case "eastwood": createMapEastwood(); break;
 
         case "cryptic": createMapCryptic(); break;
         case "frost": createMapFrost(); break;

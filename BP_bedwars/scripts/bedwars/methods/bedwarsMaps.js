@@ -39,18 +39,6 @@ import { getScore, removeAllScoreboards, setScore, tryAddScoreboard } from "./sc
  * @property { Vector } pos 资源点位置，需传入钻石块或绿宝石块的位置
  */
 
-/** 可用 2 队地图列表 */
-export const validMapsFor2Teams = [ "cryptic", "frost", "garden", "ruins", "picnic", "lion_temple" ];
-
-/** 可用 4 队地图列表 */
-export const validMapsFor4Teams = [ "orchid", "chained", "boletum", "carapace", "archway", "aquarium" ];
-
-/** 可用 8 队地图列表 */
-export const validMapsFor8Teams = [ "glacier", "rooftop", "amazon", "deadwood" ];
-
-/** 可用夺点模式地图列表 */
-export const validMapsForCaptureMode = [ "picnic_capture" ]
-
 /** 【类】地图类，控制地图全局的运行方式 */
 export class BedwarsMap{
 

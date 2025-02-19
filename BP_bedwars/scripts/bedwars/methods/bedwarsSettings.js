@@ -2,7 +2,7 @@
 
 import { ScriptEventCommandMessageAfterEvent } from "@minecraft/server"
 import { map } from "./bedwarsMaps"
-import { regenerateMap, validMapsFor2Teams, validMapsFor4Teams, validMapsFor8Teams, validMapsForCaptureMode } from "../maps/mapGenerator"
+import { getValidMaps, regenerateMap } from "../maps/mapGenerator"
 
 /** 可用设置列表 */
 export const settings = {
@@ -202,10 +202,7 @@ export function settingsEvent( event ) {
                 );
                 break;
             case "bs:regenerateMap":
-                let mapList = [];
-                if ( settings.randomMap.allow2Teams === true ) { mapList = mapList.concat(validMapsFor2Teams).concat(validMapsForCaptureMode); }
-                if ( settings.randomMap.allow4Teams === true ) { mapList = mapList.concat(validMapsFor4Teams); }
-                if ( settings.randomMap.allow8Teams === true ) { mapList = mapList.concat(validMapsFor8Teams); }
+                let mapList = getValidMaps();
 
                 par1Name = "生成地图"; enum1Array = enum1Array.concat( "true", mapList )
 

@@ -116,7 +116,7 @@ export class BedwarsMap{
         /** 地图清空 */
         mapClear: {
             /** 正在清除的层数 */ currentLayer: 116,
-            /** 间隔多长时间清除下一层，单位：游戏刻 */ timeCostPerLayer: 3,
+            /** 间隔多长时间清除下一层，单位：游戏刻 */ timeCostPerLayer: 6,
             /** 移除本层并使层数自减 */ clear: () => {
                 this.loadInfo.mapClear.currentLayer--;
                 for ( let i of [ 1, -1 ] ) { for ( let j of [ 1, -1 ] ) {
@@ -128,12 +128,12 @@ export class BedwarsMap{
         /** 结构加载 */
         mapReload: {
             /** 全部岛屿信息 @type { islandInfo[] } */ islands: [ ],
-            /** 加载结构所需的时间，单位：游戏刻 */ totalTime: 100,
-            /** 加载倒计时，单位：游戏刻 */ countdown: 100,
+            /** 加载结构所需的时间，单位：游戏刻 */ totalTime: 300,
+            /** 加载倒计时，单位：游戏刻 */ countdown: 300,
             /** 加载岛屿 */ loadStructure: () => {
                 this.loadInfo.mapReload.islands.forEach( island => {
                     const { pos, rotation, mirror, type } = island;
-                    world.structureManager.place( `${this.id}:${type}`, overworld, pos, { animationMode: "Layers", animationSeconds: parseFloat( ( this.loadInfo.mapReload.totalTime / 20 ).toFixed( 2 ) ), mirror, rotation, } )
+                    world.structureManager.place( `${this.id}:${type}`, overworld, pos, { animationMode: "Blocks", animationSeconds: parseFloat( ( this.loadInfo.mapReload.totalTime / 20 ).toFixed( 2 ) ), mirror, rotation, } )
                 } )
             },
             /** 设置边界 */ loadBorder: () => {

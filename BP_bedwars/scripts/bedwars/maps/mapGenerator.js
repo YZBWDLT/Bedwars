@@ -21,6 +21,7 @@ import { createMapAmazon } from "./8Teams/amazon";
 import { createMapDeadwood } from "./8Teams/deadwood";
 import { createMapGlacier } from "./8Teams/glacier";
 import { createMapRooftop } from "./8Teams/rooftop";
+import { createMapWaterfall } from "./8Teams/waterfall";
 
 import { createMapPicnicCapture } from "./capture/picnicCapture";
 
@@ -29,7 +30,7 @@ export const validMaps = {
     /** 经典模式地图 */ classic: {
         /** 两队模式 */ twoTeams: [ "cryptic", "frost", "garden", "ruins", "picnic", "lion_temple", ],
         /** 四队模式 */ fourTeams: [ "orchid", "chained", "boletum", "carapace", "archway", "aquarium", "eastwood", ],
-        /** 八队模式 */ eightTeams: [ "glacier", "rooftop", "amazon", "deadwood", ],
+        /** 八队模式 */ eightTeams: [ "glacier", "rooftop", "amazon", "deadwood", "waterfall", ],
     },
     /** 夺点模式地图 */ capture: {
         /** 两队模式 */ twoTeams: [ "picnic_capture", ]
@@ -90,6 +91,7 @@ export function regenerateMap( mapId = undefined ) {
         case "rooftop": createMapRooftop(); break;
         case "amazon": createMapAmazon(); break;
         case "deadwood": createMapDeadwood(); break;
+        case "waterfall": createMapWaterfall(); break;
 
         case "picnic_capture": createMapPicnicCapture(); break;
     }

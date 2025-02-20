@@ -53,7 +53,7 @@ export function createMapRooftop( ) {
     map.spawnerInfo.ironInterval = 20; // 放慢Solo模式的铁生成速度
     map.spawnerInfo.goldInterval = 120; // 放慢Solo模式的金生成速度
     map.spawnerInfo.ironSpawnTimes = 1; // 每次生成1铁锭而非5铁锭
-    map.loadInfo.mapReload.totalTime = 300; map.loadInfo.mapReload.countdown = 300; // 延长本地图加载时间至15秒
+    map.loadInfo.mapReload.totalTime = 600; map.loadInfo.mapReload.countdown = 600; // 延长本地图加载时间至30秒
 
     /** 移除多余实体，进行初始化 */
     map.gameReady();

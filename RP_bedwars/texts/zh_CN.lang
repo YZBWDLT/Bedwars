@@ -285,6 +285,8 @@ message.selfBed=§7你
 message.otherBed=%s队
 message.bedDestroyed.allTeams=§l§c你的床已经自毁！
 message.enderChestItemReleased=§a%s的末影箱内物品已掉落在了所在团队的资源池。
+message.selfTeamPlayer.breakingBed=§c你不能破坏自己队伍的床！
+message.invalidPlayer.breakingBed=§c你没有破坏床的权限！
 
 #### 常规（待删除）
 message.bedDestroyed=§l床被破坏了 > §r§7你的床被 %s §7破坏！
@@ -406,10 +408,17 @@ message.respawned=§e你已经重生！
 message.playerRejoin.haveBed=§e你的床还没有被破坏，因此你可以重生！
 message.playerRejoin.haveNoBed=§c你的床已被破坏，你不再能重生！
 
+message.eliminated=§c你已被淘汰！
+
 ### --- 购买商品消息 ---
 
 message.purchaseItemsSuccessfully=§a你购买了§6%s
 message.purchaseTeamUpgradeSuccessfully=§6%s§a购买了§6%s
+message.resourceNotEnough=§c%s不足！还需要%sx%s！
+message.alreadyGotItem=§c你已拥有此物品，无需再次购买！
+message.needItem=§c你需要购买%s才能购买此物品！
+message.trapQueueFull=§c陷阱队列已满！
+message.invalidPlayer.purchaseItems=§c你没有购买此物品的权限！
 
 ### --- 陷阱消息 ---
 
@@ -434,22 +443,17 @@ title.gameOver=§l§c游戏结束！
 title.victory=§l§6胜利！
 message.gameOver.endInATie=§r§c游戏以平局结束！没有赢家！
 
+### --- 上下限警告消息 ---
+
+message.heightLimit.max=§c达到建筑高度限制！
+message.heightLimit.min=§c你不能在这里放置方块！
+
 ### --- 错误警告消息 ---
 
-message.selfTeamPlayer.breakingBed=§c你不能破坏自己队伍的床！
-message.invalidPlayer.breakingBed=§c你没有破坏床的权限！
-message.invalidPlayer.purchaseItems=§c你没有购买此物品的权限！
 message.breakingInvalidBlocks=§c你只能破坏由玩家放置的方块！
-message.resourceNotEnough=§c%s不足！还需要%sx%s！
-message.alreadyGotItem=§c你已拥有此物品，无需再次购买！
-message.needItem=§c你需要购买%s才能购买此物品！
-message.trapQueueFull=§c陷阱队列已满！
 message.magicMilkTimeOut=§c你的魔法牛奶已失效！
 message.beHitWhenInvisibility=§c你由于受到伤害而显形！
-message.eliminated=§c你已被淘汰！
-message.heightLimit=§c达到建筑高度限制！
 message.areaNotAllowed=§c你不能进入那里！
-message.capture.bedPositionNotInvalid=§c你不能将床放在这里！请放在有效的基岩点位上！
 
 ### --- 夺点模式消息 ---
 
@@ -463,6 +467,11 @@ message.capture.allBedDestroyed.self=§c己方的床已全部被破坏，死亡�
 
 message.respawnTipWhenHaveBed=§c不要灰心，这有可能是暂时的！当你的队伍获得一张新床的时候，你将重生！
 message.respawn.newBed=§c因为该队伍获得了一张新床，该队伍被淘汰的成员将会重生！
+
+### --- 设置警告消息 ---
+
+message.settings.warning.regenerateMapWhenLoading=§c你不能在加载结构时重新生成地图，请稍后再试！
+message.settings.warning.allModesDisabled=§c你不能将所有模式全部禁用！
 
 ### --- 商店物品消息 ---
 message.bedwars:shopitem_wool=羊毛

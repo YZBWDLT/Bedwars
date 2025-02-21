@@ -20,7 +20,7 @@ export function maxHeightLimit( event ) {
         event.cancel = true;
 
         /** 提示玩家禁止放置方块 */
-        event.source.sendMessage( { translate: "§c达到建筑高度限制！" } )
+        event.source.sendMessage( { translate: "message.heightLimit.max" } )
 
     }
 }
@@ -37,7 +37,7 @@ export function minHeightLimit( event ) {
         event.cancel = true;
 
         /** 提示玩家禁止放置方块 */
-        event.source.sendMessage( { translate: "§c你不能在这里放置方块！" } )
+        event.source.sendMessage( { translate: "message.heightLimit.min" } )
 
     }
 }

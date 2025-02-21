@@ -221,6 +221,9 @@ item.bedwars:upgrade_counter_offensive_trap=§a反击陷阱
 item.bedwars:upgrade_alarm_trap=§a报警陷阱
 item.bedwars:upgrade_miner_fatigue_trap=§a挖掘疲劳陷阱
 
+#### 调试物品
+item.bedwars:settings=设置
+
 ## ===== 队伍名 =====
 team.red=§c红
 team.blue=§9蓝
@@ -236,6 +239,55 @@ team.purple=§5紫
 
 ## ===== 消息 =====
 
+### --- 游戏开始消息 ---
+
+title.needsMorePlayer=§c等待玩家进入...
+message.needsMorePlayer=§c玩家数量不足！暂时取消游戏。
+
+message.gameStart=§e游戏将在%s§e秒后开始！
+
+### --- 模式介绍消息 ---
+
+message.greenLine=§a§l---------------
+message.gameStartTitle.classic=§f§l起床战争（经典模式）
+message.gameStartIntroduction.classic=§e§l保护你的床并摧毁敌人的床，收集铁锭、金锭、钻石和绿宝石来升级，使自身和队伍变得更强。
+message.gameStartTitle.capture=§f§l起床战争（夺点模式）
+message.gameStartIntroduction.capture=§e§l购买并放置更多的床以削减对方的分数，或者在他们放置更多的床之前摧毁他们所有的床并将他们全部淘汰以获取最终的胜利。
+message.gameStartTitle.experience=§f§l起床战争（经验模式）
+message.gameStartIntroduction.experience=§e§l保护你的床并摧毁敌人的床，资源将自动转化为经验，利用经验购买道具。
+message.gameStartTitle.rush=§f§l起床战争（疾速模式）
+message.gameStartIntroduction.rush=§e§l所有资源生成点都为满级！你的床有三层保护！手持羊毛左键点击开启建桥模式！
+message.gameStartTitle.voidless=§f§l起床战争（无虚空模式）
+message.gameStartIntroduction.voidless=§e§l保护你的床并摧毁敌人的床，但是现在不再有虚空了！你的床有三层保护！
+message.gameStartTitle.offensiveAndDefensive=§f§l起床战争（攻防战）
+message.gameStartIntroduction.offensiveAndDefensive=§e§l所有玩家分为攻方和守方，在规定时间内攻方拿下三张床即可胜利，守方则尽一切可能阻止攻方！
+message.gameStartTitle.noResource=§f§l起床战争（无资源模式）
+message.gameStartIntroduction.noResource=§e§l保护你的床并摧毁敌人的床，方块自动补充，武器装备固定，没有资源点和商店。速战速决！
+message.gameStartTitle.skywars=§f§l起床战争（空岛战争模式）
+message.gameStartIntroduction.skywars=§e§l保护你的床并摧毁敌人的床，但是场景可破坏，资源全部来自岛上的箱子！
+message.gameStartTitle.defend=§f§l起床战争（死守模式）
+message.gameStartIntroduction.defend=§e§l保护你的床并摧毁敌人的床。但是，当你失去床后，你将被淘汰！
+
+### --- 击杀消息与床破坏消息 ---
+### 床被破坏的可用模板：
+### { translate: `message.bedDestroyed.${killStyle}`, with: { rawtext: [ { translate: `message.selfBed` } ] } }
+### { translate: `message.bedDestroyed.${killStyle}`, with: { rawtext: [ { translate: `message.otherBed`, with: { rawtext: [ { text: `team.${id}` } ] } } ] } }
+
+#### 常规
+title.bedDestroyed=§c床已被破坏！
+subtitle.bedDestroyed=死亡后不能重生！
+subtitle.bedDestroyed.allTeams=所有队伍的床均已自毁！
+title.deathMatch=§c绝杀模式
+message.finalKill=§l§b最终击杀！
+message.kill.died=%s§7死了。
+message.kill.fellIntoVoid=%s§7失足跌入虚空。
+message.selfBed=§7你
+message.otherBed=%s队
+message.bedDestroyed.allTeams=§l§c你的床已经自毁！
+message.enderChestItemReleased=§a%s的末影箱内物品已掉落在了所在团队的资源池。
+
+#### 常规（待删除）
+message.bedDestroyed=§l床被破坏了 > §r§7你的床被 %s §7破坏！
 message.otherBedDestroyed=§l床被破坏了 > §r%s队的床§7被%s§7破坏！
 message.playerDied.died=%s§7死了。
 message.playerDied.fellIntoVoid=%s§7失足跌入虚空。
@@ -249,18 +301,141 @@ message.playerDied.finalKill.beKilled=%s§7被%s§7击杀。§l§b最终击杀�
 message.playerDied.finalKill.beShot=%s§7被%s§7射杀。§l§b最终击杀！
 message.playerDied.finalKill.beKilledVoid=%s§7被%s§7扔下了虚空。§l§b最终击杀！
 message.playerDied.finalKill.beKilledFall=%s§7被%s§7扔下了悬崖。§l§b最终击杀！
-message.enderChestItemReleased=§a%s的末影箱内物品已掉落在了所在团队的资源池。
 message.teamEliminated=§l团灭 > §r%s队§c已被淘汰！
+
+#### 样式：默认
+message.kill.beKilled.default=%s§7被%s§7击杀。
+message.kill.beKilledVoid.default=%s§7被%s§7扔下了虚空。
+message.kill.beShot.default=%s§7被%s§7射杀。
+message.kill.beKilledFall.default=%s§7被%s§7扔下了悬崖。
+message.kill.beKilledGolem.default=%s§7被%s§7的傀儡击杀。
+message.bedDestroyed.default=§l床被破坏了 > §r%s的床§7被%s§7破坏！
+
+#### 样式：火焰
+message.kill.beKilled.flame=%s§7被%s§7击倒。
+message.kill.beKilledVoid.flame=%s§7被%s§7化为粉尘。
+message.kill.beShot.flame=%s§7被%s§7熔化。
+message.kill.beKilledFall.flame=%s§7被%s§7化为灰烬。
+message.kill.beKilledGolem.flame=%s§7被%s§7的傀儡油炸了。
+message.bedDestroyed.flame=§l床被破坏了 > §r%s的床§7被%s§7焚烧！
+
+#### 样式：西部
+message.kill.beKilled.west=%s§7被%s§7中箭无数。
+message.kill.beKilledVoid.west=%s§7被%s§7逼入末路。
+message.kill.beShot.west=%s§7因%s§7用炸药炸死。
+message.kill.beKilledFall.west=%s§7在一场饮酒比赛中输给了%s§7。
+message.kill.beKilledGolem.west=%s§7输掉了与%s§7的傀儡的对决。
+message.bedDestroyed.west=§l床被破坏了 > §r%s的床§7被%s§7冻住！
+
+#### 样式：光荣
+message.kill.beKilled.glory=%s§7死于与%s§7的近战。
+message.kill.beKilledVoid.glory=%s§7与%s§7战至边缘。
+message.kill.beShot.glory=%s§7死于%s§7的百步穿杨之术。
+message.kill.beKilledFall.glory=%s§7因%s§7而跌跌撞撞地滑落边缘。
+message.kill.beKilledGolem.glory=%s§7与%s§7的傀儡的跳起了探戈。
+message.bedDestroyed.glory=§l床被破坏了 > §r%s的床§7不得不向%s§7高举白旗！
+
+#### 样式：海盗
+message.kill.beKilled.pirate=%s§7被%s§7塞进了戴维·琼斯的箱子。
+message.kill.beKilledVoid.pirate=%s§7被%s§7的加农炮炸死了。
+message.kill.beShot.pirate=%s§7被%s§7射杀。
+message.kill.beKilledFall.pirate=%s§7被%s§7的魔法杀死了。
+message.kill.beKilledGolem.pirate=%s§7被%s§7的傀儡用金属杀死了。
+message.bedDestroyed.pirate=§l床被破坏了 > §r%s的床§7被%s§7的大炮轰成了渣！
+
+#### 样式：爱情
+message.kill.beKilled.love=%s§7受到了%s§7的冷淡。
+message.kill.beKilledVoid.love=%s§7被%s§7的爱情炸弹击中。
+message.kill.beShot.love=%s§7被%s§7的丘比特之箭射杀。
+message.kill.beKilledFall.love=%s§7被%s§7赶出了联盟。
+message.kill.beKilledGolem.love=%s§7不敌%s§7的傀儡。
+message.bedDestroyed.love=§l床被破坏了 > §r%s的床§7被%s§7拆解！
+
+#### 样式：圣诞老人工坊
+message.kill.beKilled.christmas=%s§7被%s§7打包成了礼物。
+message.kill.beKilledVoid.christmas=%s§7因%s§7而摔到硬木地板上而死。
+message.kill.beShot.christmas=%s§7被%s§7列入淘气名单。
+message.kill.beKilledFall.christmas=%s§7被%s§7推下了滑坡。
+message.kill.beKilledGolem.christmas=%s§7被%s§7的傀儡做成了姜饼。
+message.bedDestroyed.christmas=§l床被破坏了 > §r%s的床§7被%s§7用来交换饼干和牛奶！
+
+#### 样式：表情包
+message.kill.beKilled.meme=%s§7被%s§7完爆。
+message.kill.beKilledVoid.meme=%s§7被%s§7击败。
+message.kill.beShot.meme=%s§7被%s§7删了一记耳光。
+message.kill.beKilledFall.meme=%s§7被%s§7烤熟了。
+message.kill.beKilledGolem.meme=%s§7被%s§7的傀儡捉弄致死。
+message.bedDestroyed.meme=§l床被破坏了 > §r%s的床§7被%s§7做成表情包！
+
+#### 样式：打包
+message.kill.beKilled.pack=%s§7被%s§7打包成了礼物。
+message.kill.beKilledVoid.pack=%s§7被%s§7打成了蝴蝶结。
+message.kill.beShot.pack=%s§7被%s§7粘住了。
+message.kill.beKilledFall.pack=%s§7被%s§7的礼物绊倒了。
+message.kill.beKilledGolem.pack=%s§7被%s§7的傀儡绑起来了。
+message.bedDestroyed.pack=§l床被破坏了 > §r%s的床§7被%s§7装满了面巾纸！
+
+#### 样式：胜利
+message.kill.beKilled.victory=%s§7被%s§7§e打败§7。
+message.kill.beFinalKilled.victory=%s§7成为了%s§7的第§e#%s§7个最终击杀。
+message.kill.beKilledVoid.victory=%s§7被%s§7推入§e虚空§7。
+message.kill.beShot.victory=%s§7被%s§7§e射杀§7。
+message.kill.beKilledFall.victory=%s§7被%s§7击落边缘。
+message.kill.beKilledGolem.victory=%s§7被%s§7的傀儡§e打败§7。
+message.bedDestroyed.victory=§l床被破坏了 > §r%s的床§7是%s§7破坏的第§e#%s§7张床！
+
+#### 样式：荣耀
+message.kill.beKilled.honour=%s§7被%s§7§6践踏§7。
+message.kill.beFinalKilled.honour=%s§7成为了%s§7的第§e#%s§7个最终击杀。
+message.kill.beKilledVoid.honour=%s§7被%s§7掷落§6深渊§7。
+message.kill.beShot.honour=%s§7被%s§7§6射杀§7。
+message.kill.beKilledFall.honour=%s§7被%s§7重重地击落§6地面§7。
+message.kill.beKilledGolem.honour=%s§7被%s§7的傀儡§6超越§7。
+message.bedDestroyed.honour=§l床被破坏了 > §r%s的床§7是%s§7破坏的第§e#%s§7张床！
+
+### --- 死亡与重生消息 ---
+
+title.respawning=§c你死了！
+subtitle.respawning=§e你将在§c%s§e秒后重生！
+message.respawning=§e你将在§c%s§e秒后重生！
+
+title.respawned=§a已重生！
+subtitile.respawned= 
+message.respawned=§e你已经重生！
+
+message.playerRejoin.haveBed=§e你的床还没有被破坏，因此你可以重生！
+message.playerRejoin.haveNoBed=§c你的床已被破坏，你不再能重生！
+
+### --- 购买商品消息 ---
 
 message.purchaseItemsSuccessfully=§a你购买了§6%s
 message.purchaseTeamUpgradeSuccessfully=§6%s§a购买了§6%s
+
+### --- 陷阱消息 ---
+
+title.trapTriggered=§c陷阱触发！
+subtitle.trapTriggered=你的%s已被触发！
+message.trapTriggered=§l§c%s已被触发！
+
+title.trapTriggered.alarmTrap=§c警报！！！
+subtitle.trapTriggered.alarmTrap=你的报警陷阱已被%s队§f的%s§f触发！
+message.trapTriggered.alarmTrap=§l§c报警陷阱已被%s队§c的%s§c触发！
+
+### --- 资源点升级消息 ---
 
 message.diamondSpawnerUpgradedToTier2=§b钻石生成点§e已经升至§cII§e级！
 message.diamondSpawnerUpgradedToTier3=§b钻石生成点§e已经升至§cIII§e级！
 message.emeraldSpawnerUpgradedToTier2=§2绿宝石生成点§e已经升至§cII§e级！
 message.emeraldSpawnerUpgradedToTier3=§2绿宝石生成点§e已经升至§cIII§e级！
 
-## 错误警告
+### --- 游戏结束消息 ---
+
+title.gameOver=§l§c游戏结束！
+title.victory=§l§6胜利！
+message.gameOver.endInATie=§r§c游戏以平局结束！没有赢家！
+
+### --- 错误警告消息 ---
+
 message.selfTeamPlayer.breakingBed=§c你不能破坏自己队伍的床！
 message.invalidPlayer.breakingBed=§c你没有破坏床的权限！
 message.invalidPlayer.purchaseItems=§c你没有购买此物品的权限！
@@ -276,40 +451,7 @@ message.heightLimit=§c达到建筑高度限制！
 message.areaNotAllowed=§c你不能进入那里！
 message.capture.bedPositionNotInvalid=§c你不能将床放在这里！请放在有效的基岩点位上！
 
-title.trapTriggered=§c陷阱触发！
-subtitle.trapTriggered=你的%s已被触发！
-message.trapTriggered=§l§c%s已被触发！
-
-title.trapTriggered.alarmTrap=§c警报！！！
-subtitle.trapTriggered.alarmTrap=你的报警陷阱已被%s队§f的%s§f触发！
-message.trapTriggered.alarmTrap=§l§c报警陷阱已被%s队§c的%s§c触发！
-
-title.bedDestroyed=§c床已被破坏！
-subtitle.bedDestroyed=死亡后不能重生！
-message.bedDestroyed=§l床被破坏了 > §r§7你的床被 %s §7破坏！
-subtitle.bedDestroyed.allTeams=所有队伍的床均已自毁！
-message.bedDestroyed.allTeams=§l§c你的床已经自毁！
-
-title.respawning=§c你死了！
-subtitle.respawning=§e你将在§c%s§e秒后重生！
-message.respawning=§e你将在§c%s§e秒后重生！
-message.playerRejoin.haveBed=§e你的床还没有被破坏，因此你可以重生！
-message.playerRejoin.haveNoBed=§c你的床已被破坏，你不再能重生！
-
-title.respawned=§a已重生！
-subtitile.respawned= 
-message.respawned=§e你已经重生！
-
-title.deathMatch=§c绝杀模式
-title.gameOver=§l§c游戏结束！
-title.victory=§l§6胜利！
-
-message.gameOver.endInATie=§r§c游戏以平局结束！没有赢家！
-message.greenLine=§a§l---------------
-message.gameStartTitle.classic=§f§l起床战争（经典模式）
-message.gameStartIntroduction.classic=§e§l保护你的床并摧毁敌人的床，收集铁锭、金锭、钻石和绿宝石来升级，使自身和队伍变得更强。
-message.gameStartTitle.capture=§f§l起床战争（夺点模式）
-message.gameStartIntroduction.capture=§e§l购买并放置更多的床以削减对方的分数，或者在他们放置更多的床之前摧毁他们所有的床并将他们全部淘汰以获取最终的胜利。
+### --- 夺点模式消息 ---
 
 title.capture.allBedDestroyed=%s队§c的床已全部被破坏！
 subtitle.capture.allBedDestroyed.other=淘汰所有敌方以获胜！
@@ -322,12 +464,7 @@ message.capture.allBedDestroyed.self=§c己方的床已全部被破坏，死亡�
 message.respawnTipWhenHaveBed=§c不要灰心，这有可能是暂时的！当你的队伍获得一张新床的时候，你将重生！
 message.respawn.newBed=§c因为该队伍获得了一张新床，该队伍被淘汰的成员将会重生！
 
-title.needsMorePlayer=§c等待玩家进入...
-message.needsMorePlayer=§c玩家数量不足！暂时取消游戏。
-
-message.gameStart=§e游戏将在%s§e秒后开始！
-
-## 商店物品消息
+### --- 商店物品消息 ---
 message.bedwars:shopitem_wool=羊毛
 message.bedwars:shopitem_stained_hardened_clay=硬化粘土
 message.bedwars:shopitem_planks=木板

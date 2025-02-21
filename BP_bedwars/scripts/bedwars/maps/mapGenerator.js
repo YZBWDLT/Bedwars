@@ -42,15 +42,18 @@ export function getValidMaps() {
 
     /** 获取所有可用地图 @type {String[]} */
     let currentValidMaps = [];
-    if ( settings.randomMap.allow2Teams ) {
-        currentValidMaps = [ ...currentValidMaps, ...validMaps.classic.twoTeams, ...validMaps.capture.twoTeams ];
+    if ( settings.mapEnabled.classicTwoTeamsEnabled ) {
+        currentValidMaps = [ ...currentValidMaps, ...validMaps.classic.twoTeams, ];
     };
-    if ( settings.randomMap.allow4Teams ) {
+    if ( settings.mapEnabled.classicFourTeamsEnabled ) {
         currentValidMaps = [ ...currentValidMaps, ...validMaps.classic.fourTeams ];
     };
-    if ( settings.randomMap.allow8Teams ) {
+    if ( settings.mapEnabled.classicEightTeamsEnabled ) {
         currentValidMaps = [ ...currentValidMaps, ...validMaps.classic.eightTeams ];
     };
+    if ( settings.mapEnabled.captureTwoTeamsEnabled ) {
+        currentValidMaps = [ ...currentValidMaps, ...validMaps.capture.twoTeams ];
+    }
     return currentValidMaps;
 
 }

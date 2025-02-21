@@ -25,7 +25,7 @@ export function respawnEliminatedPlayers() {
     eachValidPlayer( ( player, playerInfo ) => {
         if ( playerInfo.isEliminated && !playerInfo.isSpectator && playerInfo.getBedState() ) {
             playerInfo.isEliminated = false;
-            playerInfo.deathState.respawnCountdown = settings.respawnTime.normalPlayers;
+            playerInfo.deathState.respawnCountdown = settings.gaming.respawnTime.normalPlayers;
         }
     } )
 }

@@ -21,7 +21,7 @@ import { playerIsAlive } from "../../methods/bedwarsPlayer";
 export function spawnResources() {
 
     /** 队伍资源生成 | 只要无效队伍允许生成资源，或者队伍有效，就允许该队伍生成资源 */
-    eachTeam( team => { if ( settings.invalidTeamCouldSpawnResources || team.isValid ) { teamResources( team ); } } );
+    eachTeam( team => { if ( settings.gaming.invalidTeamCouldSpawnResources || team.isValid ) { teamResources( team ); } } );
 
     /** 世界资源生成 */
     mapResources( );
@@ -48,7 +48,7 @@ function teamResources( team ) {
     if ( team.spawnerInfo.ironCountdown <= 0 ) {
 
         /** 铁生成 | 最大生成次数必须小于等于最大次数才能生成，按规定的生成次数循环生成铁 */
-        if ( team.spawnerInfo.ironSpawned < settings.resourceMaxSpawnTimes.iron * getForgeBonus( team.teamUpgrade.forge ) ) {
+        if ( team.spawnerInfo.ironSpawned < settings.gaming.resourceLimit.iron * getForgeBonus( team.teamUpgrade.forge ) ) {
             for ( let i = 0; i < map().spawnerInfo.ironSpawnTimes; i++ ) { spawnIron( team, nearbyPlayers ); };
         }
 
@@ -61,7 +61,7 @@ function teamResources( team ) {
     if ( team.spawnerInfo.goldCountdown <= 0 ) {
 
         /** 金生成 | 最大生成次数必须小于等于最大次数才能生成 */
-        if ( team.spawnerInfo.goldSpawned < settings.resourceMaxSpawnTimes.gold * getForgeBonus( team.teamUpgrade.forge ) ) {
+        if ( team.spawnerInfo.goldSpawned < settings.gaming.resourceLimit.gold * getForgeBonus( team.teamUpgrade.forge ) ) {
             spawnGold( team, nearbyPlayers );
         }
 
@@ -74,7 +74,7 @@ function teamResources( team ) {
     if ( team.spawnerInfo.emeraldCountdown <= 0 ) {
 
         /** 绿宝石生成 | 最大生成次数必须小于等于最大次数，并且必须解锁绿宝石锻炉后才能生成 */
-        if ( team.spawnerInfo.emeraldSpawned < settings.resourceMaxSpawnTimes.emerald && team.teamUpgrade.forge >= 3 ) {
+        if ( team.spawnerInfo.emeraldSpawned < settings.gaming.resourceLimit.emerald && team.teamUpgrade.forge >= 3 ) {
             spawnEmeraldTeam( team, nearbyPlayers );
         }
 
@@ -105,7 +105,7 @@ function mapResources() {
 
         /** ===== 倒计时完成后，生成资源 | 最大生成次数必须小于等于最大次数才能生成 */
         if ( map().spawnerInfo.diamondCountdown <= 0 ) {
-            if ( diamondSpawner.spawned < settings.resourceMaxSpawnTimes.diamond ) { spawnDiamond( diamondSpawner ); };
+            if ( diamondSpawner.spawned < settings.gaming.resourceLimit.diamond ) { spawnDiamond( diamondSpawner ); };
         };
 
         /** ===== 资源点实体动画与悬浮文本更新 ===== */
@@ -130,7 +130,7 @@ function mapResources() {
 
         /** ===== 倒计时完成后，生成资源 ===== */
         if ( map().spawnerInfo.emeraldCountdown <= 0 ) {
-            if ( emeraldSpawner.spawned < settings.resourceMaxSpawnTimes.emerald ) { spawnEmerald( emeraldSpawner ); };
+            if ( emeraldSpawner.spawned < settings.gaming.resourceLimit.emerald ) { spawnEmerald( emeraldSpawner ); };
         };
 
         /** ===== 资源点实体动画与悬浮文本更新 ===== */

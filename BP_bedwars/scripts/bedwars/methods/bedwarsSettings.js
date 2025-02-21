@@ -1,246 +1,368 @@
 /** 所有设置 */
 
-import { ScriptEventCommandMessageAfterEvent } from "@minecraft/server"
+import { ItemUseAfterEvent, Player } from "@minecraft/server"
+import { regenerateMap, validMaps } from "../maps/mapGenerator"
+import { createActionUi, createModalUi, showActionOrMessageUi, showModalUi } from "./uiManager"
+import { tickToSecond } from "./time"
+import { warnPlayer } from "./bedwarsPlayer"
 import { map } from "./bedwarsMaps"
-import { getValidMaps, regenerateMap } from "../maps/mapGenerator"
 
 /** 可用设置列表 */
-export const settings = {
-    minWaitingPlayers: 2,
-    gameStartWaitingTime: 400,
-    resourceMaxSpawnTimes: { iron: 72, gold: 7, diamond: 8, emerald: 4 },
-    respawnTime: { normalPlayers: 110, rejoinedPlayers: 200 },
-    invalidTeamCouldSpawnResources: true,
-    randomMap:{ allow2Teams: true, allow4Teams: true, allow8Teams: true },
-    creativePlayerCanBreakBlocks: false,
-    /** 地图范围（正方形的半长边） */ mapRange: 105
+export let settings = {
+    /** 游戏开始前的游戏前设置 */ waiting: {
+        /** 最低等待人数 */ minWaitingPlayers: 2,
+        /** 游戏开始时长 */ gameStartWaitingTime: 400,
+    },
+    /** 游戏内设置 */ gaming: {
+        /** 生成上限 */ resourceLimit: { iron: 72, gold: 7, diamond: 8, emerald: 4 },
+        /** 重生时间 */ respawnTime: { normalPlayers: 110, rejoinedPlayers: 200 },
+        /** 无效队伍能否生成资源 */ invalidTeamCouldSpawnResources: true,
+    },
+    /** 地图启用设置 */ mapEnabled: {
+        classicTwoTeamsEnabled: true,
+        classicFourTeamsEnabled: true,
+        classicEightTeamsEnabled: true,
+        captureTwoTeamsEnabled: true,
+    },
+    /** 杂项设置 */ miscellaneous: {
+        /** 创造模式玩家允许破坏方块 */ creativePlayerCanBreakBlocks: false,
+        /** 虚空玩家可扔物品 */ playerCanThrowItemsInVoid: false,
+    },
+    /** 高级设置 */ advanced: {
+
+    },
 }
 
-/**
- * 【事件类】游戏手动设置功能 <lang>
- * @param {ScriptEventCommandMessageAfterEvent} event
+/** 默认设置，为定值 */
+const defaultSettings = {
+    /** 游戏开始前的游戏前设置 */ waiting: {
+        /** 最低等待人数 */ minWaitingPlayers: 2,
+        /** 游戏开始时长 */ gameStartWaitingTime: 400,
+    },
+    /** 游戏内设置 */ gaming: {
+        /** 生成上限 */ resourceLimit: { iron: 72, gold: 7, diamond: 8, emerald: 4 },
+        /** 重生时间 */ respawnTime: { normalPlayers: 110, rejoinedPlayers: 200 },
+        /** 无效队伍能否生成资源 */ invalidTeamCouldSpawnResources: true,
+    },
+    /** 地图启用设置 */ mapEnabled: {
+        classicTwoTeamsEnabled: true,
+        classicFourTeamsEnabled: true,
+        classicEightTeamsEnabled: true,
+        captureTwoTeamsEnabled: true,
+    },
+    /** 杂项设置 */ miscellaneous: {
+        /** 创造模式玩家允许破坏方块 */ creativePlayerCanBreakBlocks: false,
+        /** 虚空玩家可扔物品 */ playerCanThrowItemsInVoid: false,
+    },
+    /** 高级设置 */ advanced: {
+
+    },
+}
+
+/** 显示设置菜单主页面
+ * @param {Player} player 
  */
-export function settingsEvent( event ) {
+function showMainPage( player ) {
+    showActionOrMessageUi(
+        createActionUi(
+            [
+                { text: "游戏前设置...", iconPath: "textures/items/clock_item" },
+                { text: "游戏内设置...", iconPath: "textures/items/bed_red" },
+                { text: "地图启用设置...", iconPath: "textures/items/map_filled" },
+                { text: "生成地图", iconPath: "textures/items/map_empty" },
+                { text: "杂项设置...", iconPath: "textures/items/diamond_pickaxe" },
+            ], "", "设置"
+        ),
+        player,
+        result => {
+            if ( result === 0 ) { showWaitingPage( player ); }
+            else if ( result === 1 ) { showGamingPage( player ); }
+            else if ( result === 2 ) { showMapEnabledPage( player ); }
+            else if ( result === 3 ) { showRegenerateMapPage( player ); }
+            else if ( result === 4 ) { showMiscellaneousPage( player ); }
+        },
+        () => {}
+    );
+};
 
-    let acceptableIds = [
-        "bs:minWaitingPlayers",
-        "bs:gameStartWaitingTime",
-        "bs:resourceMaxSpawnTimes",
-        "bs:respawnTime",
-        "bs:invalidTeamCouldSpawnResources",
-        "bs:randomMap",
-        "bs:regenerateMap",
-        "bs:creativePlayerCanBreakBlocks"
-    ]
-
-    /**
-     * 判断执行命令的执行者是否为玩家，并发送给执行者执行消息
-     * @param { String | import("@minecraft/server").RawMessage } message
-     */
-    let sendFeedback = ( message ) => {
-        if ( event.sourceType === "Entity" && event.sourceEntity.typeId === "minecraft:player" ) { event.sourceEntity.sendMessage( message ) }
-    }
-
-    /**
-     * 当命令的参数未给定时，按照特定的格式返回帮助信息和当前值
-     * @param {{name:String,typeName:String}[]} pars 参数信息
-     * @param {String} description 本命令的描述
-     * @param {String|Number|Boolean} currentValue 显示的返回值
-     */
-    let cmdDescription = (pars, description, currentValue) => {
-        const parStrings = pars.map(par => `<${par.name}：${par.typeName}>`).join(' ');
-        return `§e${event.id} ${parStrings}§f\n${description}\n§7当前值： ${currentValue}`;
-    };
-
-    /**
-     * 判断输入的参数是否为布尔值，如果是则执行func函数，否则报错
-     * @param {String} par 输入的参数
-     * @param {String} parName 输入的参数名称
-     * @param {function(Boolean):void} func 执行的回调函数，参数1：输入的布尔值对应的布尔值
-     */
-    let booleanPar = ( par, parName, func ) => {
-        if ( par !== "true" && par !== "false" ) { sendFeedback( `§c解析 <${parName}> 参数时出现了问题，该参数只接受布尔值true或false。` ); }
-        else if ( par === "true" ) { func( true ) }
-        else { func( false ) }
-    }
-
-    /**
-     * 判断输入的参数是否为整数，如果是则执行func函数，否则报错
-     * @param {Number} par 输入的参数，需转换为数字
-     * @param {String} parName 输入的参数名称
-     * @param {function(Number):void} func 执行的回调函数，参数1：输入的参数
-     */
-    let intPar = ( par, parName, func, min = 1 ) => {
-        if ( !Number.isInteger( par ) ) { sendFeedback( `§c解析 <${parName}> 参数时出现了问题，该参数只接受整数。` ); }
-        else if ( par < min ) { sendFeedback( `§c解析 <${parName}> 参数时出现了问题，该参数不允许小于 ${min} 的值。` ); }
-        else ( func( par ) )
-    }
-
-    /**
-     * 判断输入的参数是否在所给列表之中，如果是则执行func函数，否则报错
-     * @param {String} par 输入的参数
-     * @param {String} parName 输入的参数名称
-     * @param {String[]} enumArray 允许的参数
-     * @param {function(String):void} func 执行的回调函数，参数1：输入的参数
-     */
-    let enumPar = ( par, parName, enumArray, func ) => {
-        if ( !enumArray.includes(par) ) { sendFeedback( `§c解析 <${parName}> 参数时出现了问题，该参数只接受以下值：${enumArray.join(",")}。` ); }
-        else ( func( par ) )
-    }
-
-    /**
-     * 判断输入的参数是否在所给列表之中，如果是则执行func函数，否则报错
-     * @param {function():void} emptyParLogic 当输入参数为空时，执行的回调函数
-     * @param {function():void} logic 当输入参数不为空时，执行的回调函数
-     */
-    let commandLogic = ( emptyParLogic, logic ) => {
-        if ( event.message === "" ) {
-            emptyParLogic();
+/** 显示二级菜单游戏前设置主页面
+ * @param {Player} player 
+ */
+function showWaitingPage( player ) {
+    showModalUi(
+        createModalUi( 
+            [
+                { type: "slider", label: `最低等待人数\n§7至少需要多少玩家才可开始游戏。\n当前值：§a${settings.waiting.minWaitingPlayers}§7，设置值§a`, sliderMaxValue: 16, sliderMinValue: 2, sliderStepValue: 1, defaultValue: settings.waiting.minWaitingPlayers },
+                { type: "slider", label: `开始游戏的等待时间\n§7玩家达到规定数目后，多久后开始游戏。单位：秒。\n当前值：§a${tickToSecond( settings.waiting.gameStartWaitingTime )-1}§7，设置值§a`, sliderMaxValue: 300, sliderMinValue: 5, sliderStepValue: 5, defaultValue: tickToSecond( settings.waiting.gameStartWaitingTime )-1 },
+                { type: "toggle", label: `恢复默认设置\n§7恢复上面的设置为原始的默认设置。`, defaultValue: false }
+            ], "游戏前设置", "确认"
+        ),
+        player,
+        result => {
+            if ( result[2] ) {
+                settings.waiting.gameStartWaitingTime = defaultSettings.waiting.gameStartWaitingTime;
+                settings.waiting.minWaitingPlayers = defaultSettings.waiting.minWaitingPlayers;
+            }
+            else {
+                settings.waiting.minWaitingPlayers = result[0];
+                settings.waiting.gameStartWaitingTime = result[1] * 20;
+                map().gameStartCountdown = settings.waiting.gameStartWaitingTime;
+            }
+            showMainPage( player ); // 回到上一页
+        },
+        canceled => {
+            if ( canceled === "UserClosed" ) { showMainPage( player ); } // 回到上一页
         }
-        else {
-            logic();
+    )
+};
+
+/** 显示二级菜单游戏内设置主页面
+ * @param {Player} player 
+ */
+function showGamingPage( player ) {
+    showActionOrMessageUi(
+        createActionUi(
+            [
+                { text: "资源上限设置...", iconPath: "textures/items/iron_ingot" },
+                { text: "重生时间设置...", iconPath: "textures/items/clock_item" },
+                { text: "无效队伍设置...", iconPath: "textures/blocks/barrier" },
+            ], "关闭此页面以返回上一级。", "游戏内设置"
+        ),
+        player,
+        result => {
+            if ( result === 0 ) { showResourceLimitPage( player ); }
+            else if ( result === 1 ) { showRespawnTimePage( player ); }
+            else if ( result === 2 ) { showInvalidTeamPage( player ); }
+        },
+        canceled => {
+            if ( canceled === "UserClosed" ) { showMainPage( player ); } // 回到上一页
         }
-    }
+    )
+};
 
-    /** 仅限玩家手动执行命令时执行 */
-    if ( acceptableIds.includes( event.id ) ) {
-        let par1Name = ""; let par2Name = "";
-        let enum1Array = [];
-        switch ( event.id ) {
-            case "bs:minWaitingPlayers":
-                par1Name = "玩家人数";
-                commandLogic(
-                    () => sendFeedback( cmdDescription(
-                        [ { name: par1Name, typeName: "整数" } ],
-                        "该值用于控制至少需要多少玩家才可开始游戏。",
-                        `§a${settings.minWaitingPlayers}`
-                    ) ),
-                    () => intPar( Number( event.message ), par1Name, par1 => {
-                        sendFeedback( `开始游戏需求的玩家人数已更改为${par1}` );
-                        settings.minWaitingPlayers = par1;
-                    }, 2 )
-                );
-                break;
-            case "bs:gameStartWaitingTime":
-                par1Name = "时间";
-                commandLogic(
-                    () => sendFeedback( cmdDescription(
-                        [ { name: par1Name, typeName: "整数" } ],
-                        "该值用于控制玩家达到规定数目后，多久后开始游戏。单位：游戏刻。",
-                        `§a${settings.gameStartWaitingTime}`
-                    ) ),
-                    () => intPar( Number( event.message ), par1Name, par1 => {
-                        sendFeedback( `开始游戏的等待时间已更改为${par1}` );
-                        settings.gameStartWaitingTime = par1;
-                        map().gameStartCountdown = par1;
-                    } )
-                );
-                break;
-            case "bs:resourceMaxSpawnTimes":
-                par1Name = "资源类型"; enum1Array = [ "iron", "gold", "diamond", "emerald" ];
-                par2Name = "最大生成数";
-                commandLogic(
-                    () => sendFeedback( cmdDescription(
-                        [ { name: par1Name, typeName: enum1Array.join( " | " ) }, { name: par2Name, typeName: "整数" } ],
-                        "该值用于控制游戏中的资源点最多允许生成的数目。",
-                        `\n§7iron = §a${settings.resourceMaxSpawnTimes.iron}\n§7gold = §a${settings.resourceMaxSpawnTimes.gold}\n§7diamond = §a${settings.resourceMaxSpawnTimes.diamond}\n§7emerald = §a${settings.resourceMaxSpawnTimes.emerald}`
-                    ) ),
-                    () => enumPar( event.message.split(" ")[0], par1Name, enum1Array, par1 => {
-                        intPar( Number(event.message.split(" ")[1]), par2Name, par2 => {
-                            sendFeedback( `${par1}的最大生成数已更改为${par2}` );
-                            settings.resourceMaxSpawnTimes[par1] = par2;
-                        } )
-                    } )
-                );
-                break;
-            case "bs:respawnTime":
-                par1Name = "玩家类型"; enum1Array = [ "normalPlayers", "rejoinedPlayers" ];
-                par2Name = "重生时长"
-                commandLogic(
-                    () => sendFeedback( cmdDescription(
-                        [ { name: par1Name, typeName: enum1Array.join( " | " ) }, { name: par2Name, typeName: "整数" } ],
-                        "该值用于控制游戏中的玩家重生所需要的时长。单位：游戏刻。",
-                        `\n§7normalPlayers = §a${settings.respawnTime.normalPlayers}\n§7rejoinedPlayers = §a${settings.respawnTime.rejoinedPlayers}`
-                    ) ),
-                    () => enumPar( event.message.split(" ")[0], par1Name, enum1Array, par1 => {
-                        intPar( Number(event.message.split(" ")[1]), "重生时长", par2 => {
-                            sendFeedback( `${par1}类型玩家的重生时长已更改为${par2}游戏刻` );
-                            settings.respawnTime[par1] = par2;
-                        } )
-                    } )
-                );
-                break;
-            case "bs:invalidTeamCouldSpawnResources":
-                par1Name = "可生成资源"
-                commandLogic(
-                    () => sendFeedback( cmdDescription(
-                        [ { name: par1Name, typeName: "布尔值" } ],
-                        "该值用于控制游戏中没有分配到玩家的无效队伍是否能够生成资源。",
-                        `§a${settings.invalidTeamCouldSpawnResources}`
-                    ) ),
-                    () => booleanPar( event.message, "可生成资源", par1 => {
-                        sendFeedback( `无效队伍生成资源的权限已更改为${par1}` );
-                        settings.invalidTeamCouldSpawnResources = par1
-                    } )
-                );
-                break;
-            case "bs:randomMap":
-                par1Name = "地图类型", enum1Array = [ "allow2Teams", "allow4Teams", "allow8Teams" ]
-                par2Name = "允许生成"
-                commandLogic(
-                    () => sendFeedback( cmdDescription(
-                        [ { name: par1Name, typeName: enum1Array.join( " | " ) }, { name: par2Name, typeName: "布尔值" } ],
-                        "控制游戏中何种类型的地图允许生成。",
-                        `\n§7allow2Teams = §a${settings.randomMap.allow2Teams}\n§7allow4Teams = §a${settings.randomMap.allow4Teams}\n§7allow8Teams = §a${settings.randomMap.allow8Teams}`
-                    ) ),
-                    () => enumPar( event.message.split(" ")[0], par1Name, enum1Array, par1 => {
-                        booleanPar( event.message.split(" ")[1], par2Name, par2 => {
-                            sendFeedback( `${par1}的允许生成状态已更改为${par2}` );
-                            settings.randomMap[par1] = par2;
-                        } )
-                    } )
-                );
-                break;
-            case "bs:regenerateMap":
-                let mapList = getValidMaps();
-
-                par1Name = "生成地图"; enum1Array = enum1Array.concat( "true", mapList )
-
-                commandLogic(
-                    () => sendFeedback( cmdDescription(
-                        [ { name: par1Name, typeName: enum1Array.join( " | " ) } ],
-                        "立即生成地图。如果填写为true，则生成一张随机地图。\n生成的地图必须满足地图的生成条件，例如当2队地图禁用时，将不允许生成2队地图。",
-                        `---`
-                    ) ),
-                    () => enumPar( event.message, par1Name, enum1Array, par1 => {
-                        if ( par1 === "true" ) {
-                            regenerateMap();
-                            sendFeedback( `即将生成一张随机地图。` );
-                        }
-                        else {
-                            regenerateMap( par1 );
-                            sendFeedback( `即将生成地图${par1}。` );
-                        }
-                    } )
-                );
-                break;
-            case "bs:creativePlayerCanBreakBlocks":
-                par1Name = "可破坏方块"
-                commandLogic(
-                    () => sendFeedback( cmdDescription(
-                        [ { name: par1Name, typeName: "布尔值" } ],
-                        "该值用于控制游戏中创造模式玩家是否能够破坏原版方块。",
-                        `§a${settings.creativePlayerCanBreakBlocks}`
-                    ) ),
-                    () => booleanPar( event.message, "可生成资源", par1 => {
-                        sendFeedback( `创造模式玩家破坏方块的权限已更改为${par1}` );
-                        settings.creativePlayerCanBreakBlocks = par1
-                    } )
-                );
-                break;
+/** 显示三级菜单资源上限设置主页面
+ * @param {Player} player 
+ */
+function showResourceLimitPage( player ) {
+    showModalUi(
+        createModalUi(
+            [
+                { type: "slider", label: `铁生成上限\n§7当资源池内没有玩家时，最多生成的铁锭数目。\n当前值：§a${settings.gaming.resourceLimit.iron}§7，设置值§a`, sliderMinValue: 8, sliderMaxValue: 400, sliderStepValue: 8, defaultValue: settings.gaming.resourceLimit.iron },
+                { type: "slider", label: `金生成上限\n§7当资源池内没有玩家时，最多生成的金锭数目。\n当前值：§a${settings.gaming.resourceLimit.gold}§7，设置值§a`, sliderMinValue: 1, sliderMaxValue: 50, sliderStepValue: 1, defaultValue: settings.gaming.resourceLimit.gold },
+                { type: "slider", label: `钻石生成上限\n§7当钻石点内没有玩家时，最多生成的钻石数目。\n当前值：§a${settings.gaming.resourceLimit.diamond}§7，设置值§a`, sliderMinValue: 1, sliderMaxValue: 50, sliderStepValue: 1, defaultValue: settings.gaming.resourceLimit.diamond },
+                { type: "slider", label: `绿宝石生成上限\n§7当绿宝石点内没有玩家时，最多生成的绿宝石数目。\n当前值：§a${settings.gaming.resourceLimit.emerald}§7，设置值§a`, sliderMinValue: 1, sliderMaxValue: 50, sliderStepValue: 1, defaultValue: settings.gaming.resourceLimit.emerald },
+                { type: "toggle", label: `恢复默认设置\n§7恢复上面的设置为原始的默认设置。`, defaultValue: false }
+            ], "资源上限设置", "确认"
+        ),
+        player,
+        result => {
+            if ( result[4] ) {
+                settings.gaming.resourceLimit.iron = defaultSettings.gaming.resourceLimit.iron;
+                settings.gaming.resourceLimit.gold = defaultSettings.gaming.resourceLimit.gold;
+                settings.gaming.resourceLimit.diamond = defaultSettings.gaming.resourceLimit.diamond;
+                settings.gaming.resourceLimit.emerald = defaultSettings.gaming.resourceLimit.emerald;
+            }
+            else {
+                settings.gaming.resourceLimit.iron = result[0];
+                settings.gaming.resourceLimit.gold = result[1];
+                settings.gaming.resourceLimit.diamond = result[2];
+                settings.gaming.resourceLimit.emerald = result[3];
+            }
+            showGamingPage( player );
+        },
+        canceled => {
+            if ( canceled === "UserClosed" ) { showGamingPage( player ); }
         }
+    )
+};
 
-    } else {
-        sendFeedback( `§c检测到不允许的设置项。允许的设置项包括：\n${acceptableIds.join("\n")}` )
-    }
+/** 显示三级菜单重生时间设置主页面
+ * @param {Player} player 
+ */
+function showRespawnTimePage( player ) {
+    showModalUi(
+        createModalUi(
+            [
+                { type: "slider", label: `普通玩家重生时长\n§7当玩家死亡后，需要多长时间重生。单位：秒。\n当前值：§a${tickToSecond(settings.gaming.respawnTime.normalPlayers)}§7，设置值§a`, sliderMinValue: 0, sliderMaxValue: 30, sliderStepValue: 1, defaultValue: tickToSecond(settings.gaming.respawnTime.normalPlayers) },
+                { type: "slider", label: `重进玩家重生时长\n§7当玩家退出重进后，需要多长时间重生。单位：秒。\n当前值：§a${tickToSecond(settings.gaming.respawnTime.rejoinedPlayers)}§7，设置值§a`, sliderMinValue: 0, sliderMaxValue: 30, sliderStepValue: 1, defaultValue: tickToSecond(settings.gaming.respawnTime.rejoinedPlayers) },
+                { type: "toggle", label: `恢复默认设置\n§7恢复上面的设置为原始的默认设置。`, defaultValue: false }
+            ], "重生时间设置", "确认"
+        ),
+        player,
+        result => {
+            if ( result[2] ) {
+                settings.gaming.respawnTime.normalPlayers = defaultSettings.gaming.respawnTime.normalPlayers;
+                settings.gaming.respawnTime.rejoinedPlayers = defaultSettings.gaming.respawnTime.rejoinedPlayers;
+            }
+            else {
+                settings.gaming.respawnTime.normalPlayers = result[0] * 20;
+                settings.gaming.respawnTime.rejoinedPlayers = result[1] * 20;
+            }
+            showGamingPage( player );
+        },
+        canceled => {
+            if ( canceled === "UserClosed" ) { showGamingPage( player ); }
+        }
+    )
+};
+
+/** 显示三级菜单无效队伍设置主页面
+ * @param {Player} player 
+ */
+function showInvalidTeamPage( player ) {
+    showModalUi(
+        createModalUi(
+            [
+                { type: "toggle", label: `无效队伍能否生成资源\n§7一开始未分配到队员的队伍是否在其队伍岛屿生成资源。\n当前值：§a${settings.gaming.invalidTeamCouldSpawnResources}§7，默认值：${defaultSettings.gaming.invalidTeamCouldSpawnResources}`, defaultValue: settings.gaming.invalidTeamCouldSpawnResources },
+            ], "无效队伍设置", "确认"
+        ),
+        player,
+        result => {
+            settings.gaming.invalidTeamCouldSpawnResources = result[0];
+            showGamingPage( player )
+        },
+        canceled => {
+            if ( canceled === "UserClosed" ) { showGamingPage( player ) };
+        }
+    )
+};
+
+/** 显示二级菜单生成地图主页面
+ * @param {Player} player 
+ */
+function showRegenerateMapPage( player ) {
+    let allowedModes = [];
+    if ( settings.mapEnabled.classicTwoTeamsEnabled ) { allowedModes.push( "经典2队模式" ); }
+    if ( settings.mapEnabled.classicFourTeamsEnabled ) { allowedModes.push( "经典4队模式" ); }
+    if ( settings.mapEnabled.classicEightTeamsEnabled ) { allowedModes.push( "经典8队模式" ); }
+    if ( settings.mapEnabled.captureTwoTeamsEnabled ) { allowedModes.push( "夺点2队模式" ); }
+    showModalUi(
+        createModalUi(
+            [
+                { type: "dropdown", label: "选择生成何模式的地图。", dropdownOptions: allowedModes, defaultValue: 0 }
+            ], "生成地图", "确认"
+        ),
+        player,
+        result => {
+            const selectedIndex = result[0];
+            if ( allowedModes[selectedIndex] === "经典2队模式" ) { showRegenerateMapPage2( player, "classicTwoTeams" ); }
+            else if ( allowedModes[selectedIndex] === "经典4队模式" ) { showRegenerateMapPage2( player, "classicFourTeams" ); }
+            else if ( allowedModes[selectedIndex] === "经典8队模式" ) { showRegenerateMapPage2( player, "classicEightTeams" ); }
+            else if ( allowedModes[selectedIndex] === "夺点2队模式" ) { showRegenerateMapPage2( player, "captureTwoTeams" ); }
+        },
+        canceled => {
+            if ( canceled === "UserClosed" ) { showMainPage( player ); }
+        }
+    )
+};
+
+/** 显示三级菜单生成地图主页面
+ * @param {Player} player
+ * @param {"classicTwoTeams"|"classicFourTeams"|"classicEightTeams"|"captureTwoTeams"} mode 生成模式
+ */
+function showRegenerateMapPage2( player, mode ) {
+    let maps = validMaps.classic.twoTeams;
+    if ( mode === "classicTwoTeams" ) { maps = validMaps.classic.twoTeams; }
+    else if ( mode === "classicFourTeams" ) { maps = validMaps.classic.fourTeams; }
+    else if ( mode === "classicEightTeams" ) { maps = validMaps.classic.eightTeams; }
+    else if ( mode === "captureTwoTeams" ) { maps = validMaps.capture.twoTeams; }
+    showModalUi(
+        createModalUi(
+            [
+                { type: "dropdown", label: "选择生成何地图。", dropdownOptions: maps, defaultValue: 0 },
+            ], "生成地图", "确认"
+        ),
+        player,
+        result => {
+            if ( map().loadInfo.loadStage === 2 ) {
+                warnPlayer( player, { text: "§c你不能在加载结构时重新生成地图，请稍后再试" } );
+            }
+            else {
+                const selectedIndex = result[0];
+                regenerateMap( maps[selectedIndex] );
+                player.sendMessage( `即将生成地图${maps[selectedIndex]}。` )
+            }
+        },
+        canceled => {
+            if ( canceled === "UserClosed" ) { showMainPage( player ); }
+        }
+    )
+}
+
+/** 显示二级菜单地图启用设置主页面
+ * @param {Player} player 
+ */
+function showMapEnabledPage( player ) {
+    showModalUi(
+        createModalUi(
+            [
+                { type: "toggle", label: `启用经典2队模式地图\n§7当前值：§a${settings.mapEnabled.classicTwoTeamsEnabled}`, defaultValue: settings.mapEnabled.classicTwoTeamsEnabled },
+                { type: "toggle", label: `启用经典4队模式地图\n§7当前值：§a${settings.mapEnabled.classicFourTeamsEnabled}`, defaultValue: settings.mapEnabled.classicFourTeamsEnabled },
+                { type: "toggle", label: `启用经典8队模式地图\n§7当前值：§a${settings.mapEnabled.classicEightTeamsEnabled}`, defaultValue: settings.mapEnabled.classicEightTeamsEnabled },
+                { type: "toggle", label: `启用夺点2队模式地图\n§7当前值：§a${settings.mapEnabled.captureTwoTeamsEnabled}`, defaultValue: settings.mapEnabled.captureTwoTeamsEnabled },
+                { type: "toggle", label: `恢复默认设置\n§7恢复上面的设置为原始的默认设置。`, defaultValue: false }
+            ], "地图启用设置", "确认"
+        ),
+        player,
+        result => {
+            if ( result[4] ) {
+                settings.mapEnabled.classicTwoTeamsEnabled = defaultSettings.mapEnabled.classicTwoTeamsEnabled;
+                settings.mapEnabled.classicFourTeamsEnabled = defaultSettings.mapEnabled.classicFourTeamsEnabled;
+                settings.mapEnabled.classicEightTeamsEnabled = defaultSettings.mapEnabled.classicEightTeamsEnabled;
+                settings.mapEnabled.captureTwoTeamsEnabled = defaultSettings.mapEnabled.captureTwoTeamsEnabled;
+                showMainPage( player );
+            }
+            else if ( result.every( b => b === false ) ) {
+                warnPlayer( player, { text: "§c你不能将所有模式全部禁用！" } )
+            }
+            else {
+                settings.mapEnabled.classicTwoTeamsEnabled = result[0];
+                settings.mapEnabled.classicFourTeamsEnabled = result[1];
+                settings.mapEnabled.classicEightTeamsEnabled = result[2];
+                settings.mapEnabled.captureTwoTeamsEnabled = result[3];
+                showMainPage( player );
+            }
+            
+        },
+        canceled => {
+            if ( canceled === "UserClosed" ) { showMainPage( player ); }
+        }
+    )
+};
+
+/** 显示二级菜单杂项设置主页面
+ * @param {Player} player 
+ */
+function showMiscellaneousPage( player ) {
+    showModalUi(
+        createModalUi(
+            [
+                { type: "toggle", label: `破坏原版方块\n§7创造模式的玩家能否破坏原版方块。\n§7当前值：§a${settings.miscellaneous.creativePlayerCanBreakBlocks}`, defaultValue: settings.miscellaneous.creativePlayerCanBreakBlocks },
+                { type: "toggle", label: `虚空扔物品\n§7在虚空中掉落的玩家是否允许扔出物品。\n§7当前值：§a${settings.miscellaneous.playerCanThrowItemsInVoid}`, defaultValue: settings.miscellaneous.playerCanThrowItemsInVoid },
+                { type: "toggle", label: `恢复默认设置\n§7恢复上面的设置为原始的默认设置。`, defaultValue: false }
+            ], "杂项设置", "确认"
+        ),
+        player,
+        result => {
+            if ( result[2] ) {
+                settings.miscellaneous.creativePlayerCanBreakBlocks = defaultSettings.miscellaneous.creativePlayerCanBreakBlocks;
+                settings.miscellaneous.playerCanThrowItemsInVoid = defaultSettings.miscellaneous.playerCanThrowItemsInVoid;
+            }
+            else {
+                settings.miscellaneous.creativePlayerCanBreakBlocks = result[0];
+                settings.miscellaneous.playerCanThrowItemsInVoid = result[1];
+            }
+            showMainPage( player );
+        },
+        canceled => {
+            if ( canceled === "UserClosed" ) { showMainPage( player ); }
+        }
+    )
+};
+
+/** 设置功能
+ * @param {ItemUseAfterEvent} event 
+ */
+export function settingsFunction( event ) {
+    if ( event.itemStack.typeId === "bedwars:settings" ) { showMainPage( event.source ) }
 }

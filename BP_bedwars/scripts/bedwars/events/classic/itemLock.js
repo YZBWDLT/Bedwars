@@ -13,6 +13,7 @@
 import { Player } from "@minecraft/server";
 import { eachValidSlot } from "../../methods/itemManager";
 import { eachPlayer } from "../../methods/playerManager";
+import { settings } from "../../methods/bedwarsSettings";
 
 /** 始终锁定的物品 */
 const alwaysLockInInventory = [ "bedwars:wooden_sword", "bedwars:wooden_pickaxe", "bedwars:iron_pickaxe", "bedwars:golden_pickaxe", "bedwars:diamond_pickaxe", "bedwars:wooden_axe", "bedwars:stone_axe", "bedwars:iron_axe", "bedwars:diamond_axe", "bedwars:shears" ];
@@ -44,7 +45,7 @@ export function playerItemLocker() {
         let isFalling = player.isFalling;
 
         /** 当玩家附近有商人、视线内有商人并且视线内没有箱子时；或者，玩家正在掉落状态，则锁定，否则解锁之。 */
-        if ( ( haveTraderNearby && !haveChestInView ) || ( isFalling && isVoidBelow( player ) ) ) { lockItem( player ); }
+        if ( ( haveTraderNearby && !haveChestInView ) || ( !settings.miscellaneous.playerCanThrowItemsInVoid && isFalling && isVoidBelow( player ) ) ) { lockItem( player ); }
         else { unlockItem( player ); };
 
     } )

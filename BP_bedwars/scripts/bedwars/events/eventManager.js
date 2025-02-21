@@ -31,7 +31,7 @@ import { gameEvents, teamEliminateAndWin } from "./classic/gameEvents";
 import { playerLeave, playerRejoin } from "./classic/playerLeaveAndRejoin";
 import { beforeGamingInfoBoard, gamingInfoBoard, healthScoreboard } from "./classic/infoBoard";
 import { gameOverCountdown } from "./classic/afterGaming";
-import { settingsEvent } from "../methods/bedwarsSettings";
+import { settingsFunction } from "../methods/bedwarsSettings";
 import { trading } from "./classic/trading";
 import { playerItemLocker } from "./classic/itemLock";
 
@@ -93,7 +93,7 @@ export const eventManager = {
         createEvent( "playerRejoin", world.afterEvents.playerSpawn, event => playerRejoin( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
 
         /** 游戏逻辑：设置 */
-        createEvent( "settingsEvent", system.afterEvents.scriptEventReceive, event => settingsEvent( event ), [ tags.gameLogic, tags.settings ] );
+        createEvent( "settingsFunction", world.afterEvents.itemUse, event => settingsFunction( event ), [ tags.gameLogic, tags.settings ] );
         
     },
     /** 经典模式游戏前事件 */

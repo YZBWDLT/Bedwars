@@ -76,3 +76,5 @@ item.bedwars:upgrade_its_a_trap=§a这是个陷阱！
 item.bedwars:upgrade_counter_offensive_trap=§a反击陷阱
 item.bedwars:upgrade_alarm_trap=§a报警陷阱
 item.bedwars:upgrade_miner_fatigue_trap=§a挖掘疲劳陷阱
+
+item.bedwars:settings=Settings

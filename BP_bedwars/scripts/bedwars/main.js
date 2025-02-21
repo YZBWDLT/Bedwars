@@ -1,11 +1,11 @@
-import { system, world } from "@minecraft/server";
+import { world } from "@minecraft/server";
 import { alwaysSaturation } from "./events/classic/effects.js";
 import { playerBreakVanillaBlocksTest } from "./events/classic/playerBreakBlockTest.js";
 import { regenerateMap } from "./maps/mapGenerator.js";
 import { createEvent } from "./methods/eventManager.js";
 import { createInterval } from "./methods/intervalManager.js";
 import { playerLeave, playerRejoin } from "./events/classic/playerLeaveAndRejoin.js";
-import { settingsEvent } from "./methods/bedwarsSettings.js";
+import { settingsFunction } from "./methods/bedwarsSettings.js";
 import { waiting } from "./events/classic/beforeGaming.js";
 import { beforeGamingInfoBoard } from "./events/classic/infoBoard.js";
 
@@ -48,7 +48,7 @@ createInterval( "alwaysSaturation", () => alwaysSaturation(), [ tags.gameLogic, 
 createEvent( "playerBreakVanillaBlockTest", world.beforeEvents.playerBreakBlock, event => playerBreakVanillaBlocksTest( event ), [ tags.gameLogic, tags.playerBreakBlock ] );
 createEvent( "playerLeave", world.beforeEvents.playerLeave, event => playerLeave( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
 createEvent( "playerRejoin", world.afterEvents.playerSpawn, event => playerRejoin( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
-createEvent( "settingsEvent", system.afterEvents.scriptEventReceive, event => settingsEvent( event ), [ tags.gameLogic, tags.settings ], { namespaces: [ "bs" ] } );
+createEvent( "settingsFunction", world.afterEvents.itemUse, event => settingsFunction( event ), [ tags.gameLogic, tags.settings ] );
 
 /** ===== 游戏前事件 ===== */
 createInterval( "waiting", () => waiting(), [ tags.beforeGaming ] );

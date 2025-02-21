@@ -77,7 +77,7 @@ export function waiting() {
                     loadInfo.teamIslandColor.countdown === 0,
                     () => {
                         loadInfo.isLoading = false;
-                        map().gameStartCountdown = settings.gameStartWaitingTime;
+                        map().gameStartCountdown = settings.waiting.gameStartWaitingTime;
                     }
                 )
             }
@@ -89,7 +89,7 @@ export function waiting() {
         else {
 
             // 大于规定的人数时，开始倒计时
-            if ( getPlayerAmount() >= settings.minWaitingPlayers ) {
+            if ( getPlayerAmount() >= settings.waiting.minWaitingPlayers ) {
 
                 // 倒计时
                 map().gameStartCountdown--;
@@ -122,10 +122,10 @@ export function waiting() {
             }
 
             // 人数不足时，且已经开始倒计时，则取消倒计时
-            else if ( map().gameStartCountdown < settings.gameStartWaitingTime ) {
+            else if ( map().gameStartCountdown < settings.waiting.gameStartWaitingTime ) {
 
                 // 重置倒计时
-                map().gameStartCountdown = settings.gameStartWaitingTime;
+                map().gameStartCountdown = settings.waiting.gameStartWaitingTime;
 
                 // 提醒玩家倒计时已取消
                 eachPlayer( player => {

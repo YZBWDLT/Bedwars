@@ -109,6 +109,8 @@
 
         "bedwars_red_bed": { "textures": "textures/items/bed_red" },
         "bedwars_blue_bed": { "textures": "textures/items/bed_blue" },
-        "bedwars_white_bed": { "textures": "textures/items/bed_white" }
+        "bedwars_white_bed": { "textures": "textures/items/bed_white" },
+
+        "bedwars_settings": { "textures": "textures/items/settings" }
     }
 }

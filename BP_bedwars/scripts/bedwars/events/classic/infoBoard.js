@@ -20,7 +20,7 @@ export function beforeGamingInfoBoard() {
             else { waitingInfoBoard( "§f设置队伍岛屿中...§r" ); }
         }
         else {
-            if ( getPlayerAmount() >= settings.minWaitingPlayers ) { waitingInfoBoard( `§f即将开始： §a${tickToSecond(map().gameStartCountdown)}秒§r` ); }
+            if ( getPlayerAmount() >= settings.waiting.minWaitingPlayers ) { waitingInfoBoard( `§f即将开始： §a${tickToSecond(map().gameStartCountdown)}秒§r` ); }
             else { waitingInfoBoard( "§f等待中...§r" ); }
         }
     }

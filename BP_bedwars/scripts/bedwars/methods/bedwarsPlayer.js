@@ -166,11 +166,11 @@ export class BedwarsPlayer{
         /** 设置重生时间 */
         if ( this.getBedState() ) {
             if ( this.deathState.isRejoinedPlayer ) {
-                this.deathState.respawnCountdown = settings.respawnTime.rejoinedPlayers;
+                this.deathState.respawnCountdown = settings.gaming.respawnTime.rejoinedPlayers;
                 this.deathState.isRejoinedPlayer = false;
             }
             else {
-                this.deathState.respawnCountdown = settings.respawnTime.normalPlayers;
+                this.deathState.respawnCountdown = settings.gaming.respawnTime.normalPlayers;
             }
         }
         else {

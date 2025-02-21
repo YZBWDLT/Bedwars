@@ -86,7 +86,7 @@ export class BedwarsMap{
     nextGameCountdown = 200;
 
     /** 游戏开始倒计时 */
-    gameStartCountdown = settings.gameStartWaitingTime;
+    gameStartCountdown = settings.waiting.gameStartWaitingTime;
 
     /** 商人信息，包括位置、朝向、类型 @type {traderInfo[]} */ 
     traderInfo = [];

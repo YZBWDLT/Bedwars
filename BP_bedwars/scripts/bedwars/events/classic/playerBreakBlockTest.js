@@ -19,7 +19,7 @@ export function playerBreakVanillaBlocksTest( event ) {
     const breakableVanillaBlocksByPlayer = [ "minecraft:bed", "minecraft:short_grass", "minecraft:ladder", "minecraft:sponge", "minecraft:wet_sponge" ];
 
     /** 如果玩家破坏的方块是原版方块，且不属于上方列出的的可破坏方块，则防止玩家破坏方块 */ 
-    if ( event.block.typeId.includes( "minecraft:" ) && !breakableVanillaBlocksByPlayer.includes( event.block.typeId ) && !settings.creativePlayerCanBreakBlocks ) {
+    if ( event.block.typeId.includes( "minecraft:" ) && !breakableVanillaBlocksByPlayer.includes( event.block.typeId ) && !settings.miscellaneous.creativePlayerCanBreakBlocks ) {
         let breaker = event.player;
         system.run( () => { warnPlayer( breaker, { translate: "message.breakingInvalidBlocks" } ); } );
         event.cancel = true;

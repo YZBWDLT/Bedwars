@@ -10,6 +10,7 @@ import { BedwarsPlayer, eachValidPlayer, initPlayer } from "./bedwarsPlayer.js";
 import { overworld, positionManager, Vector } from "./positionManager.js";
 import { eventManager } from "../events/eventManager.js";
 import { getScore, removeAllScoreboards, setScore, tryAddScoreboard } from "./scoreboardManager.js";
+import { tickToSecond } from "./time.js";
 
 /**
  * @typedef islandInfo 岛屿信息
@@ -50,10 +51,6 @@ export class BedwarsMap{
 
     /** 地图的钻石点与绿宝石点信息、全地图中所有类型资源生成间隔的基准信息、资源生成方式信息 */
     spawnerInfo = {
-        /** 平均每个铁的基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔*每次生成的铁锭数/(1+速度加成)） */ ironInterval: 6,
-        /** 金基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔/(1+速度加成) */ goldInterval: 75,
-        /** 钻石基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔-200*等级） */ diamondInterval: 800,
-        /** 绿宝石基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔-200*等级） */ emeraldInterval: 1500,
         /** 钻石点等级 */ diamondLevel: 1,
         /** 绿宝石点等级 */ emeraldLevel: 1,
         /** 钻石生成倒计时，单位：游戏刻 */ diamondCountdown: 600,
@@ -86,7 +83,7 @@ export class BedwarsMap{
     nextGameCountdown = 200;
 
     /** 游戏开始倒计时 */
-    gameStartCountdown = settings.waiting.gameStartWaitingTime;
+    gameStartCountdown = settings.beforeGaming.waiting.gameStartWaitingTime;
 
     /** 商人信息，包括位置、朝向、类型 @type {traderInfo[]} */ 
     traderInfo = [];
@@ -117,6 +114,7 @@ export class BedwarsMap{
         mapClear: {
             /** 正在清除的层数 */ currentLayer: 116,
             /** 间隔多长时间清除下一层，单位：游戏刻 */ timeCostPerLayer: 6,
+            /** 倒计时，单位：游戏刻 */ countdown: 690,
             /** 移除本层并使层数自减 */ clear: () => {
                 this.loadInfo.mapClear.currentLayer--;
                 for ( let i of [ 1, -1 ] ) { for ( let j of [ 1, -1 ] ) {
@@ -133,7 +131,7 @@ export class BedwarsMap{
             /** 加载岛屿 */ loadStructure: () => {
                 this.loadInfo.mapReload.islands.forEach( island => {
                     const { pos, rotation, mirror, type } = island;
-                    world.structureManager.place( `${this.id}:${type}`, overworld, pos, { animationMode: "Blocks", animationSeconds: parseFloat( ( this.loadInfo.mapReload.totalTime / 20 ).toFixed( 2 ) ), mirror, rotation, } )
+                    world.structureManager.place( `${this.id}:${type}`, overworld, pos, { animationMode: "Blocks", animationSeconds: tickToSecond( this.loadInfo.mapReload.totalTime, "float" ), mirror, rotation, } )
                 } )
             },
             /** 设置边界 */ loadBorder: () => {
@@ -184,6 +182,9 @@ export class BedwarsMap{
         /** 游戏结束倒计时，单位：秒 */ gameOverCountdown: 1500,
         /** 优势方 @type {import("./bedwarsTeam.js").validTeams|"none"} */ dominantTeam: "none",
     };
+
+    /** 地图版本 */
+    version = "Alpha 1.1_01"
 
     /** 【构建器】
      * @param {String} id 地图 ID
@@ -305,28 +306,69 @@ export class BedwarsMap{
      */
     gameStart() {
 
-        /** 随机分配玩家的队伍
-         * @description 分配逻辑为，现在有玩家数目playerAmount、分配队伍数teamCount和随机玩家列表Player[]，先用玩家数目除以分配队伍数，playerAmount / teamCount = a ... b，然后，先为所有队伍分配 a 人，这样还剩下 b 人，将这 b 人每人随机插入到随机队伍中，插入后即移除该队伍以防止某个队伍比别队多出2人或更多人
-         */
-        let assignPlayersRandomly = () => {
-            let players = shuffleArray( world.getPlayers() );
-            let copiedTeamList = shuffleArray( [ ...this.teamList ] );
-            let a = getPlayerAmount() / this.teamCount;
-            eachTeam( team => {
-                for ( let i = 0; i < a; i++ ) { new BedwarsPlayer( players[i].name, team.id ); };
-                players.splice( 0, a );
-            } );
-            if ( players.length !== 0 ) {
-                players.forEach( player => { 
-                    new BedwarsPlayer( player.name, copiedTeamList[0].id ); 
-                    copiedTeamList.splice( 0, 1 );
+        /** 组队功能 */
+        const assignPlayers = () => {
+
+            // ===== 变量准备 =====
+
+            /** 当前总人数 */
+            let playerCount = getPlayerAmount();
+            /** 上限人数 */
+            const maxPlayerCount = settings.beforeGaming.waiting.maxPlayerCount;
+            /** 分配模式 */
+            const assignMode = settings.beforeGaming.teamAssign.mode;
+            /** 所有队伍列表并打乱顺序（copy，不影响原数组） */
+            let teams = shuffleArray( [ ...this.teamList ] );
+            /** 所有玩家列表并打乱顺序（copy，不影响原数组） */
+            let players = [ ...world.getPlayers() ]; players = shuffleArray( players );
+            /** 每队至少应当分配的玩家。 @description 例：若一共14人，分配4队，则每队应至少有3人，剩余的2人可依次分配到随机的队伍 */
+            const minPlayerCountPerTeam = Math.floor( playerCount / this.teamCount );
+
+            // ===== 玩家名单处理 =====
+            // 只保留maxPlayerCount个玩家，剩下的玩家改为旁观模式
+            if ( playerCount > maxPlayerCount ) {
+                let spectatorPlayers = players.splice( maxPlayerCount );
+                spectatorPlayers.forEach( spectatorPlayer => {
+                    new BedwarsPlayer( spectatorPlayer.name, undefined )
+                } );
+                playerCount = maxPlayerCount;
+            }
+            // 如果为按照胜率排序，则重新排序
+            if ( assignMode === "assignByWins" ) {
+                
+            }
+
+            // ===== 为每个队伍先分配 minPlayerCountPerTeam 个玩家 =====
+
+            // 每个队伍先分配前面的玩家，分配 minPlayerCountPerTeam 次
+            // 比如，玩家[A,B,C,D,E,F,G,H,I]，队伍[a,b,c,d]，先4个队伍分配前4名玩家[A,B,C,D]，再分配[E,F,G,H]
+            for ( let i = 0; i < minPlayerCountPerTeam; i++ ) {
+                teams.forEach( team => {
+                    new BedwarsPlayer( players[0].name, team.id );
+                    players.splice( 0, 1 ); // 添加后移除该待加玩家
                 } );
             };
-        };
 
-        /** 生成商人
-         * @description 按照设定的商人数据，设置其位置、朝向、类型、皮肤、名字。
-         */
+            // ===== 多余的玩家执行的逻辑 =====
+
+            if ( players.length !== 0 ) {
+                // 如果为标准模式，分配到前面的队伍去
+                if ( assignMode === "assignNormally" ) {
+                    for ( let i = 0; i < players.length; i++ ) {
+                        new BedwarsPlayer( players[i].name, this.teamList[i].id );
+                    }
+                }
+                // 如果为随机分配或按击杀数分配，则随机分配到不同的队伍去
+                else {
+                    players.forEach( player => {
+                        new BedwarsPlayer( player.name, teams[0].id );
+                        teams.splice( 0, 1 ); // 插入后即移除该队伍，以防止某个队伍比别队多出 2 人或更多人
+                    } );
+                }
+            }
+        }
+
+        /** 生成商人 @description 按照设定的商人数据，设置其位置、朝向、类型、皮肤、名字。 */
         let setTrader = () => {
             this.traderInfo.forEach( traderInfo => {
                 let trader = overworld.spawnEntity( "bedwars:trader", traderInfo.pos );
@@ -340,23 +382,34 @@ export class BedwarsMap{
             } )
         };
     
-
-        /** 设置地图阶段 */ this.gameStage = 1;
+        /** 设置地图阶段 */
+        this.gameStage = 1;
         /** 触发游戏时事件 */
         eventManager.classicEvents();
         if ( this.mode === "capture" ) { eventManager.captureEvents(); }
 
-        /** 设置为允许 PVP */ world.gameRules.pvp = true;
-        /** 随机分配玩家队伍 */ assignPlayersRandomly();
-        /** 安置商人 */ setTrader();
-        /** 移除等待大厅 */ overworld.runCommand( `fill -12 117 -12 12 127 12 air` );
-        /** 在重生点下方放置一块屏障（防止薛定谔玩家复活时判定失败） */ overworld.runCommand( `setblock 0 ${this.spawnpointPos.y - 2} 0 barrier` );
-        /** 如果一个队伍没有分配到人，则设置为无效的队伍 */ eachTeam( team => { if ( team.getTeamMember().length === 0 ) { team.setTeamInvalid(); }; } );
-        /** 玩家命令 */ eachValidPlayer( ( player, playerInfo ) => {
-            /** 将玩家传送到队伍中 */ playerInfo.teleportPlayerToSpawnpoint();
-            /** 调整玩家的游戏模式 */ setPlayerGamemode( player, "survival" );
-            /** 播报消息 */ player.sendMessage( [ { translate: "message.greenLine" }, "\n", this.getStartIntro().title, "\n\n", this.getStartIntro().intro, "\n\n", { translate: "message.greenLine" } ] )
-        } )
+        /** 设置为允许 PVP */
+        world.gameRules.pvp = true;
+        /** 随机分配玩家队伍 */
+        assignPlayers();
+        /** 安置商人 */
+        setTrader();
+        /** 移除等待大厅 */
+        overworld.runCommand( `fill -12 117 -12 12 127 12 air` );
+        /** 在重生点下方放置一块屏障（防止薛定谔玩家复活时判定失败） */
+        overworld.runCommand( `setblock 0 ${this.spawnpointPos.y - 2} 0 barrier` );
+        /** 如果一个队伍没有分配到人，则设置为无效的队伍 */
+        if ( settings.gaming.invalidTeam.enableTest ) {
+            eachTeam( team => { if ( team.getTeamMember().length === 0 ) { team.setTeamInvalid(); }; } );
+        }
+        /** 玩家命令 */
+        eachValidPlayer( ( player, playerInfo ) => {
+            if ( !playerInfo.isSpectator ) {
+                /** 将玩家传送到队伍中 */ playerInfo.teleportPlayerToSpawnpoint();
+                /** 调整玩家的游戏模式 */ setPlayerGamemode( player, "survival" );
+                /** 播报消息 */ player.sendMessage( [ { translate: "message.greenLine" }, "\n", this.getStartIntro().title, "\n\n", this.getStartIntro().intro, "\n\n", { translate: "message.greenLine" } ] )
+            }
+        } );
     };
 
     /** 游戏结束

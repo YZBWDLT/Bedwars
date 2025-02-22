@@ -45,7 +45,7 @@ export class BedwarsPlayer{
 
     /** 构建并初始化一个起床战争信息实例，并且按照输入的队伍自动设置玩家信息
      * @param {String} name 玩家名称
-     * @param {import("./bedwarsTeam").validTeams|undefined} team 玩家队伍
+     * @param {import("./bedwarsTeam").validTeams|undefined} team 玩家队伍，如果设置为undefined则为旁观者
      */
     constructor( name, team ) {
         this.name = name;

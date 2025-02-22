@@ -15,13 +15,14 @@ export function beforeGamingInfoBoard() {
     if ( map() ) {
         let loadInfo = map().loadInfo;
         if ( loadInfo.isLoading ) {
-            if ( loadInfo.mapClear.currentLayer !== 0 ) { waitingInfoBoard( `§f清除原地图中... §7${tickToSecond(loadInfo.mapClear.currentLayer*loadInfo.mapClear.timeCostPerLayer)}秒§r` ); }
-            else if ( loadInfo.mapReload.countdown !== 0 ) { waitingInfoBoard( `§f生成地图中... §7${tickToSecond(loadInfo.mapReload.countdown)}秒§r` ); }
-            else { waitingInfoBoard( "§f设置队伍岛屿中...§r" ); }
+            if ( loadInfo.loadStage === 0 ) { waitingInfoBoard( "§f准备中...§r" ); }
+            else if ( loadInfo.loadStage === 1 ) { waitingInfoBoard( `§f清除原地图中... §7${tickToSecond(loadInfo.mapClear.countdown)}秒§r` ); }
+            else if ( loadInfo.loadStage === 2 ) { waitingInfoBoard( `§f生成地图中... §7${tickToSecond(loadInfo.mapReload.countdown)}秒§r` ); }
+            else if ( loadInfo.loadStage === 3 ) { waitingInfoBoard( "§f设置队伍岛屿中...§r" ); }
         }
         else {
-            if ( getPlayerAmount() >= settings.waiting.minWaitingPlayers ) { waitingInfoBoard( `§f即将开始： §a${tickToSecond(map().gameStartCountdown)}秒§r` ); }
-            else { waitingInfoBoard( "§f等待中...§r" ); }
+            if ( getPlayerAmount() >= settings.beforeGaming.waiting.minPlayerCount ) { waitingInfoBoard( `§f即将开始： §a${tickToSecond(map().gameStartCountdown)}秒§r` ); }
+            else { waitingInfoBoard( `§f等待中...§7还需${settings.beforeGaming.waiting.minPlayerCount-getPlayerAmount()}人§r` ); }
         }
     }
 }
@@ -115,11 +116,12 @@ function waitingInfoBoard( infoBoardProgress ) {
     /** 展示内容 */
     let infoBoardTitle = "§l§e     起床战争§r     ";
     let infoBoardMapName = `§f地图： §a${map().name}§r`;
-    let infoBoardWaitingPlayer = `§f玩家： §a${getPlayerAmount()}/16§r`;
+    let infoBoardWaitingPlayer = `§f玩家： §a${getPlayerAmount()}/${settings.beforeGaming.waiting.maxPlayerCount}§r`;
     let infoBoardTeamCount = `§f队伍数： §a${map().teamCount}§r`;
     let infoBoardMode = `§f模式： §a${map().modeName()}§r`;
+    let infoBoardVersion = `§f版本： §7${map().version}§r`;
     let infoBoardAuthor = `§e一只卑微的量筒§r`
-    eachPlayer( player => { player.onScreenDisplay.setActionBar( `${infoBoardTitle}\n§8${map().gameId}\n\n${infoBoardMapName}\n${infoBoardWaitingPlayer}\n\n${infoBoardProgress}\n\n${infoBoardTeamCount}\n${infoBoardMode}\n\n${infoBoardAuthor}` ) } )
+    eachPlayer( player => { player.onScreenDisplay.setActionBar( `${infoBoardTitle}\n§8${map().gameId}\n\n${infoBoardMapName}\n${infoBoardWaitingPlayer}\n\n${infoBoardProgress}\n\n${infoBoardTeamCount}\n${infoBoardMode}\n${infoBoardVersion}\n\n${infoBoardAuthor}` ) } )
     
 }
 

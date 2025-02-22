@@ -5,9 +5,11 @@
 
 /** 将单位为游戏刻的时间转换为以秒为单位的时间
  * @param {Number} tickTime 游戏刻时间
+ * @param {"int"|"float"} returnType 返回类型，为整数或浮点数。
  */
-export function tickToSecond( tickTime ) {
-    return Math.floor( tickTime / 20 ) + 1;
+export function tickToSecond( tickTime, returnType = "int" ) {
+    if ( returnType === "int" ) { return Math.floor( tickTime / 20 ) + 1; }
+    else { return parseFloat( ( tickTime / 20 ).toFixed( 2 )); }
 }
 
 /** 将单位为秒的时间转换为以分钟和秒钟为单位的时间

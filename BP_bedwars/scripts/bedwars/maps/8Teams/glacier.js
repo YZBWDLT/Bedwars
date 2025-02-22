@@ -46,9 +46,7 @@ export function createMapGlacier( ) {
     map.heightLimit.min = 75; // 最低下限
     map.healPoolRadius = 18; // 治愈池范围
     map.spawnerInfo.distributeResource = false; // 资源集中式生成
-    map.spawnerInfo.ironInterval = 20; // 放慢Solo模式的铁生成速度
-    map.spawnerInfo.goldInterval = 120; // 放慢Solo模式的金生成速度
-    map.spawnerInfo.ironSpawnTimes = 1; // 每次生成1铁锭而非5铁锭
+    map.spawnerInfo.ironSpawnTimes = 3; // 每次生成3铁锭而非5铁锭
 
     /** 移除多余实体，进行初始化 */
     map.gameReady();

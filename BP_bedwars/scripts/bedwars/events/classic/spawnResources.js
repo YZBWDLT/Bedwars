@@ -21,7 +21,7 @@ import { playerIsAlive } from "../../methods/bedwarsPlayer";
 export function spawnResources() {
 
     /** 队伍资源生成 | 只要无效队伍允许生成资源，或者队伍有效，就允许该队伍生成资源 */
-    eachTeam( team => { if ( settings.gaming.invalidTeamCouldSpawnResources || team.isValid ) { teamResources( team ); } } );
+    eachTeam( team => { if ( settings.gaming.invalidTeam.spawnResources || team.isValid ) { teamResources( team ); } } );
 
     /** 世界资源生成 */
     mapResources( );
@@ -53,7 +53,7 @@ function teamResources( team ) {
         }
 
         /** 铁倒计时 | 时间：单个铁的间隔*生成铁的数目/速度加成 */
-        team.spawnerInfo.ironCountdown = Math.floor( map().spawnerInfo.ironInterval * map().spawnerInfo.ironSpawnTimes / getForgeBonus( team.teamUpgrade.forge ) );
+        team.spawnerInfo.ironCountdown = Math.floor( settings.gaming.resourceInterval.iron * map().spawnerInfo.ironSpawnTimes / ( map().isSolo() ? settings.gaming.resourceInterval.soloSpeedMultiplier : 1.0 ) / getForgeBonus( team.teamUpgrade.forge ) );
 
     };
     
@@ -66,7 +66,7 @@ function teamResources( team ) {
         }
 
         /** 金倒计时 | 时间：金间隔/速度加成 */
-        team.spawnerInfo.goldCountdown = Math.floor( map().spawnerInfo.goldInterval / getForgeBonus( team.teamUpgrade.forge ) );
+        team.spawnerInfo.goldCountdown = Math.floor( settings.gaming.resourceInterval.gold / ( map().isSolo() ? settings.gaming.resourceInterval.soloSpeedMultiplier : 1.0 ) / getForgeBonus( team.teamUpgrade.forge ) );
 
     };
     
@@ -79,7 +79,7 @@ function teamResources( team ) {
         }
 
         /** 绿宝石倒计时 | 时间：绿宝石间隔（无加成） */
-        team.spawnerInfo.emeraldCountdown = map().spawnerInfo.emeraldInterval;
+        team.spawnerInfo.emeraldCountdown = settings.gaming.resourceInterval.emerald;
 
     };
 
@@ -121,7 +121,7 @@ function mapResources() {
 
     /** 重置倒计时 */
     if ( map().spawnerInfo.diamondCountdown <= 0 ) {
-        map().spawnerInfo.diamondCountdown = map().spawnerInfo.diamondInterval - 10 * 20 * map().spawnerInfo.diamondLevel;
+        map().spawnerInfo.diamondCountdown = settings.gaming.resourceInterval.diamond - 10 * 20 * map().spawnerInfo.diamondLevel;
     }
 
     /** ===== 绿宝石点 ===== */
@@ -145,7 +145,7 @@ function mapResources() {
     } )
     /** 重置倒计时 */
     if ( map().spawnerInfo.emeraldCountdown <= 0 ) {
-        map().spawnerInfo.emeraldCountdown = map().spawnerInfo.emeraldInterval - 10 * 20 * map().spawnerInfo.emeraldLevel;
+        map().spawnerInfo.emeraldCountdown = settings.gaming.resourceInterval.emerald - 10 * 20 * map().spawnerInfo.emeraldLevel;
     }
 
 }

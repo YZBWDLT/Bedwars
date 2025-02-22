@@ -8,6 +8,16 @@
 - 现在所有的地图都有特定的治愈池范围。
 - 现在地图 屋顶 的最低建造高度上限由 55 提升到了 62。
 - 现在默认的加载时长由 5 秒调整为了 15 秒。特殊地，屋顶的加载时长延长到了 30 秒。
+- 现在所有的单挑模式的地图的铁锭、金锭生成速度都是 4 队模式或 2 队模式生成速度的 60 %。您可以见下表以查看我们所作出的更改。
+
+| | 1.0 版本 | Alpha 1.1_01 版本 |
+| --- | --- | --- |
+| 4 队模式和 2 队模式的铁生成间隔 | 6 游戏刻 | 6 游戏刻 |
+| 单挑模式的铁生成间隔 | 20 游戏刻 | 6 / 0.6 = 10 游戏刻 |
+| 4 队模式和 2 队模式的金生成间隔 | 75 游戏刻 | 75 游戏刻 |
+| 单挑模式的金生成间隔 | 120 游戏刻 | 75 / 0.6 = 125 游戏刻 |
+
+- 现在所有的单挑模式每次都生成 3 个铁而非 1 个。
 
 ## 设置
 
@@ -15,9 +25,28 @@
 - 以前的`/scriptevent`命令被**全部移除**，转而使用设置菜单代替。
 - 新增了一个物品：**设置**。
 - 右键使用设置物品调出设置菜单。
-- 设置菜单分为 5 个子项，完全继承以前的设置命令功能。
-- 新增设置“虚空扔物品”，控制在虚空中掉落的玩家是否允许扔出物品。
-- 新增设置“启用夺点2队模式地图”，控制夺点模式是否能够生成。
+- 设置菜单分为 7 个子项，完全继承以前的设置命令功能。下文中，【设置项】为命令系统原有的设置。
+  - 游戏前设置：控制游戏前的运行逻辑，例如地图重置、等待时。包括：
+    - 地图重置设置：包括地图清除速度、地图加载速度。
+    - 等待设置：包括【玩家人数下限】、玩家人数上限、【开始游戏的等待时间】。
+    - 组队设置：包括组队模式（暂未实装）、开始前组队（暂未实装）、玩家自主选队（暂未实装）。
+  - 游戏内设置：控制资源生成、复活时间等。包括：
+    - 【资源上限设置】：包括【铁生成上限】、【金生成上限】、【钻石生成上限】、【绿宝石生成上限】。
+    - 资源生成间隔设置：包括铁生成间隔、金生成间隔、钻石生成间隔、绿宝石生成间隔、单挑模式生成倍率。*是的，现在你可以调整资源生成间隔了！*
+    - 【重生时间设置】：包括【普通玩家重生时长】、【重进玩家重生时长】。
+    - 无效队伍设置：包括无效队伍检测、【无效队伍能否生成资源】、无效队伍能否生成商人（暂未实装）。
+  - 【地图启用设置】：控制何种地图能够生成。包括：【启用经典 2 队模式地图】、【启用经典 4 队模式地图】、【启用经典 8 队模式地图】、【启用夺点 2 队模式地图】（*拆分出来单独的模式*）。
+  - 【生成地图】：立即生成地图。
+  - 杂项设置：包括【破坏原版方块】、虚空扔物品。
+  - 关于：制作人和关于我们的页面。
+  - 开发者设置：开发人员可用的设置项。正式版本发布后，将移除此设置。
+
+## 信息板
+
+- 更改了游戏开始前的等待信息板。
+  - 人数信息现在显示为 当前人数/上限人数 ；
+  - 在等待更多玩家进入时，“等待中...”的后面现在会显示还需要多少玩家进入；
+  - 现在会显示版本了。
 
 ## 最低版本需求
 
@@ -34,7 +63,7 @@
 - **新增** 类型声明`islandInfo`、`teamIslandColorInfo`、`traderInfo`、`spawnerInfo`。
 - **更改** 为`loadInfo`属性作出如下更改：
   - 新增`loadInfo.loadStage`，当前所处的加载阶段。
-  - 新增`loadInfo.mapClear`对象，清除地图的方法和变量，其中包括`currentLayer`、`timeCostPerLayer`、`clear()`。
+  - 新增`loadInfo.mapClear`对象，清除地图的方法和变量，其中包括`currentLayer`、`timeCostPerLayer`、`clear()`、`countdown`。
   - 新增`loadInfo.mapReload`对象，加载地图的方法和变量，其中包括`islands`、`totalTime`、`countdown`、`loadStructure()`、`loadBorder()`。
   - 新增`loadInfo.teamIslandColor`对象，设置队伍岛屿的羊毛颜色，其中包括`isEnabled`、`countdown`、`colors`、`load()`。
   - 移除`loadInfo.clearingLayer`，现在用`loadInfo.mapClear.currentLayer`代替。
@@ -42,6 +71,7 @@
   - 移除`loadInfo.structureLoadTime`，现在用`loadInfo.mapReload.countdown`代替。
   - 移除`loadInfo.setTeamIslandTime`，现在用`loadInfo.teamIslandColor.countdown`代替。
 - **新增** `mapSize`属性，表示当前及上一张地图的地图大小。
+- **新增** `version`属性，表示地图版本。
 - **更改** 拆分了`methods/bedwarsMap.js`的方法和函数：
   - 这样做是为了便于控制结构加载的时间。
   - 移动了`createMap(mapName)()`函数到脚本`maps/(teamCount)Teams/(mapName).js`中存储数据。
@@ -53,6 +83,11 @@
 - **更改** 方法`addTrader(pos,direction,type) {}`→`addTrader(...traders) {}`，现在允许直接传入多个参数。
 - **更改** 方法`addSpawner(resourceType,pos) {}`→`addSpawners(...spawners) {}`，现在允许直接传入多个参数，并且现在每个生成点信息所传入的坐标`pos`需传入钻石点或绿宝石点中钻石块或绿宝石块的位置，而不再是其上方 2 格。
 - **更改** 为`mapGenerator.js`将`validMapsFor2Teams`等变量改为一个`validMaps`对象，并新增了一个方法`getValidMaps() {}`以确定当前设置下有效的地图ID。
+- **移除** `spawnerInfo`属性下的：
+  - `spawnerInfo.ironInterval`；
+  - `spawnerInfo.goldInterval`；
+  - `spawnerInfo.diamondInterval`；
+  - `spawnerInfo.emeraldInterval`；
 
 ### `BedwarsTeam`类
 
@@ -79,27 +114,45 @@
 ### `methods/uiManager.js`
 
 - 用于控制 UI 的方法。
+- **新增** 类型声明`actionUiButtonInfo`、`modalUiButtonInfo`
 - `createActionUi(buttonInfo,bodyText,titleText) {}`：创建一个`ActionForm`的 UI。
 - `createMessageUi(button1Text,button2Text,bodyText,titleText) {}`：创建一个`MessageForm`的 UI。
 - `createModalUi(buttonInfo,titleText,submitText) {}`：创建一个`ModalForm`的 UI。
 - `showActionOrMessageUi(ui,showPlayer,playerSelectedFunc,playerCanceledFunc) {}`：显示一个`ActionForm`或`MessageForm`的 UI，并追踪玩家的选择。
 - `showModalUi(ui,showPlayer,submittedFunc,playerCanceledFunc) {}`：显示一个`ModalForm`的 UI，并追踪玩家的选择。
+- `createAndShowActionUi(player,buttonInfo,playerCanceledFunc,bodyText,titleText) {}`：创建一个`ActionForm`的 UI 并立即显示，同时追踪玩家的选择并执行内容。
+- `createAndShowMessageUi(player,buttonInfo,bodyText,titleText) {}`：创建一个`MessageForm`的 UI 并立即显示，同时追踪玩家的选择并执行内容。
+- `createAndShowModalUi(player,buttonInfo,submittedFunc,playerCanceledFunc,titleText,submitText) {}`：创建一个`ModalForm`的 UI 并立即显示，同时追踪玩家的选择并执行内容。
 
 ### 设置与`methods/bedwarsSettings.js`
 
 - **新增** 物品`bedwars:settings`。
 - **移除** 移除了所有的设置命令，转而使用设置菜单代替。
-- **新增** 为`settings`对象新增了`settings.miscellaneous.playerCanThrowItemsInVoid`，控制虚空扔物品的设置。
+- **新增** 为`settings`对象新增了以下属性：
+  - `settings.miscellaneous.playerCanThrowItemsInVoid`，控制虚空扔物品的设置。
+  - `settings.beforeGaming.waiting.maxPlayerCount`，控制一局中最多有多少玩家能够参与游戏。
+  - `settings.beforeGaming.reload.clearSpeed`，控制清除地图的速度。
+  - `settings.beforeGaming.reload.loadSpeed`，控制加载地图的速度。
+  - `settings.beforeGaming.teamAssign.mode`，控制队伍分配的方式。
+  - `settings.beforeGaming.teamAssign.assignBeforeGaming`，是否在开始前就随机组队。
+  - `settings.beforeGaming.teamAssign.playerSelectEnabled`，是否启用自由选队。
+  - `settings.gaming.resourceInterval.iron`，平均每个铁的基准生成间隔。
+  - `settings.gaming.resourceInterval.gold`，金基准生成间隔。
+  - `settings.gaming.resourceInterval.diamond`，钻石基准生成间隔。
+  - `settings.gaming.resourceInterval.emerald`，绿宝石基准生成间隔。
+  - `settings.gaming.resourceInterval.soloSpeedMultiplier`，单挑模式下的生成间隔乘数。
+  - `settings.gaming.invalidTeam.enableTest`，是否启用无效队伍的检测。
+  - `settings.gaming.invalidTeam.spawnTraders`，无效队伍是否生成商人。
 - **更改** 为`settings`对象进行了以下重命名：
-  - `settings.minWaitingPlayers` → `settings.waiting.minWaitingPlayers`；
-  - `settings.gameStartWaitingTime` → `settings.waiting.gameStartWaitingTime`；
+  - `settings.minWaitingPlayers` → `settings.beforeGaming.waiting.minPlayerCount`；
+  - `settings.gameStartWaitingTime` → `settings.beforeGaming.waiting.gameStartWaitingTime`；
   - `settings.resourceMaxSpawnTimes.iron` → `settings.gaming.resourceLimit.iron`；
   - `settings.resourceMaxSpawnTimes.gold` → `settings.gaming.resourceLimit.gold`；
   - `settings.resourceMaxSpawnTimes.diamond` → `settings.gaming.resourceLimit.diamond`；
   - `settings.resourceMaxSpawnTimes.emerald` → `settings.gaming.resourceLimit.emerald`；
   - `settings.respawnTime.normalPlayers` → `settings.gaming.respawnTime.normalPlayers`；
   - `settings.respawnTime.rejoinedPlayers` → `settings.gaming.respawnTime.rejoinedPlayers`；
-  - `settings.invalidTeamCouldSpawnResources` → `settings.gaming.invalidTeamCouldSpawnResources`；
+  - `settings.invalidTeamCouldSpawnResources` → `settings.gaming.invalidTeam.spawnResources`；
   - `settings.randomMap.allow2Teams` → `settings.mapEnabled.classicTwoTeamsEnabled`和`settings.mapEnabled.captureTwoTeamsEnabled`；
   - `settings.randomMap.allow4Teams` → `settings.mapEnabled.classicFourTeamsEnabled`；
   - `settings.randomMap.allow8Teams` → `settings.mapEnabled.classicEightTeamsEnabled`；

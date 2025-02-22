@@ -1,12 +1,12 @@
 /** ===== 游戏前 ===== */
 
-import { system } from "@minecraft/server";
 import { map } from "../../methods/bedwarsMaps.js";
 import { settings } from "../../methods/bedwarsSettings.js";
 import { tickToSecond } from "../../methods/time.js";
 import { getPlayerAmount, showTitle, eachPlayer, setPlayerGamemode } from "../../methods/playerManager.js";
 import { overworld, Vector } from "../../methods/positionManager.js";
 import { eachTeam } from "../../methods/bedwarsTeam.js";
+import { giveItem, hasItem } from "../../methods/itemManager.js";
 
 /** 在玩家集体在大厅等待时所执行的事件
  * @description 非创造或冒险模式的玩家，需要调整游戏模式。禁止玩家跑出去。
@@ -30,6 +30,9 @@ export function waiting() {
             // 将非创造模式的玩家改为冒险模式
             setPlayerGamemode( player, "adventure" );
 
+            // 给予创造模式玩家一个设置（当该玩家没有设置的时候）
+            if ( player.getGameMode() === "creative" && !hasItem( player, "bedwars:settings" ) ) { giveItem( player, "bedwars:settings" ); }
+
         } )
 
         // 加载阶段下，重新加载地图
@@ -40,17 +43,33 @@ export function waiting() {
 
             /** 清除前的准备工作 */
             if ( loadInfo.loadStage === 0 ) {
-                nextStage( true, () => {} );
+                if ( settings.beforeGaming.reload.clearSpeed === 0 ) { loadInfo.mapClear.timeCostPerLayer *= 1.75; }
+                else if ( settings.beforeGaming.reload.clearSpeed === 1 ) { loadInfo.mapClear.timeCostPerLayer *= 1.50; }
+                else if ( settings.beforeGaming.reload.clearSpeed === 2 ) { loadInfo.mapClear.timeCostPerLayer *= 1.25; }
+                else if ( settings.beforeGaming.reload.clearSpeed === 4 ) { loadInfo.mapClear.timeCostPerLayer *= 0.75; }
+                else if ( settings.beforeGaming.reload.clearSpeed === 5 ) { loadInfo.mapClear.timeCostPerLayer *= 0.50; }
+                else if ( settings.beforeGaming.reload.clearSpeed === 6 ) { loadInfo.mapClear.timeCostPerLayer *= 0.25; }
+                loadInfo.mapClear.timeCostPerLayer = Math.ceil( loadInfo.mapClear.timeCostPerLayer );
+                loadInfo.mapClear.countdown = loadInfo.mapClear.timeCostPerLayer * loadInfo.mapClear.currentLayer;
+                nextStage( true, () => { } );
             }
 
             /** 清除原场景 */
             else if ( loadInfo.loadStage === 1 ) {
-                if ( system.currentTick % loadInfo.mapClear.timeCostPerLayer === 0 ) {
+                loadInfo.mapClear.countdown--;
+                if ( loadInfo.mapClear.countdown % loadInfo.mapClear.timeCostPerLayer === 0 ) {
                     loadInfo.mapClear.clear();
                 }
                 nextStage(
-                    loadInfo.mapClear.currentLayer === 0,
+                    loadInfo.mapClear.countdown <= 0,
                     () => {
+                        if ( settings.beforeGaming.reload.loadSpeed === 0 ) { loadInfo.mapReload.totalTime *= 1.75; }
+                        else if ( settings.beforeGaming.reload.loadSpeed === 1 ) { loadInfo.mapReload.totalTime *= 1.50; }
+                        else if ( settings.beforeGaming.reload.loadSpeed === 2 ) { loadInfo.mapReload.totalTime *= 1.25; }
+                        else if ( settings.beforeGaming.reload.loadSpeed === 4 ) { loadInfo.mapReload.totalTime *= 0.75; }
+                        else if ( settings.beforeGaming.reload.loadSpeed === 5 ) { loadInfo.mapReload.totalTime *= 0.50; }
+                        else if ( settings.beforeGaming.reload.loadSpeed === 6 ) { loadInfo.mapReload.totalTime *= 0.25; }
+                        loadInfo.mapReload.countdown = loadInfo.mapReload.totalTime;
                         loadInfo.mapReload.loadBorder();
                         loadInfo.mapReload.loadStructure();
                     }
@@ -77,7 +96,7 @@ export function waiting() {
                     loadInfo.teamIslandColor.countdown === 0,
                     () => {
                         loadInfo.isLoading = false;
-                        map().gameStartCountdown = settings.waiting.gameStartWaitingTime;
+                        map().gameStartCountdown = settings.beforeGaming.waiting.gameStartWaitingTime;
                     }
                 )
             }
@@ -89,7 +108,7 @@ export function waiting() {
         else {
 
             // 大于规定的人数时，开始倒计时
-            if ( getPlayerAmount() >= settings.waiting.minWaitingPlayers ) {
+            if ( getPlayerAmount() >= settings.beforeGaming.waiting.minPlayerCount ) {
 
                 // 倒计时
                 map().gameStartCountdown--;
@@ -115,17 +134,17 @@ export function waiting() {
                 } );
 
                 // 倒计时结束后，开始游戏
-                if ( map().gameStartCountdown === 0 ) {
+                if ( map().gameStartCountdown <= 0 ) {
                     map().gameStart();
                 };
 
             }
 
             // 人数不足时，且已经开始倒计时，则取消倒计时
-            else if ( map().gameStartCountdown < settings.waiting.gameStartWaitingTime ) {
+            else if ( map().gameStartCountdown < settings.beforeGaming.waiting.gameStartWaitingTime ) {
 
                 // 重置倒计时
-                map().gameStartCountdown = settings.waiting.gameStartWaitingTime;
+                map().gameStartCountdown = settings.beforeGaming.waiting.gameStartWaitingTime;
 
                 // 提醒玩家倒计时已取消
                 eachPlayer( player => {

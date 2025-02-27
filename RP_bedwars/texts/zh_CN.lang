@@ -1,22 +1,3 @@
-### ===== 物品重命名 =====
-### 主要用于辨认特定名称的物品，用于命令执行
-item.bed.black.name=黑色床
-item.bed.red.name=红色床
-item.bed.green.name=绿色床
-item.bed.brown.name=棕色床
-item.bed.blue.name=蓝色床
-item.bed.purple.name=紫色床
-item.bed.cyan.name=青色床
-item.bed.silver.name=淡灰色床
-item.bed.gray.name=灰色床
-item.bed.pink.name=粉色床
-item.bed.lime.name=黄绿色床
-item.bed.yellow.name=黄色床
-item.bed.lightBlue.name=淡蓝色床
-item.bed.magenta.name=品红色床
-item.bed.orange.name=橙色床
-item.bed.white.name=白色床
-
 ### ===== 新实体 =====
 entity.bedwars:diamond_spawner.name=钻石生成点
 entity.bedwars:emerald_spawner.name=绿宝石生成点

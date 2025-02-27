@@ -268,6 +268,7 @@ message.bedDestroyed.allTeams=§l§c你的床已经自毁！
 message.enderChestItemReleased=§a%s的末影箱内物品已掉落在了所在团队的资源池。
 message.selfTeamPlayer.breakingBed=§c你不能破坏自己队伍的床！
 message.invalidPlayer.breakingBed=§c你没有破坏床的权限！
+message.teamEliminated=§l团灭 > §r%s队§c已被淘汰！
 
 #### 常规（待删除）
 message.bedDestroyed=§l床被破坏了 > §r§7你的床被 %s §7破坏！
@@ -284,7 +285,6 @@ message.playerDied.finalKill.beKilled=%s§7被%s§7击杀。§l§b最终击杀�
 message.playerDied.finalKill.beShot=%s§7被%s§7射杀。§l§b最终击杀！
 message.playerDied.finalKill.beKilledVoid=%s§7被%s§7扔下了虚空。§l§b最终击杀！
 message.playerDied.finalKill.beKilledFall=%s§7被%s§7扔下了悬崖。§l§b最终击杀！
-message.teamEliminated=§l团灭 > §r%s队§c已被淘汰！
 
 #### 样式：默认
 message.kill.beKilled.default=%s§7被%s§7击杀。

@@ -49,11 +49,13 @@ tile.bedwars:obsidian.name=Obsidian
 tile.bedwars:oak_planks.name=Oak Planks
 
 ### ===== New Items =====
+
 #### Resources
 item.bedwars:diamond=Diamond
 item.bedwars:emerald=Emerald
 item.bedwars:iron_ingot=Iron Ingot
 item.bedwars:gold_ingot=Gold Ingot
+
 #### Gadgets
 item.bedwars:magic_milk=Magic Milk
 item.bedwars:potion_invisibility=Invisibility Potion (30 seconds)
@@ -65,7 +67,12 @@ item.bedwars:dream_defender=Dream Defender
 item.bedwars:fireball=Fireball
 item.bedwars:knockback_stick=Stick (Knockback I)
 tile.bedwars:tnt.name=TNT
+
 #### Tools
+item.bedwars:wooden_sword=Wooden Sword
+item.bedwars:stone_sword=Stone Sword
+item.bedwars:iron_sword=Iron Sword
+item.bedwars:diamond_sword=Diamond Sword
 item.bedwars:wooden_pickaxe=Wooden Pickaxe
 item.bedwars:iron_pickaxe=Iron Pickaxe
 item.bedwars:golden_pickaxe=Golden Pickaxe
@@ -75,9 +82,11 @@ item.bedwars:stone_axe=Stone Axe
 item.bedwars:iron_axe=Iron Axe
 item.bedwars:diamond_axe=Diamond Axe
 item.bedwars:shears=Shears
+
 #### Beds
 item.bedwars:red_bed=Red Bed
 item.bedwars:blue_bed=Blue Bed
+
 #### Team Apparels
 item.bedwars:red_helmet=Red Hat
 item.bedwars:red_chestplate=Red Shirt
@@ -129,6 +138,7 @@ item.bedwars:iron_leggings=Iron Leggings
 item.bedwars:iron_boots=Iron Boots
 item.bedwars:diamond_leggings=Diamond Leggings
 item.bedwars:diamond_boots=Diamond Boots
+
 #### Shopitems
 tile.bedwars:shopitem_wool.name=§aWool
 tile.bedwars:shopitem_stained_hardened_clay.name=§aHardened Clay
@@ -192,6 +202,7 @@ item.bedwars:upgrade_counter_offensive_trap=§aCounter-Offensive Trap
 item.bedwars:upgrade_alarm_trap=§aAlarm Trap
 item.bedwars:upgrade_miner_fatigue_trap=§aMiner Fatigue Trap
 
+#### Debug Items
 item.bedwars:settings=Settings
 
 ## ===== Team Names =====
@@ -209,6 +220,58 @@ team.purple=§5P
 
 ## ===== Messages =====
 
+### --- Game Start ---
+
+title.needsMorePlayer=§cNeeds More Players...
+message.needsMorePlayer=§cWe don't have enough players! Start cancelled.
+
+message.gameStart=§eThe game starts in %s§e seconds!
+
+### --- Mode Intros ---
+
+message.greenLine=§a§l---------------
+message.gameStartTitle.classic=§f§lBED WARS (CLASSIC)
+message.gameStartIntroduction.classic=§e§lProtect your bed and destroy the enemy's beds, collect iron ingots, gold ingots, diamonds and emeralds to upgrade and make yourself and your team stronger.
+message.gameStartTitle.capture=§f§lBED WARS (CAPTURE)
+message.gameStartIntroduction.capture=§e§lBuy and place more beds to cut into your opponent's score, or destroy all of their beds before they can place more and knock them all out for the ultimate victory.
+message.gameStartTitle.experience=§f§l起床战争（经验模式）
+message.gameStartIntroduction.experience=§e§l保护你的床并摧毁敌人的床，资源将自动转化为经验，利用经验购买道具。
+message.gameStartTitle.rush=§f§l起床战争（疾速模式）
+message.gameStartIntroduction.rush=§e§l所有资源生成点都为满级！你的床有三层保护！手持羊毛左键点击开启建桥模式！
+message.gameStartTitle.voidless=§f§l起床战争（无虚空模式）
+message.gameStartIntroduction.voidless=§e§l保护你的床并摧毁敌人的床，但是现在不再有虚空了！你的床有三层保护！
+message.gameStartTitle.offensiveAndDefensive=§f§l起床战争（攻防战）
+message.gameStartIntroduction.offensiveAndDefensive=§e§l所有玩家分为攻方和守方，在规定时间内攻方拿下三张床即可胜利，守方则尽一切可能阻止攻方！
+message.gameStartTitle.noResource=§f§l起床战争（无资源模式）
+message.gameStartIntroduction.noResource=§e§l保护你的床并摧毁敌人的床，方块自动补充，武器装备固定，没有资源点和商店。速战速决！
+message.gameStartTitle.skywars=§f§l起床战争（空岛战争模式）
+message.gameStartIntroduction.skywars=§e§l保护你的床并摧毁敌人的床，但是场景可破坏，资源全部来自岛上的箱子！
+message.gameStartTitle.defend=§f§l起床战争（死守模式）
+message.gameStartIntroduction.defend=§e§l保护你的床并摧毁敌人的床。但是，当你失去床后，你将被淘汰！
+
+### --- Kill And Bed Destruction ---
+### Useful templates: 
+### { translate: `message.bedDestroyed.${killStyle}`, with: { rawtext: [ { translate: `message.selfBed` } ] } }
+### { translate: `message.bedDestroyed.${killStyle}`, with: { rawtext: [ { translate: `message.otherBed`, with: { rawtext: [ { text: `team.${id}` } ] } } ] } }
+
+#### Normal
+title.bedDestroyed=§cBED DESTROYED!
+subtitle.bedDestroyed=You will no longer respawn!
+subtitle.bedDestroyed.allTeams=All beds have been destroyed!
+title.deathMatch=§cSudden Death
+message.finalKill=§l§bFINAL KILL!
+message.kill.died=%s§7 died.
+message.kill.fellIntoVoid=%s§7 fell into the void.
+message.selfBed=§7Your bed
+message.otherBed=Bed %s
+message.bedDestroyed.allTeams=§l§cYour bed has been destroyed!
+message.enderChestItemReleased=§aContents of %s's Ender Chest have been dropped into their fountain.
+message.selfTeamPlayer.breakingBed=§cYou can't destroy your own bed!
+message.invalidPlayer.breakingBed=§cYou don't have permission to destroy the bed!
+message.teamEliminated=§lTEAM ELIMINATED > §rTeam %s§c has been eliminated!
+
+#### Normal (Will Be Deleted)
+message.bedDestroyed=§lBED DESTRUCTION > §r§7Your bed was destroyed by %s§7!
 message.otherBedDestroyed=§lBED DESTRUCTION > §rBed %s §7was destroyed by %s§7!
 message.playerDied.died=%s§7 died.
 message.playerDied.fellIntoVoid=%s§7 fell into the void.
@@ -222,34 +285,123 @@ message.playerDied.finalKill.beKilled=%s§7 was killed by %s§7. §l§bFINAL KIL
 message.playerDied.finalKill.beShot=%s§7 was shot by %s§7.§l§bFINAL KILL!
 message.playerDied.finalKill.beKilledVoid=%s§7 was knocked into the void by %s§7. §l§bFINAL KILL!
 message.playerDied.finalKill.beKilledFall=%s§7 was knocked off a cliff by %s§7. §l§bFINAL KILL!
-message.enderChestItemReleased=§aContents of %s's Ender Chest have been dropped into their fountain.
-message.teamEliminated=§lTEAM ELIMINATED > §rTeam %s§c has been eliminated!
+
+#### Style: Default
+message.kill.beKilled.default=%s§7 was killed by %s§7.
+message.kill.beKilledVoid.default=%s§7 was knocked into the void by %s§7.
+message.kill.beShot.default=%s§7was shot by %s§7.
+message.kill.beKilledFall.default=%s§7 was knocked off a cliff by %s§7.
+message.kill.beKilledGolem.default=%s§7 was killed by %s§7's Golem.
+message.bedDestroyed.default=§l床被破坏了 > §r%s §7was destroyed by %s§7!
+
+#### 样式：火焰
+message.kill.beKilled.flame=%s§7被%s§7击倒。
+message.kill.beKilledVoid.flame=%s§7被%s§7化为粉尘。
+message.kill.beShot.flame=%s§7被%s§7熔化。
+message.kill.beKilledFall.flame=%s§7被%s§7化为灰烬。
+message.kill.beKilledGolem.flame=%s§7被%s§7的傀儡油炸了。
+message.bedDestroyed.flame=§l床被破坏了 > §r%s的床§7被%s§7焚烧！
+
+#### 样式：西部
+message.kill.beKilled.west=%s§7被%s§7中箭无数。
+message.kill.beKilledVoid.west=%s§7被%s§7逼入末路。
+message.kill.beShot.west=%s§7因%s§7用炸药炸死。
+message.kill.beKilledFall.west=%s§7在一场饮酒比赛中输给了%s§7。
+message.kill.beKilledGolem.west=%s§7输掉了与%s§7的傀儡的对决。
+message.bedDestroyed.west=§l床被破坏了 > §r%s的床§7被%s§7冻住！
+
+#### 样式：光荣
+message.kill.beKilled.glory=%s§7死于与%s§7的近战。
+message.kill.beKilledVoid.glory=%s§7与%s§7战至边缘。
+message.kill.beShot.glory=%s§7死于%s§7的百步穿杨之术。
+message.kill.beKilledFall.glory=%s§7因%s§7而跌跌撞撞地滑落边缘。
+message.kill.beKilledGolem.glory=%s§7与%s§7的傀儡的跳起了探戈。
+message.bedDestroyed.glory=§l床被破坏了 > §r%s的床§7不得不向%s§7高举白旗！
+
+#### 样式：海盗
+message.kill.beKilled.pirate=%s§7被%s§7塞进了戴维·琼斯的箱子。
+message.kill.beKilledVoid.pirate=%s§7被%s§7的加农炮炸死了。
+message.kill.beShot.pirate=%s§7被%s§7射杀。
+message.kill.beKilledFall.pirate=%s§7被%s§7的魔法杀死了。
+message.kill.beKilledGolem.pirate=%s§7被%s§7的傀儡用金属杀死了。
+message.bedDestroyed.pirate=§l床被破坏了 > §r%s的床§7被%s§7的大炮轰成了渣！
+
+#### 样式：爱情
+message.kill.beKilled.love=%s§7受到了%s§7的冷淡。
+message.kill.beKilledVoid.love=%s§7被%s§7的爱情炸弹击中。
+message.kill.beShot.love=%s§7被%s§7的丘比特之箭射杀。
+message.kill.beKilledFall.love=%s§7被%s§7赶出了联盟。
+message.kill.beKilledGolem.love=%s§7不敌%s§7的傀儡。
+message.bedDestroyed.love=§l床被破坏了 > §r%s的床§7被%s§7拆解！
+
+#### 样式：圣诞老人工坊
+message.kill.beKilled.christmas=%s§7被%s§7打包成了礼物。
+message.kill.beKilledVoid.christmas=%s§7因%s§7而摔到硬木地板上而死。
+message.kill.beShot.christmas=%s§7被%s§7列入淘气名单。
+message.kill.beKilledFall.christmas=%s§7被%s§7推下了滑坡。
+message.kill.beKilledGolem.christmas=%s§7被%s§7的傀儡做成了姜饼。
+message.bedDestroyed.christmas=§l床被破坏了 > §r%s的床§7被%s§7用来交换饼干和牛奶！
+
+#### 样式：表情包
+message.kill.beKilled.meme=%s§7被%s§7完爆。
+message.kill.beKilledVoid.meme=%s§7被%s§7击败。
+message.kill.beShot.meme=%s§7被%s§7删了一记耳光。
+message.kill.beKilledFall.meme=%s§7被%s§7烤熟了。
+message.kill.beKilledGolem.meme=%s§7被%s§7的傀儡捉弄致死。
+message.bedDestroyed.meme=§l床被破坏了 > §r%s的床§7被%s§7做成表情包！
+
+#### 样式：打包
+message.kill.beKilled.pack=%s§7被%s§7打包成了礼物。
+message.kill.beKilledVoid.pack=%s§7被%s§7打成了蝴蝶结。
+message.kill.beShot.pack=%s§7被%s§7粘住了。
+message.kill.beKilledFall.pack=%s§7被%s§7的礼物绊倒了。
+message.kill.beKilledGolem.pack=%s§7被%s§7的傀儡绑起来了。
+message.bedDestroyed.pack=§l床被破坏了 > §r%s的床§7被%s§7装满了面巾纸！
+
+#### 样式：胜利
+message.kill.beKilled.victory=%s§7被%s§7§e打败§7。
+message.kill.beFinalKilled.victory=%s§7成为了%s§7的第§e#%s§7个最终击杀。
+message.kill.beKilledVoid.victory=%s§7被%s§7推入§e虚空§7。
+message.kill.beShot.victory=%s§7被%s§7§e射杀§7。
+message.kill.beKilledFall.victory=%s§7被%s§7击落边缘。
+message.kill.beKilledGolem.victory=%s§7被%s§7的傀儡§e打败§7。
+message.bedDestroyed.victory=§l床被破坏了 > §r%s的床§7是%s§7破坏的第§e#%s§7张床！
+
+#### 样式：荣耀
+message.kill.beKilled.honour=%s§7被%s§7§6践踏§7。
+message.kill.beFinalKilled.honour=%s§7成为了%s§7的第§e#%s§7个最终击杀。
+message.kill.beKilledVoid.honour=%s§7被%s§7掷落§6深渊§7。
+message.kill.beShot.honour=%s§7被%s§7§6射杀§7。
+message.kill.beKilledFall.honour=%s§7被%s§7重重地击落§6地面§7。
+message.kill.beKilledGolem.honour=%s§7被%s§7的傀儡§6超越§7。
+message.bedDestroyed.honour=§l床被破坏了 > §r%s的床§7是%s§7破坏的第§e#%s§7张床！
+
+### --- Death and respawn ---
+
+title.respawning=§cYOU DIED!
+subtitle.respawning=§eYou will respawn in §c%s§e seconds!
+message.respawning=§eYou will respawn in §c%s§e seconds!    
+
+title.respawned=§aRESPAWNED!
+subtitile.respawned= 
+message.respawned=§eYou have respawned!
+
+message.playerRejoin.haveBed=§eYou bed hasn't been destroyed yet!
+message.playerRejoin.haveNoBed=§cYou bed has been destroyed! You will no longer respawn!
+
+message.eliminated=§cYou have been eliminated!
+
+### --- Purchase Items ---
 
 message.purchaseItemsSuccessfully=§aYou purchased §6%s
 message.purchaseTeamUpgradeSuccessfully=§6%s§a purchased §6%s
-
-message.diamondSpawnerUpgradedToTier2=§bDimaond Generators§e has been upgraded to Tier §cII§e!
-message.diamondSpawnerUpgradedToTier3=§bDiamond Generators§e has been upgraded to Tier §cIII§e!
-message.emeraldSpawnerUpgradedToTier2=§2Emerald Generators§e has been upgraded to Tier §cII§e!
-message.emeraldSpawnerUpgradedToTier3=§2Emerald Generators§e has been upgraded to Tier §cIII§e!
-
-## Warnings
-message.selfTeamPlayer.breakingBed=§cYou can't destroy your own bed!
-message.invalidPlayer.breakingBed=§cYou don't have permission to destroy the bed!
-message.invalidPlayer.purchaseItems=§cYou don't have permission to purchase the item!
-message.invalidTeam=§cInvalid team!
-message.invalidTeamId=§c%s is not a valid team id!
-message.breakingInvalidBlocks=§cYou can only break blocks placed by a player!
 message.resourceNotEnough=§cYou don't have enough %s! Need %sx%s more!
 message.alreadyGotItem=§cYou already have this item!
 message.needItem=§cYou need purchase %s first to purchase this item!
 message.trapQueueFull=§cTrap queue full!
-message.magicMilkTimeOut=§cYour Magic Milk wore off!
-message.beHitWhenInvisibility=§cYou took damage and lost your invisibility!
-message.eliminated=§cYou have been eliminated!
-message.heightLimit=§cBuild height limit reached!
-message.areaNotAllowed=§cYou can't enter this area!
-message.capture.bedPositionNotInvalid=§cYou cannot place a bed here! Please place it on a valid bedrock position!
+message.invalidPlayer.purchaseItems=§cYou don't have permission to purchase the item!
+
+### --- Traps ---
 
 title.trapTriggered=§cTRAP TRIGGERED!
 subtitle.trapTriggered=Your %s has been set off!
@@ -259,32 +411,32 @@ title.trapTriggered.alarmTrap=§cALARM!!!
 subtitle.trapTriggered.alarmTrap=Your Alarm Trap has been set off by Team %s§f %s§f!    #### Hope you can use %1,%2... instead of using %s ~
 message.trapTriggered.alarmTrap=§l§cThe Alarm Trap has been set off by Team %s §c%s§c!
 
-title.bedDestroyed=§cBED DESTROYED!
-subtitle.bedDestroyed=You will no longer respawn!
-message.bedDestroyed=§lBED DESTRUCTION > §r§7Your bed was destroyed by %s§7!
-subtitle.bedDestroyed.allTeams=All beds have been destroyed!
-message.bedDestroyed.allTeams=§l§cYour bed has been destroyed!
+### --- Resource Upgrade ---
 
-title.respawning=§cYOU DIED!
-subtitle.respawning=§eYou will respawn in §c%s§e seconds!
-message.respawning=§eYou will respawn in §c%s§e seconds!    
-message.playerRejoin.haveBed=§eYou bed hasn't been destroyed yet!
-message.playerRejoin.haveNoBed=§cYou bed has been destroyed! You will no longer respawn!
+message.diamondSpawnerUpgradedToTier2=§bDimaond Generators§e has been upgraded to Tier §cII§e!
+message.diamondSpawnerUpgradedToTier3=§bDiamond Generators§e has been upgraded to Tier §cIII§e!
+message.emeraldSpawnerUpgradedToTier2=§2Emerald Generators§e has been upgraded to Tier §cII§e!
+message.emeraldSpawnerUpgradedToTier3=§2Emerald Generators§e has been upgraded to Tier §cIII§e!
 
-title.respawned=§aRESPAWNED!
-subtitile.respawned= 
-message.respawned=§eYou have respawned!
+### --- Game Over ---
 
-title.deathMatch=§cSudden Death
 title.gameOver=§l§cGAME OVER!
 title.victory=§l§6VICTORY
-
 message.gameOver.endInATie=§r§cThe game ended in a draw! No winner!
-message.greenLine=§a§l---------------
-message.gameStartTitle.classic=§f§lBED WARS (CLASSIC)
-message.gameStartIntroduction.classic=§e§lProtect your bed and destroy the enemy's beds, collect iron ingots, gold ingots, diamonds and emeralds to upgrade and make yourself and your team stronger.
-message.gameStartTitle.capture=§f§lBED WARS (CAPTURE)
-message.gameStartIntroduction.capture=§e§lBuy and place more beds to cut into your opponent's score, or destroy all of their beds before they can place more and knock them all out for the ultimate victory.
+
+### --- Height limit ---
+
+message.heightLimit.max=§cBuild height limit reached!
+message.heightLimit.min=§cYou can't place block here!
+
+### --- Warning ---
+
+message.breakingInvalidBlocks=§cYou can only break blocks placed by a player!
+message.magicMilkTimeOut=§cYour Magic Milk wore off!
+message.beHitWhenInvisibility=§cYou took damage and lost your invisibility!
+message.areaNotAllowed=§cYou can't enter this area!
+
+### --- Capture Mode ---
 
 title.capture.allBedDestroyed=All beds of Team %s §chas been destroyed!
 subtitle.capture.allBedDestroyed.other=Eliminate all enemies to win!
@@ -297,11 +449,12 @@ message.capture.allBedDestroyed.self=§cAll your beds have been destroyed and yo
 message.respawnTipWhenHaveBed=§cDon't get discouraged, this may be temporary! When your team gets a new bed, you will respawn!
 message.respawn.newBed=§cBecause the team has obtained a new bed, the eliminated members of the team will be respawned!
 
-title.needsMorePlayer=§cNeeds More Players...
-message.needsMorePlayer=§cWe don't have enough players! Start cancelled.
+### --- Settings Warning ---
 
-message.gameStart=§eThe game starts in %s§e seconds!
+message.settings.warning.regenerateMapWhenLoading=§cYou can't regenerate map when loading map, please try again later.
+message.settings.warning.allModesDisabled=§cYou can't disable all modes!
 
+### --- Shopitems ---
 message.bedwars:shopitem_wool=Wool
 message.bedwars:shopitem_stained_hardened_clay=Stained Hardened Clay
 message.bedwars:shopitem_planks=Planks

@@ -1,6 +1,6 @@
 /** 
  * ===== 玩家破坏床检测 =====
- * 该文件是基于gaming/playerBreakBlockTest.js而编写的。在实际使用中，应视情况禁用其中的某些函数，然后启用这里的替代函数。
+ * 该文件是基于gaming/playerBreakBlock.js而编写的。在实际使用中，应视情况禁用其中的某些函数，然后启用这里的替代函数。
  */
 
 import { PlayerBreakBlockAfterEvent, Player, world } from "@minecraft/server";

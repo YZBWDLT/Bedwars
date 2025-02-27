@@ -1,7 +1,7 @@
 /** ===== 事件主文件 ===== */
 
 /** MC 核心事件 */
-import { system, world } from "@minecraft/server";
+import { world } from "@minecraft/server";
 
 /** 方法类函数调用 */
 import { createEvent, deleteEvents, deleteEventsWithTag } from "../methods/eventManager";
@@ -19,7 +19,7 @@ import { removeEnderPearl } from "./items/enderPearl";
 
 /** 经典模式函数调用 */
 import { waiting } from "./classic/beforeGaming";
-import { playerBreakBedTest, playerBreakVanillaBlocksTest } from "./classic/playerBreakBlockTest";
+import { playerBreakBedTest, playerBreakVanillaBlocksTest } from "./classic/playerBreakBlock";
 import { maxHeightLimit, minHeightLimit } from "./classic/heightLimit";
 import { equipmentTest } from "./classic/equipmentTest";
 import { applyResistanceNearby, applyYVelocity, dropLoot, preventBreakingVanillaBlocks } from "./classic/explosion";

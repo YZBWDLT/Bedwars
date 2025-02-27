@@ -1,6 +1,6 @@
 import { world } from "@minecraft/server";
 import { alwaysSaturation } from "./events/classic/effects.js";
-import { playerBreakVanillaBlocksTest } from "./events/classic/playerBreakBlockTest.js";
+import { playerBreakVanillaBlocksTest } from "./events/classic/playerBreakBlock.js";
 import { regenerateMap } from "./maps/mapGenerator.js";
 import { createEvent } from "./methods/eventManager.js";
 import { createInterval } from "./methods/intervalManager.js";

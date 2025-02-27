@@ -292,7 +292,7 @@ message.kill.beKilledVoid.default=%s§7 was knocked into the void by %s§7.
 message.kill.beShot.default=%s§7was shot by %s§7.
 message.kill.beKilledFall.default=%s§7 was knocked off a cliff by %s§7.
 message.kill.beKilledGolem.default=%s§7 was killed by %s§7's Golem.
-message.bedDestroyed.default=§l床被破坏了 > §r%s §7was destroyed by %s§7!
+message.bedDestroyed.default=§lBED DESTRUCTION > §r%s §7was destroyed by %s§7!
 
 #### 样式：火焰
 message.kill.beKilled.flame=%s§7被%s§7击倒。

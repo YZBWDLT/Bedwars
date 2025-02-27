@@ -42,7 +42,7 @@
  * ```json
  * {
  *   "module_name": "@minecraft/server-ui",
- *   "version": "1.2.0"
+ *   "version": "1.3.0"
  * }
  * ```
  *
@@ -438,8 +438,21 @@ export class ModalFormResponse extends FormResponse {
     readonly formValues?: (boolean | number | string)[];
 }
 
+export class UIManager {
+    private constructor();
+    /**
+     * @remarks
+     * This function can't be called in read-only mode.
+     *
+     * @throws This function can throw errors.
+     */
+    closeAllForms(player: minecraftserver.Player): void;
+}
+
 // @ts-ignore Class inheritance allowed for native defined classes
 export class FormRejectError extends Error {
     private constructor();
     reason: FormRejectReason;
 }
+
+export const uiManager: UIManager;

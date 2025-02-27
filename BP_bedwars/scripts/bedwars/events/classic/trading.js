@@ -77,34 +77,6 @@ function forbiddenArea() {
 
 /** ===== 方法 ===== */
 
-/** 锁定玩家的物品栏
- * @param {Player} player 
- */
-function lockItem( player ) {
-
-    eachValidSlot( player, slot => {
-
-        /** 如果该槽位的物品不为「始终锁定的物品」，且还未处于锁定状态，则锁定之 */
-        if ( slot.lockMode === "none" && !alwaysLockInInventory.includes( slot.typeId ) ) { slot.lockMode = "inventory"; };
-
-    } );
-
-}
-
-/** 解锁玩家的物品栏
- * @param {Player} player 
- */
-function unlockItem( player ) {
-
-    eachValidSlot( player, slot => {
-
-        /** 如果该槽位的物品不为「始终锁定的物品」，且处于锁定状态，则解锁之 */
-        if ( slot.lockMode === "inventory" && !alwaysLockInInventory.includes( slot.typeId ) ) { slot.lockMode = "none"; };
-
-    } );
-
-}
-
 /** 获取具有特定家族的商人
  * @param {"blocks_and_items" | "weapon_and_armor" | "team_upgrade" | "weapon_and_armor_capture"} traderType 商人类型
  */

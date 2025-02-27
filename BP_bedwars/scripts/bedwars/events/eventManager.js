@@ -21,7 +21,7 @@ import { removeEnderPearl } from "./items/enderPearl";
 import { waiting } from "./classic/beforeGaming";
 import { playerBreakBedTest, playerBreakVanillaBlocksTest } from "./classic/playerBreakBlock";
 import { maxHeightLimit, minHeightLimit } from "./classic/heightLimit";
-import { equipmentTest } from "./classic/equipmentTest";
+import { equipmentTest } from "./classic/equipment";
 import { applyResistanceNearby, applyYVelocity, dropLoot, preventBreakingVanillaBlocks } from "./classic/explosion";
 import { trap } from "./classic/trap";
 import { spawnResources } from "./classic/spawnResources";

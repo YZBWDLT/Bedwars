@@ -92,6 +92,8 @@
 - 更新了行为包的`manifest.json`的版本号到`1.0.20`。
 - 更新了行为包的脚本版本到`@minecraft/server@1.15.0`和`@minecraft/server-ui@1.3.0`。
 - 现在破坏无效的床也不再会报错了。
+- 更名`events/classic/playerBreakBlockTest.js`→`events/classic/playerBreakBlock.js`。
+- 更名`events/classic/equipmentTest.js`→`events/classic/equipment.js`。
 
 #### `BedwarsMap`类，`methods/bedwarsMap.js`的方法
 

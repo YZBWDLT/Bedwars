@@ -11,6 +11,7 @@ import { overworld, positionManager, Vector } from "./positionManager.js";
 import { eventManager } from "../events/eventManager.js";
 import { getScore, removeAllScoreboards, setScore, tryAddScoreboard } from "./scoreboardManager.js";
 import { tickToSecond } from "./time.js";
+import { shopitems } from "./bedwarsShopitem.js";
 
 /**
  * @typedef islandInfo 岛屿信息
@@ -184,7 +185,10 @@ export class BedwarsMap{
     };
 
     /** 地图版本 */
-    version = "Alpha 1.1_01"
+    version = "Alpha 1.1_01";
+
+    /** 地图允许的商店物品 */
+    validShopitems = [ ...shopitems.blocksAndItems, ...shopitems.weaponAndArmor, ...shopitems.teamUpgrade, ];
 
     /** 【构建器】
      * @param {String} id 地图 ID
@@ -231,6 +235,29 @@ export class BedwarsMap{
             const { pos, direction, type } = trader;
             this.traderInfo.push( { pos: positionManager.center( pos ), direction, type } );
         } )
+    };
+
+    /** 设置商人 */
+    setTraders() {
+        this.traderInfo.forEach( traderInfo => {
+            // 生成商人并确定朝向、类型和皮肤
+            let trader = overworld.spawnEntity( "bedwars:trader", traderInfo.pos );
+            trader.setRotation( new Vector( 0, traderInfo.direction ) );
+            trader.triggerEvent( `${traderInfo.type}_trader` );
+            trader.triggerEvent( `assign_skin_randomly` );
+            // 设定名字
+            if ( traderInfo.type === "blocks_and_items" ) { trader.nameTag = `§a方块与物品`; }
+            else if ( traderInfo.type === "weapon_and_armor" ) { trader.nameTag = `§c武器与盔甲`; }
+            else if ( traderInfo.type === "weapon_and_armor_capture" ) { trader.nameTag = `§c武器与盔甲`; }
+            else { trader.nameTag = `§b团队升级`; }
+        } )
+    };
+
+    /** 获取具有特定家族的商人
+     * @param {import("./bedwarsShopitem.js").traderType} traderType 
+     */
+    getTraders( traderType ) {
+        return overworld.getEntities( { type: "bedwars:trader" } ).filter( trader => trader.getComponent( "minecraft:type_family" ).hasTypeFamily( `${traderType}_trader` ) );
     }
 
     /** 设置下一个事件
@@ -373,20 +400,6 @@ export class BedwarsMap{
                 }
             }
         }
-
-        /** 生成商人 @description 按照设定的商人数据，设置其位置、朝向、类型、皮肤、名字。 */
-        let setTrader = () => {
-            this.traderInfo.forEach( traderInfo => {
-                let trader = overworld.spawnEntity( "bedwars:trader", traderInfo.pos );
-                trader.setRotation( new Vector( 0, traderInfo.direction ) );
-                trader.triggerEvent( `${traderInfo.type}_trader` );
-                trader.triggerEvent( `assign_skin_randomly` );
-                if ( traderInfo.type === "blocks_and_items" ) { trader.nameTag = `§a方块与物品`; }
-                else if ( traderInfo.type === "weapon_and_armor" ) { trader.nameTag = `§c武器与盔甲`; }
-                else if ( traderInfo.type === "weapon_and_armor_capture" ) { trader.nameTag = `§c武器与盔甲`; }
-                else { trader.nameTag = `§b团队升级`; }
-            } )
-        };
     
         /** 设置地图阶段 */
         this.gameStage = 1;
@@ -399,7 +412,7 @@ export class BedwarsMap{
         /** 随机分配玩家队伍 */
         assignPlayers();
         /** 安置商人 */
-        setTrader();
+        this.setTraders();
         /** 移除等待大厅 */
         overworld.runCommand( `fill -12 117 -12 12 127 12 air` );
         /** 在重生点下方放置一块屏障（防止薛定谔玩家复活时判定失败） */

@@ -219,7 +219,7 @@ export function playerIsAlive( player ) {
 
 /** 获取玩家的起床战争信息
  * @param {Player} player 要获取信息的玩家
- * @returns {BedwarsPlayer} 玩家的起床战争信息
+ * @returns {BedwarsPlayer|undefined} 玩家的起床战争信息
  */
 export function getPlayerBedwarsInfo( player ) {
     return player.bedwarsInfo

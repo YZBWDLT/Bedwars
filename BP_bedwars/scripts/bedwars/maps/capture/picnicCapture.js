@@ -7,6 +7,7 @@ import { world } from "@minecraft/server";
 import { BedwarsMap } from "../../methods/bedwarsMaps";
 import { BedwarsTeam } from "../../methods/bedwarsTeam";
 import { Vector } from "../../methods/positionManager";
+import { shopitems } from "../../methods/bedwarsShopitem";
 
 /** 创建 2 队夺点地图：野餐 */
 export function createMapPicnicCapture( ) {
@@ -71,6 +72,9 @@ export function createMapPicnicCapture( ) {
         { type: "emerald", pos: new Vector( -7, 69, -11 ) },
         { type: "emerald", pos: new Vector( 8, 69, 12 ) },
     );
+
+    /** 设置地图可购买的物品 */
+    map.validShopitems = [ ...shopitems.blocksAndItems, ...shopitems.weaponAndArmorCapture, ...shopitems.teamUpgrade ];
 
     /** 在 world 类中插入地图信息 */
     world.bedwarsMap = map;

@@ -1,11 +1,13 @@
 /**
- * ===== 陷阱 =====
- * 控制陷阱的冷却倒计时和运行。
- * 冷却机制：当陷阱启用后，进入倒计时状态，倒计时结束后重新进入检测状态。
- * 触发机制：当未处于冷却状态下，并且有敌方玩家接近己方的床时，触发第一个陷阱
+ * ===== 玩家与方块交互逻辑 =====
+ * 【经典模式】
+ * 本文件主要用于：
+ * · 控制陷阱的冷却倒计时和运行；
+ * · 冷却机制：当陷阱启用后，进入倒计时状态，倒计时结束后重新进入检测状态；
+ * · 触发机制：当未处于冷却状态下，并且有敌方玩家接近己方的床时，触发第一个陷阱。
  */
 
-import { Player, system, world } from "@minecraft/server";
+import { Player, system } from "@minecraft/server";
 import { eachTeam } from "../../methods/bedwarsTeam";
 import { BedwarsTeam } from "../../methods/bedwarsTeam";
 import { replaceInventoryItem } from "../../methods/itemManager";

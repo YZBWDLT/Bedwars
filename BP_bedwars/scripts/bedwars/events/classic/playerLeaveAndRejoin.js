@@ -1,5 +1,9 @@
 /**
  * ===== 玩家退出重进检测 =====
+ * 【经典模式】
+ * 本函数主要用于：
+ * · 当玩家退出游戏后，备份数据；
+ * · 当玩家回到游戏后，从备份的数据中恢复数据。
  */
 
 import { Player, PlayerLeaveBeforeEvent, PlayerSpawnAfterEvent, system, world } from "@minecraft/server";

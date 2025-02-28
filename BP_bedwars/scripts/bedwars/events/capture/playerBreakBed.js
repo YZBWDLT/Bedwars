@@ -1,10 +1,13 @@
-/** 
- * ===== 玩家破坏床检测 =====
- * 该文件是基于gaming/playerBreakBlock.js而编写的。在实际使用中，应视情况禁用其中的某些函数，然后启用这里的替代函数。
+/**
+ * ===== 玩家破坏方块逻辑 =====
+ * 【夺点模式】 基于经典模式
+ * 本函数主要用于：
+ * · 当玩家破坏床后，进行判定。
+ * · 如果为别队的床，则将附近重新染色。
  */
 
 import { PlayerBreakBlockAfterEvent, Player, world } from "@minecraft/server";
-import { BedwarsPlayer, eachValidPlayer, getPlayerBedwarsInfo, playerIsValid, warnPlayer } from "../../methods/bedwarsPlayer";
+import { eachValidPlayer, getPlayerBedwarsInfo, playerIsValid, warnPlayer } from "../../methods/bedwarsPlayer";
 import { map } from "../../methods/bedwarsMaps";
 
 import { removeItemEntity } from "../../methods/itemManager";

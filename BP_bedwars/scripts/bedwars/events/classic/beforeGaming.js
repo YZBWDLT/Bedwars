@@ -1,4 +1,11 @@
-/** ===== 游戏前 ===== */
+/**
+ * ===== 游戏前逻辑 =====
+ * 【经典模式】
+ * 本函数主要用于：
+ * · 在开始游戏前，清除并重新加载地图；
+ * · 等待玩家，在玩家人数足够后进行倒计时，倒计时结束后开启游戏；
+ * · 调整玩家的状态。
+ */
 
 import { map } from "../../methods/bedwarsMaps.js";
 import { settings } from "../../methods/bedwarsSettings.js";

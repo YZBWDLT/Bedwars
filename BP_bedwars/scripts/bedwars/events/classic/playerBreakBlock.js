@@ -1,4 +1,10 @@
-/** 玩家破坏方块检测 */
+/**
+ * ===== 玩家破坏方块逻辑 =====
+ * 【经典模式】
+ * 本函数主要用于：
+ * · 阻止玩家破坏原版方块；
+ * · 当玩家破坏床后，进行判定。
+ */
 
 import { system, PlayerBreakBlockBeforeEvent, PlayerBreakBlockAfterEvent, Player } from "@minecraft/server";
 import { settings } from "../../methods/bedwarsSettings";
@@ -8,7 +14,7 @@ import { map } from "../../methods/bedwarsMaps";
 import { removeItemEntity } from "../../methods/itemManager";
 import { overworld, positionManager } from "../../methods/positionManager";
 import { BedwarsTeam } from "../../methods/bedwarsTeam";
-import { getPlayerAmount, showTitle } from "../../methods/playerManager";
+import { showTitle } from "../../methods/playerManager";
 
 /** 玩家破坏原版方块检测
  * @param {PlayerBreakBlockBeforeEvent} event 破坏方块检测事件

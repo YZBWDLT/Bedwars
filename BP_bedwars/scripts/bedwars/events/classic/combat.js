@@ -1,6 +1,11 @@
 /**
- * ===== 玩家死亡判定 =====
- * 包括玩家死亡判定、受伤判定。
+ * ===== 战斗逻辑 =====
+ * 【经典模式】
+ * 本函数主要用于：
+ * · 玩家受伤判定；
+ * · 玩家死亡判定；
+ * · 玩家重生过程判定；
+ * · 当玩家掉落后，施加虚空伤害。
  */
 
 import { Entity, EntityDieAfterEvent, EntityHurtAfterEvent, Player, ProjectileHitBlockAfterEvent, ProjectileHitEntityAfterEvent, world } from "@minecraft/server";

@@ -75,26 +75,10 @@ function getWinningPlayers( winningTeam ) {
 
 /** 获取击杀排名信息 */
 function killCountRank() {
-
-    /** ===== 变量初始化 ===== */
-
-    /** 排名列表 @type { { name: String, totalKillCount: Number }[] } */ let rank = [];
-    /** 第一名 */ let theFirst = "";
-    /** 第二名 */ let theSecond = ``;
-    /** 第三名 */ let theThird = ``;
-
-    /** ===== 按照击杀数进行排名 ===== */
-    
-    getValidPlayers().forEach( player => {
-        let playerInfo = getPlayerBedwarsInfo( player );
-        rank.push( { name: player.name, totalKillCount: playerInfo.killCount.kill + playerInfo.killCount.finalKill } );
-    } );
-    rank.sort( ( a, b ) => b.totalKillCount - a.totalKillCount );
-
-    theFirst = `§e§l击杀数第一名§r§7 - ${rank[0].name} - ${rank[0].totalKillCount}`;
-    if ( rank[1] ) { theSecond = `§6§l击杀数第二名§r§7 - ${rank[1].name} - ${rank[1].totalKillCount}`; }
-    if ( rank[2] ) { theThird = `§c§l击杀数第三名§r§7 - ${rank[2].name} - ${rank[2].totalKillCount}`; }
-
+    /** 排名列表*/
+    const rank = getValidPlayers().map( player => ( { name: player.name, totalKillCount: getPlayerBedwarsInfo( player ).killCount.kill + getPlayerBedwarsInfo( player ).killCount.finalKill } ) ).sort( ( a, b ) => b.totalKillCount - a.totalKillCount );
+    /** 第一名 */ const theFirst = `§e§l击杀数第一名§r§7 - ${rank[0].name} - ${rank[0].totalKillCount}`;
+    /** 第二名 */ const theSecond = rank[1] ? `§6§l击杀数第二名§r§7 - ${rank[1].name} - ${rank[1].totalKillCount}` : ``;
+    /** 第三名 */ const theThird = rank[2] ? `§c§l击杀数第三名§r§7 - ${rank[2].name} - ${rank[2].totalKillCount}` : ``;
     return [ theFirst, theSecond, theThird ];
-    
 }

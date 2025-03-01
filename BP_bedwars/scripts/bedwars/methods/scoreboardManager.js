@@ -132,9 +132,5 @@ export function getScore( objective, participant ) {
  * @param {String} participantName 追踪对象的名称
  */
 export function getObjectiveFromParticipant( participantName ) {
-    /** @type {ScoreboardObjective[]} */ let scoreboards = [];
-    eachScoreboard( obj => {
-        if ( obj.getScores().find( info => info.participant.displayName === participantName ) ) { scoreboards.push( obj ); }
-    } )
-    return scoreboards;
+    return world.scoreboard.getObjectives().filter( obj => obj.getScores().some( info => info.participant.displayName === participantName ) );
 }

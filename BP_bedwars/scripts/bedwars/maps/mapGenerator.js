@@ -63,7 +63,7 @@ export function getValidMaps() {
  */
 export function regenerateMap( mapId = undefined ) {
 
-    /** 获取所有可用地图 @type {String} */
+    /** 获取所有可用地图 */
     let currentValidMaps = getValidMaps();
 
     /** 在所有可用地图中选择一个 */

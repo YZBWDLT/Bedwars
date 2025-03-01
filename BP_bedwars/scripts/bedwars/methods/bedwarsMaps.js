@@ -205,7 +205,7 @@ export class BedwarsMap{
         this.spawnpointPos = new Vector( 0, this.heightLimit.max + 7, 0 );
     };
 
-    /** ===== 基本方法 ===== */
+    // ===== 队伍操作 =====
 
     /** 添加队伍信息
      * @param {...BedwarsTeam} teams 要加入的队伍信息
@@ -215,6 +215,27 @@ export class BedwarsMap{
         this.teamList = currentTeams;
         this.teamCount = currentTeams.length;
     };
+
+    /** 从队伍 ID 获取队伍信息
+     * @param {import("./bedwarsTeam.js").validTeams} id 输入队伍的 ID
+     */
+    getTeam( id ) {
+        return this.teamList.find( team => team.id === id );
+    };
+
+    /** 获取未被淘汰的队伍 */
+    getAliveTeam( ) {
+        return this.teamList.filter( team => team.isEliminated === false )
+    };
+
+    /** 使每个队伍都执行一个函数
+     * @param {function(BedwarsTeam)} func - 一个接受 BedwarsTeam 类型参数的函数
+     */
+    eachTeam( func ) {
+        this.teamList.forEach( team => { func( team ) } )
+    };
+
+    // ===== 资源点操作 =====
 
     /** 添加资源点信息
      * @param {...spawnerInfo} spawners 资源点信息
@@ -226,6 +247,8 @@ export class BedwarsMap{
             this.spawnerInfo[`${type}Info`].push( { pos: changedPos, spawned: 0, } );
         } );
     };
+
+    // ===== 商人操作 =====
 
     /** 添加商人信息
      * @param {...traderInfo} traders 商人信息
@@ -270,10 +293,7 @@ export class BedwarsMap{
         this.gameEvent.nextEventName = nextEventName;
     };
 
-    /** 获取未被淘汰的队伍 */
-    getAliveTeam( ) {
-        return this.teamList.filter( team => team.isEliminated === false )
-    };
+
 
     /** 移除边界外的实体
      * @param {String} entityId 要移除的实体ID

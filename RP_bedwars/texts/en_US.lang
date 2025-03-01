@@ -435,6 +435,7 @@ message.breakingInvalidBlocks=§cYou can only break blocks placed by a player!
 message.magicMilkTimeOut=§cYour Magic Milk wore off!
 message.beHitWhenInvisibility=§cYou took damage and lost your invisibility!
 message.areaNotAllowed=§cYou can't enter this area!
+message.cannotOpenAliveTeamChests=%s§c还未被淘汰，你无法打开这个箱子！
 
 ### --- Capture Mode ---
 

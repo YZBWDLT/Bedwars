@@ -20,7 +20,7 @@ import { removeEnderPearl } from "./items/enderPearl";
 /** 经典模式函数调用 */
 import { waiting } from "./classic/beforeGaming";
 import { playerBreakBedTest, playerBreakVanillaBlocksTest } from "./classic/playerBreakBlock";
-import { maxHeightLimit, minHeightLimit } from "./classic/heightLimit";
+import { maxHeightLimit, minHeightLimit, playerOpenChest } from "./classic/playerUseBlock";
 import { equipmentTest } from "./classic/equipment";
 import { applyResistanceNearby, applyYVelocity, dropLoot, preventBreakingVanillaBlocks } from "./classic/explosion";
 import { trap } from "./classic/trap";
@@ -55,7 +55,7 @@ const tags = {
     /** 装备检测 */ equipmentTest: "equipmentTest",
     /** 爆炸 */ explosion: "explosion",
     /** 游戏事件 */ gameEvents: "gameEvents",
-    /** 高度限制 */ heightLimit: "heightLimit",
+    /** 使用方块 */ playerUseBlock: "playerUseBlock",
     /** 信息板 */ infoBoard: "infoBoard",
     /** 破坏方块 */ playerBreakBlock: "playerBreakBlock",
     /** 玩家退出重进 */ playerLeaveAndRejoin: "playerLeaveAndRejoin",
@@ -153,9 +153,10 @@ export const eventManager = {
         /** 游戏逻辑：游戏事件 */
         createInterval( "gameEventsMain", () => gameEvents(), [ tags.gameLogic, tags.gaming, tags.gameEvents ] );
         createInterval( "teamEliminateAndWin", () => teamEliminateAndWin(), [ tags.gameLogic, tags.gaming, tags.gameEvents ] );
-        /** 游戏逻辑：高度限制 */
-        createEvent( "maxHeightLimit", world.beforeEvents.itemUseOn, event => maxHeightLimit( event ), [ tags.gameLogic, tags.gaming, tags.heightLimit ] );
-        createEvent( "minHeightLimit", world.beforeEvents.itemUseOn, event => minHeightLimit( event ), [ tags.gameLogic, tags.gaming, tags.heightLimit ] );
+        /** 游戏逻辑：玩家使用方块 */
+        createEvent( "maxHeightLimit", world.beforeEvents.playerInteractWithBlock, event => maxHeightLimit( event ), [ tags.gameLogic, tags.gaming, tags.playerUseBlock ] );
+        createEvent( "minHeightLimit", world.beforeEvents.playerInteractWithBlock, event => minHeightLimit( event ), [ tags.gameLogic, tags.gaming, tags.playerUseBlock ] );
+        createEvent( "playerOpenChest", world.beforeEvents.playerInteractWithBlock, event => playerOpenChest( event ), [ tags.gameLogic, tags.gaming, tags.playerUseBlock ] );
         /** 游戏逻辑：信息板 */
         createInterval( "gamingInfoBoard", () => gamingInfoBoard(), [ tags.gameLogic, tags.afterGaming, tags.gaming, tags.infoBoard ], 3 );
         createInterval( "healthScoreboard", () => healthScoreboard(), [ tags.gameLogic, tags.gaming, tags.infoBoard ] );

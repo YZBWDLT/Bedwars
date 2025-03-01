@@ -39,8 +39,8 @@ export function createMapPicnic( ) {
 
     /** 设置地图的队伍 */
     map.addTeams(
-        new BedwarsTeam( "red", { bedPos: new Vector( 0, 65, -62 ), bedRotation: "Rotate270", resourceSpawnerPos: new Vector( 0, 64, -78 ), spawnpointPos: new Vector( 0, 64, -74 ) } ),
-        new BedwarsTeam( "blue", { bedPos: new Vector( 0, 65, 61 ), bedRotation: "Rotate90", resourceSpawnerPos: new Vector( 0, 64, 77 ), spawnpointPos: new Vector( 0, 64, 73 ) } ),
+        new BedwarsTeam( "red", { bedPos: new Vector( 0, 65, -62 ), bedRotation: "Rotate270", resourceSpawnerPos: new Vector( 0, 64, -78 ), spawnpointPos: new Vector( 0, 64, -74 ), chestPos: new Vector( 3, 64, -73 ), } ),
+        new BedwarsTeam( "blue", { bedPos: new Vector( 0, 65, 61 ), bedRotation: "Rotate90", resourceSpawnerPos: new Vector( 0, 64, 77 ), spawnpointPos: new Vector( 0, 64, 73 ), chestPos: new Vector( -3, 64, 72 ), } ),
     );
 
     /** 设置地图商人 */

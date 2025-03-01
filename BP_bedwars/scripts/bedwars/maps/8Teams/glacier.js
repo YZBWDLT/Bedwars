@@ -53,14 +53,14 @@ export function createMapGlacier( ) {
 
     /** 设置地图的队伍 */
     map.addTeams(
-        new BedwarsTeam( "red", { bedPos: new Vector( -32, 81, -65 ), bedRotation: "Rotate270", resourceSpawnerPos: new Vector( -32, 81, -86 ), spawnpointPos: new Vector( -32, 81, -80 ) } ),
-        new BedwarsTeam( "blue", { bedPos: new Vector( 32, 81, -65 ), bedRotation: "Rotate270", resourceSpawnerPos: new Vector( 32, 81, -86 ), spawnpointPos: new Vector( 32, 81, -80 ) } ),
-        new BedwarsTeam( "green", { bedPos: new Vector( 65, 81, -32 ), bedRotation: "None", resourceSpawnerPos: new Vector( 86, 81, -32 ), spawnpointPos: new Vector( 80, 81, -32 ) } ),
-        new BedwarsTeam( "yellow", { bedPos: new Vector( 65, 81, 32 ), bedRotation: "None", resourceSpawnerPos: new Vector( 86, 81, 32 ), spawnpointPos: new Vector( 80, 81, 32 ) } ),
-        new BedwarsTeam( "cyan", { bedPos: new Vector( 32, 81, 65 ), bedRotation: "Rotate90", resourceSpawnerPos: new Vector( 32, 81, 86 ), spawnpointPos: new Vector( 32, 81, 80 ) } ),
-        new BedwarsTeam( "white", { bedPos: new Vector( -32, 81, 65 ), bedRotation: "Rotate90", resourceSpawnerPos: new Vector( -32, 81, 86 ), spawnpointPos: new Vector( -32, 81, 80 ) } ),
-        new BedwarsTeam( "pink", { bedPos: new Vector( -65, 81, 32 ), bedRotation: "Rotate180", resourceSpawnerPos: new Vector( -86, 81, 32 ), spawnpointPos: new Vector( -80, 81, 32 ) } ),
-        new BedwarsTeam( "gray", { bedPos: new Vector( -65, 81, -32 ), bedRotation: "Rotate180", resourceSpawnerPos: new Vector( -86, 81, -32 ), spawnpointPos: new Vector( -80, 81, -32 ) } ),
+        new BedwarsTeam( "red", { bedPos: new Vector( -32, 81, -65 ), bedRotation: "Rotate270", resourceSpawnerPos: new Vector( -32, 81, -86 ), spawnpointPos: new Vector( -32, 81, -80 ), chestPos: new Vector( -35, 81, -76 ), } ),
+        new BedwarsTeam( "blue", { bedPos: new Vector( 32, 81, -65 ), bedRotation: "Rotate270", resourceSpawnerPos: new Vector( 32, 81, -86 ), spawnpointPos: new Vector( 32, 81, -80 ), chestPos: new Vector( 35, 81, -76 ), } ),
+        new BedwarsTeam( "green", { bedPos: new Vector( 65, 81, -32 ), bedRotation: "None", resourceSpawnerPos: new Vector( 86, 81, -32 ), spawnpointPos: new Vector( 80, 81, -32 ), chestPos: new Vector( 76, 81, -35 ), } ),
+        new BedwarsTeam( "yellow", { bedPos: new Vector( 65, 81, 32 ), bedRotation: "None", resourceSpawnerPos: new Vector( 86, 81, 32 ), spawnpointPos: new Vector( 80, 81, 32 ), chestPos: new Vector( 76, 81, 35 ), } ),
+        new BedwarsTeam( "cyan", { bedPos: new Vector( 32, 81, 65 ), bedRotation: "Rotate90", resourceSpawnerPos: new Vector( 32, 81, 86 ), spawnpointPos: new Vector( 32, 81, 80 ), chestPos: new Vector( 35, 81, 76 ), } ),
+        new BedwarsTeam( "white", { bedPos: new Vector( -32, 81, 65 ), bedRotation: "Rotate90", resourceSpawnerPos: new Vector( -32, 81, 86 ), spawnpointPos: new Vector( -32, 81, 80 ), chestPos: new Vector( -35, 81, 76 ), } ),
+        new BedwarsTeam( "pink", { bedPos: new Vector( -65, 81, 32 ), bedRotation: "Rotate180", resourceSpawnerPos: new Vector( -86, 81, 32 ), spawnpointPos: new Vector( -80, 81, 32 ), chestPos: new Vector( -76, 81, 35 ), } ),
+        new BedwarsTeam( "gray", { bedPos: new Vector( -65, 81, -32 ), bedRotation: "Rotate180", resourceSpawnerPos: new Vector( -86, 81, -32 ), spawnpointPos: new Vector( -80, 81, -32 ), chestPos: new Vector( -76, 81, -35 ), } ),
     );
 
     /** 设置地图商人 */

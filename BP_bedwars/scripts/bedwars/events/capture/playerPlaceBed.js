@@ -10,7 +10,6 @@ import { ItemUseOnAfterEvent, world } from "@minecraft/server";
 import { overworld, positionManager, Vector } from "../../methods/positionManager";
 import { map } from "../../methods/bedwarsMaps";
 import { getPlayerBedwarsInfo, playerIsValid } from "../../methods/bedwarsPlayer";
-import { objectInArray } from "../../methods/number";
 
 /** 当玩家对方块使用床时，执行的内容
  * @param {ItemUseOnAfterEvent} event 物品使用前事件
@@ -52,11 +51,11 @@ function getValidBedPoint( usingBlockPos ) {
     /** 所有有效点位 */
     let validPos = map().captureInfo.validBedPoints;
 
-    /** 如果检测点位正好是有效点中的一个，则直接返回该检测点位 */
-    if ( objectInArray( validPos, testPos ) ) { return testPos; }
-    /** 如果检测点位在某个有效点的 z+1 处（即检测点位的 z-1 后为某个有效点，因有效点均取x,y,z最小），则返回检测点位 z-1 后的值 */
-    else if ( objectInArray( validPos, positionManager.add( testPos, 0, 0, -1 ) ) ) { return positionManager.add( testPos, 0, 0, -1 ); }
-    /** 否则，返回未定义 */
+    // 如果检测点位正好是有效点中的一个，则直接返回该检测点位
+    if ( positionManager.hasPosition( validPos, testPos ) ) { return testPos; }
+    // 如果检测点位在某个有效点的 z+1 处（即检测点位的 z-1 后为某个有效点，因有效点均取x,y,z最小），则返回检测点位 z-1 后的值
+    else if ( positionManager.hasPosition( validPos, positionManager.add( testPos, 0, 0, -1 ) ) ) { return positionManager.add( testPos, 0, 0, -1 ) }
+    // 否则，返回未定义
     else { return void 0; }
 
 }

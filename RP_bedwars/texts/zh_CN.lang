@@ -435,6 +435,7 @@ message.breakingInvalidBlocks=§c你只能破坏由玩家放置的方块！
 message.magicMilkTimeOut=§c你的魔法牛奶已失效！
 message.beHitWhenInvisibility=§c你由于受到伤害而显形！
 message.areaNotAllowed=§c你不能进入那里！
+message.cannotOpenAliveTeamChests=%s§c还未被淘汰，你无法打开这个箱子！
 
 ### --- 夺点模式消息 ---
 

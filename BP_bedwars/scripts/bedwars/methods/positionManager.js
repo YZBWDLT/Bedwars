@@ -54,4 +54,31 @@ export const positionManager = {
         return new Vector( pos.x + 0.5, pos.y, pos.z + 0.5 );
     },
 
+    /** 返回两个坐标是否相同
+     * @param {Vector} pos1 坐标1
+     * @param {Vector} pos2 坐标2
+     */
+    isEqual( pos1, pos2 ) {
+        const keys = Object.keys( pos1 );
+        return pos1.length === pos2.length && keys.every( key => pos1[key] === pos2[key] );
+    },
+
+    /** 检查在多个坐标下是否存在特定的坐标
+     * @param {Vector[]} positions 
+     * @param {Vector} testPos 
+     */
+    hasPosition( positions, testPos ) {
+        return positions.some( position => this.isEqual( testPos, position ) );
+    },
+
+    /** 返回两个坐标之间的距离
+     * @param {Vector} pos1 坐标1（必须是x,y,z坐标）
+     * @param {Vector} pos2 坐标2（必须是x,y,z坐标）
+     */
+    distance( pos1, pos2 ) {
+        const { x: x1, y: y1, z: z1 } = pos1;
+        const { x: x2, y: y2, z: z2 } = pos2;
+        return Math.sqrt( (x2-x1)**2+(y2-y1)**2+(z2-z1)**2 );
+    }
+
 }

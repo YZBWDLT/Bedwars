@@ -74,6 +74,10 @@
   - 在等待更多玩家进入时，“等待中...”的后面现在会显示还需要多少玩家进入；
   - 现在会显示版本了。
 
+### 箱子
+
+- 现在其他队伍的玩家不再能开启其他队伍的箱子，除非该队伍已被淘汰。
+
 ### 最低版本需求
 
 - 提高了本模组的最低版本需求到 1.21.50。
@@ -86,6 +90,7 @@
 
 - #24 修复了末影珍珠的出界检测会包括顶面的问题，这个问题可能导致向上扔的末影珍珠被吞掉。
 - #25 修复了在弓击中同队玩家时会多次响起音效的问题。
+- 修复了在最高处或最低处平搭依然会阻止搭路的问题。
 
 ### 底层更新
 
@@ -94,6 +99,16 @@
 - 现在破坏无效的床也不再会报错了。
 - 更名`events/classic/playerBreakBlockTest.js`→`events/classic/playerBreakBlock.js`。
 - 更名`events/classic/equipmentTest.js`→`events/classic/equipment.js`。
+- 更名`events/classic/heightLimit.js`→`events/classic/playerUseBlock.js`，并新增了两个函数：
+  - `playerOpenChest(event) {}`：玩家尝试开其他未淘汰的队伍的箱子时，阻止之；
+  - `safeAreaLimit(event) {}`：玩家尝试在安全区（例如队伍岛屿的重生点、资源点）时，阻止之。
+- **新增** 在`methods/itemManager.js`中新增了`getValidItems(entity) {}`方法。
+- 在`events/classic/trading.js`中移除了有关`capture`的内容，现在是按照地图设置自动处理的一般情况。
+- **新增** 在`methods/positionManager.js`的`positionManager`对象中新增了多个方法：
+  - `isEqual(pos1,pos2) {}`：判断两个坐标是否一致；
+  - `hasPosition(positions, testPos) {}`：判断一个坐标数组里是否存在一个坐标；
+  - `distance(pos1,pos2) {}`：判断两个坐标之间的距离。
+- **移除** 在`methods/number.js`中的`objectInArray(array, object) {}`方法。现在用`positionManager.hasPosition(positions, testPos) {}`代替。
 
 #### `BedwarsMap`类，`methods/bedwarsMap.js`的方法
 
@@ -130,8 +145,9 @@
 
 - **新增** 类型声明`validTeams`、`teamInfo`。
 - **更改** 重命名属性`bedInfo.direction`→`bedInfo.rotation`，并且更改了其类型，由`Number`改为`StructureRotation`。
-- **更改** 现在构建器由`constructor(id,bedPos,bedDirection,resourceSpawnerPos,spawnpointPos)`改为了`constructor(id,teamInfo)`。
+- **更改** 现在构建器由`constructor(id,bedPos,bedDirection,resourceSpawnerPos,spawnpointPos)`改为了`constructor(id,teamInfo)`，并且`teamInfo`中支持输入`chestPos`。
 - **移除** 变量`validTeams`。
+- **移除** 移除属性`chestInfo`，以`chestPos: number`代替。
 
 #### `methods/scoreboardManager.js`
 

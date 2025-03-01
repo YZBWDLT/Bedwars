@@ -36,8 +36,8 @@ export function createMapFrost( ) {
 
     /** 设置地图的队伍 */
     map.addTeams(
-        new BedwarsTeam( "red", { bedPos: new Vector( 0, 72, 59 ), bedRotation: "Rotate90", resourceSpawnerPos: new Vector( 0, 72, 75 ), spawnpointPos: new Vector( 0, 72, 70 ) } ),
-        new BedwarsTeam( "blue", { bedPos: new Vector( 0, 72, -59 ), bedRotation: "Rotate270", resourceSpawnerPos: new Vector( 0, 72, -75 ), spawnpointPos: new Vector( 0, 72, -70 ) } ),
+        new BedwarsTeam( "red", { bedPos: new Vector( 0, 72, 59 ), bedRotation: "Rotate90", resourceSpawnerPos: new Vector( 0, 72, 75 ), spawnpointPos: new Vector( 0, 72, 70 ), chestPos: new Vector( 4, 72, 68 ), } ),
+        new BedwarsTeam( "blue", { bedPos: new Vector( 0, 72, -59 ), bedRotation: "Rotate270", resourceSpawnerPos: new Vector( 0, 72, -75 ), spawnpointPos: new Vector( 0, 72, -70 ), chestPos: new Vector( 4, 72, -68 ), } ),
     );
 
     /** 设置地图商人 */

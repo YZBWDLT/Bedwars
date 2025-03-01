@@ -18,6 +18,7 @@ import { map } from "./bedwarsMaps.js";
  * @property { "None" | "Rotate90" | "Rotate180" | "Rotate270" } bedRotation 床的旋转
  * @property { Vector } spawnpointPos 重生点所在位置
  * @property { Vector } resourceSpawnerPos 资源点所在位置，应设置为对应半砖的上方1格
+ * @property { Vector } chestPos 该队箱子所在位置
  */
 
 /** 【类】队伍类 */
@@ -41,12 +42,7 @@ export class BedwarsTeam{
     /** 重生点信息 */ spawnpoint = new Vector( 0, 0, 0 );
     /** 队伍是否有效，开始时未分配到队员的队伍即为无效队伍 */ isValid = true;
     /** 队伍是否被淘汰，淘汰的队伍是没有床、没有存活队员的有效队伍 */ isEliminated = false;
-    /** 箱子信息 */ chestInfo = {
-        /** 箱子位置 */ chestPos: new Vector( 0, 0, 0 ),
-        /** 箱子朝向 @type {0|1|2|3} */ chestDirection: 0,
-        /** 末影箱位置*/ enderChestPos: new Vector( 0, 0, 0 ),
-        /** 末影箱朝向 @type {0|1|2|3} */ enderChestDirection: 0
-    };
+    /** 箱子位置 */ chestPos = new Vector( 0, 0, 0 );
     /** 团队升级信息 */ teamUpgrade = {
         /** 盔甲强化等级 @type {0|1|2|3|4} */ reinforcedArmor: 0,
         /** 治愈池 */ healPool: false,
@@ -72,18 +68,15 @@ export class BedwarsTeam{
     /** 
      * @param {validTeams} id 队伍 ID
      * @param {teamInfo} teamInfo 队伍基本信息
-     * @param {Vector} bedPos - 床的位置
-     * @param {0|1|2|3} bedDirection - 床的方向
-     * @param {Vector} resourceSpawnerPos - 资源点位置
-     * @param {Vector} spawnpointPos - 重生点位置
      */
     constructor( id, teamInfo ) {
-        const { bedPos, bedRotation, resourceSpawnerPos, spawnpointPos } = teamInfo
+        const { bedPos, bedRotation, resourceSpawnerPos, spawnpointPos, chestPos } = teamInfo
         this.id = id;
         this.bedInfo.pos = bedPos;
         this.bedInfo.rotation = bedRotation;
         this.spawnerInfo.spawnerPos = positionManager.center( resourceSpawnerPos );
         this.spawnpoint = positionManager.center( spawnpointPos );
+        this.chestPos = chestPos;
     };
     /** 获取本队的队伍颜色 */
     getTeamColor( ) {

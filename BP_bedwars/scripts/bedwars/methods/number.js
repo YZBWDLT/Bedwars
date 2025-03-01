@@ -91,30 +91,3 @@ export function removeElementOfArray( array, element ) {
         }
     }
 }
-
-/** 判断由对象组成的数组中是否含有某个对象
- * @param {object[]} array 待检测数组
- * @param {object} object 是否含有的对象
- */
-export function objectInArray(array, object) {
-    // 遍历数组中的每个元素
-    return array.some(item => {
-        // 检查对象的所有属性是否匹配
-        for (let key in object) {
-            if (object.hasOwnProperty(key)) {
-                // 如果属性不匹配，返回 false
-                if (!item.hasOwnProperty(key) || item[key] !== object[key]) {
-                    return false;
-                }
-            }
-        }
-        // 检查数组中的对象是否有多余的属性
-        for (let key in item) {
-            if (item.hasOwnProperty(key) && !object.hasOwnProperty(key)) {
-                return false;
-            }
-        }
-        // 如果所有属性都匹配，返回 true
-        return true;
-    });
-}

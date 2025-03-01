@@ -40,8 +40,8 @@ export function createMapCryptic( ) {
 
     /** 设置地图的队伍 */
     map.addTeams(
-        new BedwarsTeam( "red", { bedPos: new Vector( 2, 77, 73 ), bedRotation: "Rotate90", resourceSpawnerPos: new Vector( 2, 78, 90 ), spawnpointPos: new Vector( 2, 78, 85 ) } ),
-        new BedwarsTeam( "blue", { bedPos: new Vector( 2, 77, -73 ), bedRotation: "Rotate270", resourceSpawnerPos: new Vector( 2, 78, -90 ), spawnpointPos: new Vector( 2, 78, -85 ) } ),
+        new BedwarsTeam( "red", { bedPos: new Vector( 2, 77, 73 ), bedRotation: "Rotate90", resourceSpawnerPos: new Vector( 2, 78, 90 ), spawnpointPos: new Vector( 2, 78, 85 ), chestPos: new Vector( -1, 78, 81 ), } ),
+        new BedwarsTeam( "blue", { bedPos: new Vector( 2, 77, -73 ), bedRotation: "Rotate270", resourceSpawnerPos: new Vector( 2, 78, -90 ), spawnpointPos: new Vector( 2, 78, -85 ), chestPos: new Vector( -1, 78, -81 ), } ),
     );
 
     /** 设置地图商人 */

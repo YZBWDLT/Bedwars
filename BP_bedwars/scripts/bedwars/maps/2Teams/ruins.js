@@ -38,8 +38,8 @@ export function createMapRuins( ) {
 
     /** 设置地图的队伍 */
     map.addTeams(
-        new BedwarsTeam( "red", { bedPos: new Vector( -4, 71, -64 ), bedRotation: "Rotate270", resourceSpawnerPos: new Vector( 0, 72, -82 ), spawnpointPos: new Vector( 0, 72, -78 ) } ),
-        new BedwarsTeam( "blue", { bedPos: new Vector( 4, 71, 64 ), bedRotation: "Rotate90", resourceSpawnerPos: new Vector( 0, 72, 82 ), spawnpointPos: new Vector( 0, 72, 78 ) } ),
+        new BedwarsTeam( "red", { bedPos: new Vector( -4, 71, -64 ), bedRotation: "Rotate270", resourceSpawnerPos: new Vector( 0, 72, -82 ), spawnpointPos: new Vector( 0, 72, -78 ), chestPos: new Vector( 5, 72, -76 ), } ),
+        new BedwarsTeam( "blue", { bedPos: new Vector( 4, 71, 64 ), bedRotation: "Rotate90", resourceSpawnerPos: new Vector( 0, 72, 82 ), spawnpointPos: new Vector( 0, 72, 78 ), chestPos: new Vector( -5, 72, 76 ), } ),
     );
 
     /** 设置地图商人 */

@@ -44,10 +44,10 @@ export function createMapBoletum( ) {
 
     /** 设置地图的队伍 */
     map.addTeams(
-        new BedwarsTeam( "red", { bedPos: new Vector( 0, 69, 66 ), bedRotation: "Rotate90", resourceSpawnerPos: new Vector( 0, 68, 82 ), spawnpointPos: new Vector( 0, 68, 78 ) } ),
-        new BedwarsTeam( "blue", { bedPos: new Vector( -68, 69, 0 ), bedRotation: "Rotate180", resourceSpawnerPos: new Vector( -84, 68, 0 ), spawnpointPos: new Vector( -80, 68, 0 ) } ),
-        new BedwarsTeam( "green", { bedPos: new Vector( -2, 69, -68 ), bedRotation: "Rotate270", resourceSpawnerPos: new Vector( -2, 68, -84 ), spawnpointPos: new Vector( -2, 68, -80 ) } ),
-        new BedwarsTeam( "yellow", { bedPos: new Vector( 66, 69, -2 ), bedRotation: "None", resourceSpawnerPos: new Vector( 82, 68, -2 ), spawnpointPos: new Vector( 78, 68, -2 ) } ),
+        new BedwarsTeam( "red", { bedPos: new Vector( 0, 69, 66 ), bedRotation: "Rotate90", resourceSpawnerPos: new Vector( 0, 68, 82 ), spawnpointPos: new Vector( 0, 68, 78 ), chestPos: new Vector( -3, 68, 77 ), } ),
+        new BedwarsTeam( "blue", { bedPos: new Vector( -68, 69, 0 ), bedRotation: "Rotate180", resourceSpawnerPos: new Vector( -84, 68, 0 ), spawnpointPos: new Vector( -80, 68, 0 ), chestPos: new Vector( -79, 68, -3 ), } ),
+        new BedwarsTeam( "green", { bedPos: new Vector( -2, 69, -68 ), bedRotation: "Rotate270", resourceSpawnerPos: new Vector( -2, 68, -84 ), spawnpointPos: new Vector( -2, 68, -80 ), chestPos: new Vector( 1, 68, -79 ), } ),
+        new BedwarsTeam( "yellow", { bedPos: new Vector( 66, 69, -2 ), bedRotation: "None", resourceSpawnerPos: new Vector( 82, 68, -2 ), spawnpointPos: new Vector( 78, 68, -2 ), chestPos: new Vector( 77, 68, 1 ), } ),
     );
 
     /** 设置地图商人 */

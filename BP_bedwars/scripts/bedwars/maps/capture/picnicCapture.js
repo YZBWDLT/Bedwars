@@ -45,8 +45,8 @@ export function createMapPicnicCapture( ) {
     map.gameReady();
 
     /** 设置地图的队伍 */
-    let teamRed = new BedwarsTeam( "red", { bedPos: new Vector( 0, 64, -63 ), bedRotation: "Rotate270", resourceSpawnerPos: new Vector( 0, 63, -78 ), spawnpointPos: new Vector( 0, 63, -74 ) } );
-    let teamBlue = new BedwarsTeam( "blue", { bedPos: new Vector( 0, 64, 61 ), bedRotation: "Rotate90", resourceSpawnerPos: new Vector( 0, 63, 77 ), spawnpointPos: new Vector( 0, 63, 73 ) } );
+    let teamRed = new BedwarsTeam( "red", { bedPos: new Vector( 0, 64, -63 ), bedRotation: "Rotate270", resourceSpawnerPos: new Vector( 0, 63, -78 ), spawnpointPos: new Vector( 0, 63, -74 ), chestPos: new Vector( 3, 63, -73 ), } );
+    let teamBlue = new BedwarsTeam( "blue", { bedPos: new Vector( 0, 64, 61 ), bedRotation: "Rotate90", resourceSpawnerPos: new Vector( 0, 63, 77 ), spawnpointPos: new Vector( 0, 63, 73 ), chestPos: new Vector( -3, 63, 72 ), } );
     teamRed.captureInfo.bedsPos.push( teamRed.bedInfo.pos );
     teamBlue.captureInfo.bedsPos.push( teamBlue.bedInfo.pos );
     map.addTeams(

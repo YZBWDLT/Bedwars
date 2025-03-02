@@ -93,20 +93,23 @@
 
 ### 漏洞修复
 
+- #23 修复了地毯可能会被冲掉并使玩家获得地毯的问题。
 - #24 修复了末影珍珠的出界检测会包括顶面的问题，这个问题可能导致向上扔的末影珍珠被吞掉。
 - #25 修复了在弓击中同队玩家时会多次响起音效的问题。
 - 修复了在最高处或最低处平搭依然会阻止搭路的问题。
+- 修复了启用创造模式玩家可破坏方块的设置后，生存模式的玩家也能破坏方块的问题。
 
 ### 底层更新
 
 - 更新了行为包的`manifest.json`的版本号到`1.0.20`。
 - 更新了行为包的脚本版本到`@minecraft/server@1.15.0`和`@minecraft/server-ui@1.3.0`。
 - 现在破坏无效的床也不再会报错了。
-- 更名`events/classic/playerBreakBlockTest.js`→`events/classic/playerBreakBlock.js`。
+- 更名`events/classic/playerBreakBlockTest.js`→`events/classic/breakBlock.js`。
 - 更名`events/classic/equipmentTest.js`→`events/classic/equipment.js`。
 - 更名`events/classic/heightLimit.js`→`events/classic/playerUseBlock.js`，并新增了两个函数：
   - `playerOpenChest(event) {}`：玩家尝试开其他未淘汰的队伍的箱子时，阻止之；
   - `safeAreaLimit(event) {}`：玩家尝试在安全区（例如队伍岛屿的重生点、资源点）放置方块时，阻止之。
+- 更名`events/classic/itemLock.js`→`events/classic/items.js`，并新增了一个函数`removeInvalidItems() {}`以清除额外的物品。
 - **新增** 在`methods/itemManager.js`中新增了`getValidItems(entity) {}`方法。
 - 在`events/classic/trading.js`中移除了有关`capture`的内容，现在是按照地图设置自动处理的一般情况。
 - **新增** 在`methods/positionManager.js`的`positionManager`对象中新增了多个方法：

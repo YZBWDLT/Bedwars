@@ -292,12 +292,7 @@ export function trading() {
             
         }
     } );
-
-    // ===== 移除商品实体 =====
-    overworld.getEntities( { type: "minecraft:item" } ).forEach( item => {
-        if ( item.getComponent( "minecraft:item" ).itemStack.typeId.includes( "bedwars:shopitem_" ) || item.getComponent( "minecraft:item" ).itemStack.typeId.includes( "bedwars:upgrade_" ) ) { item.remove( ); }
-    } );
-
+    
     // ===== 禁止玩家进入商人区域 =====
     if ( !map().playerCouldIntoShop ) {
         eachAlivePlayer( player => {

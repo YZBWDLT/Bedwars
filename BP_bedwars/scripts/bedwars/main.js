@@ -1,6 +1,6 @@
 import { world } from "@minecraft/server";
 import { alwaysSaturation } from "./events/classic/effects";
-import { playerBreakVanillaBlocksTest } from "./events/classic/playerBreakBlock";
+import { playerBreakVanillaBlocksTest } from "./events/classic/breakBlock";
 import { regenerateMap } from "./maps/mapGenerator";
 import { createEvent } from "./methods/eventManager";
 import { createInterval } from "./methods/intervalManager";
@@ -26,7 +26,7 @@ const tags = {
     /** 游戏事件 */ gameEvents: "gameEvents",
     /** 高度限制 */ heightLimit: "heightLimit",
     /** 信息板 */ infoBoard: "infoBoard",
-    /** 破坏方块 */ playerBreakBlock: "playerBreakBlock",
+    /** 破坏方块 */ breakBlock: "breakBlock",
     /** 玩家退出重进 */ playerLeaveAndRejoin: "playerLeaveAndRejoin",
     /** 资源生成 */ spawnResources: "spawnResources",
     /** 交易 */ trading: "trading",
@@ -45,7 +45,7 @@ const tags = {
 
 /** ===== 常执行 ===== */
 createInterval( "alwaysSaturation", () => alwaysSaturation(), [ tags.gameLogic, tags.effects ], 20 );
-createEvent( "playerBreakVanillaBlockTest", world.beforeEvents.playerBreakBlock, event => playerBreakVanillaBlocksTest( event ), [ tags.gameLogic, tags.playerBreakBlock ] );
+createEvent( "playerBreakVanillaBlockTest", world.beforeEvents.playerBreakBlock, event => playerBreakVanillaBlocksTest( event ), [ tags.gameLogic, tags.breakBlock ] );
 createEvent( "playerLeave", world.beforeEvents.playerLeave, event => playerLeave( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
 createEvent( "playerRejoin", world.afterEvents.playerSpawn, event => playerRejoin( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
 createEvent( "settingsFunction", world.afterEvents.itemUse, event => settingsFunction( event ), [ tags.gameLogic, tags.settings ] );

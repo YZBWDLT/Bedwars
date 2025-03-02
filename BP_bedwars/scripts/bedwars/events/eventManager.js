@@ -19,7 +19,7 @@ import { removeEnderPearl } from "./items/enderPearl";
 
 /** 经典模式函数调用 */
 import { waiting } from "./classic/beforeGaming";
-import { playerBreakBedTest, playerBreakVanillaBlocksTest } from "./classic/playerBreakBlock";
+import { playerBreakBedTest, playerBreakVanillaBlocksTest } from "./classic/breakBlock";
 import { maxHeightLimit, minHeightLimit, playerOpenChest, safeAreaLimit } from "./classic/playerUseBlock";
 import { equipmentTest } from "./classic/equipment";
 import { applyResistanceNearby, applyYVelocity, dropLoot, preventBreakingVanillaBlocks } from "./classic/explosion";
@@ -33,7 +33,7 @@ import { beforeGamingInfoBoard, gamingInfoBoard, healthScoreboard } from "./clas
 import { gameOverCountdown } from "./classic/afterGaming";
 import { settingsFunction } from "../methods/bedwarsSettings";
 import { trading } from "./classic/trading";
-import { playerItemLocker } from "./classic/itemLock";
+import { playerItemLocker, removeInvalidItems } from "./classic/items";
 
 /** 夺点模式函数调用 */
 import { playerBreakBedTestCapture } from "./capture/playerBreakBed";
@@ -57,12 +57,12 @@ const tags = {
     /** 游戏事件 */ gameEvents: "gameEvents",
     /** 使用方块 */ playerUseBlock: "playerUseBlock",
     /** 信息板 */ infoBoard: "infoBoard",
-    /** 破坏方块 */ playerBreakBlock: "playerBreakBlock",
+    /** 破坏方块 */ breakBlock: "breakBlock",
     /** 玩家退出重进 */ playerLeaveAndRejoin: "playerLeaveAndRejoin",
     /** 资源生成 */ spawnResources: "spawnResources",
     /** 交易 */ trading: "trading",
     /** 陷阱 */ trap: "trap",
-    /** 物品锁定 */ itemLock: "itemLock",
+    /** 物品 */ items: "items",
     /** 设置 */ settings: "settings",
 
     /** 物品逻辑 */ itemLogic: "itemLogic",
@@ -86,7 +86,7 @@ export const eventManager = {
         createInterval( "alwaysSaturation", () => alwaysSaturation(), [ tags.gameLogic, tags.effects ], 20 );
 
         /** 游戏逻辑：破坏方块 */
-        createEvent( "playerBreakVanillaBlockTest", world.beforeEvents.playerBreakBlock, event => playerBreakVanillaBlocksTest( event ), [ tags.gameLogic, tags.playerBreakBlock ] );
+        createEvent( "playerBreakVanillaBlockTest", world.beforeEvents.playerBreakBlock, event => playerBreakVanillaBlocksTest( event ), [ tags.gameLogic, tags.breakBlock ] );
 
         /** 游戏逻辑：玩家退出重进 */
         createEvent( "playerLeave", world.beforeEvents.playerLeave, event => playerLeave( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
@@ -162,15 +162,16 @@ export const eventManager = {
         createInterval( "gamingInfoBoard", () => gamingInfoBoard(), [ tags.gameLogic, tags.afterGaming, tags.gaming, tags.infoBoard ], 3 );
         createInterval( "healthScoreboard", () => healthScoreboard(), [ tags.gameLogic, tags.gaming, tags.infoBoard ] );
         /** 游戏逻辑：玩家破坏方块 */
-        createEvent( "playerBreakBedTest", world.afterEvents.playerBreakBlock, event => playerBreakBedTest( event ), [ tags.gameLogic, tags.gaming, tags.playerBreakBlock ] );
+        createEvent( "playerBreakBedTest", world.afterEvents.playerBreakBlock, event => playerBreakBedTest( event ), [ tags.gameLogic, tags.gaming, tags.breakBlock ] );
         /** 游戏逻辑：陷阱 */
         createInterval( "trap", () => trap(), [ tags.gameLogic, tags.gaming, tags.trap ] );
         /** 游戏逻辑：交易 */
         createInterval( "trading", () => trading(), [ tags.gameLogic, tags.gaming, tags.trading ] )
         /** 游戏逻辑：资源生成 */
         createInterval( "spawnResources", () => spawnResources(), [ tags.gameLogic, tags.gaming, tags.spawnResources ] );
-        /** 游戏逻辑：物品锁定 */
-        createInterval( "playerItemLocker", () => playerItemLocker(), [ tags.gameLogic, tags.gaming, tags.itemLock ] );
+        /** 游戏逻辑：物品 */
+        createInterval( "playerItemLocker", () => playerItemLocker(), [ tags.gameLogic, tags.gaming, tags.items ] );
+        createInterval( "removeInvalidItems", () => removeInvalidItems(), [ tags.gameLogic, tags.gaming, tags.items ] );
     },
     /** 经典模式游戏后事件 */
     classicAfterEvents() {
@@ -188,7 +189,7 @@ export const eventManager = {
     captureEvents( ) {
         /** 使用夺点模式的床破坏与放置逻辑 */
         deleteEvents( "playerBreakBedTest" );
-        createEvent( "playerBreakBedTestCapture", world.afterEvents.playerBreakBlock, event => playerBreakBedTestCapture( event ), [ tags.gameLogic, tags.gaming, tags.playerBreakBlock, "capture" ] );
+        createEvent( "playerBreakBedTestCapture", world.afterEvents.playerBreakBlock, event => playerBreakBedTestCapture( event ), [ tags.gameLogic, tags.gaming, tags.breakBlock, "capture" ] );
         createEvent( "playerPlaceBed", world.afterEvents.itemUseOn, event => playerPlaceBedTest( event ), [ tags.gameLogic, tags.gaming, "capture" ] )
         /** 使用夺点模式的游戏事件逻辑 */
         deleteIntervalsWithTag( tags.gameEvents );

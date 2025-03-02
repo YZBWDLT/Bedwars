@@ -78,8 +78,5 @@ function unlockItem( player ) {
  */
 function isVoidBelow( player ) {
     let { x, y, z } = player.location
-    for ( let y0 = y; y0 >= 0; y0-- ) {
-        if ( !player.dimension.getBlock( { x, y: y0, z } ).isAir ) { return false; }
-    }
-    return true;
+    return player.dimension.getTopmostBlock( { x, z }, y ) === undefined;
 }

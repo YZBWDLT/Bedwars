@@ -51,6 +51,7 @@
 - 新增了一个物品：**设置**。
 - 右键使用设置物品调出设置菜单。
 - 在开始游戏前，创造模式的玩家能够默认获得此物品。
+- 现在设置能够在设置完成后自动备份数据，能够在`/reload`、重启地图、重启服务器前恢复以前设置的数据。即：现在设置不再会因前述原因而重置。
 - 设置菜单分为 7 个子项，完全继承以前的设置命令功能。下文中，【设置项】为命令系统原有的设置。
   - 游戏前设置：控制游戏前的运行逻辑，例如地图重置、等待时。包括：
     - #29 地图重置设置：包括地图清除速度、地图加载速度。
@@ -78,6 +79,10 @@
 
 - 现在其他队伍的玩家不再能开启其他队伍的箱子，除非该队伍已被淘汰。
 
+### 区域保护
+
+- 现在玩家不再能在资源点、商人或队伍出生点附近放置方块。
+
 ### 最低版本需求
 
 - 提高了本模组的最低版本需求到 1.21.50。
@@ -101,7 +106,7 @@
 - 更名`events/classic/equipmentTest.js`→`events/classic/equipment.js`。
 - 更名`events/classic/heightLimit.js`→`events/classic/playerUseBlock.js`，并新增了两个函数：
   - `playerOpenChest(event) {}`：玩家尝试开其他未淘汰的队伍的箱子时，阻止之；
-  - `safeAreaLimit(event) {}`：玩家尝试在安全区（例如队伍岛屿的重生点、资源点）时，阻止之。
+  - `safeAreaLimit(event) {}`：玩家尝试在安全区（例如队伍岛屿的重生点、资源点）放置方块时，阻止之。
 - **新增** 在`methods/itemManager.js`中新增了`getValidItems(entity) {}`方法。
 - 在`events/classic/trading.js`中移除了有关`capture`的内容，现在是按照地图设置自动处理的一般情况。
 - **新增** 在`methods/positionManager.js`的`positionManager`对象中新增了多个方法：

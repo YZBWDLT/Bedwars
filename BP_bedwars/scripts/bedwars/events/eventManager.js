@@ -20,7 +20,7 @@ import { removeEnderPearl } from "./items/enderPearl";
 /** 经典模式函数调用 */
 import { waiting } from "./classic/beforeGaming";
 import { playerBreakBedTest, playerBreakVanillaBlocksTest } from "./classic/playerBreakBlock";
-import { maxHeightLimit, minHeightLimit, playerOpenChest } from "./classic/playerUseBlock";
+import { maxHeightLimit, minHeightLimit, playerOpenChest, safeAreaLimit } from "./classic/playerUseBlock";
 import { equipmentTest } from "./classic/equipment";
 import { applyResistanceNearby, applyYVelocity, dropLoot, preventBreakingVanillaBlocks } from "./classic/explosion";
 import { trap } from "./classic/trap";
@@ -157,6 +157,7 @@ export const eventManager = {
         createEvent( "maxHeightLimit", world.beforeEvents.playerInteractWithBlock, event => maxHeightLimit( event ), [ tags.gameLogic, tags.gaming, tags.playerUseBlock ] );
         createEvent( "minHeightLimit", world.beforeEvents.playerInteractWithBlock, event => minHeightLimit( event ), [ tags.gameLogic, tags.gaming, tags.playerUseBlock ] );
         createEvent( "playerOpenChest", world.beforeEvents.playerInteractWithBlock, event => playerOpenChest( event ), [ tags.gameLogic, tags.gaming, tags.playerUseBlock ] );
+        createEvent( "safeAreaLimit", world.beforeEvents.playerInteractWithBlock, event => safeAreaLimit( event ), [ tags.gameLogic, tags.gaming, tags.playerUseBlock ] );
         /** 游戏逻辑：信息板 */
         createInterval( "gamingInfoBoard", () => gamingInfoBoard(), [ tags.gameLogic, tags.afterGaming, tags.gaming, tags.infoBoard ], 3 );
         createInterval( "healthScoreboard", () => healthScoreboard(), [ tags.gameLogic, tags.gaming, tags.infoBoard ] );

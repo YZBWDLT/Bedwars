@@ -230,7 +230,7 @@ export const shopitems = {
         new Shopitem( "bow", 16, "weapon_and_armor", "gold", 12, 1, { itemId: "minecraft:bow", itemType: "bow" } ),
         new Shopitem( "bow_power", 17, "weapon_and_armor", "gold", 20, 1, { itemId: "minecraft:bow", itemType: "bow" } ),
         new Shopitem( "bow_power_punch", 18, "weapon_and_armor", "emerald", 6, 1, { itemId: "minecraft:bow", itemType: "bow" } ),
-        new Shopitem( "arrow", 19, "weapon_and_armor", "gold", 2, 6, { itemId: "minecraft:arrow" } )    
+        new Shopitem( "arrow", 19, "weapon_and_armor", "gold", 2, 6, { itemId: "minecraft:arrow" } )
     ],
     /** 队伍升级 */
     teamUpgrade: [
@@ -250,7 +250,7 @@ export const shopitems = {
         new Shopitem( "its_a_trap", 13, "team_upgrade", "diamond", 1, 1, { description: "造成失明和缓慢效果，持续 8 秒。", itemType: "trap" } ),
         new Shopitem( "counter_offensive_trap", 14, "team_upgrade", "diamond", 1, 1, { description: "赋予基地附近的队友速度 II 与跳跃提升 II\n 效果，持续 15 秒。", itemType: "trap" } ),
         new Shopitem( "alarm_trap", 15, "team_upgrade", "diamond", 1, 1, { description: "让隐身的敌人立刻显形，并警报入侵者的名字和队伍。", itemType: "trap" } ),
-        new Shopitem( "miner_fatigue_trap", 16, "team_upgrade", "diamond", 1, 1, { description: "造成挖掘疲劳效果，持续 10 秒。", itemType: "trap" } )    
+        new Shopitem( "miner_fatigue_trap", 16, "team_upgrade", "diamond", 1, 1, { description: "造成挖掘疲劳效果，持续 10 秒。", itemType: "trap" } )
     ],
     /** 武器与盔甲（夺点模式） */
     get weaponAndArmorCapture() {

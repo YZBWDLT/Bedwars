@@ -31,10 +31,11 @@ function setSilverfishProperties( silverfish, throwerInfo ) {
     silverfish.nameSetter = () => {
         const index = Math.floor( silverfish.killTimer / 60 );
         const bars = "■■■■■";
+        const timePassedColor = silverfish.team.id === "gray" ? "§8" : "§7";
         if ( index >= 0 && index <= 4 ) {
-            return bars.slice(0, 5 - index) + "§7" + bars.slice(5 - index);
+            return bars.slice(0, 5 - index) + timePassedColor + bars.slice(5 - index);
         }
-        return "§7■■■■■";
+        return `${timePassedColor}■■■■■`;
     }
 
 }

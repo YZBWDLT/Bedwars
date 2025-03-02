@@ -31,10 +31,11 @@ function setIronGolemProperties( ironGolem, placerInfo ) {
     ironGolem.nameSetter = () => {
         const index = Math.floor( ironGolem.killTimer / 480 );
         const bars = "■■■■■■■■■■";
+        const timePassedColor = ironGolem.team.id === "gray" ? "§8" : "§7";
         if ( index >= 0 && index <= 9 ) {
-            return bars.slice(0, 10 - index) + "§7" + bars.slice(10 - index);
+            return bars.slice(0, 10 - index) + timePassedColor + bars.slice(10 - index);
         }
-        return "§7■■■■■■■■■■";
+        return `${timePassedColor}■■■■■■■■■■`;
     }
 
 }

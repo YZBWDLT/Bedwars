@@ -112,7 +112,7 @@
                 "minecraft:inventory": { "container_type": "container", "inventory_size": 20 }
             },
             "weapon_and_armor_capture_trader": {
-                "minecraft:type_family": { "family": [ "npc", "trader", "weapon_and_armor_capture_trader" ] },
+                "minecraft:type_family": { "family": [ "npc", "trader", "weapon_and_armor_trader", "weapon_and_armor_capture_trader" ] },
                 "minecraft:inventory": { "container_type": "container", "inventory_size": 21 }
             },
             "team_upgrade_trader": {

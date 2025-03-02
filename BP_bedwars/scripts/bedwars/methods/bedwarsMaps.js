@@ -1,17 +1,17 @@
 /** 地图类，及地图相关信息 */
 
 import { world } from "@minecraft/server";
-import { BedwarsTeam, eachTeam } from "./bedwarsTeam.js"
-import { settings } from "./bedwarsSettings.js";
+import { BedwarsTeam, eachTeam } from "./bedwarsTeam"
+import { settings } from "./bedwarsSettings";
 
-import { randomInt, shuffleArray } from "./number.js";
-import { getPlayerAmount, eachPlayer, setPlayerGamemode } from "./playerManager.js";
-import { BedwarsPlayer, eachValidPlayer, initPlayer } from "./bedwarsPlayer.js";
-import { overworld, positionManager, Vector } from "./positionManager.js";
-import { eventManager } from "../events/eventManager.js";
-import { getScore, removeAllScoreboards, setScore, tryAddScoreboard } from "./scoreboardManager.js";
-import { tickToSecond } from "./time.js";
-import { shopitems } from "./bedwarsShopitem.js";
+import { randomInt, shuffleArray } from "./number";
+import { getPlayerAmount, eachPlayer, setPlayerGamemode } from "./playerManager";
+import { BedwarsPlayer, eachValidPlayer, initPlayer } from "./bedwarsPlayer";
+import { overworld, positionManager, Vector } from "./positionManager";
+import { eventManager } from "../events/eventManager";
+import { getScore, removeAllScoreboards, setScore, tryAddScoreboard } from "./scoreboardManager";
+import { tickToSecond } from "./time";
+import { shopitems } from "./bedwarsShopitem";
 
 /**
  * @typedef islandInfo 岛屿信息

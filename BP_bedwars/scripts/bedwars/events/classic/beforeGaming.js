@@ -7,13 +7,13 @@
  * · 调整玩家的状态。
  */
 
-import { map } from "../../methods/bedwarsMaps.js";
-import { settings, settingsRecover } from "../../methods/bedwarsSettings.js";
-import { tickToSecond } from "../../methods/time.js";
-import { getPlayerAmount, showTitle, eachPlayer, setPlayerGamemode } from "../../methods/playerManager.js";
-import { overworld, Vector } from "../../methods/positionManager.js";
-import { eachTeam } from "../../methods/bedwarsTeam.js";
-import { giveItem, hasItem } from "../../methods/itemManager.js";
+import { map } from "../../methods/bedwarsMaps";
+import { settings, settingsRecover } from "../../methods/bedwarsSettings";
+import { tickToSecond } from "../../methods/time";
+import { getPlayerAmount, showTitle, eachPlayer, setPlayerGamemode } from "../../methods/playerManager";
+import { overworld, Vector } from "../../methods/positionManager";
+import { eachTeam } from "../../methods/bedwarsTeam";
+import { giveItem, hasItem } from "../../methods/itemManager";
 
 /** 在玩家集体在大厅等待时所执行的事件
  * @description 非创造或冒险模式的玩家，需要调整游戏模式。禁止玩家跑出去。

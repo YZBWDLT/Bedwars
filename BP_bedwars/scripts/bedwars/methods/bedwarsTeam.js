@@ -5,10 +5,10 @@
 
 import { world } from "@minecraft/server";
 
-import { getPlayerBedwarsInfo, playerIsValid } from "./bedwarsPlayer.js";
-import { overworld, positionManager, Vector } from "./positionManager.js";
-import { removeItemEntity } from "./itemManager.js";
-import { map } from "./bedwarsMaps.js";
+import { getPlayerBedwarsInfo, playerIsValid } from "./bedwarsPlayer";
+import { overworld, positionManager, Vector } from "./positionManager";
+import { removeItemEntity } from "./itemManager";
+import { map } from "./bedwarsMaps";
 
 /** @typedef {"red"|"blue"|"yellow"|"green"|"pink"|"cyan"|"white"|"gray"|"purple"|"brown"|"orange"} validTeams 所有可用的队伍 */
 

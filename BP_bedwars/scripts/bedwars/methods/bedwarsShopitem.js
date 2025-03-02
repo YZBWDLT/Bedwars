@@ -1,7 +1,7 @@
 /** 商店物品 */
 
-import { map } from "./bedwarsMaps.js"
-import { intToRoman } from "./number.js";
+import { map } from "./bedwarsMaps"
+import { intToRoman } from "./number";
 
 /**
  * @typedef { "sword" | "armor" | "axe" | "pickaxe" | "teamUpgrade" | "coloredBlock" | "knockbackStick" | "shears" | "bow" | "potion" | "trap" | "other" } shopitemType 商店物品类型列表

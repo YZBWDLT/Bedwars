@@ -99,11 +99,12 @@ export function safeAreaLimit( event ) {
     /** 所有队伍的队伍资源点 */ const teamSpawnerPoints = map().teamList.map( team => ( team.spawnerInfo.spawnerPos ) );
     /** 所有钻石点 */ const diamondSpawnerPoints = map().spawnerInfo.diamondInfo.map( diamond => ( diamond.pos ) );
     /** 所有绿宝石点 */ const emeraldSpawnerPoints = map().spawnerInfo.emeraldInfo.map( emerald => ( emerald.pos ) );
-
     /** 受限物品（ID中所含有的字符串） */ const limitedItems = [ "wool", "stained_hardened_clay", "blast_proof_glass", "end_stone", "obsidian", "ladder", "tnt", "planks", "sponge", "bucket" ];
-
+    /** 玩家 */ const player = event.player;
     /** 玩家使用的物品 */ const usingItem = event.itemStack;
-    /** 玩家使用的方块的位置 */ const usingPos = event.block.location;
+    /** 玩家使用的方块 */ const usingBlock = event.block;
+    /** 玩家使用的方块的位置 */ const usingPos = usingBlock.location;
+    /** 玩家使用的方块是否为箱子 */ const isChest = [ "minecraft:chest", "minecraft:ender_chest" ].includes( usingBlock.typeId )
 
     // 如果玩家在以上点位中使用了受限物品，则取消事件并警告玩家
     if (
@@ -116,19 +117,17 @@ export function safeAreaLimit( event ) {
             || emeraldSpawnerPoints.some( emeraldSpawnerPoint => positionManager.distance( usingPos, emeraldSpawnerPoint ) <= 2 )
         ) // 在以上类型的点位附近放置方块时
         && limitedItems.some( limitItem => usingItem.typeId.includes( limitItem ) ) // 且玩家使用的物品为限制物品时
+        && ( !isChest || ( isChest && player.isSneaking ) ) // 玩家使用的方块不为箱子，或使用箱子时在潜行
     ) {
         event.cancel = true;
         system.run( () => {
             // 提醒，但防止多次提醒
             if ( event.isFirstEvent ) {
-                warnPlayer( event.player, { translate: "message.heightLimit.min" } );
+                warnPlayer( player, { translate: "message.heightLimit.min" } );
             }
             // 如果使用的是水桶，则先设置为含水方块再设置为非含水方块，防止放假水
             if ( usingItem.typeId === "minecraft:water_bucket" ) {
-                try {
-                    event.block.setWaterlogged( true );
-                    event.block.setWaterlogged( false );
-                } catch {}
+                try { usingBlock.setWaterlogged( true ); usingBlock.setWaterlogged( false ); } catch {}
             }
         } )
     }

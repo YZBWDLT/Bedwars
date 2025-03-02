@@ -89,7 +89,7 @@ export function playerOpenChest( event ) {
     }
 }
 
-/** 玩家尝试在安全区（例如队伍岛屿的重生点、资源点）时，阻止之
+/** 玩家尝试在安全区（例如队伍岛屿的重生点、资源点）放置方块时，阻止之
  * @param {PlayerInteractWithBlockBeforeEvent} event 
  */
 export function safeAreaLimit( event ) {

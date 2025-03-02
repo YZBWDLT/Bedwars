@@ -8,7 +8,7 @@
  */
 
 import { map } from "../../methods/bedwarsMaps.js";
-import { settings } from "../../methods/bedwarsSettings.js";
+import { settings, settingsRecover } from "../../methods/bedwarsSettings.js";
 import { tickToSecond } from "../../methods/time.js";
 import { getPlayerAmount, showTitle, eachPlayer, setPlayerGamemode } from "../../methods/playerManager.js";
 import { overworld, Vector } from "../../methods/positionManager.js";
@@ -50,6 +50,7 @@ export function waiting() {
 
             /** 清除前的准备工作 */
             if ( loadInfo.loadStage === 0 ) {
+                settingsRecover();
                 if ( settings.beforeGaming.reload.clearSpeed === 0 ) { loadInfo.mapClear.timeCostPerLayer *= 1.75; }
                 else if ( settings.beforeGaming.reload.clearSpeed === 1 ) { loadInfo.mapClear.timeCostPerLayer *= 1.50; }
                 else if ( settings.beforeGaming.reload.clearSpeed === 2 ) { loadInfo.mapClear.timeCostPerLayer *= 1.25; }

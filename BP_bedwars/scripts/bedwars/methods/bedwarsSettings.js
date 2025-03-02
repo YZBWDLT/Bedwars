@@ -6,90 +6,67 @@ import { createAndShowActionUi, createAndShowMessageUi, createAndShowModalUi } f
 import { tickToSecond } from "./time"
 import { warnPlayer } from "./bedwarsPlayer"
 import { map } from "./bedwarsMaps"
+import { getScore, setScore } from "./scoreboardManager"
 
-/** 可用设置列表 */
-export let settings = {
-    /** 游戏开始前的游戏前设置 */ beforeGaming: {
-        /** 等待设置 */ waiting: {
-            /** 玩家人数下限 */ minPlayerCount: 2,
-            /** 玩家人数上限 */ maxPlayerCount: 16,
-            /** 游戏开始时长 */ gameStartWaitingTime: 400,
+/** 生成默认设置的函数 */
+function createDefaultSettings() {
+    return {
+        /** 游戏开始前的游戏前设置 */ beforeGaming: {
+            /** 等待设置 */ waiting: {
+                /** 玩家人数下限 */ minPlayerCount: 2,
+                /** 玩家人数上限 */ maxPlayerCount: 16,
+                /** 游戏开始时长 */ gameStartWaitingTime: 400,
+            },
+            /** 重加载设置 */ reload: {
+                /** 清除地图的速度，0：非常慢，1：慢，2：较慢，3：中等，4：较快，5：快，6：非常快 */ clearSpeed: 3,
+                /** 加载地图的速度，0：非常慢，1：慢，2：较慢，3：中等，4：较快，5：快，6：非常快 */ loadSpeed: 3,
+            },
+            /** 队伍分配设置 */ teamAssign: {
+                /** 队伍分配模式，0：标准组队，1：随机组队，2：胜率组队 */ mode: 1,
+                /** 是否在开始前就随机组队 */ assignBeforeGaming: false,
+                /** 是否启用自由选队 */ playerSelectEnabled: false,
+            },
         },
-        /** 重加载设置 */ reload: {
-            /** 清除地图的速度，0：非常慢，1：慢，2：较慢，3：中等，4：较快，5：快，6：非常快 */ clearSpeed: 3,
-            /** 加载地图的速度，0：非常慢，1：慢，2：较慢，3：中等，4：较快，5：快，6：非常快 */ loadSpeed: 3,
+        /** 游戏内设置 */ gaming: {
+            /** 生成上限 */ resourceLimit: {
+                iron: 72,
+                gold: 7,
+                diamond: 8,
+                emerald: 4
+            },
+            /** 生成间隔（单位：游戏刻） */ resourceInterval: { 
+                /** 平均每个铁的基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔*每次生成的铁锭数/(1+速度加成)） */ iron: 6,
+                /** 金基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔/(1+速度加成) */ gold: 75,
+                /** 钻石基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔-200*等级） */ diamond: 800,
+                /** 绿宝石基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔-200*等级） */ emerald: 1500,
+                /** 单挑模式下的生成间隔乘数 */ soloSpeedMultiplier: 6
+            },
+            /** 重生时间 */ respawnTime: {
+                /** 普通玩家重生的时长，单位：游戏刻 */ normalPlayers: 110,
+                /** 重进玩家重生的时长，单位：游戏刻 */ rejoinedPlayers: 200
+            },
+            /** 无效队伍 */ invalidTeam: {
+                /** 是否启用无效队伍检测 */ enableTest: true,
+                /** 是否启用无效队伍的资源池 */ spawnResources: true,
+                /** 是否启用无效队伍的商人 */ spawnTraders: true
+            },
         },
-        /** 队伍分配设置 */ teamAssign: {
-            /** 队伍分配模式 @type { "assignNormally" | "assignRandomly" | "assignByWins" } */ mode: "assignRandomly",
-            /** 是否在开始前就随机组队 */ assignBeforeGaming: false,
-            /** 是否启用自由选队 */ playerSelectEnabled: false,
+        /** 地图启用设置 */ mapEnabled: {
+            /** 是否启用经典两队模式 */ classicTwoTeamsEnabled: true,
+            /** 是否启用经典四队模式 */ classicFourTeamsEnabled: true,
+            /** 是否启用经典八队模式 */ classicEightTeamsEnabled: true,
+            /** 是否启用夺点两队模式 */ captureTwoTeamsEnabled: true,
         },
-    },
-    /** 游戏内设置 */ gaming: {
-        /** 生成上限 */ resourceLimit: { iron: 72, gold: 7, diamond: 8, emerald: 4 },
-        /** 生成间隔（单位：游戏刻） */ resourceInterval: { 
-            /** 平均每个铁的基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔*每次生成的铁锭数/(1+速度加成)） */ iron: 6,
-            /** 金基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔/(1+速度加成) */ gold: 75,
-            /** 钻石基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔-200*等级） */ diamond: 800,
-            /** 绿宝石基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔-200*等级） */ emerald: 1500,
-            /** 单挑模式下的生成间隔乘数 */ soloSpeedMultiplier: 0.6
+        /** 杂项设置 */ miscellaneous: {
+            /** 创造模式玩家允许破坏方块 */ creativePlayerCanBreakBlocks: false,
+            /** 虚空玩家可扔物品 */ playerCanThrowItemsInVoid: false,
         },
-        /** 重生时间 */ respawnTime: { normalPlayers: 110, rejoinedPlayers: 200 },
-        /** 无效队伍 */ invalidTeam: { enableTest: true, spawnResources: true, spawnTraders: true },
-    },
-    /** 地图启用设置 */ mapEnabled: {
-        classicTwoTeamsEnabled: true,
-        classicFourTeamsEnabled: true,
-        classicEightTeamsEnabled: true,
-        captureTwoTeamsEnabled: true,
-    },
-    /** 杂项设置 */ miscellaneous: {
-        /** 创造模式玩家允许破坏方块 */ creativePlayerCanBreakBlocks: false,
-        /** 虚空玩家可扔物品 */ playerCanThrowItemsInVoid: false,
-    },
-}
-
+    };
+};
 /** 默认设置，为定值 */
-const defaultSettings = {
-    /** 游戏开始前的游戏前设置 */ beforeGaming: {
-        /** 等待设置 */ waiting: {
-            /** 玩家人数下限 */ minPlayerCount: 2,
-            /** 玩家人数上限 */ maxPlayerCount: 16,
-            /** 游戏开始时长 */ gameStartWaitingTime: 400,
-        },
-        /** 重加载设置 */ reload: {
-            /** 清除地图的速度，0：非常慢，1：慢，2：较慢，3：中等，4：较快，5：快，6：非常快 */ clearSpeed: 3,
-            /** 加载地图的速度，0：非常慢，1：慢，2：较慢，3：中等，4：较快，5：快，6：非常快 */ loadSpeed: 3,
-        },
-        /** 队伍分配设置 */ teamAssign: {
-            /** 队伍分配模式 @type { "assignNormally" | "assignRandomly" | "assignByWins" } */ mode: "assignRandomly",
-            /** 是否在开始前就随机组队 */ assignBeforeGaming: false,
-            /** 是否启用自由选队 */ playerSelectEnabled: false,
-        },
-    },
-    /** 游戏内设置 */ gaming: {
-        /** 生成上限 */ resourceLimit: { iron: 72, gold: 7, diamond: 8, emerald: 4 },
-        /** 生成间隔（单位：游戏刻） */ resourceInterval: { 
-            /** 平均每个铁的基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔*每次生成的铁锭数/(1+速度加成)） */ iron: 6,
-            /** 金基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔/(1+速度加成) */ gold: 75,
-            /** 钻石基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔-200*等级） */ diamond: 800,
-            /** 绿宝石基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔-200*等级） */ emerald: 1500,
-            /** 单挑模式下的生成间隔乘数 */ soloSpeedMultiplier: 0.6
-        },
-        /** 重生时间 */ respawnTime: { normalPlayers: 110, rejoinedPlayers: 200 },
-        /** 无效队伍 */ invalidTeam: { enableTest: true, spawnResources: true, spawnTraders: true },
-    },
-    /** 地图启用设置 */ mapEnabled: {
-        classicTwoTeamsEnabled: true,
-        classicFourTeamsEnabled: true,
-        classicEightTeamsEnabled: true,
-        captureTwoTeamsEnabled: true,
-    },
-    /** 杂项设置 */ miscellaneous: {
-        /** 创造模式玩家允许破坏方块 */ creativePlayerCanBreakBlocks: false,
-        /** 虚空玩家可扔物品 */ playerCanThrowItemsInVoid: false,
-    },
-}
+const defaultSettings = createDefaultSettings();
+/** 可用设置列表 */
+export let settings = createDefaultSettings();
 
 /** 显示设置菜单主页面
  * @param {Player} player 
@@ -107,7 +84,7 @@ function showMainPage( player ) {
             { text: "关于...", iconPath: "textures/items/spyglass", funcWhenSelected: () => about(), },
             { text: "开发者设置...", iconPath: "textures/items/settings", funcWhenSelected: () => developer(), },
         ],
-        () => {},
+        () => { settingsBackup() /** 退出前备份数据 */ },
         "欢迎来到设置！你可以在这里设置这个附加包的方方面面，例如立刻生成一张特定地图、更改资源生成上限等。来试试吧！>wO§b\n· 更改完成后，请点击窗口下面的「确认」按钮，按右上角的「x」会使您返回上一页而不作任何更改。\n· 如果您需要调整回默认设置，您可以打开默认设置的开关，然后确认。"
     );
 
@@ -165,23 +142,18 @@ function showMainPage( player ) {
         };
         /** 组队设置 */
         function assignTeam() {
-            const getModeIndex = () => { switch ( settings.beforeGaming.teamAssign.mode ) { case "assignNormally": return 0; case "assignRandomly": return 1; case "assignByWins": default: return 2; } }
-            const getModeName = () => { switch ( settings.beforeGaming.teamAssign.mode ) { case "assignNormally": return "标准组队"; case "assignRandomly": return "随机组队"; case "assignByWins": default: return "胜率组队"; } }
+            const getModeName = () => { switch ( settings.beforeGaming.teamAssign.mode ) { case 0: return "标准组队"; case 1: return "随机组队"; case 2: default: return "胜率组队"; } }
             modalSettings(
                 player,
                 "组队设置",
                 [
-                    { type: "dropdown", label: `§l组队模式\n§r§7如何为各个队伍分配玩家。\n§c目前未实装胜率组队的功能。§7\n当前值：§a${getModeName()}`, dropdownOptions: [ "标准组队（随机平均分队，排列靠前的队伍人多）", "随机组队（随机平均分队，何队人多不定）", "胜率组队（按照胜率平均分队）" ], defaultValue: getModeIndex(), },
+                    { type: "dropdown", label: `§l组队模式\n§r§7如何为各个队伍分配玩家。\n§c目前未实装胜率组队的功能。§7\n当前值：§a${getModeName()}`, dropdownOptions: [ "标准组队（随机平均分队，排列靠前的队伍人多）", "随机组队（随机平均分队，何队人多不定）", "胜率组队（按照胜率平均分队）" ], defaultValue: settings.beforeGaming.teamAssign.mode, },
                     { type: "toggle", label: `§l开始前组队\n§r§7游戏将在开始前就随机组队，而非开始后随机组队。\n§c目前未实装功能。§7\n当前值：§a${settings.beforeGaming.teamAssign.assignBeforeGaming}`, defaultValue: settings.beforeGaming.teamAssign.assignBeforeGaming },
                     { type: "toggle", label: `§l玩家自主选队\n§r§7玩家是否能够自主选择队伍。未选择队伍的玩家按照组队模式的方法分配队伍。\n§c目前未实装功能。§7\n当前值：§a${settings.beforeGaming.teamAssign.playerSelectEnabled}`, defaultValue: settings.beforeGaming.teamAssign.playerSelectEnabled },
                 ],
                 () => { settings.beforeGaming.teamAssign = defaultSettings.beforeGaming.teamAssign; },
                 result => {
-                    switch ( result[0] ) {
-                        case 0: settings.beforeGaming.teamAssign.mode = "assignNormally"; break;
-                        case 1: settings.beforeGaming.teamAssign.mode = "assignRandomly"; break;
-                        case 2: default: settings.beforeGaming.teamAssign.mode = "assignByWins"; break;
-                    };
+                    settings.beforeGaming.teamAssign.mode = result[0];
                     settings.beforeGaming.teamAssign.assignBeforeGaming = result[1];
                     settings.beforeGaming.teamAssign.playerSelectEnabled = result[2];
                 },
@@ -231,20 +203,20 @@ function showMainPage( player ) {
                 player,
                 "资源间隔设置",
                 [
-                    { type: "slider", label: `§l铁生成间隔\n§r§7在标准模式无任何加成下，平均每个铁锭生成所需的时间。单位：秒。\n§c注意！该设置需要您重新调整一次。§7\n当前值：§a${tickToSecond(settings.gaming.resourceInterval.iron,"float")}§7，设置值§a`, sliderMinValue: 0.10, sliderMaxValue: 2.00, sliderStepValue: 0.10, defaultValue: 1 },
+                    { type: "slider", label: `§l铁生成间隔\n§r§7在标准模式无任何加成下，平均每个铁锭生成所需的时间。单位：*0.05秒。\n§8例：若设置为6，则每个铁锭的生成间隔将为0.3秒。§7\n当前值：§a${tickToSecond(settings.gaming.resourceInterval.iron,"float")}§7，设置值§a`, sliderMinValue: 2, sliderMaxValue: 40, sliderStepValue: 2, defaultValue: settings.gaming.resourceInterval.iron },
                     { type: "slider", label: `§l金生成间隔\n§r§7在标准模式无任何加成下，平均每个金锭生成所需的时间。单位：秒。\n当前值：§a${tickToSecond(settings.gaming.resourceInterval.gold)-1}§7，设置值§a`, sliderMinValue: 1, sliderMaxValue: 15, sliderStepValue: 1, defaultValue: tickToSecond(settings.gaming.resourceInterval.gold)-1 },
                     // 钻石生成实际速率为（基准间隔-等级*200），所以1级的情况下默认为800-1*200=600（30秒）。所以，应该减去11而不能只减1。
                     { type: "slider", label: `§l钻石生成间隔\n§r§7在标准模式无任何加成下，平均每个钻石生成所需的时间。单位：秒。\n当前值：§a${tickToSecond(settings.gaming.resourceInterval.diamond)-11}§7，设置值§a`, sliderMinValue: 30, sliderMaxValue: 90, sliderStepValue: 5, defaultValue: tickToSecond(settings.gaming.resourceInterval.diamond)-11 },
                     { type: "slider", label: `§l绿宝石生成间隔\n§r§7在标准模式无任何加成下，平均每个绿宝石生成所需的时间。单位：秒。\n当前值：§a${tickToSecond(settings.gaming.resourceInterval.emerald)-11}§7，设置值§a`, sliderMinValue: 30, sliderMaxValue: 90, sliderStepValue: 5, defaultValue: tickToSecond(settings.gaming.resourceInterval.emerald)-11 },
-                    { type: "slider", label: `§l单挑模式生成倍率\n§r§7单挑模式相比于标准模式的速度倍率。\n§c注意！该设置需要您重新调整一次。§7\n当前值：§a${settings.gaming.resourceInterval.soloSpeedMultiplier}§7，设置值§a`, sliderMinValue: 0.1, sliderMaxValue: 2.0, sliderStepValue: 0.1, defaultValue: 1 },
+                    { type: "slider", label: `§l单挑模式生成倍率\n§r§7单挑模式相比于标准模式的速度倍率。单位：*0.1。\n§8例：若设置为6，则单挑模式下生成资源的速度降为标准模式的0.6倍。§7\n当前值：§a${settings.gaming.resourceInterval.soloSpeedMultiplier}§7，设置值§a`, sliderMinValue: 1, sliderMaxValue: 20, sliderStepValue: 1, defaultValue: settings.gaming.resourceInterval.soloSpeedMultiplier },
                 ],
                 () => { settings.gaming.resourceInterval = defaultSettings.gaming.resourceInterval; },
                 result => {
-                    settings.gaming.resourceInterval.iron = result[0] * 20;
+                    settings.gaming.resourceInterval.iron = result[0];
                     settings.gaming.resourceInterval.gold = result[1] * 20;
                     settings.gaming.resourceInterval.diamond = ( result[2] + 10 ) * 20;
                     settings.gaming.resourceInterval.emerald = ( result[3] + 10 ) * 20;
-                    settings.gaming.resourceInterval.soloSpeedMultiplier = parseFloat(result[4].toFixed(1));
+                    settings.gaming.resourceInterval.soloSpeedMultiplier = result[4];
                 },
                 () => gaming()
             );
@@ -375,8 +347,8 @@ function showMainPage( player ) {
             player,
             "杂项设置",
             [
-                { type: "toggle", label: `破坏原版方块\n§7创造模式的玩家能否破坏原版方块。\n§7当前值：§a${settings.miscellaneous.creativePlayerCanBreakBlocks}`, defaultValue: settings.miscellaneous.creativePlayerCanBreakBlocks },
-                { type: "toggle", label: `虚空扔物品\n§7在虚空中掉落的玩家是否允许扔出物品。\n§7当前值：§a${settings.miscellaneous.playerCanThrowItemsInVoid}`, defaultValue: settings.miscellaneous.playerCanThrowItemsInVoid },
+                { type: "toggle", label: `§l破坏原版方块\n§r§7创造模式的玩家能否破坏原版方块。\n§7当前值：§a${settings.miscellaneous.creativePlayerCanBreakBlocks}`, defaultValue: settings.miscellaneous.creativePlayerCanBreakBlocks },
+                { type: "toggle", label: `§l虚空扔物品\n§r§7在虚空中掉落的玩家是否允许扔出物品。\n§7当前值：§a${settings.miscellaneous.playerCanThrowItemsInVoid}`, defaultValue: settings.miscellaneous.playerCanThrowItemsInVoid },
             ],
             () => { settings.miscellaneous = defaultSettings.miscellaneous; },
             result => {
@@ -428,6 +400,69 @@ function showMainPage( player ) {
  */
 export function settingsFunction( event ) {
     if ( event.itemStack.typeId === "bedwars:settings" ) { showMainPage( event.source ) }
+}
+
+/** 备份设置到data记分板上 */
+export function settingsBackup() {
+    /** 递归遍历对象，并为每个属性调用 setScore
+     * @remark 代码生成自Deepseek
+     * @param {object} obj - 要遍历的对象
+     * @param {string} path - 当前属性的路径（用于生成 setScore 的第二个参数）
+     */
+    function applySettings(obj, path = "") {
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                // 构建当前属性的路径
+                const currentPath = path ? `${path}.${key}` : key;
+                // 如果当前属性是对象，递归遍历
+                if (typeof obj[key] === "object" && !Array.isArray(obj[key])) {
+                    applySettings(obj[key], currentPath);
+                }
+                // 如果当前属性是基本类型（整数、布尔值），调用 setScore
+                else {
+                    setScore("data", `settings.${currentPath}`, obj[key]);
+                }
+            }
+        }
+    }
+    applySettings( settings );
+}
+
+/** 恢复设置到data记分板上 */
+export function settingsRecover() {
+    /**
+     * 递归遍历对象，并为每个属性调用 getScore
+     * @remark 代码生成自Deepseek
+     * @param {object} obj - 要遍历的对象（settings 或 defaultSettings）
+     * @param {string} path - 当前属性的路径（用于生成 getScore 的第二个参数）
+     * @param {object} defaultObj - 默认设置对象（defaultSettings）
+     */
+    function applySettings(obj, path = "", defaultObj) {
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const currentPath = path ? `${path}.${key}` : key; // 构建当前属性的路径
+                if (typeof obj[key] === "object" && !Array.isArray(obj[key])) {
+                    // 如果当前属性是对象，递归遍历
+                    applySettings(obj[key], currentPath, defaultObj[key]);
+                } else {
+                    // 获取 getScore 的结果
+                    const scoreValue = getScore("data", `settings.${currentPath}`, defaultObj[key]);
+
+                    // 如果默认值是布尔值，则将结果转换为布尔值
+                    if (typeof defaultObj[key] === "boolean") {
+                        obj[key] = Boolean(scoreValue); // 或者使用 !!scoreValue
+                    } else {
+                        // 否则，直接使用 getScore 的结果
+                        obj[key] = scoreValue;
+                        
+                    }
+                }
+            }
+        }
+    }
+
+    // 调用函数，遍历 settings 对象
+    applySettings(settings, "", defaultSettings);
 }
 
 /** === 方法 === */

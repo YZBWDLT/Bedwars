@@ -54,7 +54,7 @@ function teamResources( team ) {
         }
 
         /** 铁倒计时 | 时间：单个铁的间隔*生成铁的数目/速度加成 */
-        team.spawnerInfo.ironCountdown = Math.floor( settings.gaming.resourceInterval.iron * map().spawnerInfo.ironSpawnTimes / ( map().isSolo() ? settings.gaming.resourceInterval.soloSpeedMultiplier : 1.0 ) / getForgeBonus( team.teamUpgrade.forge ) );
+        team.spawnerInfo.ironCountdown = Math.floor( settings.gaming.resourceInterval.iron * map().spawnerInfo.ironSpawnTimes / ( map().isSolo() ? settings.gaming.resourceInterval.soloSpeedMultiplier / 10 : 1.0 ) / getForgeBonus( team.teamUpgrade.forge ) );
 
     };
     
@@ -67,7 +67,7 @@ function teamResources( team ) {
         }
 
         /** 金倒计时 | 时间：金间隔/速度加成 */
-        team.spawnerInfo.goldCountdown = Math.floor( settings.gaming.resourceInterval.gold / ( map().isSolo() ? settings.gaming.resourceInterval.soloSpeedMultiplier : 1.0 ) / getForgeBonus( team.teamUpgrade.forge ) );
+        team.spawnerInfo.goldCountdown = Math.floor( settings.gaming.resourceInterval.gold / ( map().isSolo() ? settings.gaming.resourceInterval.soloSpeedMultiplier / 10 : 1.0 ) / getForgeBonus( team.teamUpgrade.forge ) );
 
     };
     

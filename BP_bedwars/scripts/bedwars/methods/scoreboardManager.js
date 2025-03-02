@@ -108,22 +108,30 @@ export function addScore( objective, participant, score ) {
  * @description 等同于/scoreboard players set (objective) (participant) (score)
  * @param {String} objective 记分项 ID
  * @param {Entity | ScoreboardIdentity | String} participant 追踪对象
- * @param {Number} score 添加的分数
+ * @param {Number | Boolean} score 添加的分数，如果输入为布尔值，则输入为 0 或 1
  */
 export function setScore( objective, participant, score ) {
-    return getScoreboard( objective ).setScore( participant, score );
+    if ( typeof score === "boolean" ) { score = Number( score ) };
+    getScoreboard( objective ).setScore( participant, score );
+    return score;
 }
 
 /** 获取分数
  * @param {String} objective 记分项 ID
  * @param {Entity | ScoreboardIdentity | String} participant 追踪对象
+ * @param {number} defaultValue 默认值
  */
-export function getScore( objective, participant ) {
+export function getScore( objective, participant, defaultValue = undefined ) {
     try {
         return getScoreboard( objective ).getScore( participant );
     }
     catch {
-        return void 0;
+        if ( defaultValue !== undefined ) {
+            return setScore( objective, participant, defaultValue );
+        }
+        else {
+            return void 0;
+        }
     }
 }
 

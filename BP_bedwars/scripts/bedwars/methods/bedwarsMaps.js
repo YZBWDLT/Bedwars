@@ -338,7 +338,7 @@ export class BedwarsMap{
         } );
         // 移除多余记分板并添加新的记分板
         const scoreboardWhitelist = [ "data" ];
-        removeAllScoreboards( obj => !scoreboardWhitelist.includes( obj.displayName ) )
+        removeAllScoreboards( obj => !scoreboardWhitelist.includes( obj.id ) );
         tryAddScoreboard( "data", "数据" );
         // 地图大小同步
         // 先从记分板获取上一张地图的大小，然后将本地图的大小设置到记分板上
@@ -387,7 +387,7 @@ export class BedwarsMap{
                 playerCount = maxPlayerCount;
             }
             // 如果为按照胜率排序，则重新排序
-            if ( assignMode === "assignByWins" ) {
+            if ( assignMode === 2 ) {
                 
             }
 
@@ -406,7 +406,7 @@ export class BedwarsMap{
 
             if ( players.length !== 0 ) {
                 // 如果为标准模式，分配到前面的队伍去
-                if ( assignMode === "assignNormally" ) {
+                if ( assignMode === 0 ) {
                     for ( let i = 0; i < players.length; i++ ) {
                         new BedwarsPlayer( players[i].name, this.teamList[i].id );
                     }

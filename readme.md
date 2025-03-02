@@ -165,8 +165,8 @@
 - `eachScoreboard(func,condition) {}`：令所有记分板执行一个函数。
 - `removeAllScoreboards(condition) {}`：移除所有记分板。
 - `addScore(objective,participant,score) {}`：添加分数。
-- `setScore(objective,participant,score) {}`：设置分数。
-- `getScore(objective,participant) {}`：获取分数。
+- `setScore(objective,participant,score) {}`：设置分数并返回这个值。
+- `getScore(objective,participant,defaultValue) {}`：获取分数。如果无法获取分数，则设置为默认值并返回这个值。
 - `getObjectiveFromParticipant(participantName) {}`：获取被追踪对象的全部记分项数据。
 
 #### `methods/uiManager.js`
@@ -216,6 +216,8 @@
   - `settings.randomMap.allow8Teams` → `settings.mapEnabled.classicEightTeamsEnabled`；
   - `settings.creativePlayerCanBreakBlocks` → `settings.miscellaneous.creativePlayerCanBreakBlocks`。
 - **更改** 重命名`settingsEvent(event) {}` → `settingsFunction(event) {}`，并更改了其依赖事件，由`system.afterEvents.scriptEventReceive`改为`world.afterEvents.itemUse`。
+- **新增** `settingsBackup() {}`方法，用于在玩家设置完成后备份数据。
+- **新增** `settingsRecover() {}`方法，用于恢复已备份的数据。
 
 #### 翻译文件`zh_CN.lang`
 

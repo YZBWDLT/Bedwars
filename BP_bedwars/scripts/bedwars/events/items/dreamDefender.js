@@ -26,6 +26,9 @@ function setIronGolemProperties( ironGolem, placerInfo ) {
     
     /** 消失计时 */
     ironGolem.killTimer = 0;
+
+    /** 设定主人 */
+    ironGolem.owner = placerInfo.getThisPlayer();
     
     /** 名称 */
     ironGolem.nameSetter = () => {

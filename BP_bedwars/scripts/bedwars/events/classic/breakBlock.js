@@ -75,17 +75,18 @@ export function playerBreakBedTest( event ) {
             // 进行全体玩家通报
             eachValidPlayer( ( player, playerInfo ) => {
                 /** 破坏者的玩家名 */ const breakerName = breaker.nameTag;
+                /** 破坏样式 */ const killStyle = breakerInfo.killStyle;
 
                 // 对本队玩家通报
                 if ( playerInfo.team === team.id ) {
                     showTitle( player, { translate: "title.bedDestroyed" }, { translate: "subtitle.bedDestroyed" } );
                     player.playSound( "mob.wither.death" );
-                    player.sendMessage( [ "\n", { translate: "message.bedDestroyed", with: [ `${breakerName}` ] }, "\n " ] );
+                    player.sendMessage( [ "\n", { translate: `message.bedDestroyed.${killStyle}`, with: { rawtext: [ { translate: `message.selfBed` }, { text: breakerName } ] } }, "\n " ] );
                 }
                 // 对他队玩家通报
                 else {
                     player.playSound( "mob.enderdragon.growl", { location: positionManager.add( player.location, 0, 12 ) } ); // 播放音效（末影龙的麦很炸，所以提高 12 格）
-                    player.sendMessage( [ "\n", { translate: "message.otherBedDestroyed", with: { rawtext: [ { translate: `team.${team.id}` }, { text: `${breakerName}` } ] } }, "\n " ] );
+                    player.sendMessage( [ "\n", { translate: `message.bedDestroyed.${killStyle}`, with: { rawtext: [ { translate: `message.otherBed`, with: { rawtext: [ { translate: `team.${team.id}` } ] } }, { text: breakerName } ] } }, "\n " ] ); // 英语的效果可能不好
                 }
             } )
         }

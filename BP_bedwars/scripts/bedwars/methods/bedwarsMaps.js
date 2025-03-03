@@ -6,7 +6,7 @@ import { settings } from "./bedwarsSettings";
 
 import { randomInt, shuffleArray } from "./number";
 import { getPlayerAmount, eachPlayer, setPlayerGamemode } from "./playerManager";
-import { BedwarsPlayer, eachValidPlayer, initPlayer } from "./bedwarsPlayer";
+import { availableKillStyles, BedwarsPlayer, eachValidPlayer, initPlayer } from "./bedwarsPlayer";
 import { overworld, positionManager, Vector } from "./positionManager";
 import { eventManager } from "../events/eventManager";
 import { getScore, removeAllScoreboards, setScore, tryAddScoreboard } from "./scoreboardManager";
@@ -337,9 +337,10 @@ export class BedwarsMap{
             initPlayer( player )
         } );
         // 移除多余记分板并添加新的记分板
-        const scoreboardWhitelist = [ "data" ];
+        const scoreboardWhitelist = [ "data", "killStyle" ];
         removeAllScoreboards( obj => !scoreboardWhitelist.includes( obj.id ) );
         tryAddScoreboard( "data", "数据" );
+        tryAddScoreboard( "killStyle", "击杀样式" );
         // 地图大小同步
         // 先从记分板获取上一张地图的大小，然后将本地图的大小设置到记分板上
         let prevX = getScore( "data", "mapSize.prevX" );
@@ -427,26 +428,40 @@ export class BedwarsMap{
         eventManager.classicEvents();
         if ( this.mode === "capture" ) { eventManager.captureEvents(); }
 
-        /** 设置为允许 PVP */
+        // 设置为允许 PVP
         world.gameRules.pvp = true;
-        /** 随机分配玩家队伍 */
+        // 分配玩家队伍
         assignPlayers();
-        /** 安置商人 */
+        // 安置商人
         this.setTraders();
-        /** 移除等待大厅 */
+        // 移除等待大厅
         overworld.runCommand( `fill -12 117 -12 12 127 12 air` );
-        /** 在重生点下方放置一块屏障（防止薛定谔玩家复活时判定失败） */
+        // 在重生点下方放置一块屏障（防止薛定谔玩家复活时判定失败）
         overworld.runCommand( `setblock 0 ${this.spawnpointPos.y - 2} 0 barrier` );
-        /** 如果一个队伍没有分配到人，则设置为无效的队伍 */
+        // 继续尝试重新添加killStyle记分板
+        tryAddScoreboard( "killStyle", "击杀样式" );
+        // 如果一个队伍没有分配到人，则设置为无效的队伍
         if ( settings.gaming.invalidTeam.enableTest ) {
             eachTeam( team => { if ( team.getTeamMember().length === 0 ) { team.setTeamInvalid(); }; } );
         }
-        /** 玩家命令 */
+        // 玩家命令
         eachValidPlayer( ( player, playerInfo ) => {
             if ( !playerInfo.isSpectator ) {
                 /** 将玩家传送到队伍中 */ playerInfo.teleportPlayerToSpawnpoint();
                 /** 调整玩家的游戏模式 */ setPlayerGamemode( player, "survival" );
-                /** 播报消息 */ player.sendMessage( [ { translate: "message.greenLine" }, "\n", this.getStartIntro().title, "\n\n", this.getStartIntro().intro, "\n\n", { translate: "message.greenLine" } ] )
+                /** 播报消息 */ player.sendMessage( [ { translate: "message.greenLine" }, "\n", this.getStartIntro().title, "\n\n", this.getStartIntro().intro, "\n\n", { translate: "message.greenLine" } ] );
+
+                // 玩家击杀样式 */
+                if ( settings.gaming.killStyle.isEnabled ) {
+                    playerInfo.killStyle = settings.gaming.killStyle.randomKillStyle ? availableKillStyles[randomInt(0,availableKillStyles.length-1)] : availableKillStyles[getScore( "killStyle", player, 0 )];
+                }
+                else {
+                    playerInfo.killStyle = "default"
+                }
+                // 移除玩家的设置物品
+                player.runCommand( `clear @s bedwars:kill_style` );
+                player.runCommand( `clear @s bedwars:select_team` );
+                
             }
         } );
     };

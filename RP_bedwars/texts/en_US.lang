@@ -202,8 +202,10 @@ item.bedwars:upgrade_counter_offensive_trap=§aCounter-Offensive Trap
 item.bedwars:upgrade_alarm_trap=§aAlarm Trap
 item.bedwars:upgrade_miner_fatigue_trap=§aMiner Fatigue Trap
 
-#### Debug Items
-item.bedwars:settings=Settings
+#### Settings Items
+item.bedwars:select_team=Select Team
+item.bedwars:kill_style=Kill Style
+item.bedwars:map_settings=Map Settings
 
 ## ===== Team Names =====
 team.red=§cR
@@ -270,22 +272,6 @@ message.selfTeamPlayer.breakingBed=§cYou can't destroy your own bed!
 message.invalidPlayer.breakingBed=§cYou don't have permission to destroy the bed!
 message.teamEliminated=§lTEAM ELIMINATED > §rTeam %s§c has been eliminated!
 
-#### Normal (Will Be Deleted)
-message.bedDestroyed=§lBED DESTRUCTION > §r§7Your bed was destroyed by %s§7!
-message.otherBedDestroyed=§lBED DESTRUCTION > §rBed %s §7was destroyed by %s§7!
-message.playerDied.died=%s§7 died.
-message.playerDied.fellIntoVoid=%s§7 fell into the void.
-message.playerDied.beKilled=%s§7 was killed by %s§7.
-message.playerDied.beShot=%s§7was shot by %s§7.
-message.playerDied.beKilledVoid=%s§7 was knocked into the void by %s§7.
-message.playerDied.beKilledFall=%s§7 was knocked off a cliff by %s§7.
-message.playerDied.finalKill.died=%s§7 died. §l§bFINAL KILL!
-message.playerDied.finalKill.fellIntoVoid=%s§7 fell into the void. §l§bFINAL KILL!
-message.playerDied.finalKill.beKilled=%s§7 was killed by %s§7. §l§bFINAL KILL!
-message.playerDied.finalKill.beShot=%s§7 was shot by %s§7.§l§bFINAL KILL!
-message.playerDied.finalKill.beKilledVoid=%s§7 was knocked into the void by %s§7. §l§bFINAL KILL!
-message.playerDied.finalKill.beKilledFall=%s§7 was knocked off a cliff by %s§7. §l§bFINAL KILL!
-
 #### Style: Default
 message.kill.beKilled.default=%s§7 was killed by %s§7.
 message.kill.beKilledVoid.default=%s§7 was knocked into the void by %s§7.
@@ -300,7 +286,7 @@ message.kill.beKilledVoid.flame=%s§7被%s§7化为粉尘。
 message.kill.beShot.flame=%s§7被%s§7熔化。
 message.kill.beKilledFall.flame=%s§7被%s§7化为灰烬。
 message.kill.beKilledGolem.flame=%s§7被%s§7的傀儡油炸了。
-message.bedDestroyed.flame=§l床被破坏了 > §r%s的床§7被%s§7焚烧！
+message.bedDestroyed.flame=§lBED DESTRUCTION > §r%s的床§7被%s§7焚烧！
 
 #### 样式：西部
 message.kill.beKilled.west=%s§7被%s§7中箭无数。
@@ -308,7 +294,7 @@ message.kill.beKilledVoid.west=%s§7被%s§7逼入末路。
 message.kill.beShot.west=%s§7因%s§7用炸药炸死。
 message.kill.beKilledFall.west=%s§7在一场饮酒比赛中输给了%s§7。
 message.kill.beKilledGolem.west=%s§7输掉了与%s§7的傀儡的对决。
-message.bedDestroyed.west=§l床被破坏了 > §r%s的床§7被%s§7冻住！
+message.bedDestroyed.west=§lBED DESTRUCTION > §r%s的床§7被%s§7冻住！
 
 #### 样式：光荣
 message.kill.beKilled.glory=%s§7死于与%s§7的近战。
@@ -316,7 +302,7 @@ message.kill.beKilledVoid.glory=%s§7与%s§7战至边缘。
 message.kill.beShot.glory=%s§7死于%s§7的百步穿杨之术。
 message.kill.beKilledFall.glory=%s§7因%s§7而跌跌撞撞地滑落边缘。
 message.kill.beKilledGolem.glory=%s§7与%s§7的傀儡的跳起了探戈。
-message.bedDestroyed.glory=§l床被破坏了 > §r%s的床§7不得不向%s§7高举白旗！
+message.bedDestroyed.glory=§lBED DESTRUCTION > §r%s的床§7不得不向%s§7高举白旗！
 
 #### 样式：海盗
 message.kill.beKilled.pirate=%s§7被%s§7塞进了戴维·琼斯的箱子。
@@ -324,7 +310,7 @@ message.kill.beKilledVoid.pirate=%s§7被%s§7的加农炮炸死了。
 message.kill.beShot.pirate=%s§7被%s§7射杀。
 message.kill.beKilledFall.pirate=%s§7被%s§7的魔法杀死了。
 message.kill.beKilledGolem.pirate=%s§7被%s§7的傀儡用金属杀死了。
-message.bedDestroyed.pirate=§l床被破坏了 > §r%s的床§7被%s§7的大炮轰成了渣！
+message.bedDestroyed.pirate=§lBED DESTRUCTION > §r%s的床§7被%s§7的大炮轰成了渣！
 
 #### 样式：爱情
 message.kill.beKilled.love=%s§7受到了%s§7的冷淡。
@@ -332,7 +318,7 @@ message.kill.beKilledVoid.love=%s§7被%s§7的爱情炸弹击中。
 message.kill.beShot.love=%s§7被%s§7的丘比特之箭射杀。
 message.kill.beKilledFall.love=%s§7被%s§7赶出了联盟。
 message.kill.beKilledGolem.love=%s§7不敌%s§7的傀儡。
-message.bedDestroyed.love=§l床被破坏了 > §r%s的床§7被%s§7拆解！
+message.bedDestroyed.love=§lBED DESTRUCTION > §r%s的床§7被%s§7拆解！
 
 #### 样式：圣诞老人工坊
 message.kill.beKilled.christmas=%s§7被%s§7打包成了礼物。
@@ -340,7 +326,7 @@ message.kill.beKilledVoid.christmas=%s§7因%s§7而摔到硬木地板上而死�
 message.kill.beShot.christmas=%s§7被%s§7列入淘气名单。
 message.kill.beKilledFall.christmas=%s§7被%s§7推下了滑坡。
 message.kill.beKilledGolem.christmas=%s§7被%s§7的傀儡做成了姜饼。
-message.bedDestroyed.christmas=§l床被破坏了 > §r%s的床§7被%s§7用来交换饼干和牛奶！
+message.bedDestroyed.christmas=§lBED DESTRUCTION > §r%s的床§7被%s§7用来交换饼干和牛奶！
 
 #### 样式：表情包
 message.kill.beKilled.meme=%s§7被%s§7完爆。
@@ -348,7 +334,7 @@ message.kill.beKilledVoid.meme=%s§7被%s§7击败。
 message.kill.beShot.meme=%s§7被%s§7删了一记耳光。
 message.kill.beKilledFall.meme=%s§7被%s§7烤熟了。
 message.kill.beKilledGolem.meme=%s§7被%s§7的傀儡捉弄致死。
-message.bedDestroyed.meme=§l床被破坏了 > §r%s的床§7被%s§7做成表情包！
+message.bedDestroyed.meme=§lBED DESTRUCTION > §r%s的床§7被%s§7做成表情包！
 
 #### 样式：打包
 message.kill.beKilled.pack=%s§7被%s§7打包成了礼物。
@@ -356,7 +342,7 @@ message.kill.beKilledVoid.pack=%s§7被%s§7打成了蝴蝶结。
 message.kill.beShot.pack=%s§7被%s§7粘住了。
 message.kill.beKilledFall.pack=%s§7被%s§7的礼物绊倒了。
 message.kill.beKilledGolem.pack=%s§7被%s§7的傀儡绑起来了。
-message.bedDestroyed.pack=§l床被破坏了 > §r%s的床§7被%s§7装满了面巾纸！
+message.bedDestroyed.pack=§lBED DESTRUCTION > §r%s的床§7被%s§7装满了面巾纸！
 
 #### 样式：胜利
 message.kill.beKilled.victory=%s§7被%s§7§e打败§7。
@@ -365,7 +351,7 @@ message.kill.beKilledVoid.victory=%s§7被%s§7推入§e虚空§7。
 message.kill.beShot.victory=%s§7被%s§7§e射杀§7。
 message.kill.beKilledFall.victory=%s§7被%s§7击落边缘。
 message.kill.beKilledGolem.victory=%s§7被%s§7的傀儡§e打败§7。
-message.bedDestroyed.victory=§l床被破坏了 > §r%s的床§7是%s§7破坏的第§e#%s§7张床！
+message.bedDestroyed.victory=§lBED DESTRUCTION > §r%s的床§7是%s§7破坏的第§e#%s§7张床！
 
 #### 样式：荣耀
 message.kill.beKilled.honour=%s§7被%s§7§6践踏§7。
@@ -374,7 +360,15 @@ message.kill.beKilledVoid.honour=%s§7被%s§7掷落§6深渊§7。
 message.kill.beShot.honour=%s§7被%s§7§6射杀§7。
 message.kill.beKilledFall.honour=%s§7被%s§7重重地击落§6地面§7。
 message.kill.beKilledGolem.honour=%s§7被%s§7的傀儡§6超越§7。
-message.bedDestroyed.honour=§l床被破坏了 > §r%s的床§7是%s§7破坏的第§e#%s§7张床！
+message.bedDestroyed.honour=§lBED DESTRUCTION > §r%s的床§7是%s§7破坏的第§e#%s§7张床！
+
+#### 样式：新三国（独家，by 狂野巴豆）(PLS DO NOT TRANSLATE)
+message.kill.beKilled.newThreeKingdom=%s§7被%s§7摸须一刀斩。
+message.kill.beKilledVoid.newThreeKingdom=%s§7被%s§7叉出去，掉进虚空。生死不明，那就是死了。
+message.kill.beShot.newThreeKingdom=%s§7被%s§7射了一万个透明窟窿。
+message.kill.beKilledFall.newThreeKingdom=%s§7摔成肉饼，被%s§7拿去煮汤喝。虽然酸，但咱家不怕酸！
+message.kill.beKilledGolem.newThreeKingdom=%s§7被铁傀儡杀了，不是%s§7害了你，是这个乱世害了你啊！
+message.bedDestroyed.newThreeKingdom=§l床被破坏了 > §r%s的床§7与%s§7战至最后一刻，自！刎！归！天！
 
 ### --- Death and respawn ---
 
@@ -455,6 +449,7 @@ message.respawn.newBed=§cBecause the team has obtained a new bed, the eliminate
 
 message.settings.warning.regenerateMapWhenLoading=§cYou can't regenerate map when loading map, please try again later.
 message.settings.warning.allModesDisabled=§cYou can't disable all modes!
+message.killStyle.scoreboardLost=§cYou can't use this setting because the key scoreboard object "killStyle" has been lost
 
 ### --- Shopitems ---
 message.bedwars:shopitem_wool=Wool

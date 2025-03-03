@@ -202,8 +202,10 @@ item.bedwars:upgrade_counter_offensive_trap=§a反击陷阱
 item.bedwars:upgrade_alarm_trap=§a报警陷阱
 item.bedwars:upgrade_miner_fatigue_trap=§a挖掘疲劳陷阱
 
-#### 调试物品
-item.bedwars:settings=设置
+#### 设置物品
+item.bedwars:select_team=选择队伍
+item.bedwars:kill_style=击杀样式
+item.bedwars:map_settings=地图设置
 
 ## ===== 队伍名 =====
 team.red=§c红
@@ -251,8 +253,8 @@ message.gameStartIntroduction.defend=§e§l保护你的床并摧毁敌人的床�
 
 ### --- 击杀消息与床破坏消息 ---
 ### 床被破坏的可用模板：
-### { translate: `message.bedDestroyed.${killStyle}`, with: { rawtext: [ { translate: `message.selfBed` } ] } }
-### { translate: `message.bedDestroyed.${killStyle}`, with: { rawtext: [ { translate: `message.otherBed`, with: { rawtext: [ { text: `team.${id}` } ] } } ] } }
+### { translate: `message.bedDestroyed.${killStyle}`, with: { rawtext: [ { translate: `message.selfBed` }, { text: breakerName } ] } }
+### { translate: `message.bedDestroyed.${killStyle}`, with: { rawtext: [ { translate: `message.otherBed`, with: { rawtext: [ { text: `team.${team.id}` } ] } }, { text: breakerName } ] } }
 
 #### 常规
 title.bedDestroyed=§c床已被破坏！
@@ -269,22 +271,6 @@ message.enderChestItemReleased=§a%s的末影箱内物品已掉落在了所在�
 message.selfTeamPlayer.breakingBed=§c你不能破坏自己队伍的床！
 message.invalidPlayer.breakingBed=§c你没有破坏床的权限！
 message.teamEliminated=§l团灭 > §r%s队§c已被淘汰！
-
-#### 常规（待删除）
-message.bedDestroyed=§l床被破坏了 > §r§7你的床被 %s §7破坏！
-message.otherBedDestroyed=§l床被破坏了 > §r%s队的床§7被%s§7破坏！
-message.playerDied.died=%s§7死了。
-message.playerDied.fellIntoVoid=%s§7失足跌入虚空。
-message.playerDied.beKilled=%s§7被%s§7击杀。
-message.playerDied.beShot=%s§7被%s§7射杀。
-message.playerDied.beKilledVoid=%s§7被%s§7扔下了虚空。
-message.playerDied.beKilledFall=%s§7被%s§7扔下了悬崖。
-message.playerDied.finalKill.died=%s§7死了。§l§b最终击杀！
-message.playerDied.finalKill.fellIntoVoid=%s§7失足跌入虚空。§l§b最终击杀！
-message.playerDied.finalKill.beKilled=%s§7被%s§7击杀。§l§b最终击杀！
-message.playerDied.finalKill.beShot=%s§7被%s§7射杀。§l§b最终击杀！
-message.playerDied.finalKill.beKilledVoid=%s§7被%s§7扔下了虚空。§l§b最终击杀！
-message.playerDied.finalKill.beKilledFall=%s§7被%s§7扔下了悬崖。§l§b最终击杀！
 
 #### 样式：默认
 message.kill.beKilled.default=%s§7被%s§7击杀。
@@ -303,9 +289,9 @@ message.kill.beKilledGolem.flame=%s§7被%s§7的傀儡油炸了。
 message.bedDestroyed.flame=§l床被破坏了 > §r%s的床§7被%s§7焚烧！
 
 #### 样式：西部
-message.kill.beKilled.west=%s§7被%s§7中箭无数。
+message.kill.beKilled.west=%s§7因%s§7中箭无数。
 message.kill.beKilledVoid.west=%s§7被%s§7逼入末路。
-message.kill.beShot.west=%s§7因%s§7用炸药炸死。
+message.kill.beShot.west=%s§7被%s§7用炸药炸死。
 message.kill.beKilledFall.west=%s§7在一场饮酒比赛中输给了%s§7。
 message.kill.beKilledGolem.west=%s§7输掉了与%s§7的傀儡的对决。
 message.bedDestroyed.west=§l床被破坏了 > §r%s的床§7被%s§7冻住！
@@ -345,7 +331,7 @@ message.bedDestroyed.christmas=§l床被破坏了 > §r%s的床§7被%s§7用来
 #### 样式：表情包
 message.kill.beKilled.meme=%s§7被%s§7完爆。
 message.kill.beKilledVoid.meme=%s§7被%s§7击败。
-message.kill.beShot.meme=%s§7被%s§7删了一记耳光。
+message.kill.beShot.meme=%s§7被%s§7扇了一记耳光。
 message.kill.beKilledFall.meme=%s§7被%s§7烤熟了。
 message.kill.beKilledGolem.meme=%s§7被%s§7的傀儡捉弄致死。
 message.bedDestroyed.meme=§l床被破坏了 > §r%s的床§7被%s§7做成表情包！
@@ -375,6 +361,14 @@ message.kill.beShot.honour=%s§7被%s§7§6射杀§7。
 message.kill.beKilledFall.honour=%s§7被%s§7重重地击落§6地面§7。
 message.kill.beKilledGolem.honour=%s§7被%s§7的傀儡§6超越§7。
 message.bedDestroyed.honour=§l床被破坏了 > §r%s的床§7是%s§7破坏的第§e#%s§7张床！
+
+#### 样式：新三国（独家，by 狂野巴豆）
+message.kill.beKilled.newThreeKingdom=%s§7被%s§7摸须一刀斩。
+message.kill.beKilledVoid.newThreeKingdom=%s§7被%s§7叉出去，掉进虚空。生死不明，那就是死了。
+message.kill.beShot.newThreeKingdom=%s§7被%s§7射了一万个透明窟窿。
+message.kill.beKilledFall.newThreeKingdom=%s§7摔成肉饼，被%s§7拿去煮汤喝。虽然酸，但咱家不怕酸！
+message.kill.beKilledGolem.newThreeKingdom=%s§7被铁傀儡杀了，不是%s§7害了你，是这个乱世害了你啊！
+message.bedDestroyed.newThreeKingdom=§l床被破坏了 > §r%s的床§7与%s§7战至最后一刻，自！刎！归！天！
 
 ### --- 死亡与重生消息 ---
 
@@ -455,6 +449,7 @@ message.respawn.newBed=§c因为该队伍获得了一张新床，该队伍被淘
 
 message.settings.warning.regenerateMapWhenLoading=§c你不能在加载结构时重新生成地图，请稍后再试！
 message.settings.warning.allModesDisabled=§c你不能将所有模式全部禁用！
+message.killStyle.scoreboardLost=§c无法使用此设置，因为关键的记分项killStyle已丢失
 
 ### --- 商店物品消息 ---
 message.bedwars:shopitem_wool=羊毛

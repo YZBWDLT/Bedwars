@@ -88,7 +88,7 @@ export function deadPlayer() {
             if ( playerInfo.deathState.stayDeadTime === 100 ) {
                 playerInfo.setPlayerDead();
                 player.sendMessage( { translate: "message.eliminated" } );
-                world.sendMessage( { translate: `message.playerDied.finalKill.died`, with: [ `${player.nameTag}` ] } );
+                world.sendMessage( { translate: "message.kill.died", with: [ player.nameTag ] }, { translate: "message.finalKill" }, );
             }
         };
         /** 如果玩家的游戏 ID 与本局不匹配，则改为旁观者 */
@@ -164,64 +164,101 @@ export function hurtByFireball( event ) {
 
 
 /** 播报击杀信息，并返回击杀类型和击杀者
- * @description 0：其他、1：被其他玩家杀死、2：被其他玩家射杀、3：被其他玩家炸死、4：被其他玩家扔下去摔死、5：被其他玩家扔到虚空、6：自走虚空
+ * @description 0：其他、1：被其他玩家杀死、2：被其他玩家射杀、3：被其他玩家炸死、4：被其他玩家扔下去摔死、5：被其他玩家扔到虚空、6：自走虚空、7：被玩家的傀儡击杀
  * @param {Player} player 被击杀者
  * @param {BedwarsPlayer} playerInfo 被击杀者的起床战争信息
- * @param {Player} killer 击杀者
+ * @param {Entity|undefined} killer 击杀者
  * @returns { {id:Number,killer:Player|undefined} }
  */
 function getKillerAndDeathMessage( player, playerInfo, killer ) {
 
-    let finalKillString = () => {
-        return playerInfo.getBedState() ? "" : "finalKill.";
+    /** 是否为最终击杀，视玩家是否有床而决定 */ const isFinalKill =  playerInfo.getBedState() ? "" : "message.finalKill";
+    /** 玩家的名字（带颜色） */ const playerName = player.nameTag;
+    /** 玩家在一般情况下死亡 */
+    function diedNormally() {
+        world.sendMessage( [ { translate: "message.kill.died", with: [ player.nameTag ] } , { translate: isFinalKill }, ] );
+        return { id: 0, killer: void 0 };
     }
-    /** 击杀者实际存在的情况 */
-    if ( killer && killer.typeId === "minecraft:player" ) {
-        /** 被其他玩家射杀 */
-        if ( playerInfo.deathState.deathType === "projectile" ) {
-            world.sendMessage( { translate: `message.playerDied.${finalKillString()}beShot`, with: [ `${player.nameTag}`, `${killer.nameTag}` ] } );    
-            return { id: 2, killer };
+
+    // 击杀者实际存在的情况
+    if ( killer !== undefined ) {
+        // 击杀者为玩家的情况
+        if ( killer.typeId === "minecraft:player" ) {
+
+            /** 击杀者的样式 */ const killStyle = getPlayerBedwarsInfo( killer ).killStyle;
+            /** 击杀者的名字 */ const killerName = killer.nameTag;
+
+            // 被射杀
+            if ( playerInfo.deathState.deathType === "projectile" ) {
+                world.sendMessage( [ { translate: `message.kill.beShot.${killStyle}`, with: [ playerName, killerName ] }, { translate: isFinalKill }, ] )
+                return { id: 2, killer };
+            }
+            // 被击杀
+            else {
+                world.sendMessage( [ { translate: `message.kill.beKilled.${killStyle}`, with: [ playerName, killerName ] }, { translate: isFinalKill }, ] )
+                return { id: 1, killer };
+            }
+
         }
-        /** 被其他玩家杀死 */
+        // 击杀者不为玩家的情况（例如铁傀儡或蠹虫）
         else {
-            world.sendMessage( { translate: `message.playerDied.${finalKillString()}beKilled`, with: [ `${player.nameTag}`, `${killer.nameTag}` ] } );
-            return { id: 1, killer };
+
+            /** 该实体的主人 @type {Player | undefined} */ const owner = killer.owner;
+
+            // 如果有主人，则设定为被主人的傀儡所杀 message.kill.beKilledGolem.default=%s§7被%s§7的傀儡击杀。
+            if ( owner !== undefined ) {
+
+                /** 击杀者的样式 */ const killStyle = getPlayerBedwarsInfo( owner ).killStyle;
+                /** 击杀者的名字 */ const ownerName = owner.nameTag
+
+                world.sendMessage( [ { translate: `message.kill.beKilledGolem.${killStyle}`, with: [ playerName, ownerName ] }, { translate: isFinalKill }, ] );
+                return { id: 7, killer: owner };
+
+            }
+            // 否则，判定为一般死亡
+            else {
+                diedNormally();
+            }
+
         }
+
     }
-    /** 击杀者未实际存在的情况，但玩家间接地被玩家杀死的情况 */
-    else if ( playerInfo.lastHurt.attacker ) {
-        /** 被其他玩家炸死 */
+    // 击杀者未实际存在，但上一次受伤信息存在，则击杀者为上一次受伤信息指定的玩家 */
+    else if ( playerInfo.lastHurt.attacker !== undefined ) {
+        const attacker = playerInfo.lastHurt.attacker;
+        const attackerName = attacker.nameTag;
+        const killStyle = getPlayerBedwarsInfo( attacker ).killStyle;
+
+        // 被其他玩家炸死
         if ( playerInfo.deathState.deathType === "entityExplosion" ) {
-            world.sendMessage( { translate: `message.playerDied.${finalKillString()}beKilled`, with: [ `${player.nameTag}`, `${playerInfo.lastHurt.attacker.nameTag}` ] } );
-            return { id: 3, killer: playerInfo.lastHurt.attacker };
+            world.sendMessage( [ { translate: `message.kill.beKilled.${killStyle}`, with: [ playerName, attackerName ] }, { translate: isFinalKill }, ] )
+            return { id: 3, killer: attacker };
         }
-        /** 被其他玩家扔下去摔死 */
+        // 被其他玩家扔下去摔死
         else if ( playerInfo.deathState.deathType === "fall" ) {
-            world.sendMessage( { translate: `message.playerDied.${finalKillString()}beKilledFall`, with: [ `${player.nameTag}`, `${playerInfo.lastHurt.attacker.nameTag}` ] } );    
-            return { id: 4, killer: playerInfo.lastHurt.attacker };
+            world.sendMessage( [ { translate: `message.kill.beKilledFall.${killStyle}`, with: [ playerName, attackerName ] }, { translate: isFinalKill }, ] )
+            return { id: 4, killer: attacker };
         }
-        /** 被其他玩家扔到虚空 */
+        // 被其他玩家扔到虚空 message.kill.beKilledVoid.default=%s§7被%s§7扔下了虚空。
         else if ( playerInfo.deathState.deathType === "void" ) {
-            world.sendMessage( { translate: `message.playerDied.${finalKillString()}beKilledVoid`, with: [ `${player.nameTag}`, `${playerInfo.lastHurt.attacker.nameTag}` ] } );    
-            return { id: 5, killer: playerInfo.lastHurt.attacker };
+            world.sendMessage( [ { translate: `message.kill.beKilledVoid.${killStyle}`, with: [ playerName, attackerName ] }, { translate: isFinalKill }, ] )
+            return { id: 5, killer: attacker };
         }
-        /** 其他情况 */
+        // 其他情况
         else {
-            world.sendMessage( { translate: `message.playerDied.${finalKillString()}died`, with: [ `${player.nameTag}` ] } );
-            return { id: 0, killer: playerInfo.lastHurt.attacker };
+            diedNormally();
         }
     }
-    /** 自身原因 */
+    // 其他则为自身原因
     else {
-        /** 自走虚空 */
+        // 自走虚空
         if ( playerInfo.deathState.deathType === "void" ) {
-            world.sendMessage( { translate: `message.playerDied.${finalKillString()}fellIntoVoid`, with: [ `${player.nameTag}` ] } );
+            world.sendMessage( [ { translate: `message.kill.fellIntoVoid`, with: [ playerName ] }, { translate: isFinalKill }, ] )
             return { id: 6, killer: void 0 };
         }
-        /** 其他情况 */
+        // 其他情况
         else {
-            world.sendMessage( { translate: `message.playerDied.${finalKillString()}died`, with: [ `${player.nameTag}` ] } );
-            return { id: 0, killer: void 0 };
+            diedNormally();
         }
     }
 }

@@ -5,7 +5,7 @@ import { regenerateMap } from "./maps/mapGenerator";
 import { createEvent } from "./methods/eventManager";
 import { createInterval } from "./methods/intervalManager";
 import { playerLeave, playerRejoin } from "./events/classic/playerLeaveAndRejoin";
-import { settingsFunction } from "./methods/bedwarsSettings";
+import { killStyleSettings, mapSettings } from "./methods/bedwarsSettings";
 import { waiting } from "./events/classic/beforeGaming";
 import { beforeGamingInfoBoard } from "./events/classic/infoBoard";
 
@@ -48,7 +48,8 @@ createInterval( "alwaysSaturation", () => alwaysSaturation(), [ tags.gameLogic, 
 createEvent( "playerBreakVanillaBlockTest", world.beforeEvents.playerBreakBlock, event => playerBreakVanillaBlocksTest( event ), [ tags.gameLogic, tags.breakBlock ] );
 createEvent( "playerLeave", world.beforeEvents.playerLeave, event => playerLeave( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
 createEvent( "playerRejoin", world.afterEvents.playerSpawn, event => playerRejoin( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
-createEvent( "settingsFunction", world.afterEvents.itemUse, event => settingsFunction( event ), [ tags.gameLogic, tags.settings ] );
+createEvent( "mapSettings", world.afterEvents.itemUse, event => mapSettings( event ), [ tags.gameLogic, tags.settings ] );
+createEvent( "killStyleSettings", world.afterEvents.itemUse, event => killStyleSettings( event ), [ tags.gameLogic, tags.settings ] )
 
 /** ===== 游戏前事件 ===== */
 createInterval( "waiting", () => waiting(), [ tags.beforeGaming ] );

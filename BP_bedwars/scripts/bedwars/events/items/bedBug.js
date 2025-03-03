@@ -27,6 +27,9 @@ function setSilverfishProperties( silverfish, throwerInfo ) {
     /** 消失计时 */
     silverfish.killTimer = 0;
 
+    /** 设定主人 */
+    silverfish.owner = throwerInfo.getThisPlayer();
+
     /** 名称 */
     silverfish.nameSetter = () => {
         const index = Math.floor( silverfish.killTimer / 60 );

@@ -9,6 +9,13 @@ import { settings } from "./bedwarsSettings";
 import { setPlayerGamemode } from "./playerManager";
 import { getTeam as getTeamFunc } from "./bedwarsTeam";
 
+/** @typedef { "default" | "flame" | "west" | "glory" | "pirate" | "love" | "christmas" | "meme" | "pack" | "newThreeKingdom" } killStyle 击杀样式 */
+
+/** 可用的击杀样式 @type {killStyle[]} */
+export const availableKillStyles = [
+    "default", "flame", "west", "glory", "pirate", "love", "christmas", "meme", "pack", "newThreeKingdom"
+]
+
 export class BedwarsPlayer{
 
     /** 玩家名称 */ name = "";
@@ -38,8 +45,9 @@ export class BedwarsPlayer{
         /** 最终击杀 */ finalKill: 0,
         /** 破坏床数 */ bed: 0
     };
+    /** 击杀样式 @type {killStyle} */ killStyle = "default";
     /** 上一次受伤信息 */ lastHurt = {
-        /** 伤害者信息 */ attacker: undefined,
+        /** 伤害者信息 @type { Player | undefined } */ attacker: undefined,
         /** 自上一次伤害经过的时间 */ attackedSinceLastAttack: 200
     };
 

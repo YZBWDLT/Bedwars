@@ -38,7 +38,17 @@ export function waiting() {
             setPlayerGamemode( player, "adventure" );
 
             // 给予创造模式玩家一个设置（当该玩家没有设置的时候）
-            if ( player.getGameMode() === "creative" && !hasItem( player, "bedwars:settings" ) ) { giveItem( player, "bedwars:settings" ); }
+            if ( player.getGameMode() === "creative" && !hasItem( player, "bedwars:map_settings" ) ) {
+                giveItem( player, "bedwars:map_settings" );
+            }
+            // 若自主选队启用，则给予所有玩家该设置
+            if ( settings.beforeGaming.teamAssign.playerSelectEnabled && !hasItem( player, "bedwars:select_team" ) ) {
+                giveItem( player, "bedwars:select_team", { itemLock: "inventory" } );
+            }
+            // 若击杀样式启用，则给予所有玩家该设置
+            if ( settings.gaming.killStyle.isEnabled && !settings.gaming.killStyle.randomKillStyle && !hasItem( player, "bedwars:kill_style" ) ) {
+                giveItem( player, "bedwars:kill_style", { itemLock: "inventory" } );
+            }
 
         } )
 

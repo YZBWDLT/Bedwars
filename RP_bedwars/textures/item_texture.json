@@ -111,6 +111,8 @@
         "bedwars_blue_bed": { "textures": "textures/items/bed_blue" },
         "bedwars_white_bed": { "textures": "textures/items/bed_white" },
 
-        "bedwars_settings": { "textures": "textures/items/settings" }
+        "bedwars_map_settings": { "textures": "textures/items/map_settings" },
+        "bedwars_select_team": { "textures": "textures/items/bed_red" },
+        "bedwars_kill_style": { "textures": "textures/items/diamond_sword" }
     }
 }

@@ -107,6 +107,7 @@
   - `hasPosition(positions, testPos) {}`：判断一个坐标数组里是否存在一个坐标；
   - `distance(pos1,pos2) {}`：判断两个坐标之间的距离。
 - **移除** 在`methods/number.js`中的`objectInArray(array, object) {}`方法。现在用`positionManager.hasPosition(positions, testPos) {}`代替。
+- 更名`BedwarsPlayer`类的`runtimeId`属性为`gameId`属性，以和`BedwarsMap`类一致。
 
 #### `BedwarsMap`类，`methods/bedwarsMap.js`的方法
 

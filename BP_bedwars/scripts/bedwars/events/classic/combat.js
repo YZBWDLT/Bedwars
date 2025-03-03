@@ -92,7 +92,7 @@ export function deadPlayer() {
             }
         };
         /** 如果玩家的游戏 ID 与本局不匹配，则改为旁观者 */
-        if ( isDead && playerInfo.runtimeId !== map().gameId ) {
+        if ( isDead && playerInfo.gameId !== map().gameId ) {
             new BedwarsPlayer( player.name, undefined );
         };
     } )

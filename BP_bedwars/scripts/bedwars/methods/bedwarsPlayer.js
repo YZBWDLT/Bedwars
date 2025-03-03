@@ -13,7 +13,7 @@ export class BedwarsPlayer{
 
     /** 玩家名称 */ name = "";
     /** 玩家队伍 @type {import("./bedwarsTeam").validTeams|undefined} */ team = void 0;
-    /** 玩家运行时 ID */ runtimeId = 0;
+    /** 玩家游戏 ID */ gameId = 0;
     /** 玩家是否正在旁观 */ isSpectator = false;
     /** 玩家是否被淘汰 */ isEliminated = false;
     /** 玩家装备等级 */ equipment = {
@@ -92,7 +92,7 @@ export class BedwarsPlayer{
         this.isEliminated = true;
         this.deathState.isDeath = true;
         this.deathState.respawnCountdown = -1;
-        this.runtimeId = map().gameId;
+        this.gameId = map().gameId;
         setPlayerGamemode( this.getThisPlayer(), "spectator" );
         this.getThisPlayer().triggerEvent( `remove_team` );
         this.setNametag();
@@ -105,7 +105,7 @@ export class BedwarsPlayer{
         this.isEliminated = false;
         this.deathState.isDeath = false;
         this.deathState.respawnCountdown = 100;
-        this.runtimeId = map().gameId;
+        this.gameId = map().gameId;
         setPlayerGamemode( this.getThisPlayer(), "survival" );
         this.getThisPlayer().triggerEvent( `team_${this.team}` );
         this.setNametag();

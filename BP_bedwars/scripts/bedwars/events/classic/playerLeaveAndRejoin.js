@@ -77,7 +77,7 @@ function dataBackup( player, playerInfo ) {
         overworld.runCommand( `scoreboard players set bedDestroyed "${playerName}" ${playerInfo.killCount.bed}` );
 
         /** 备份游戏 ID 数据 */
-        overworld.runCommand( `scoreboard players set runtimeId "${playerName}" ${playerInfo.runtimeId}` );
+        overworld.runCommand( `scoreboard players set gameId "${playerName}" ${playerInfo.gameId}` );
         
     } )
 
@@ -92,7 +92,7 @@ function dataRecover( player ) {
     /** 玩家数据 */ let playerData = world.scoreboard.getObjective( player.name );
     
     /** 如果存在数据，玩家的运行时 ID 与本局的 ID 相同，并且先前的队伍不为无效队伍，则开始尝试恢复数据，并且则进行下一步 */
-    if ( playerData && playerData.getScore( "runtimeId" ) === map().gameId && playerData.getScore( "team" ) !== 12 ) {
+    if ( playerData && playerData.getScore( "gameId" ) === map().gameId && playerData.getScore( "team" ) !== 12 ) {
 
         /** 初始化信息 */
         let playerInfo = new BedwarsPlayer( player.name, getKeyByValue( teamCode, playerData.getScore( "team" ) ) );

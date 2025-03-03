@@ -20,5 +20,6 @@ export function playSoundWhenShot( event ) {
     ) {
         shooter.playSound( "random.orb" );
         hitter.playSound( "random.orb" );
+        shooter.sendMessage( { translate: "message.bowHitHealth", with: { rawtext: [ { text: `${hitter.nameTag}` }, { text: `${hitter.getComponent("minecraft:health").currentValue}` } ] } } )
     }
 }

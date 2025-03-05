@@ -11,6 +11,7 @@ import { map } from "../../methods/bedwarsMaps";
 import { BedwarsPlayer, getPlayerBedwarsInfo, initPlayer, playerIsValid } from "../../methods/bedwarsPlayer";
 import { overworld } from "../../methods/positionManager";
 import { getKeyByValue } from "../../methods/number";
+import { getQuitPlayers, resetScore } from "../../methods/scoreboardManager";
 
 /** 队伍的数字 ID */
 const teamCode = { "red": 1, "blue": 2, "yellow": 3, "green": 4, "white": 5, "cyan": 6, "pink": 7, "gray": 8, "orange": 9, "brown": 10, "purple": 11, "undefined": 12 }
@@ -24,6 +25,10 @@ export function playerLeave( event ) {
     if ( playerIsValid( player ) && map().gameStage >= 1 ) {
         dataBackup( player, getPlayerBedwarsInfo( player ) );
     };
+    system.run( () => {
+        getQuitPlayers("selectTeam").forEach(quitPlayer=>{resetScore("selectTeam",quitPlayer)});
+    } )
+    
 }
 
 /** 玩家重进游戏

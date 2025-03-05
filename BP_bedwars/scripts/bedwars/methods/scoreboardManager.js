@@ -142,3 +142,41 @@ export function getScore( objective, participant, defaultValue = undefined ) {
 export function getObjectiveFromParticipant( participantName ) {
     return world.scoreboard.getObjectives().filter( obj => obj.getScores().some( info => info.participant.displayName === participantName ) );
 }
+
+/** 移除分数 
+ * @param {String} objective 记分项 ID
+ * @param {Entity | ScoreboardIdentity | String} participant 追踪对象
+ */
+export function resetScore( objective, participant ) {
+    try {
+        getScoreboard( objective ).removeParticipant( participant )
+    }
+    catch {
+
+    }
+}
+
+/** 获取记分板下的所有分值
+ * @param {string} objective 记分项ID
+ */
+export function getScores( objective ) {
+    return getScoreboard( objective ).getScores().map( scoreInfo => scoreInfo.score )
+}
+
+/** 获取拥有特定分值的追踪对象
+ * @param {string} objective 记分项ID
+ * @param {number} score 分值信息
+ */
+export function getParticipantWithScore( objective, score ) {
+    return getScoreboard( objective ).getParticipants().filter( participant => getScore( objective, participant ) === score );
+}
+
+/** 获取所有退出的玩家
+ * @param {string} objective 
+ */
+export function getQuitPlayers( objective ) {
+    return getScoreboard( objective ).getParticipants().filter( participant => {
+        if ( participant.type !== "Player" ) { return false }
+        else { try { participant.getEntity(); } catch { return true; } return false; }
+    } );
+}

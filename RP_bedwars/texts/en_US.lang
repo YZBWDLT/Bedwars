@@ -445,11 +445,16 @@ message.capture.allBedDestroyed.self=§cAll your beds have been destroyed and yo
 message.respawnTipWhenHaveBed=§cDon't get discouraged, this may be temporary! When your team gets a new bed, you will respawn!
 message.respawn.newBed=§cBecause the team has obtained a new bed, the eliminated members of the team will be respawned!
 
-### --- Settings Warning ---
+### --- Settings ---
 
 message.settings.warning.regenerateMapWhenLoading=§cYou can't regenerate map when loading map, please try again later.
 message.settings.warning.allModesDisabled=§cYou can't disable all modes!
+message.killStyle.success=§aYou chose kill style §6%s
 message.killStyle.scoreboardLost=§cYou can't use this setting because the key scoreboard object "killStyle" has been lost
+message.selectTeam.success=§aYou chose Team %s
+message.selectTeam.successClearTeam=§aYou chose Assign Team Randomly, cleared your selection
+message.selectTeam.scoreboardLost=§cYou can't use this setting because the key scoreboard object "selectTeam" has been lost
+message.selectTeam.teamIsFull=§c Team %s §cis full! You can't choose this team!
 
 ### --- Shopitems ---
 message.bedwars:shopitem_wool=Wool

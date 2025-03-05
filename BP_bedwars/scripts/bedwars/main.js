@@ -5,7 +5,7 @@ import { regenerateMap } from "./maps/mapGenerator";
 import { createEvent } from "./methods/eventManager";
 import { createInterval } from "./methods/intervalManager";
 import { playerLeave, playerRejoin } from "./events/classic/playerLeaveAndRejoin";
-import { killStyleSettings, mapSettings } from "./methods/bedwarsSettings";
+import { killStyleSettings, mapSettings, selectTeamSettings } from "./methods/bedwarsSettings";
 import { waiting } from "./events/classic/beforeGaming";
 import { beforeGamingInfoBoard } from "./events/classic/infoBoard";
 
@@ -50,6 +50,7 @@ createEvent( "playerLeave", world.beforeEvents.playerLeave, event => playerLeave
 createEvent( "playerRejoin", world.afterEvents.playerSpawn, event => playerRejoin( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
 createEvent( "mapSettings", world.afterEvents.itemUse, event => mapSettings( event ), [ tags.gameLogic, tags.settings ] );
 createEvent( "killStyleSettings", world.afterEvents.itemUse, event => killStyleSettings( event ), [ tags.gameLogic, tags.settings ] )
+createEvent( "selectTeamSettings", world.afterEvents.itemUse, event => selectTeamSettings( event ), [ tags.gameLogic, tags.settings ] )
 
 /** ===== 游戏前事件 ===== */
 createInterval( "waiting", () => waiting(), [ tags.beforeGaming ] );

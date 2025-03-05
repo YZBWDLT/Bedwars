@@ -91,3 +91,16 @@ export function removeElementOfArray( array, element ) {
         }
     }
 }
+
+/** 判断一个数组有多少组x个相同的数字
+ * @description 例：countSameNumbers([1,1,1,2,3],3) => 1；countSameNumbers([1,1,2,2,3],2) => 2
+ * @param {any[]} array 
+ * @param {number} x 
+ */
+export function countSameNumbers(array, x) {
+    let map = new Map();
+    array.forEach(num => { map.set(num, (map.get(num) || 0) + 1); }); // 统计每个数字出现的次数
+    let count = 0;
+    map.forEach((value, key) => { if (value === x) { count++; } }); // 遍历 map，找出有多少组 x 个相同的数字
+    return count;
+}

@@ -445,11 +445,16 @@ message.capture.allBedDestroyed.self=§c己方的床已全部被破坏，死亡�
 message.respawnTipWhenHaveBed=§c不要灰心，这有可能是暂时的！当你的队伍获得一张新床的时候，你将重生！
 message.respawn.newBed=§c因为该队伍获得了一张新床，该队伍被淘汰的成员将会重生！
 
-### --- 设置警告消息 ---
+### --- 设置消息 ---
 
 message.settings.warning.regenerateMapWhenLoading=§c你不能在加载结构时重新生成地图，请稍后再试！
 message.settings.warning.allModesDisabled=§c你不能将所有模式全部禁用！
+message.killStyle.success=§a你选择了§6%s§a击杀样式
 message.killStyle.scoreboardLost=§c无法使用此设置，因为关键的记分项killStyle已丢失
+message.selectTeam.success=§a你选择了%s队
+message.selectTeam.successClearTeam=§a你选择了随机分队，已移除所选的队伍信息
+message.selectTeam.scoreboardLost=§c无法使用此设置，因为关键的记分项selectTeam已丢失
+message.selectTeam.teamIsFull=%s队§c已满！你不能选择这个队伍！
 
 ### --- 商店物品消息 ---
 message.bedwars:shopitem_wool=羊毛

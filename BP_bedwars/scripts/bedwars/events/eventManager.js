@@ -31,7 +31,7 @@ import { gameEvents, teamEliminateAndWin } from "./classic/gameEvents";
 import { playerLeave, playerRejoin } from "./classic/playerLeaveAndRejoin";
 import { beforeGamingInfoBoard, gamingInfoBoard, healthScoreboard } from "./classic/infoBoard";
 import { gameOverCountdown } from "./classic/afterGaming";
-import { killStyleSettings, mapSettings } from "../methods/bedwarsSettings";
+import { killStyleSettings, mapSettings, selectTeamSettings } from "../methods/bedwarsSettings";
 import { trading } from "./classic/trading";
 import { playerItemLocker, removeInvalidItems } from "./classic/items";
 
@@ -84,17 +84,15 @@ export const eventManager = {
 
         /** 游戏逻辑：饱和药效 */
         createInterval( "alwaysSaturation", () => alwaysSaturation(), [ tags.gameLogic, tags.effects ], 20 );
-
         /** 游戏逻辑：破坏方块 */
         createEvent( "playerBreakVanillaBlockTest", world.beforeEvents.playerBreakBlock, event => playerBreakVanillaBlocksTest( event ), [ tags.gameLogic, tags.breakBlock ] );
-
         /** 游戏逻辑：玩家退出重进 */
         createEvent( "playerLeave", world.beforeEvents.playerLeave, event => playerLeave( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
         createEvent( "playerRejoin", world.afterEvents.playerSpawn, event => playerRejoin( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
-
         /** 游戏逻辑：设置 */
         createEvent( "mapSettings", world.afterEvents.itemUse, event => mapSettings( event ), [ tags.gameLogic, tags.settings ] );
-        createEvent( "killStyleSettings", world.afterEvents.itemUse, event => killStyleSettings( event ), [ tags.gameLogic, tags.settings ] )
+        createEvent( "killStyleSettings", world.afterEvents.itemUse, event => killStyleSettings( event ), [ tags.gameLogic, tags.settings ] );
+        createEvent( "selectTeamSettings", world.afterEvents.itemUse, event => selectTeamSettings( event ), [ tags.gameLogic, tags.settings ] );
         
     },
     /** 经典模式游戏前事件 */

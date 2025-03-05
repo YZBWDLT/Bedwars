@@ -64,7 +64,7 @@
     - 组队设置
       - 组队模式 *（暂未实装）*
       - 开始前组队 *（暂未实装）*
-      - 玩家自主选队 *（暂未实装）*
+      - 玩家自主选队（允许玩家在开始游戏前自主选择其所归属的队伍）
   - 游戏内设置：控制资源生成、复活时间等。
     - 【资源上限设置】
       - 【铁生成上限】
@@ -91,7 +91,7 @@
     - 【启用经典 2 队模式地图】
     - 【启用经典 4 队模式地图】
     - 【启用经典 8 队模式地图】
-    - 【启用夺点 2 队模式地图】（*拆分出来单独的模式*）。
+    - 【启用夺点 2 队模式地图】（*拆分出来单独的模式*）
   - 【生成地图】：立即生成地图。
   - 杂项设置：
     - 【破坏原版方块】
@@ -107,6 +107,17 @@
 - 你可以在开始游戏前进行设置。
 - 如果地图设置启用，每个玩家都将获得一个设置物品。
 - 现在铁傀儡、蠹虫的击杀也算作击杀数，并且拥有专门的击杀信息。
+
+### 自主选队
+
+- 隆重介绍：自主选队！
+- 如果地图设置启用，每个玩家都可以获得一个设置物品，玩家将可以在开始前自主选择自己要加入的队伍！
+  - 这个设置默认是关闭的，以和 Hypixel 匹配。
+  - 如果需要的话，你可以联系房主，让 ta 开启这个设置。
+- 自主选队时，也只允许一个队伍比另一个队伍最多多出 1 名玩家。
+  - 因此，类似于3 3 3 1的队伍分布也是不允许的。
+- 界面将会显示都有哪些玩家选择了对应的队伍。
+- 当其他玩家选择了队伍后，其他正在选队的玩家的界面将会刷新。
 
 ### 其他更改
 
@@ -147,6 +158,7 @@
   - `hasPosition(positions, testPos) {}`：判断一个坐标数组里是否存在一个坐标；
   - `distance(pos1,pos2) {}`：判断两个坐标之间的距离。
 - **移除** 在`methods/number.js`中的`objectInArray(array, object) {}`方法。现在用`positionManager.hasPosition(positions, testPos) {}`代替。
+- **新增** 在`methods/number.js`中新增了`countSameNumbers(array, x) {}`方法，以判断一个数组有多少组x个相同的数字。
 
 #### `BedwarsPlayer`类，`methods/bedwarsPlayer.js`的方法
 
@@ -207,7 +219,11 @@
 - `addScore(objective,participant,score) {}`：添加分数。
 - `setScore(objective,participant,score) {}`：设置分数并返回这个值。
 - `getScore(objective,participant,defaultValue) {}`：获取分数。如果无法获取分数，则设置为默认值并返回这个值。
+- `resetScore(objective,participant) {}`：移除分数。
 - `getObjectiveFromParticipant(participantName) {}`：获取被追踪对象的全部记分项数据。
+- `getScores(objective) {}`：获取在特定记分板下的所有分值。
+- `getParticipantWithScore(objective,score) {}`：获取在特定记分板下拥有特定分值的被追踪对象。
+- `getQuitPlayers(objective) {}`：获取「玩家下线」的追踪对象。
 
 #### `methods/uiManager.js`
 

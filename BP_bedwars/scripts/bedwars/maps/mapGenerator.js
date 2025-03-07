@@ -20,6 +20,8 @@ import { createMapOrchid } from "./4Teams/orchid";
 import { createMapAmazon } from "./8Teams/amazon";
 import { createMapDeadwood } from "./8Teams/deadwood";
 import { createMapGlacier } from "./8Teams/glacier";
+import { createMapLighthouse } from "./8Teams/lighthouse";
+import { createMapPlayground } from "./8Teams/playground";
 import { createMapRooftop } from "./8Teams/rooftop";
 import { createMapWaterfall } from "./8Teams/waterfall";
 
@@ -30,17 +32,19 @@ export const validMaps = {
     /** 经典模式地图 */ classic: {
         /** 两队模式 */ twoTeams: [ "cryptic", "frost", "garden", "ruins", "picnic", "lion_temple", ],
         /** 四队模式 */ fourTeams: [ "orchid", "chained", "boletum", "carapace", "archway", "aquarium", "eastwood", ],
-        /** 八队模式 */ eightTeams: [ "glacier", "rooftop", "amazon", "deadwood", "waterfall", ],
+        /** 八队模式 */ eightTeams: [ "glacier", "rooftop", "amazon", "deadwood", "waterfall", "playground", "lighthouse", ],
     },
     /** 夺点模式地图 */ capture: {
-        /** 两队模式 */ twoTeams: [ "picnic_capture", ]
+        /** 两队模式 */ twoTeams: [ "picnic_capture", ],
     },
 }
 
 /** 获取所有可用地图的 ID */
 export function getValidMaps() {
 
-    /** 获取所有可用地图 @type {String[]} */
+    /** 获取所有可用地图
+     * @type {String[]}
+     */
     let currentValidMaps = [];
     if ( settings.mapEnabled.classicTwoTeamsEnabled ) {
         currentValidMaps = [ ...currentValidMaps, ...validMaps.classic.twoTeams, ];
@@ -95,6 +99,8 @@ export function regenerateMap( mapId = undefined ) {
         case "amazon": createMapAmazon(); break;
         case "deadwood": createMapDeadwood(); break;
         case "waterfall": createMapWaterfall(); break;
+        case "playground": createMapPlayground(); break;
+        case "lighthouse": createMapLighthouse(); break;
 
         case "picnic_capture": createMapPicnicCapture(); break;
     }

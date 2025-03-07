@@ -13,3 +13,5 @@ diagnostic.disable.behaviorpack.mcstructure.missing=true
 diagnostic.disable.behaviorpack.block.states.invalid=true
 diagnostic.disable.behaviorpack.item.components.deprecated=true
 diagnostic.disable.behaviorpack.item.component.missing=true
+diagnostic.disable.behaviorpack.item.components.texture_not_found=true
+diagnostic.disable.minecraft.language.comment.invalid=true

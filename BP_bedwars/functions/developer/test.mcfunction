@@ -1,2 +1,0 @@
-scriptevent bs:regenerateMap picnic_capture
-scriptevent bs:gameStartWaitingTime 5

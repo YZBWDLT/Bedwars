@@ -28,7 +28,7 @@
 ### 地图
 
 - 新增 1 张 4 队地图：伊斯特伍德（Eastwood）。
-- 新增 3 张 8 队地图：瀑布（Waterfall）。
+- 新增 3 张 8 队地图：瀑布（Waterfall）、乐园（Playground）、灯塔（Lighthouse）。
 - 现在所有的地图都有特定的最低建造高度上限。
 - 现在所有的地图都有特定的治愈池范围。
 - 现在地图 屋顶 的最低建造高度上限由 55 提升到了 62。
@@ -143,6 +143,7 @@
 ### 底层更新
 
 - 更新了行为包的`manifest.json`的版本号到`1.0.20`。
+- 更新了资源包的`manifest.json`的版本号到`1.2.7`。
 - 更新了行为包的脚本版本到`@minecraft/server@1.15.0`和`@minecraft/server-ui@1.3.0`。
 - 现在破坏无效的床也不再会报错了。
 - 更名`events/classic/playerBreakBlockTest.js`→`events/classic/breakBlock.js`。

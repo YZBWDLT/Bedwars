@@ -18,7 +18,6 @@ import { playerDrinkPotionTest } from "./items/potions";
 import { removeEnderPearl } from "./items/enderPearl";
 
 /** 经典模式函数调用 */
-import { waiting } from "./classic/beforeGaming";
 import { playerBreakBedTest, playerBreakVanillaBlocksTest } from "./classic/breakBlock";
 import { maxHeightLimit, minHeightLimit, playerOpenChest, safeAreaLimit } from "./classic/playerUseBlock";
 import { equipmentTest } from "./classic/equipment";
@@ -29,7 +28,7 @@ import { combat, deadPlayer, hurtByFireball, hurtByPlayer, playerDied } from "./
 import { alwaysSaturation, goldenAppleEffect, invulnerableAfterGame, teamUpgradeEffects } from "./classic/effects";
 import { gameEvents, teamEliminateAndWin } from "./classic/gameEvents";
 import { playerLeave, playerRejoin } from "./classic/playerLeaveAndRejoin";
-import { beforeGamingInfoBoard, gamingInfoBoard, healthScoreboard } from "./classic/infoBoard";
+import { gamingInfoBoard, healthScoreboard } from "./classic/infoBoard";
 import { gameOverCountdown } from "./classic/afterGaming";
 import { killStyleSettings, mapSettings, selectTeamSettings } from "../methods/bedwarsSettings";
 import { trading } from "./classic/trading";
@@ -94,16 +93,6 @@ export const eventManager = {
         createEvent( "killStyleSettings", world.afterEvents.itemUse, event => killStyleSettings( event ), [ tags.gameLogic, tags.settings ] );
         createEvent( "selectTeamSettings", world.afterEvents.itemUse, event => selectTeamSettings( event ), [ tags.gameLogic, tags.settings ] );
         
-    },
-    /** 经典模式游戏前事件 */
-    classicBeforeEvents() {
-        /** 移除游戏时和游戏后事件 */
-        deleteEventsWithTag( tags.gaming, tags.afterGaming );
-        deleteIntervalsWithTag( tags.gaming, tags.afterGaming );
-        /** 大厅等待中 */
-        createInterval( "waiting", () => waiting(), [ tags.beforeGaming ] );
-        /** 大厅信息板 */
-        createInterval( "beforeGamingInfoBoard", () => beforeGamingInfoBoard(), [ tags.gameLogic, tags.beforeGaming, tags.infoBoard ], 3 );
     },
     /** 经典模式游戏时事件 */
     classicEvents() {

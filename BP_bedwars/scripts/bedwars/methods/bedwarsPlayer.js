@@ -260,19 +260,3 @@ export function warnPlayer( player, rawtext ) {
     player.playSound( "mob.shulker.teleport", { pitch: 0.5, location: player.location } );
     player.sendMessage( rawtext );
 };
-
-/** 当在等待期间时，初始化玩家
- * @description 清除物品：清除物品栏的物品和末影箱的物品。
- * @description 状态效果设置：移除药效并恢复玩家的血量。
- * @description 移除队伍：移除玩家的队伍、玩家的起床战争信息，并恢复玩家的昵称颜色。
- * @param {Player} player 待初始化的玩家
- */
-export function initPlayer( player ) {
-    player.runCommand( `clear @s` );
-    player.runCommand( `function lib/modify_data/reset_ender_chest` );
-    player.runCommand( `effect @s clear` );
-    player.addEffect( "instant_health", 1, { amplifier: 49 } );
-    player.triggerEvent( `remove_team` )
-    delete player.bedwarsInfo;
-    player.nameTag = player.name;
-}

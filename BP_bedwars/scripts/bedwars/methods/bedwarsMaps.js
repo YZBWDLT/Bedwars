@@ -5,8 +5,8 @@ import { BedwarsTeam, eachTeam } from "./bedwarsTeam"
 import { settings } from "./bedwarsSettings";
 
 import { randomInt, shuffleArray } from "./number";
-import { getPlayerAmount, eachPlayer, setPlayerGamemode } from "./playerManager";
-import { availableKillStyles, BedwarsPlayer, eachValidPlayer, initPlayer } from "./bedwarsPlayer";
+import { getPlayerAmount, setPlayerGamemode } from "./playerManager";
+import { availableKillStyles, BedwarsPlayer, eachValidPlayer } from "./bedwarsPlayer";
 import { overworld, positionManager, Vector } from "./positionManager";
 import { eventManager } from "../events/eventManager";
 import { getQuitPlayers, getScore, getScoreboard, removeAllScoreboards, resetScore, setScore, tryAddScoreboard } from "./scoreboardManager";
@@ -272,43 +272,6 @@ export class BedwarsMap{
     };
 
     /** ===== 游戏阶段转换方法 ===== */
-
-    /** 进行地图初始化
-     * @description 基础功能：设置地图阶段为0，触发游戏前事件。
-     * @description 额外功能：禁止PVP，移除实体，移除玩家信息等
-     */
-    gameReady() {
-        // 设置地图阶段
-        this.gameStage = 0;
-        // 触发游戏前事件
-        eventManager.classicBeforeEvents();
-
-        // 设置为正在加载新地图
-        this.loadInfo.isLoading = true;
-        // 设置为禁止 PVP
-        world.gameRules.pvp = false;
-        // 移除多余实体
-        overworld.getEntities().filter( entity => { return entity.typeId !== "minecraft:player" } ).forEach( entity => entity.remove() );
-        // 移除玩家的bedwarsInfo，还原玩家名字颜色
-        eachPlayer( player => { initPlayer( player ) } );
-        // 移除多余记分板并添加新的记分板
-        const scoreboardWhitelist = [ "data", "killStyle" ];
-        removeAllScoreboards( obj => !scoreboardWhitelist.includes( obj.id ) );
-        tryAddScoreboard( "data", "数据" );
-        tryAddScoreboard( "killStyle", "击杀样式" );
-        tryAddScoreboard( "selectTeam", "选队数据" );
-        // 地图大小同步
-        // 先从记分板获取上一张地图的大小，然后将本地图的大小设置到记分板上
-        let prevX = getScore( "data", "mapSize.prevX" );
-        let prevZ = getScore( "data", "mapSize.prevZ" );
-        if ( prevX !== undefined ) { this.mapSize.prevX = prevX }
-        if ( prevZ !== undefined ) { this.mapSize.prevZ = prevZ }
-        setScore( "data", "mapSize.prevX", this.mapSize.x );
-        setScore( "data", "mapSize.prevZ", this.mapSize.z );
-
-        // 执行初始化命令函数
-        overworld.runCommand( `function lib/init/map` );
-    };
 
     /** 游戏开始
      * @description 基础功能：设置地图阶段为1，触发游戏时事件。

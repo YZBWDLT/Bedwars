@@ -8,7 +8,7 @@
 
 import { Player, PlayerLeaveBeforeEvent, PlayerSpawnAfterEvent, system, world } from "@minecraft/server";
 import { map } from "../../methods/bedwarsMaps";
-import { BedwarsPlayer, getPlayerBedwarsInfo, initPlayer, playerIsValid } from "../../methods/bedwarsPlayer";
+import { BedwarsPlayer, getPlayerBedwarsInfo, playerIsValid } from "../../methods/bedwarsPlayer";
 import { overworld } from "../../methods/positionManager";
 import { getKeyByValue } from "../../methods/number";
 import { getQuitPlayers, resetScore } from "../../methods/scoreboardManager";
@@ -41,7 +41,6 @@ export function playerRejoin( event ) {
 
         /** 如果是游戏前，则初始化该玩家 */
         if ( map().gameStage === 0 ) {
-            initPlayer( event.player );
         }
         /** 否则，开始恢复数据 */
         else {

@@ -20,35 +20,31 @@
         },
         "events": {
             "assign_skin_randomly": {
-                "sequence": [
-                    {
-                        "filters": { "test": "has_component", "operator": "!=", "value": "minecraft:skin_id" },
-                        "randomize": [
-                            { "weight": 1, "add": { "component_groups": [ "skin_0" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_1" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_2" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_3" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_4" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_5" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_6" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_7" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_8" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_9" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_10" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_11" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_12" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_13" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_14" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_15" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_16" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_17" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_18" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_19" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_20" ] } },
-                            { "weight": 1, "add": { "component_groups": [ "skin_21" ] } }
+                "filters": { "test": "has_component", "operator": "!=", "value": "minecraft:skin_id" },
+                "randomize": [
+                    { "weight": 1, "add": { "component_groups": [ "skin_0" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_1" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_2" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_3" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_4" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_5" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_6" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_7" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_8" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_9" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_10" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_11" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_12" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_13" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_14" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_15" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_16" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_17" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_18" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_19" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_20" ] } },
+                    { "weight": 1, "add": { "component_groups": [ "skin_21" ] } }
 
-                        ]
-                    }
                 ]
             },
             "skin_0":{ "add": { "component_groups": [ "skin_0" ] } },

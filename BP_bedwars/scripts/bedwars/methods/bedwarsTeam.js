@@ -7,7 +7,6 @@ import { world } from "@minecraft/server";
 
 import { getPlayerBedwarsInfo, playerIsValid } from "./bedwarsPlayer";
 import { overworld, positionManager, Vector } from "./positionManager";
-import { removeItemEntity } from "./itemManager";
 import { map } from "./bedwarsMaps";
 
 /** @typedef {"red"|"blue"|"yellow"|"green"|"pink"|"cyan"|"white"|"gray"|"purple"|"brown"|"orange"} validTeams 所有可用的队伍 */
@@ -152,14 +151,6 @@ export class BedwarsTeam{
             world.structureManager.place( `beds:${this.id}_bed`, overworld, pos( this.bedInfo.pos ), { rotation: this.bedInfo.rotation } );
         }
         
-    };
-    /** 设置队伍为无效队伍 */
-    setTeamInvalid() {
-        this.isValid = false;
-        this.isEliminated = true;
-        this.bedInfo.isExist = false;
-        overworld.runCommand( `setblock ${this.bedInfo.pos.x} ${this.bedInfo.pos.y} ${this.bedInfo.pos.z} air destroy` )
-        removeItemEntity( "minecraft:bed" );
     };
     /** 设置队伍为淘汰队伍 */
     setTeamEliminated() {

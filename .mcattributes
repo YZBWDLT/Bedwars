@@ -1,4 +1,5 @@
 diagnostic.disable.minecraft.language.comment.invalid=true
+diagnostic.disable.minecraft.format.path.length=true
 
 diagnostic.disable.behaviorpack.block.components.material_instance_clash=true
 diagnostic.disable.behaviorpack.blocks.missing=true

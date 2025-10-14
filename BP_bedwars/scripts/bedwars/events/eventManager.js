@@ -9,7 +9,6 @@ import { createInterval, deleteIntervals, deleteIntervalsWithTag } from "../meth
 
 /** 物品事件函数调用 */
 import { magicMilkCountdown, playerDrinkMagicMilkTest } from "./items/magicMilk";
-import { silverfishCountdown, summonSilverfish } from "./items/bedBug";
 import { summonIronGolem, ironGolemCountdown } from "./items/dreamDefender";
 import { createBridge } from "./items/bridgeEgg";
 import { igniteImmediately } from "./items/tnt";
@@ -99,10 +98,6 @@ export const eventManager = {
         /** 移除游戏前和游戏后事件 */
         deleteEventsWithTag( tags.beforeGaming, tags.afterGaming );
         deleteIntervalsWithTag( tags.beforeGaming, tags.afterGaming );
-        /** 物品：床虱 */
-        createEvent( "summonSilverfishB", world.afterEvents.projectileHitBlock, event => summonSilverfish( event ), [ tags.itemLogic, tags.gaming, tags.bedBug, "summonSilverfish" ] );
-        createEvent( "summonSilverfishE", world.afterEvents.projectileHitEntity, event => summonSilverfish( event ), [ tags.itemLogic, tags.gaming, tags.bedBug, "summonSilverfish" ] );
-        createInterval( "silverfishCountdown", () => silverfishCountdown(), [ tags.itemLogic, tags.gaming, tags.bedBug ] );
         /** 物品：搭桥蛋 */
         createInterval( "createBridge", () => createBridge(), [ tags.itemLogic, tags.gaming, tags.bridgeEgg ] );
         /** 物品：梦境守护者 */

@@ -4,12 +4,9 @@ import { world } from "@minecraft/server";
 import { BedwarsTeam, eachTeam } from "./bedwarsTeam"
 import { settings } from "./bedwarsSettings";
 
-import { randomInt, shuffleArray } from "./number";
-import { getPlayerAmount, setPlayerGamemode } from "./playerManager";
-import { availableKillStyles, BedwarsPlayer, eachValidPlayer } from "./bedwarsPlayer";
+import { randomInt } from "./number";
 import { overworld, positionManager, Vector } from "./positionManager";
 import { eventManager } from "../events/eventManager";
-import { getQuitPlayers, getScore, getScoreboard, removeAllScoreboards, resetScore, setScore, tryAddScoreboard } from "./scoreboardManager";
 import { tickToSecond } from "./time";
 import { shopitems } from "./bedwarsShopitem";
 
@@ -217,22 +214,6 @@ export class BedwarsMap{
         } )
     };
 
-    /** 设置商人 */
-    setTraders() {
-        this.traderInfo.forEach( traderInfo => {
-            // 生成商人并确定朝向、类型和皮肤
-            let trader = overworld.spawnEntity( "bedwars:trader", traderInfo.pos );
-            trader.setRotation( new Vector( 0, traderInfo.direction ) );
-            trader.triggerEvent( `${traderInfo.type}_trader` );
-            trader.triggerEvent( `assign_skin_randomly` );
-            // 设定名字
-            if ( traderInfo.type === "blocks_and_items" ) { trader.nameTag = `§a方块与物品`; }
-            else if ( traderInfo.type === "weapon_and_armor" ) { trader.nameTag = `§c武器与盔甲`; }
-            else if ( traderInfo.type === "weapon_and_armor_capture" ) { trader.nameTag = `§c武器与盔甲`; }
-            else { trader.nameTag = `§b团队升级`; }
-        } )
-    };
-
     /** 获取具有特定家族的商人
      * @param {import("./bedwarsShopitem.js").traderType} traderType 
      */
@@ -279,152 +260,10 @@ export class BedwarsMap{
      */
     gameStart() {
 
-        /** 组队功能 */
-        const assignPlayers = () => {
-
-            // ===== 变量准备 =====
-
-            /** 当前总人数 */
-            let playerCount = getPlayerAmount();
-            /** 上限人数 */
-            let maxPlayerCount = settings.beforeGaming.waiting.maxPlayerCount;
-            /** 分配模式 */
-            const assignMode = settings.beforeGaming.teamAssign.mode;
-            /** 所有队伍列表并打乱顺序（copy，不影响原数组） */
-            let teams = [ ...this.teamList ]; teams = shuffleArray( teams );
-            /** 所有玩家列表并打乱顺序（copy，不影响原数组） */
-            let players = [ ...world.getPlayers() ]; players = shuffleArray( players );
-            /** 每队至少应当分配的玩家 */
-            // 例：11人4队，一队最少分配11/4=2（向下取整）名玩家；13人8队，一队最少分配13/8=1（向下取整）名玩家
-            const minPlayerPerTeam = Math.floor( playerCount / this.teamCount );
-
-            // ===== 一、为自主选队的玩家先选定队伍 =====
-            // 如果启用了自主选队的玩家，则先选择队伍
-            // 经过队伍选定后：
-            // - players剩余的玩家均为待随机分配的玩家；
-            // - playerCount代表待随机分配的玩家数量；
-            // - maxPlayerCount代表剩余的玩家中允许参与游戏的玩家数量
-            if ( settings.beforeGaming.teamAssign.playerSelectEnabled ) {
-                try {
-                    getScoreboard( "selectTeam" ).getScores().filter( info => info.participant.type === "Player" ).forEach( info => {
-                        const thisPlayer = info.participant.getEntity();
-                        const teamIndex = info.score;
-                        new BedwarsPlayer( thisPlayer.name, this.teamList[teamIndex].id ); // 添加该玩家到队伍中
-                        players = players.filter( player => player.name !== thisPlayer.name ); // players剩余的玩家为随机分配的
-                        playerCount--; maxPlayerCount--; // 将这些选择了队伍的玩家从玩家数量和总玩家中剔除出去
-                    });
-                } catch {}
-            }
-
-            // ===== 二、将多出的玩家随机设置为旁观 =====
-            // 只保留maxPlayerCount个玩家，剩下的玩家改为旁观模式
-            if ( playerCount > maxPlayerCount ) {
-                let spectatorPlayers = players.splice( maxPlayerCount );
-                spectatorPlayers.forEach( spectatorPlayer => {
-                    new BedwarsPlayer( spectatorPlayer.name, undefined )
-                } );
-                playerCount = maxPlayerCount;
-            }
-
-            // ===== 三、为每个队伍先分配 minPlayerPerTeam 个玩家 =====
-            // 经过自主选队和筛选之后，不同的队伍目前会分配到不同的人数
-
-            // 以下假设3种情况：
-            // （1）11人4队，分别为3/3 2/2 0/2 1/2（minPlayerPerTeam = 2）
-            // （2）16人2队，分别为5/8 3/8（minPlayerPerTeam = 8）
-            // （3）14人8队，分别为0/1 0/1 0/1 ... 0/1 （minPlayerPerTeam = 1）
-
-            // 1. 先找到游戏玩家为 currentPlayerCount = 0 （条件1）并且人数小于 minPlayerPerTeam （条件2）的队伍
-            // 2. 在这些队伍里插入玩家：
-            // - (1) 3/3 2/2 0/2 1/2 -> 3/3 2/2 1/2 1/2
-            // - (2) 5/8 3/8 -> 5/8 3/8
-            // - (3) 0/1 0/1 ... 0/1 -> 1/1 1/1 ... 1/1 循环结束（players剩余5人）
-            // 3. 然后，currentPlayerCount++，重复步骤 1-2 并继续循环：
-            // - (1) 3/3 2/2 1/2 1/2 -> 3/3 2/2 2/2 2/2 循环结束（players剩余2人）
-            // - (2) 5/8 3/8 -> ... -> 5/8 4/8 -> 5/8 5/8 -> 6/8 6/8 -> ... -> 8/8 8/8 循环结束（players剩余0人）
-
-            // 如果为按照胜率排序，则重新排序随机分配的玩家列表
-            if ( assignMode === 2 ) { }
-            for ( let currentPlayerCount = 0; /** 条件2 -> */ currentPlayerCount < minPlayerPerTeam; currentPlayerCount++ ) {
-                teams.filter( team => /** 条件1 -> */ team.getTeamMember().length === currentPlayerCount ).forEach( team => {
-                    new BedwarsPlayer( players[0].name, team.id );
-                    players.splice( 0, 1 );
-                } )
-            }
-
-            // ===== 四、多余的玩家执行的逻辑 =====
-
-            // 1. 如果 players 还有剩余的玩家，则准备分配到剩余的队伍中去。
-            // - (1) 3/3 2/2 2/2 2/2 （players剩余2人） 继续判断
-            // - (2) 8/8 8/8 （players剩余0人） 停止判断，分队结束
-            // - (3) 1/1 1/1 ... 1/1 （players剩余5人） 继续判断
-            // 2. 视分配模式进行分配。在所有的队伍列表中，需要移除人数非 minPlayerPerTeam 的队伍：
-            // - (1) 3/3 2/2 2/2 2/2 -> 2/2 2/2 2/2（players剩余2人）
-            // - (2) 1/1 1/1 ... 1/1 -> 1/1 1/1 ... 1/1（players剩余5人）
-            // 3. 每个队伍分配一个玩家。
-            // - (1) 2/2 2/2 2/2 -> 3/3 3/3 2/2，分队结束
-            // - (2) 1/1 1/1 ... 1/1 -> 2/2 2/2 ... 2/2 1/1 1/1 1/1，分队结束
-
-            if ( players.length !== 0 ) {
-                if ( assignMode === 0 ) {
-                    teams = this.teamList.filter( team => team.getTeamMember().length === minPlayerPerTeam )
-                }
-                else {
-                    teams = teams.filter( team => team.getTeamMember().length === minPlayerPerTeam );
-                }
-
-                teams.forEach( ( team, index ) => {
-                    if ( index < players.length ) { // 防止加玩家加过界
-                        new BedwarsPlayer( players[index].name, team.id );
-                    }
-                } )
-            }
-        }
-    
-        /** 设置地图阶段 */
-        this.gameStage = 1;
         /** 触发游戏时事件 */
         eventManager.classicEvents();
         if ( this.mode === "capture" ) { eventManager.captureEvents(); }
 
-        // 设置为允许 PVP
-        world.gameRules.pvp = true;
-        // 分配玩家队伍
-        assignPlayers();
-        // 安置商人
-        this.setTraders();
-        // 移除等待大厅
-        overworld.runCommand( `fill -12 117 -12 12 127 12 air` );
-        // 在重生点下方放置一块屏障（防止薛定谔玩家复活时判定失败）
-        overworld.runCommand( `setblock 0 ${this.spawnpointPos.y - 2} 0 barrier` );
-        // 继续尝试重新添加killStyle记分板
-        tryAddScoreboard( "killStyle", "击杀样式" );
-        tryAddScoreboard( "selectTeam", "选队数据" );
-        getQuitPlayers( "selectTeam" ).forEach( quitPlayer => resetScore( "selectTeam", quitPlayer ) ); // 移除记分板中的玩家下线
-        // 如果一个队伍没有分配到人，则设置为无效的队伍
-        if ( settings.gaming.invalidTeam.enableTest ) {
-            eachTeam( team => { if ( team.getTeamMember().length === 0 ) { team.setTeamInvalid(); }; } );
-        }
-        // 玩家命令
-        eachValidPlayer( ( player, playerInfo ) => {
-            if ( !playerInfo.isSpectator ) {
-                /** 将玩家传送到队伍中 */ playerInfo.teleportPlayerToSpawnpoint();
-                /** 调整玩家的游戏模式 */ setPlayerGamemode( player, "survival" );
-                /** 播报消息 */ player.sendMessage( [ { translate: "message.greenLine" }, "\n", this.getStartIntro().title, "\n\n", this.getStartIntro().intro, "\n\n", { translate: "message.greenLine" } ] );
-
-                // 玩家击杀样式
-                if ( settings.gaming.killStyle.isEnabled ) {
-                    playerInfo.killStyle = settings.gaming.killStyle.randomKillStyle ? availableKillStyles[randomInt(0,availableKillStyles.length-1)] : availableKillStyles[getScore( "killStyle", player, 0 )];
-                }
-                else {
-                    playerInfo.killStyle = "default";
-                }
-                // 移除玩家的设置物品
-                player.runCommand( `clear @s bedwars:kill_style` );
-                player.runCommand( `clear @s bedwars:select_team` );
-                
-            }
-        } );
     };
 
     /** 游戏结束
@@ -451,11 +290,6 @@ export class BedwarsMap{
     /** 获取地图模式名 */
     modeName( ) {
         if ( this.mode === "classic" ) { return "经典"; } else { return "夺点" }
-    };
-
-    /** 获取游戏开始介绍 @returns { { title: import("@minecraft/server").RawMessage, intro: import("@minecraft/server").RawMessage } } */
-    getStartIntro() {
-        return { title: { translate: `message.gameStartTitle.${this.mode}` }, intro: { translate: `message.gameStartIntroduction.${this.mode}` } }
     };
 
     /** ===== 夺点模式方法 ===== */

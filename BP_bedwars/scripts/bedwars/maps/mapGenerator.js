@@ -2,10 +2,6 @@
 
 import { settings } from "../methods/bedwarsSettings";
 
-import { createMapCryptic } from "./2Teams/cryptic";
-import { createMapFrost } from "./2Teams/frost";
-import { createMapGarden } from "./2Teams/garden";
-import { createMapLionTemple } from "./2Teams/lionTemple";
 import { createMapPicnic } from "./2Teams/picnic";
 import { createMapRuins } from "./2Teams/ruins";
 
@@ -87,12 +83,8 @@ export function regenerateMap( mapId = undefined ) {
         case "aquarium": createMapAquarium(); break;
         case "eastwood": createMapEastwood(); break;
 
-        case "cryptic": createMapCryptic(); break;
-        case "frost": createMapFrost(); break;
-        case "garden": createMapGarden(); break;
         case "ruins": createMapRuins(); break;
         case "picnic": createMapPicnic(); break;
-        case "lion_temple": createMapLionTemple(); break;
 
         case "glacier": createMapGlacier(); break;
         case "rooftop": createMapRooftop(); break;

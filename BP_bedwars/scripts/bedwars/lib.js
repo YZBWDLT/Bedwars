@@ -333,7 +333,7 @@ export const scoreboard = {
          * @param {number} score 
          */
         add(objectiveId, participant, score) {
-            return scoreboardObjective.get(objectiveId).addScore(participant, score);
+            return scoreboard.objective.get(objectiveId).addScore(participant, score);
         },
 
         /** 为追踪对象设置分数
@@ -342,7 +342,7 @@ export const scoreboard = {
          * @param {number} score 
          */
         set(objectiveId, participant, score) {
-            scoreboardObjective.get(objectiveId).setScore(participant, score);
+            scoreboard.objective.get(objectiveId).setScore(participant, score);
             return score;
         },
 
@@ -362,7 +362,7 @@ export const scoreboard = {
          */
         get(objectiveId, participant) {
             try {
-                return scoreboardObjective.get(objectiveId)?.getScore(participant);
+                return scoreboard.objective.get(objectiveId)?.getScore(participant);
             }
             catch {
                 return undefined;
@@ -373,12 +373,12 @@ export const scoreboard = {
          * @param {string} participantName 追踪对象的名称
          */
         getObjective(participantName) {
-            return scoreboardObjective.getAll().filter( obj => obj.getScores().some( info => info.participant.displayName === participantName ) );
+            return scoreboard.objective.getAll().filter( obj => obj.getScores().some( info => info.participant.displayName === participantName ) );
         },
 
         /** 获取分数，若获取不到则设置为默认值
          * @param {string} objectiveId 
-         * @param {string} participant 
+         * @param {Entity|ScoreboardIdentity|string} participant 
          * @param {string} defaultScore 
          */
         getOrSetDefault(objectiveId, participant, defaultScore) {
@@ -394,7 +394,7 @@ export const scoreboard = {
          * @param {Entity|ScoreboardIdentity|string} participant 
          */
         remove(objectiveId, participant) {
-            return scoreboardObjective.get(objectiveId)?.removeParticipant(participant);
+            return scoreboard.objective.get(objectiveId)?.removeParticipant(participant);
         },
 
         /** 获取拥有特定分数的玩家
@@ -402,14 +402,14 @@ export const scoreboard = {
          * @param {number} score 
          */
         getPlayerWithScore(objectiveId, score) {
-            scoreboardObjective.get(objectiveId).getParticipants().filter(player => this.get(objectiveId, player) === score);
+            scoreboard.objective.get(objectiveId).getParticipants().filter(player => this.get(objectiveId, player) === score);
         },
 
         /** 获取已离线的玩家
          * @param {string} objectiveId 
          */
         getOfflinePlayers(objectiveId) {
-            return scoreboardObjective.get(objectiveId)?.getParticipants().filter(player => {
+            return scoreboard.objective.get(objectiveId)?.getParticipants().filter(player => {
                 if (player.type !== "Player") { return false; }
                 else { try { player.getEntity() } catch { return true; } return false; }
             })

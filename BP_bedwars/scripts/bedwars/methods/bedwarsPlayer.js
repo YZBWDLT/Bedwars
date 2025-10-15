@@ -58,7 +58,6 @@ export class BedwarsPlayer{
     constructor( name, team ) {
         this.name = name;
         this.team = team;
-        if ( team === undefined ) { this.setSpectator(); } else { this.setTeamMember(); };
     };
 
 
@@ -71,54 +70,6 @@ export class BedwarsPlayer{
     getTeam( ) {
         return getTeamFunc( this.team );
     };
-
-    /** 按队伍设定玩家的昵称颜色
-     * @param {*} name 玩家名称
-     * @returns 
-     */
-    setNametag( ) {
-        let player = this.getThisPlayer();
-        switch ( this.team ) {
-            case "red": player.nameTag = `§c${player.name}`; break;
-            case "blue": player.nameTag = `§9${player.name}`; break;
-            case "yellow": player.nameTag = `§e${player.name}`; break;
-            case "green": player.nameTag = `§a${player.name}`; break;
-            case "white": player.nameTag = `§f${player.name}`; break;
-            case "cyan": player.nameTag = `§3${player.name}`; break;
-            case "pink": player.nameTag = `§d${player.name}`; break;
-            case "gray": player.nameTag = `§7${player.name}`; break;
-            case "orange": player.nameTag = `§6${player.name}`; break;
-            case "brown": player.nameTag = `§n${player.name}`; break;
-            case "purple": player.nameTag = `§5${player.name}`; break;
-            case undefined: default: player.nameTag = player.name; break;
-        }
-    };
-
-    /** 设置玩家为旁观者 */
-    setSpectator() {
-        this.isSpectator = true;
-        this.isEliminated = true;
-        this.deathState.isDeath = true;
-        this.deathState.respawnCountdown = -1;
-        this.gameId = map().gameId;
-        setPlayerGamemode( this.getThisPlayer(), "spectator" );
-        this.getThisPlayer().triggerEvent( `remove_team` );
-        this.setNametag();
-        this.getThisPlayer().bedwarsInfo = this;
-    };
-
-    /** 设置玩家为某个队伍的队员 */
-    setTeamMember() {
-        this.isSpectator = false;
-        this.isEliminated = false;
-        this.deathState.isDeath = false;
-        this.deathState.respawnCountdown = 100;
-        this.gameId = map().gameId;
-        setPlayerGamemode( this.getThisPlayer(), "survival" );
-        this.getThisPlayer().triggerEvent( `team_${this.team}` );
-        this.setNametag();
-        this.getThisPlayer().bedwarsInfo = this;
-    }
 
     /** 传送玩家到重生点 */
     teleportPlayerToSpawnpoint() {

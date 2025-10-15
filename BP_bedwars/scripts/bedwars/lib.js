@@ -6,6 +6,7 @@
 
 import { world, Entity, Player, ItemStack, EnchantmentType, EquipmentSlot, EntityInventoryComponent, ScoreboardObjective, ScoreboardIdentity, DisplaySlotId, BlockVolume, Structure, system } from "@minecraft/server";
 import { ActionFormData, MessageFormData, ModalFormData, FormCancelationReason } from "@minecraft/server-ui";
+import { secondToMinute } from "./methods/time";
 
 // ===== 世界 =====
 
@@ -57,12 +58,12 @@ export const structure = {
 /** 维度操作方法 */
 export const dimension = {
 
-   /** 令两个坐标间填充方块
-    * @param {"overworld" | "nether" | "the_end"} dimensionId 维度 ID
-    * @param {import("@minecraft/server").Vector3} from 起始坐标
-    * @param {import("@minecraft/server").Vector3} to 终止坐标
-    * @param {string} blockId 方块 ID
-    */
+    /** 令两个坐标间填充方块
+     * @param {"overworld" | "nether" | "the_end"} dimensionId 维度 ID
+     * @param {import("@minecraft/server").Vector3} from 起始坐标
+     * @param {import("@minecraft/server").Vector3} to 终止坐标
+     * @param {string} blockId 方块 ID
+     */
     fillBlock(dimensionId, from, to, blockId) {
         const volume = new BlockVolume(from, to);
         world.getDimension(dimensionId).fillBlocks(volume, blockId)
@@ -77,7 +78,7 @@ export const dimension = {
      */
     replaceBlock(dimensionId, from, to, replaceBlockIds, toBlockId) {
         const volume = new BlockVolume(from, to);
-        world.getDimension(dimensionId).fillBlocks(volume, toBlockId, {blockFilter: {includeTypes: replaceBlockIds}})
+        world.getDimension(dimensionId).fillBlocks(volume, toBlockId, { blockFilter: { includeTypes: replaceBlockIds } })
     },
 
 }
@@ -164,8 +165,8 @@ export const entity = {
      * @param {"overworld"|"nether"|"the_end"|"entity_dimension"} dimensionId 待检查的维度，指定为entity_dimension时将在实体自身维度检测
      */
     isNearby(entity, pos, r, dimensionId = "entity_dimension") {
-        if (dimensionId === "entity_dimension") return entity.dimension.getEntities({location: pos, maxDistance: r}).some(nearbyEntity => nearbyEntity.id === entity.id);
-        else return world.getDimension(dimensionId).getEntities({location: pos, maxDistance: r}).some(nearbyEntity => nearbyEntity.id === entity.id);
+        if (dimensionId === "entity_dimension") return entity.dimension.getEntities({ location: pos, maxDistance: r }).some(nearbyEntity => nearbyEntity.id === entity.id);
+        else return world.getDimension(dimensionId).getEntities({ location: pos, maxDistance: r }).some(nearbyEntity => nearbyEntity.id === entity.id);
     },
 
     /**
@@ -177,9 +178,9 @@ export const entity = {
     isInVolume(entity, volume, dimensionId = "entity_dimension") {
         let from = volume.from;
         let to = volume.to;
-        let delta = position3.add({x: 0, y: 0, z: 0}, to.x - from.x, to.y - from.y, to.z - from.z);
-        if (dimensionId == "entity_dimension") return entity.dimension.getEntities({location: from, volume: delta}).some(nearbyEntity => nearbyEntity.id === entity.id);
-        else return world.getDimension(dimensionId).getEntities({location: from, volume: delta}).some(nearbyEntity => nearbyEntity.id === entity.id);
+        let delta = position3.add({ x: 0, y: 0, z: 0 }, to.x - from.x, to.y - from.y, to.z - from.z);
+        if (dimensionId == "entity_dimension") return entity.dimension.getEntities({ location: from, volume: delta }).some(nearbyEntity => nearbyEntity.id === entity.id);
+        else return world.getDimension(dimensionId).getEntities({ location: from, volume: delta }).some(nearbyEntity => nearbyEntity.id === entity.id);
     },
 
     /** 移除其他除玩家之外的实体
@@ -227,7 +228,7 @@ export const player = {
 
 /** 记分板操作方法 */
 export const scoreboard = {
-    
+
     /** 记分项操作方法 */
     objective: {
 
@@ -373,7 +374,7 @@ export const scoreboard = {
          * @param {string} participantName 追踪对象的名称
          */
         getObjective(participantName) {
-            return scoreboard.objective.getAll().filter( obj => obj.getScores().some( info => info.participant.displayName === participantName ) );
+            return scoreboard.objective.getAll().filter(obj => obj.getScores().some(info => info.participant.displayName === participantName));
         },
 
         /** 获取分数，若获取不到则设置为默认值
@@ -415,7 +416,7 @@ export const scoreboard = {
             })
         }
 
-    }, 
+    },
 
 }
 
@@ -814,7 +815,7 @@ export const ui = {
      * @param {Player} player 
      */
     close(player) {
-        
+
     }
 
 }
@@ -836,8 +837,8 @@ export const js = {
     /** 将数字转换为罗马数字的字符串
      * @param {Number} num 待转换数字
      */
-    intToRoman( num ) {
-        if ( num <= 0 ) { return ""; }
+    intToRoman(num) {
+        if (num <= 0) { return ""; }
         const romanNumerals = [
             // { value: 1000, symbol: 'M' },
             // { value: 900, symbol: 'CM' },
@@ -865,7 +866,7 @@ export const js = {
      * @param {object} obj 输入的对象
      * @param {*} value 待寻找的对应值
      */
-    getKeyByValue( obj, value ) {
+    getKeyByValue(obj, value) {
         for (const [key, val] of Object.entries(obj)) {
             if (val === value) {
                 return key;
@@ -880,7 +881,7 @@ export const js = {
     shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             /** 生成一个随机索引 j */ const j = Math.floor(Math.random() * (i + 1));
-            /** 交换元素 array[i] 和 array[j] */ [array[i], array[j]] = [array[j], array[i]];
+            /** 交换元素 array[i] 和 array[j] */[array[i], array[j]] = [array[j], array[i]];
         }
         return array;
     },
@@ -896,7 +897,7 @@ export const js = {
      * @param {Array} array 待删除元素的数组
      * @param {*} element 待删除的元素
      */
-    removeElementOfArray( array, element ) {
+    removeElementOfArray(array, element) {
         // 使用循环和splice方法删除所有匹配的元素
         for (let i = array.length - 1; i >= 0; i--) {
             if (array[i] === element) {
@@ -916,6 +917,50 @@ export const js = {
         let count = 0;
         map.forEach((value, key) => { if (value === x) { count++; } }); // 遍历 map，找出有多少组 x 个相同的数字
         return count;
+    },
+
+    /**
+     * @typedef TimeInfo 时间信息
+     * @property {number} [minute] 待输出的分钟数
+     * @property {number} second 待输出的秒钟数
+     * @property {number} [tick] 待输出的游戏刻数
+     */
+    /** 按照给定的时间值输出合适格式的时间字符串（例如 15:34.75）
+     * @param {TimeInfo} time 输入的时间信息
+     * @param {"ShowSecondsAndMilliseconds"|"ShowMinutesAndSeconds"|"ShowAll"} mode 输出模式，默认为 ShowMinutesAndSeconds
+     */
+    timeToString(time, mode = "ShowMinutesAndSeconds") {
+
+        /** 时间值 */
+        const { minute, second, tick } = time;
+
+        /** 秒数字符串，如果为 < 10 的数则显示为 0x（例如 15:03 而非 15:3） */
+        const secondString = second < 10 ? `0${second}` : `${second}`;
+
+        if (mode === "ShowAll") return `${minute}:${secondString}.${tick * 5}`;
+        else if (mode === "ShowSecondsAndMilliseconds") return `${secondString}.${tick * 5}`;
+        else return `${minute}:${secondString}`;
+    },
+
+    /** 将单位为游戏刻的时间转换为以秒为单位的时间
+     * @param {number} tickTime 游戏刻时间
+     * @param {"int"|"float"} returnType 返回类型
+     */
+    tickToSecond(tickTime, returnType = "int") {
+        if (returnType === "int") return Math.floor(tick / 20);
+        else return parseFloat((tickTime / 20).toFixed(2));
+    },
+
+    /** 将单位为秒的时间转换为以分钟和秒钟为单位的时间
+     * @param {Number} secondTime 秒数时间
+     */
+    secondToMinute(secondTime) {
+        /** @type {TimeInfo} */
+        let timeInfo = {
+            minute: Math.floor(secondTime / 60),
+            second: secondTime % 60,
+        }
+        return timeInfo;
     },
 
 }
@@ -949,7 +994,7 @@ export const debug = {
         /** 待打印的字符串数组 @type {string[]} */ let printString = [];
         // 设置打印的字符串
         if (object == undefined) {
-            printString = [`<§6undefined>`];
+            printString = [`<§6undefined§f>`];
         }
         else {
             printString.push(`<§6Object ${object.constructor.name}`);

@@ -5,7 +5,7 @@ import { world } from "@minecraft/server";
 
 /** 方法类函数调用 */
 import { createEvent, deleteEvents, deleteEventsWithTag } from "../methods/eventManager";
-import { createInterval, deleteIntervals, deleteIntervalsWithTag } from "../methods/intervalManager";
+import { createInterval, deleteIntervalsWithTag } from "../methods/intervalManager";
 
 /** 物品事件函数调用 */
 import { magicMilkCountdown, playerDrinkMagicMilkTest } from "./items/magicMilk";
@@ -17,7 +17,6 @@ import { playerDrinkPotionTest } from "./items/potions";
 import { removeEnderPearl } from "./items/enderPearl";
 
 /** 经典模式函数调用 */
-import { playerBreakBedTest, playerBreakVanillaBlocksTest } from "./classic/breakBlock";
 import { maxHeightLimit, minHeightLimit, playerOpenChest, safeAreaLimit } from "./classic/playerUseBlock";
 import { equipmentTest } from "./classic/equipment";
 import { applyResistanceNearby, applyYVelocity, dropLoot, preventBreakingVanillaBlocks } from "./classic/explosion";
@@ -27,7 +26,7 @@ import { combat, deadPlayer, hurtByFireball, hurtByPlayer, playerDied } from "./
 import { alwaysSaturation, goldenAppleEffect, invulnerableAfterGame, teamUpgradeEffects } from "./classic/effects";
 import { gameEvents, teamEliminateAndWin } from "./classic/gameEvents";
 import { playerLeave, playerRejoin } from "./classic/playerLeaveAndRejoin";
-import { gamingInfoBoard, healthScoreboard } from "./classic/infoBoard";
+import { healthScoreboard } from "./classic/infoBoard";
 import { gameOverCountdown } from "./classic/afterGaming";
 import { killStyleSettings, mapSettings, selectTeamSettings } from "../methods/bedwarsSettings";
 import { trading } from "./classic/trading";
@@ -82,8 +81,6 @@ export const eventManager = {
 
         /** 游戏逻辑：饱和药效 */
         createInterval( "alwaysSaturation", () => alwaysSaturation(), [ tags.gameLogic, tags.effects ], 20 );
-        /** 游戏逻辑：破坏方块 */
-        createEvent( "playerBreakVanillaBlockTest", world.beforeEvents.playerBreakBlock, event => playerBreakVanillaBlocksTest( event ), [ tags.gameLogic, tags.breakBlock ] );
         /** 游戏逻辑：玩家退出重进 */
         createEvent( "playerLeave", world.beforeEvents.playerLeave, event => playerLeave( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
         createEvent( "playerRejoin", world.afterEvents.playerSpawn, event => playerRejoin( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
@@ -142,10 +139,7 @@ export const eventManager = {
         createEvent( "playerOpenChest", world.beforeEvents.playerInteractWithBlock, event => playerOpenChest( event ), [ tags.gameLogic, tags.gaming, tags.playerUseBlock ] );
         createEvent( "safeAreaLimit", world.beforeEvents.playerInteractWithBlock, event => safeAreaLimit( event ), [ tags.gameLogic, tags.gaming, tags.playerUseBlock ] );
         /** 游戏逻辑：信息板 */
-        createInterval( "gamingInfoBoard", () => gamingInfoBoard(), [ tags.gameLogic, tags.afterGaming, tags.gaming, tags.infoBoard ], 3 );
         createInterval( "healthScoreboard", () => healthScoreboard(), [ tags.gameLogic, tags.gaming, tags.infoBoard ] );
-        /** 游戏逻辑：玩家破坏方块 */
-        createEvent( "playerBreakBedTest", world.afterEvents.playerBreakBlock, event => playerBreakBedTest( event ), [ tags.gameLogic, tags.gaming, tags.breakBlock ] );
         /** 游戏逻辑：陷阱 */
         createInterval( "trap", () => trap(), [ tags.gameLogic, tags.gaming, tags.trap ] );
         /** 游戏逻辑：交易 */
@@ -163,15 +157,12 @@ export const eventManager = {
         deleteIntervalsWithTag( tags.beforeGaming, tags.gaming );
         /** 游戏逻辑：游戏结束 */
         createInterval( "gameOverCountdown", () => gameOverCountdown(), [ tags.gameLogic, tags.afterGaming, "gameOver" ] );
-        /** 游戏逻辑：信息板 */
-        createInterval( "gamingInfoBoard", () => gamingInfoBoard(), [ tags.gameLogic, tags.gaming, tags.afterGaming, tags.infoBoard ], 3 );
         /** 游戏逻辑：状态效果 */
         createInterval( "invulnerableAfterGame", () => invulnerableAfterGame(), [ tags.gameLogic, tags.afterGaming, tags.effects ], 20 );
     },
     /** 夺点模式游戏时事件 */
     captureEvents( ) {
         /** 使用夺点模式的床破坏与放置逻辑 */
-        deleteEvents( "playerBreakBedTest" );
         createEvent( "playerBreakBedTestCapture", world.afterEvents.playerBreakBlock, event => playerBreakBedTestCapture( event ), [ tags.gameLogic, tags.gaming, tags.breakBlock, "capture" ] );
         createEvent( "playerPlaceBed", world.afterEvents.itemUseOn, event => playerPlaceBedTest( event ), [ tags.gameLogic, tags.gaming, "capture" ] )
         /** 使用夺点模式的游戏事件逻辑 */
@@ -180,7 +171,6 @@ export const eventManager = {
         createInterval( "teamEliminateAndWinCapture", () => teamEliminateAndWinCapture(), [ tags.gameLogic, tags.gaming, tags.gameEvents, "capture" ] );
         createInterval( "supplyDragonBuff", () => supplyDragonBuff(), [ tags.gameLogic, tags.gaming, tags.gameEvents, "capture" ] )
         /** 使用夺点模式的信息板逻辑 */
-        deleteIntervals( "gamingInfoBoard" );
         createInterval( "captureInfoboard", () => captureInfoBoard(), [ tags.gameLogic, tags.afterGaming, tags.gaming, tags.infoBoard, "capture" ] );
         /** 使用夺点模式的战斗逻辑 */
         createEvent( "playerDiedCapture", world.afterEvents.entityDie, event => playerDiedCapture( event ), [ tags.gameLogic, tags.gaming, tags.combat, "capture" ] );
@@ -190,7 +180,6 @@ export const eventManager = {
     /** 夺点模式游戏后事件 */
     captureAfterEvents( ) {
         /** 使用夺点模式的信息板逻辑 */
-        deleteIntervals( "gamingInfoBoard" );
         createInterval( "captureInfoboard", () => captureInfoBoard(), [ tags.gameLogic, tags.afterGaming, tags.gaming, tags.infoBoard, "capture" ] );
     }
 }

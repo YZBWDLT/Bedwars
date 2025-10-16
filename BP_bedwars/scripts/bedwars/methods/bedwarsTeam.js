@@ -152,11 +152,6 @@ export class BedwarsTeam{
         }
         
     };
-    /** 设置队伍为淘汰队伍 */
-    setTeamEliminated() {
-        this.isEliminated = true;
-        world.sendMessage( [ "\n", { translate: "message.teamEliminated", with: [ `${this.getTeamNameWithColor()}` ] }, "\n " ] );
-    };
     /** 获取其他队伍的床数 */
     getOtherTeamBed() {
         this.captureInfo.otherTeamBedAmount = 0;

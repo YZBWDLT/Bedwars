@@ -22,7 +22,7 @@ import { equipmentTest } from "./classic/equipment";
 import { applyResistanceNearby, applyYVelocity, dropLoot, preventBreakingVanillaBlocks } from "./classic/explosion";
 import { trap } from "./classic/trap";
 import { spawnResources } from "./classic/spawnResources";
-import { combat, deadPlayer, hurtByFireball, hurtByPlayer, playerDied } from "./classic/combat";
+import { deadPlayer } from "./classic/combat";
 import { alwaysSaturation, goldenAppleEffect, invulnerableAfterGame, teamUpgradeEffects } from "./classic/effects";
 import { gameEvents, teamEliminateAndWin } from "./classic/gameEvents";
 import { playerLeave, playerRejoin } from "./classic/playerLeaveAndRejoin";
@@ -114,11 +114,6 @@ export const eventManager = {
         /** 物品：弓 */
         createEvent( "playSoundWhenShot", world.afterEvents.projectileHitEntity, event => playSoundWhenShot( event ), [ tags.itemLogic, tags.gaming, tags.bow ] );
         /** 游戏逻辑：战斗系统 */
-        createInterval( "combatMain", () => combat(), [ tags.gameLogic, tags.gaming, tags.combat ] );
-        createEvent( "hurtByFireballB", world.afterEvents.projectileHitBlock, event => hurtByFireball( event ), [ tags.gameLogic, tags.gaming, tags.combat ] );
-        createEvent( "hurtByFireballE", world.afterEvents.projectileHitEntity, event => hurtByFireball( event ), [ tags.gameLogic, tags.gaming, tags.combat ] );
-        createEvent( "hurtByPlayer", world.afterEvents.entityHurt, event => hurtByPlayer( event ), [ tags.gameLogic, tags.gaming, tags.combat ] );
-        createEvent( "playerDied", world.afterEvents.entityDie, event => playerDied( event ), [ tags.gameLogic, tags.gaming, tags.combat ] );
         createInterval( "deadPlayer", () => deadPlayer(), [ tags.gameLogic, tags.gaming, tags.combat ] )
         /** 游戏逻辑：团队状态效果 */
         createInterval( "teamUpgradeEffects", () => teamUpgradeEffects(), [ tags.gameLogic, tags.gaming, tags.effects ], 20 );

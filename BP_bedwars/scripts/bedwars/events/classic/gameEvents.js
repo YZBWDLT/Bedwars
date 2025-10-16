@@ -41,12 +41,6 @@ export function gameEvents() {
  * @description 队伍胜利判定：如果仅剩一个队伍存活，则该队伍获胜。
  */
 export function teamEliminateAndWin() {
-    /** 队伍淘汰判定 */
-    eachTeam( team => {
-        if ( !team.bedInfo.isExist && team.getAliveTeamMember().length === 0 && !team.isEliminated ) {
-            team.setTeamEliminated();
-        }
-    } );
 
     /** 队伍胜利判定 */
     if ( map().getAliveTeam().length <= 1 ) {

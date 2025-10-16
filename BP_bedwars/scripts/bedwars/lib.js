@@ -6,7 +6,6 @@
 
 import { world, Entity, Player, ItemStack, EnchantmentType, EquipmentSlot, EntityInventoryComponent, ScoreboardObjective, ScoreboardIdentity, DisplaySlotId, BlockVolume, Structure, system } from "@minecraft/server";
 import { ActionFormData, MessageFormData, ModalFormData, FormCancelationReason } from "@minecraft/server-ui";
-import { secondToMinute } from "./methods/time";
 
 // ===== 世界 =====
 
@@ -157,6 +156,24 @@ const defaultTitleOptions = {
 
 /** 实体操作方法 */
 export const entity = {
+
+    /** 生成实体
+     * @param {string} typeId 
+     * @param {import("@minecraft/server").Vector3} location 
+     * @param {import("@minecraft/server").SpawnEntityOptions} options 
+     * @param {"overworld"|"nether"|"the_end"} dimensionId 待生成的维度
+     */
+    add(typeId, location, options, dimensionId = "overworld") {
+        return world.getDimension(dimensionId).spawnEntity(typeId, location, options);
+    },
+
+    /** 获取实体
+     * @param {string} typeId 实体 ID
+     * @param {"overworld"|"nether"|"the_end"} dimensionId 待检查的维度
+     */
+    get(typeId, dimensionId = "overworld") {
+        return world.getDimension(dimensionId).getEntities({type: typeId});
+    },
 
     /** 检查实体是否在特定位置周围
      * @param {Entity} entity 待检查的实体

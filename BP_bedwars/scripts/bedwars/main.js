@@ -178,11 +178,11 @@ class BedwarsSettings {
         /** 重加载设置 */
         reload: {
 
-            /** 清除地图的速度，0：非常慢，1：慢，2：较慢，3：中等，4：较快，5：快，6：非常快 */
-            clearSpeed: 3,
+            /** 清除地图的速度，0：非常慢，1：慢，2：较慢，3：中等，4：较快，5：快，6：非常快 [debug] */
+            clearSpeed: 6,
 
-            /** 加载地图的速度，0：非常慢，1：慢，2：较慢，3：中等，4：较快，5：快，6：非常快 */
-            loadSpeed: 3,
+            /** 加载地图的速度，0：非常慢，1：慢，2：较慢，3：中等，4：较快，5：快，6：非常快 [debug] */
+            loadSpeed: 6,
 
         },
 
@@ -244,11 +244,11 @@ class BedwarsSettings {
         /** 重生时间 */
         respawnTime: {
 
-            /** 普通玩家重生的时长，单位：游戏刻 */
-            normalPlayers: 110,
+            /** 普通玩家重生的时长，单位：秒 */
+            normalPlayers: 6,
 
-            /** 重进玩家重生的时长，单位：游戏刻 */
-            rejoinedPlayers: 200
+            /** 重进玩家重生的时长，单位：秒 */
+            rejoinedPlayers: 11
 
         },
 
@@ -363,6 +363,7 @@ class BedwarsEvent {
 // 例如，游戏前、游戏时都使用什么逻辑，都通过模式调用 Minecraft 的接口（world 的前事件、后事件和 system.runInterval 等）
 // 来执行，并对系统传入 Minecraft 传回的参数，方便后续管理。
 // 模式内部有几个特殊方法：entry...State(){} 和 exit...State() {}，它们在阶段变更时执行。一共有 5 个阶段。
+// 此外，...Timeline()的方法为时间线方法，...Event()方法为事件放发，可以调用它们以注册时间线或事件。
 // 一切其他模式都是基于 BedwarsClassicMode（经典模式）的模式构建的。
 // 【优化指南】在不必要的情况下，为性能考虑，模式内的代码会传入较高延迟的 system.runInterval，并且在符合特定条件时会销毁。
 // 例如蠹虫生成后，蠹虫存活倒计时才开始计时，并在蠹虫全部消失后销毁时间线。事件也是类似的道理，在不需要时应销毁。
@@ -1038,6 +1039,9 @@ class BedwarsClassicMode {
             // 传送玩家
             team.teleportPlayerToSpawnpoint(player);
 
+            // 设置玩家重生点 [debug]应在退出重进时也设置重生点
+            player.setSpawnPoint({ dimension: minecraft.world.getDimension("overworld"), ...this.map.spawnpoint, })
+
             // 提示玩家游戏玩法
             /** @type {(import("@minecraft/server").RawMessage | string)[]} */
             let introMessage = [
@@ -1064,20 +1068,75 @@ class BedwarsClassicMode {
 
         // 注册事件
         this.system.subscribeEvent(this.stopPlayerBreakBlockEvent()); // 阻止玩家破坏方块
+        this.system.subscribeEvent(this.newEntitySpawnEvent()); // 实体（尤其是弹射物）生成时的事件，用于创建新的事件（比如火球出现后，检查火球是否击中）
+        this.system.subscribeEvent(this.entityRemoveEvent()); // 实体（尤其是弹射物）被移除时的事件，用于移除事件
         this.system.subscribeEvent(this.playerBreakBedEvent()); // 玩家破坏床的事件
+        this.system.subscribeEvent(this.playerDieEvent()); // 玩家死亡事件
+        this.system.subscribeEvent(this.playerHurtByPlayerEvent()); // 玩家被其他玩家攻击事件
+        this.system.subscribeEvent(this.playerFellIntoVoidEvent()); // 玩家掉进虚空事件
 
         // 注册时间线
         this.system.subscribeTimeline(this.showGamingInfoBoardTimeline()); // 右侧记分板
-
-        // 床虱击中事件
-        this.system.subscribeEvent(this.bedBugHitBlockEvent());
-        this.system.subscribeEvent(this.bedBugHitEntityEvent());
 
     };
 
     /** 离开游戏状态，仅在退出此状态时执行一次 */
     exitGamingState() {
     };
+
+    // 实体生成检查，当对应实体生成后再触发对应的事件
+
+    /** 当某些实体生成后，则开始对应的事件检查 */
+    newEntitySpawnEvent() {
+        return new BedwarsEvent(
+            "newEntitySpawn",
+            minecraft.world.afterEvents.entitySpawn,
+            minecraft.world.afterEvents.entitySpawn.subscribe(event => {
+
+                // 如果生成了火球，则触发对应检查事件
+                if (event.entity.typeId == "bedwars:fireball" && !this.system.getEvent("fireballHitBlock")) {
+                    this.system.subscribeEvent(this.fireballHitBlockEvent());
+                    this.system.subscribeEvent(this.fireballHitEntityEvent());
+                }
+                // 如果生成了床虱，则触发对应检查事件
+                else if (event.entity.typeId == "bedwars:bed_bug" && !this.system.getEvent("bedBugHitBlock")) {
+                    this.system.subscribeEvent(this.bedBugHitBlockEvent());
+                    this.system.subscribeEvent(this.bedBugHitEntityEvent());
+                }
+                // 如果生成了搭桥蛋，则触发对应检查事件
+                else if (event.entity.typeId == "bedwars:bridge_egg" && !this.system.getEvent("bridgeEggHitBlock")) {
+
+                }
+            })
+        );
+    };
+
+    /** 当某些实体消失后，则停止对应的事件检查 */
+    entityRemoveEvent() {
+        return new BedwarsEvent(
+            "entityRemove",
+            minecraft.world.afterEvents.entityRemove,
+            minecraft.world.afterEvents.entityRemove.subscribe(event => {
+
+                // 如果移除了火球，则移除对应检查事件
+                if (event.typeId == "bedwars:fireball" && lib.entity.get("bedwars:fireball").length == 0) {
+                    this.system.unsubscribeEvent("fireballHitBlock");
+                    this.system.unsubscribeEvent("fireballHitEntity");
+                }
+                // 如果移除了床虱，则移除对应检查事件
+                else if (event.typeId == "bedwars:bed_bug" && lib.entity.get("bedwars:bed_bug").length == 0) {
+                    this.system.unsubscribeEvent("bedBugHitBlock");
+                    this.system.unsubscribeEvent("bedBugHitEntity");
+                }
+                // 如果移除了搭桥蛋，则移除对应检查事件
+                else if (event.typeId == "bedwars:bridge_egg" && lib.entity.get("bedwars:bridge_egg").length == 0) {
+
+                }
+            })
+        );
+    };
+
+    // 退出重进检查部分
 
     // 破坏床部分
 
@@ -1132,6 +1191,166 @@ class BedwarsClassicMode {
         );
     };
 
+    // 战斗部分
+
+    /** 玩家死亡事件 */
+    playerDieEvent() {
+        return new BedwarsEvent(
+            "playerDie",
+            minecraft.world.afterEvents.entityDie,
+            minecraft.world.afterEvents.entityDie.subscribe(event => {
+
+                /** 死亡玩家 @type {minecraft.Player} */
+                const player = event.deadEntity;
+
+                /** 死亡玩家的起床战争信息 */
+                const playerData = this.map.getBedwarsPlayer(player);
+
+                /** 死亡类型 */
+                const deathType = event.damageSource.cause;
+
+                /** 击杀者 */
+                const killer = event.damageSource.damagingEntity;
+
+                // 设置该玩家为已死亡状态，触发队伍淘汰甚至是游戏结束事件，并广播相关消息
+                playerData?.setDead(deathType, killer);
+
+                // 如果没有玩家重生时间线，则创建之
+                if (!this.system.getTimeline("playerRespawn")) this.system.subscribeTimeline(this.playerRespawnTimeline());
+
+            }, { entities: this.map.teams.flatMap(team => team.alivePlayers.flatMap(alivePlayer => alivePlayer.player)) })
+        );
+    };
+
+    /** 检查被玩家攻击事件 */
+    playerHurtByPlayerEvent() {
+        return new BedwarsEvent(
+            "playerHurtByPlayer",
+            minecraft.world.afterEvents.entityHurt,
+            minecraft.world.afterEvents.entityHurt.subscribe(event => {
+
+                /** 受伤玩家 */
+                const player = event.hurtEntity;
+
+                /** 伤害玩家 */
+                const damager = event.damageSource.damagingEntity;
+
+                /** 受伤玩家的起床战争信息 */
+                const playerData = this.map.getBedwarsPlayer(player);
+
+                /** 伤害玩家的起床战争信息 */
+                const damagerData = this.map.getBedwarsPlayer(damager);
+
+                // 如果受伤，检查伤害者是否正常，正常则记录伤害者，并开始计时，同时撤销隐身玩家的盔甲隐藏状态
+                if (damagerData && damagerData.team) {
+                    playerData.beAttacked(damager);
+                    if (!this.system.getTimeline("playerAttackedTimer")) this.system.subscribeTimeline(this.playerAttackedTimerTimeline());
+                }
+
+            }, { entities: this.map.teams.flatMap(team => team.alivePlayers.flatMap(alivePlayer => alivePlayer.player)) })
+        );
+    };
+
+    /** 对正在被攻击期间的玩家计时 */
+    playerAttackedTimerTimeline() {
+        return new BedwarsTimeline(
+            "playerAttackedTimer",
+            minecraft.system.runInterval(() => {
+
+                // 查找所有被攻击的玩家，让他们每秒计时，10 秒后恢复为未被攻击状态
+                let attackedPlayers = this.map.teams.flatMap(team => team.players.filter(playerData => playerData.timeSinceLastAttack < 10));
+                attackedPlayers.forEach(attackedPlayer => {
+                    attackedPlayer.timeSinceLastAttack++;
+                    if (attackedPlayer.timeSinceLastAttack >= 10) attackedPlayer.resetAttackedInfo();
+                });
+
+                // 如果不再存在被攻击玩家，销毁该时间线
+                if (attackedPlayers.length == 0) this.system.unsubscribeTimeline("playerAttackedTimer");
+
+            }, 20)
+        );
+    };
+
+    /** 火球击中方块事件 */
+    fireballHitBlockEvent() {
+        return new BedwarsEvent(
+            "fireballHitBlock",
+            minecraft.world.afterEvents.projectileHitBlock,
+            minecraft.world.afterEvents.projectileHitBlock.subscribe(event => {
+                if (event.projectile.typeId == "bedwars:fireball") this.playerHurtByFireball(event);
+            })
+        );
+    };
+
+    /** 火球击中实体事件 */
+    fireballHitEntityEvent() {
+        return new BedwarsEvent(
+            "fireballHitEntity",
+            minecraft.world.afterEvents.projectileHitEntity,
+            minecraft.world.afterEvents.projectileHitEntity.subscribe(event => {
+                if (event.projectile.typeId == "bedwars:fireball") this.playerHurtByFireball(event);
+            })
+        );
+    };
+
+    /** 火球击中后执行的内容
+     * @param {minecraft.ProjectileHitEntityAfterEvent | minecraft.ProjectileHitBlockAfterEvent} event 
+     */
+    playerHurtByFireball(event) {
+
+        // 检查火球是否有有效的掷出者，有的话则执行代码
+        const thrower = event.source;
+        const throwerData = this.map.getBedwarsPlayer(thrower);
+        if (throwerData) {
+            // 令火球附近的玩家执行代码，如果受伤，检查伤害者是否正常，正常则记录伤害者，并开始计时，同时撤销隐身玩家的盔甲隐藏状态
+            lib.player.getNearby(event.location, 4).forEach(player => {
+                const playerData = this.map.getBedwarsPlayer(player);
+                if (playerData && playerData.team.id != throwerData.team.id) {
+                    playerData.beAttacked(thrower);
+                    if (!this.system.getTimeline("playerAttackedTimer")) this.system.subscribeTimeline(this.playerAttackedTimerTimeline());
+                }
+            });
+        }
+
+    };
+
+    /** 玩家进入虚空事件 */
+    playerFellIntoVoidEvent() {
+        return new BedwarsEvent(
+            "playerFellIntoVoid",
+            minecraft.world.afterEvents.entityHurt,
+            minecraft.world.afterEvents.entityHurt.subscribe(event => {
+                if (event.damageSource.cause == "void") event.hurtEntity.applyDamage(200, { cause: "void" });
+            }, { entityTypes: ["minecraft:player"] })
+        );
+    };
+
+    /** 玩家重生时间线 [debug] 应在有玩家退出重进时创建该时间线 */
+    playerRespawnTimeline() {
+        return new BedwarsTimeline(
+            "playerRespawn",
+            minecraft.system.runInterval(() => {
+
+                /** 获取正处于死亡状态且重生倒计时大于 0 的玩家 */
+                const respawningPlayers = this.map.teams.flatMap(team => team.alivePlayers.filter(alivePlayer => alivePlayer.respawnTime > 0));
+
+                // 进行重生倒计时
+                respawningPlayers.forEach(respawningPlayer => {
+                    respawningPlayer.respawnTime--;
+                    if (respawningPlayer.respawnTime > 0) {
+                        lib.player.setTitle(respawningPlayer.player, { translate: "title.respawning" }, { translate: "subtitle.respawning", with: [`${respawningPlayer.respawnTime}`] }, { fadeInDuration: 0 });
+                        respawningPlayer.player.sendMessage( { translate: "message.respawning", with: [ `${respawningPlayer.respawnTime}` ] } );
+                    }
+                    if (respawningPlayer.respawnTime == 0) respawningPlayer.respawn();
+                });
+
+                // 如果不存在死亡玩家，则销毁时间线
+                if (respawningPlayers.length == 0) this.system.unsubscribeTimeline("playerRespawn");
+
+            }, 20)
+        );
+    };
+
     // 床虱部分
 
     /** 床虱击中方块事件，击中后生成床虱 */
@@ -1160,7 +1379,7 @@ class BedwarsClassicMode {
         return new BedwarsTimeline(
             "bedBugCountdown",
             minecraft.system.runInterval(() => {
-                const silverfishes = minecraft.world.getDimension("overworld").getEntities({ type: "minecraft:silverfish" }).filter(silverfish => silverfish.killTimer != undefined);
+                const silverfishes = lib.entity.get("minecraft:silverfish").filter(silverfish => silverfish.killTimer != undefined);
                 // 对床虱计时并设定名称，倒计时结束后则杀死之
                 silverfishes.forEach(silverfish => {
                     silverfish.killTimer++;
@@ -1362,6 +1581,9 @@ class BedwarsMap {
 
     /** 队伍信息 @type {BedwarsTeam[]} */
     teams = [];
+
+    /** 存活队伍信息 @type {BedwarsTeam[]} */
+    aliveTeams = [];
 
     /** 旁观玩家信息 @type {BedwarsPlayer[]} */
     spectatorPlayers = [];
@@ -1597,9 +1819,10 @@ class BedwarsMap {
 
     /** 从玩家信息获取起床战争玩家
      * @param {minecraft.Player} player 
+     * @remarks 可以传入undefined，不会出现问题，最终会返回undefined
      */
     getBedwarsPlayer(player) {
-        return this.teams.flatMap(team => team.players).concat(this.spectatorPlayers).find(bedwarsPlayer => bedwarsPlayer.player.id == player.id);
+        return this.teams.flatMap(team => team.players).concat(this.spectatorPlayers).find(bedwarsPlayer => bedwarsPlayer.player.id == player?.id);
     };
 
     /** 设置商人 */
@@ -1608,7 +1831,7 @@ class BedwarsMap {
         this.traders.forEach(traderData => {
 
             // 生成商人并确定朝向、类型和皮肤
-            let trader = minecraft.world.getDimension("overworld").spawnEntity("bedwars:trader", lib.position3.center(traderData.location));
+            let trader = lib.entity.add("bedwars:trader", lib.position3.center(traderData.location));
             trader.setRotation({ x: 0, y: traderData.rotation });
             trader.triggerEvent(`${traderData.type}_trader`);
             trader.triggerEvent(`assign_skin_randomly`);
@@ -1653,7 +1876,7 @@ class BedwarsMap {
             player.sendMessage(["\n", { translate: `message.bedDestroyed.${breakerInfo.killStyle}`, with: { rawtext: [{ translate: `message.otherBed`, with: { rawtext: [{ translate: `team.${team.id}` }] } }, { text: breakerInfo.player.nameTag }] } }, "\n "]);
         });
 
-    }
+    };
 
 };
 
@@ -2395,6 +2618,12 @@ class BedwarsTeam {
         this.destroyBed();
     };
 
+    /** 标记为已被淘汰 */
+    setEliminated() {
+        this.isEliminated = true;
+        minecraft.world.sendMessage(["\n", { translate: "message.teamEliminated", with: [`${this.getTeamNameWithColor()}`] }, "\n "])
+    };
+
 };
 
 // ===== 玩家 =====
@@ -2446,7 +2675,25 @@ class BedwarsPlayer {
     gameId = 0;
 
     /** 重生倒计时，玩家在死亡后需要多久才能重生，为 0 时触发重生函数，为负数时则代表该玩家不能重生，单位：秒 */
-    respawnTime = 6;
+    respawnTime = 0;
+
+    /** 死亡类型 @type {"entityAttack"|"projectile"|"fall"|"void"|"entityExplosion"|"other"} */
+    deathType = "other";
+
+    /** 是否为退出重进的玩家 */
+    rejoined = false;
+
+    /** 上一个攻击者 @type {minecraft.Player|undefined} */
+    lastAttacker = undefined;
+
+    /** 自上一次被攻击的计时，单位：秒 */
+    timeSinceLastAttack = 10;
+
+    /** 镐子的等级，0：无，1：木，2：铁，3：金，4：钻石 @type {0|1|2|3|4} */
+    pickaxeTier = 0;
+
+    /** 斧子的等级，0：无，1：木，2：铁，3：金，4：钻石 @type {0|1|2|3|4} */
+    axeTier = 0;
 
     /**
      * @param {BedwarsSystem} system 系统
@@ -2482,6 +2729,208 @@ class BedwarsPlayer {
 
     };
 
+    /** 获取地图 */
+    getMap() {
+        return this.system.mode.map;
+    };
+
+    /** 击杀玩家后，获得的物资奖励
+     * @param {BedwarsPlayer} killedPlayerInfo 
+     */
+    getBonus(killedPlayerInfo) {
+        const killedPlayer = killedPlayerInfo.player;
+
+        // 播放音效
+        this.player.playSound("random.orb", { location: this.player.location });
+
+        // 记录击杀数
+        if (killedPlayerInfo.team.bedIsExist) this.killCount++;
+        else this.finalKillCount++;
+
+        // 击杀奖励
+        const ironAmount = lib.inventory.hasItemAmount(killedPlayer, "bedwars:iron_ingot");
+        if (ironAmount > 0) {
+            this.player.runCommand(`give @s bedwars:iron_ingot ${ironAmount}`);
+            this.player.sendMessage(`§f+${ironAmount}块铁锭`);
+        };
+        const goldAmount = lib.inventory.hasItemAmount(killedPlayer, "bedwars:gold_ingot");
+        if (goldAmount > 0) {
+            this.player.runCommand(`give @s bedwars:gold_ingot ${goldAmount}`);
+            this.player.sendMessage(`§6+${goldAmount}块金锭`);
+        };
+        const diamondAmount = lib.inventory.hasItemAmount(killedPlayer, "bedwars:diamond");
+        if (diamondAmount > 0) {
+            this.player.runCommand(`give @s bedwars:diamond ${diamondAmount}`);
+            this.player.sendMessage(`§b+${diamondAmount}钻石`);
+        };
+        const emeraldAmount = lib.inventory.hasItemAmount(killedPlayer, "bedwars:emerald");
+        if (emeraldAmount > 0) {
+            this.player.runCommand(`give @s bedwars:emerald ${emeraldAmount}`);
+            this.player.sendMessage(`§2+${emeraldAmount}绿宝石`);
+        };
+    };
+
+    /** 设置玩家为已死亡，同时检查床的存在性，如果没有床则设为已淘汰
+     * @param {minecraft.EntityDamageCause} deathType 
+     * @param {minecraft.Entity | undefined} killer 
+     */
+    setDead(deathType, killer) {
+
+        // --- 设置为已死亡 ---
+        this.isDead = true;
+
+        // --- 设置死亡类型 ---
+        // 如果玩家死于：实体攻击、投射物、摔落、虚空、爆炸，则为了显示死亡信息应记录，其他类型统一记录为其他
+        if (["entityAttack", "projectile", "fall", "void", "entityExplosion"].includes(deathType)) this.deathType = deathType;
+        else this.deathType = "other";
+
+        // --- 根据床的存在性设置重生时间，或设置是否淘汰 ---
+        if (!this.team) null;
+        else if (this.team.bedIsExist) {
+
+            // 如果是退出重进的玩家，按照退出重进玩家的时间设置重生时间
+            if (this.rejoined) {
+                this.respawnTime = this.system.settings.gaming.respawnTime.rejoinedPlayers;
+                this.rejoined = false;
+            }
+            else {
+                this.respawnTime = this.system.settings.gaming.respawnTime.normalPlayers;
+            }
+
+        }
+        else {
+
+            // 设置为淘汰状态
+            this.respawnTime = -1;
+            this.isEliminated = true;
+
+            // 通知该玩家已淘汰
+            this.player.sendMessage({ translate: "message.eliminated" });
+
+            // 将该玩家从该队伍的存活名单中移除出去
+            this.team.alivePlayers.splice(this.team.alivePlayers.findIndex(alivePlayerData => alivePlayerData.player.id == this.player.id), 1);
+
+            // 如果已经被移除的玩家是该队最后一名存活玩家，则淘汰整个队伍
+            if (this.team.alivePlayers.length == 0) this.team.setEliminated();
+
+        };
+
+        // --- 广播玩家被击杀的消息，并给予击杀者奖励 ---
+
+        /** 本次击杀是否为最终击杀 */
+        const isFinalKill = this.team.bedIsExist ? "" : "message.finalKill";
+
+        /** 普通死亡样式
+         * @param {"died"|"fellIntoVoid"} type 死亡类型
+         */
+        const defaultDeath = (type = "died") => {
+            minecraft.world.sendMessage([{ translate: `message.kill.${type}`, with: [this.player.nameTag] }, { translate: isFinalKill }]);
+        }
+
+        /** 被其他玩家击杀样式，同时给予击杀者奖励
+         * @param {"beKilled"|"beKilledVoid"|"beShot"|"beKilledFall"|"beKilledGolem"} type 触发的消息样式
+         * @param {BedwarsPlayer} killerData 击杀者的起床战争信息
+         */
+        const killedByOthers = (type, killerData) => {
+            const killer = killerData.player;
+            minecraft.world.sendMessage([{ translate: `message.kill.${type}.${killerData.killStyle}`, with: [this.player.nameTag, killer.nameTag] }, { translate: isFinalKill }]);
+            killerData.getBonus(this);
+        };
+
+        // 当玩家被其他玩家当场击杀时
+        if (killer && killer.typeId == "minecraft:player") {
+
+            // 获取击杀者的起床战争信息
+            const killerData = this.getMap().getBedwarsPlayer(killer);
+
+            if (!killerData || !killerData.team) defaultDeath(); // 如果击杀者起床信息不存在，或击杀者起床信息的队伍不存在，则触发普通死亡样式（虽然实际运行过程中应该不太可能，但万一呢？）
+            else if (this.deathType == "projectile") killedByOthers("beShot", killerData); // 被射杀
+            else killedByOthers("beKilled", killerData); // 其他
+
+        }
+
+        // 当玩家被其他实体（例如蠹虫或铁傀儡）当场击杀时
+        else if (killer) {
+
+            // 获取该实体是否拥有主人信息
+            /** @type {minecraft.Player|undefined} */
+            const owner = killer.owner;
+            const ownerData = this.getMap().getBedwarsPlayer(owner);
+
+            if (!owner) defaultDeath(); // 如果不存在主人（比如万一是个僵尸呢），触发普通死亡样式
+            else killedByOthers("beKilledGolem", ownerData); // 否则，是被其主人的傀儡击杀，给予其主人奖励
+
+        }
+
+        // 当玩家未被实际存在的实体击杀，但是有上一次攻击的玩家时
+        else if (this.lastAttacker) {
+
+            /** 上一个攻击者的起床战争信息 */
+            const attackerData = this.getMap().getBedwarsPlayer(this.lastAttacker);
+
+            if (this.deathType == "entityExplosion") killedByOthers("beKilled", attackerData); // 被其他玩家活活炸死（例如用火焰弹不断爆破）
+            else if (this.deathType == "fall") killedByOthers("beKilledFall", attackerData); // 被其他玩家扔下去摔死
+            else if (this.deathType == "void") killedByOthers("beKilledVoid", attackerData); // 被其他玩家扔到虚空
+            else defaultDeath();
+
+        }
+        else if (this.deathType == "void") defaultDeath("fellIntoVoid"); // 如果自走虚空
+        else defaultDeath(); // 其余所有情况
+
+        // --- 其它功能 ---
+        this.player.runCommand("clear @s");
+        this.player.setGameMode("Spectator");
+
+    };
+
+    /** 玩家受伤，并移除玩家的隐身状态
+     * @param {minecraft.Player} attacker 伤害者，必须是拥有有效起床战争信息，且有队伍归属的玩家
+     */
+    beAttacked(attacker) {
+
+        // 调整状态
+        this.lastAttacker = attacker;
+        this.timeSinceLastAttack = 0;
+
+        // 移除隐身状态[debug]
+        // if ( player.getComponent( "minecraft:is_sheared" ) ) {
+        //     player.triggerEvent( "show_armor" );
+        //     player.sendMessage( { translate: "message.beHitWhenInvisibility" } );
+        // }
+
+    };
+
+    /** 重置受伤信息 */
+    resetAttackedInfo() {
+        this.lastAttacker = undefined;
+        this.timeSinceLastAttack = 10;
+    };
+
+    /** 重生玩家 */
+    respawn() {
+
+        // 设置为非死亡状态
+        this.isDead = false;
+        this.respawnTime = 0;
+
+        // 重置受伤信息
+        this.resetAttackedInfo();
+
+        // 工具降级
+        if (this.axeTier > 1) this.axeTier--;
+        if (this.pickaxeTier > 1) this.pickaxeTier--;
+
+        // 提醒玩家已经重生
+        lib.player.setTitle(this.player, { translate: "title.respawned" }, "", { fadeInDuration: 0 });
+        this.player.sendMessage( { translate: "message.respawned" } );
+
+        // 其他功能
+        this.player.setGameMode("Survival");
+        this.team.teleportPlayerToSpawnpoint(this.player);
+        this.player.runCommand("clear @s");
+
+    };
+
 };
 
 /** @enum {string} 所有可用的击杀样式 */
@@ -2503,5 +2952,4 @@ const killStyle = {
 minecraft.world.afterEvents.worldLoad.subscribe(() => {
     let bedwarsSystem = new BedwarsSystem();
     bedwarsSystem.settings.beforeGaming.waiting.gameStartWaitingTime = 1;
-    bedwarsSystem.settings.beforeGaming.reload.loadSpeed = 6;
 });

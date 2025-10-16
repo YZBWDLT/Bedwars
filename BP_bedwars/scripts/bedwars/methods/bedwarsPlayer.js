@@ -71,11 +71,6 @@ export class BedwarsPlayer{
         return getTeamFunc( this.team );
     };
 
-    /** 传送玩家到重生点 */
-    teleportPlayerToSpawnpoint() {
-        this.getThisPlayer().teleport( this.getTeam().spawnpoint, { facingLocation: this.getTeam().bedInfo.pos } )
-    };
-
     /** 新增玩家的受伤信息
      * @param {Player} attacker 攻击者
      */
@@ -84,79 +79,10 @@ export class BedwarsPlayer{
         this.lastHurt.attackedSinceLastAttack = 0;
     }
 
-    /** 重置玩家的受伤信息 */
-    resetHurtInfo( ) {
-        this.lastHurt.attackedSinceLastAttack = 200;
-        this.lastHurt.attacker = void 0;
-        this.deathState.deathType = "";
-    };
-
-    /** 将玩家的镐和斧降级 */
-    loseToolTier( ) {
-
-        if ( this.equipment.axe > 1 ) {
-            this.equipment.axe--;
-        };
-
-        if ( this.equipment.pickaxe > 1 ) {
-            this.equipment.pickaxe--;
-        };
-
-    };
-
-    /** 设置玩家为非死亡状态 */
-    setPlayerAlive( ) {
-        this.deathState.isDeath = false;
-        this.deathState.respawnCountdown = 0;
-        setPlayerGamemode( this.getThisPlayer(), "survival" )
-    };
-
-    /** 设置玩家为死亡状态
-     * @param {EntityDamageCause} deathType 玩家的死亡类型
-     */
-    setPlayerDead( deathType ) {
-
-        this.deathState.isDeath = true;
-        
-        /** 判断死亡类型，如果玩家死于：实体攻击、投射物、摔落、虚空、爆炸，则为显示死亡信息应予以记录，其他类型统一记录为其他 */
-        if ( [ "entityAttack", "projectile", "fall", "void", "entityExplosion" ].includes( deathType ) ) { this.deathState.deathType = deathType; }
-        else { this.deathState.deathType = "other"; };
-
-        /** 设置重生时间 */
-        if ( this.getBedState() ) {
-            if ( this.deathState.isRejoinedPlayer ) {
-                this.deathState.respawnCountdown = settings.gaming.respawnTime.rejoinedPlayers;
-                this.deathState.isRejoinedPlayer = false;
-            }
-            else {
-                this.deathState.respawnCountdown = settings.gaming.respawnTime.normalPlayers;
-            }
-        }
-        else {
-            this.deathState.respawnCountdown = -1;
-            this.isEliminated = true;
-        }
-
-    }
-
     /** 获取玩家是否有床 */
     getBedState( ) {
         if ( map().mode === "capture" ) { return this.getTeam().captureInfo.bedsPos.length !== 0; }
         else { return this.getTeam().bedInfo.isExist; }
-    };
-
-    /** 玩家在队伍中生成
-     * @param {{resetHurtInfo:Boolean,removeItem:Boolean,loseToolTier:Boolean}} option 生成选项
-     */
-    spawn( option = {} ) {
-        const defaultOption = { resetHurtInfo: true, removeItem: true, loseToolTier: true };
-        const { resetHurtInfo, removeItem, loseToolTier } = { ...defaultOption, ...option }
-
-        this.setPlayerAlive();
-        this.teleportPlayerToSpawnpoint();
-        if ( resetHurtInfo ) { this.resetHurtInfo(); };
-        if ( removeItem ) { this.getThisPlayer().runCommand( "clear @s" ); };
-        if ( loseToolTier ) { this.loseToolTier(); };
     };
 
 }

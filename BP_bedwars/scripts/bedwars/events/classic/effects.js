@@ -11,11 +11,6 @@ import { eachTeam } from "../../methods/bedwarsTeam";
 import { eachPlayer, entityIsNearby } from "../../methods/playerManager";
 import { map } from "../../methods/bedwarsMaps";
 
-/** 保持添加饱和效果 */
-export function alwaysSaturation() {
-    eachPlayer( player => { player.addEffect( "saturation", 1, { amplifier: 9, showParticles: false } ); } )
-}
-
 /** 团队升级状态效果 */
 export function teamUpgradeEffects() {
     eachTeam( team => {

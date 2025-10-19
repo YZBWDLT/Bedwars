@@ -4,7 +4,7 @@
 import { world } from "@minecraft/server";
 
 /** 方法类函数调用 */
-import { createEvent, deleteEvents, deleteEventsWithTag } from "../methods/eventManager";
+import { createEvent, deleteEventsWithTag } from "../methods/eventManager";
 import { createInterval, deleteIntervalsWithTag } from "../methods/intervalManager";
 
 /** 物品事件函数调用 */
@@ -17,15 +17,12 @@ import { playerDrinkPotionTest } from "./items/potions";
 import { removeEnderPearl } from "./items/enderPearl";
 
 /** 经典模式函数调用 */
-import { maxHeightLimit, minHeightLimit, playerOpenChest, safeAreaLimit } from "./classic/playerUseBlock";
 import { equipmentTest } from "./classic/equipment";
 import { applyResistanceNearby, applyYVelocity, dropLoot, preventBreakingVanillaBlocks } from "./classic/explosion";
 import { trap } from "./classic/trap";
 import { spawnResources } from "./classic/spawnResources";
-import { deadPlayer } from "./classic/combat";
-import { alwaysSaturation, goldenAppleEffect, invulnerableAfterGame, teamUpgradeEffects } from "./classic/effects";
+import { goldenAppleEffect, invulnerableAfterGame, teamUpgradeEffects } from "./classic/effects";
 import { gameEvents, teamEliminateAndWin } from "./classic/gameEvents";
-import { playerLeave, playerRejoin } from "./classic/playerLeaveAndRejoin";
 import { healthScoreboard } from "./classic/infoBoard";
 import { gameOverCountdown } from "./classic/afterGaming";
 import { killStyleSettings, mapSettings, selectTeamSettings } from "../methods/bedwarsSettings";
@@ -79,16 +76,10 @@ export const eventManager = {
     /** 全局事件 */
     generalEvents() {
 
-        /** 游戏逻辑：饱和药效 */
-        createInterval( "alwaysSaturation", () => alwaysSaturation(), [ tags.gameLogic, tags.effects ], 20 );
-        /** 游戏逻辑：玩家退出重进 */
-        createEvent( "playerLeave", world.beforeEvents.playerLeave, event => playerLeave( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
-        createEvent( "playerRejoin", world.afterEvents.playerSpawn, event => playerRejoin( event ), [ tags.gameLogic, tags.playerLeaveAndRejoin ] );
         /** 游戏逻辑：设置 */
         createEvent( "mapSettings", world.afterEvents.itemUse, event => mapSettings( event ), [ tags.gameLogic, tags.settings ] );
         createEvent( "killStyleSettings", world.afterEvents.itemUse, event => killStyleSettings( event ), [ tags.gameLogic, tags.settings ] );
         createEvent( "selectTeamSettings", world.afterEvents.itemUse, event => selectTeamSettings( event ), [ tags.gameLogic, tags.settings ] );
-        
     },
     /** 经典模式游戏时事件 */
     classicEvents() {
@@ -113,8 +104,6 @@ export const eventManager = {
         createInterval( "removeEnderPearl", () => removeEnderPearl(), [ tags.itemLogic, tags.gaming, tags.enderPearl ] );
         /** 物品：弓 */
         createEvent( "playSoundWhenShot", world.afterEvents.projectileHitEntity, event => playSoundWhenShot( event ), [ tags.itemLogic, tags.gaming, tags.bow ] );
-        /** 游戏逻辑：战斗系统 */
-        createInterval( "deadPlayer", () => deadPlayer(), [ tags.gameLogic, tags.gaming, tags.combat ] )
         /** 游戏逻辑：团队状态效果 */
         createInterval( "teamUpgradeEffects", () => teamUpgradeEffects(), [ tags.gameLogic, tags.gaming, tags.effects ], 20 );
         createEvent( "goldenAppleEffect", world.afterEvents.itemCompleteUse, event => goldenAppleEffect(event), [ tags.gameLogic, tags.gaming, tags.effects ] );
@@ -128,11 +117,6 @@ export const eventManager = {
         /** 游戏逻辑：游戏事件 */
         createInterval( "gameEventsMain", () => gameEvents(), [ tags.gameLogic, tags.gaming, tags.gameEvents ] );
         createInterval( "teamEliminateAndWin", () => teamEliminateAndWin(), [ tags.gameLogic, tags.gaming, tags.gameEvents ] );
-        /** 游戏逻辑：玩家使用方块 */
-        createEvent( "maxHeightLimit", world.beforeEvents.playerInteractWithBlock, event => maxHeightLimit( event ), [ tags.gameLogic, tags.gaming, tags.playerUseBlock ] );
-        createEvent( "minHeightLimit", world.beforeEvents.playerInteractWithBlock, event => minHeightLimit( event ), [ tags.gameLogic, tags.gaming, tags.playerUseBlock ] );
-        createEvent( "playerOpenChest", world.beforeEvents.playerInteractWithBlock, event => playerOpenChest( event ), [ tags.gameLogic, tags.gaming, tags.playerUseBlock ] );
-        createEvent( "safeAreaLimit", world.beforeEvents.playerInteractWithBlock, event => safeAreaLimit( event ), [ tags.gameLogic, tags.gaming, tags.playerUseBlock ] );
         /** 游戏逻辑：信息板 */
         createInterval( "healthScoreboard", () => healthScoreboard(), [ tags.gameLogic, tags.gaming, tags.infoBoard ] );
         /** 游戏逻辑：陷阱 */

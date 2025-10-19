@@ -4,7 +4,7 @@
 
 // ===== 导入部分 =====
 
-import { world, Entity, Player, ItemStack, EnchantmentType, EquipmentSlot, EntityInventoryComponent, ScoreboardObjective, ScoreboardIdentity, DisplaySlotId, BlockVolume, Structure, system } from "@minecraft/server";
+import { world, Entity, Player, ItemStack, EnchantmentType, EquipmentSlot, EntityInventoryComponent, ScoreboardObjective, ScoreboardIdentity, DisplaySlotId, BlockVolume, Structure, system, Block, Direction } from "@minecraft/server";
 import { ActionFormData, MessageFormData, ModalFormData, FormCancelationReason } from "@minecraft/server-ui";
 
 // ===== 世界 =====
@@ -79,6 +79,37 @@ export const dimension = {
         const volume = new BlockVolume(from, to);
         world.getDimension(dimensionId).fillBlocks(volume, toBlockId, { blockFilter: { includeTypes: replaceBlockIds } })
     },
+
+    /** 在某个位置放置方块
+     * @param {"overworld" | "nether" | "the_end"} dimensionId 维度 ID
+     * @param {import("@minecraft/server").Vector3} location 起始坐标
+     * @param {string} blockId 待替换的方块 ID
+     */
+    setBlock(dimensionId, location, blockId) {
+        world.getDimension(dimensionId).setBlockType(location, blockId);
+        return world.getDimension(dimensionId).getBlock(location);
+    },
+
+    /** 获取和方块交互后，实际放置的方块位置
+     * @description 专门适用于interactWithBlock前事件
+     * @param {Block} interactedBlock 
+     * @param {Direction} interactedBlockFace 
+     */
+    getPlaceLocation(interactedBlock, interactedBlockFace) {
+
+        const blockLocation = interactedBlock.location;
+
+        switch (interactedBlockFace) {
+            case "Up": return position3.add(blockLocation, 0, 1, 0);
+            case "Down": return position3.add(blockLocation, 0, -1, 0);
+            case "North": return position3.add(blockLocation, 0, 0, -1);
+            case "South": return position3.add(blockLocation, 0, 0, 1);
+            case "West": return position3.add(blockLocation, -1, 0, 0);
+            case "East": return position3.add(blockLocation, 1, 0, 0);
+            default: return blockLocation;
+        }
+
+    }
 
 }
 

@@ -77,7 +77,7 @@ class BedwarsSystem {
     subscribeEvent(event) {
         lib.debug.sendMessage(`[BedwarsSystem] 已添加名为${event.typeId}的事件。`);
         this.systemEvents.push(event);
-    }
+    };
 
     /** 停止特定 ID 的时间线
      * @param {string} timelineTypeId 时间线 ID
@@ -427,6 +427,16 @@ class BedwarsClassicMode {
 
     // ===== 通用事件与时间线 =====
 
+    /** 施加饱和状态效果时间线 */
+    applySaturationTimeline() {
+        return new BedwarsTimeline(
+            "applySaturation",
+            minecraft.system.runInterval(() => {
+                lib.player.getAll().forEach(player => player.addEffect("saturation", 1, {amplifier: 19, showParticles: false}))
+            }, 200)
+        );
+    };
+
     /** 显示游戏前的信息板 */
     showBeforeGamingInfoBoardTimeline() {
         return new BedwarsTimeline(
@@ -728,6 +738,7 @@ class BedwarsClassicMode {
         // 注册时间线
         this.system.subscribeTimeline(this.showBeforeGamingInfoBoardTimeline()); // 右侧信息板
         this.system.subscribeTimeline(this.beforeGamingTimeline()); // 游戏前时间线
+        this.system.subscribeTimeline(this.applySaturationTimeline()); // 施加饱和效果
 
         // 注册事件
         this.system.subscribeEvent(this.stopPlayerBreakBlockEvent()); // 阻止玩家破坏方块
@@ -847,6 +858,7 @@ class BedwarsClassicMode {
         this.system.subscribeTimeline(this.calculateLoadTimeCountdownTimeline()); // 倒计时显示
         this.system.subscribeTimeline(this.showBeforeGamingInfoBoardTimeline()); // 右侧信息板
         this.system.subscribeTimeline(this.beforeGamingTimeline()); // 游戏前时间线
+        this.system.subscribeTimeline(this.applySaturationTimeline()); // 施加饱和效果
 
         // 注册事件
         this.system.subscribeEvent(this.stopPlayerBreakBlockEvent()); // 阻止玩家破坏方块
@@ -881,6 +893,8 @@ class BedwarsClassicMode {
         // 注册时间线
         this.system.subscribeTimeline(this.showBeforeGamingInfoBoardTimeline()); // 右侧记分板
         this.system.subscribeTimeline(this.beforeGamingTimeline()); // 游戏前时间线
+        this.system.subscribeTimeline(this.applySaturationTimeline()); // 施加饱和效果
+
         // 注册事件
         this.system.subscribeEvent(this.stopPlayerBreakBlockEvent()); // 阻止玩家破坏方块
 
@@ -1030,7 +1044,11 @@ class BedwarsClassicMode {
         lib.dimension.fillBlock("overworld", { x: -12, y: 117, z: -12 }, { x: 12, y: 127, z: 12 }, "minecraft:air");
 
         // 在重生点下方放置一块屏障（防止薛定谔玩家复活时判定失败）
-        minecraft.world.getDimension("overworld").setBlockType({ x: 0, y: this.map.spawnpoint.y - 2, z: 0 }, "minecraft:barrier")
+        lib.dimension.setBlock("overworld", { x: 0, y: this.map.spawnpoint.y - 2, z: 0 }, "minecraft:barrier");
+        lib.dimension.setBlock("overworld", { x: 1, y: this.map.spawnpoint.y, z: 0 }, "minecraft:barrier");
+        lib.dimension.setBlock("overworld", { x: -1, y: this.map.spawnpoint.y, z: 0 }, "minecraft:barrier");
+        lib.dimension.setBlock("overworld", { x: 0, y: this.map.spawnpoint.y, z: 1 }, "minecraft:barrier");
+        lib.dimension.setBlock("overworld", { x: 0, y: this.map.spawnpoint.y, z: -1 }, "minecraft:barrier");
 
         // 令每队的玩家初始化
         this.map.teams.forEach(team => team.players.forEach(playerInfo => {
@@ -1039,7 +1057,7 @@ class BedwarsClassicMode {
             // 传送玩家
             team.teleportPlayerToSpawnpoint(player);
 
-            // 设置玩家重生点 [debug]应在退出重进时也设置重生点
+            // 设置玩家重生点
             player.setSpawnPoint({ dimension: minecraft.world.getDimension("overworld"), ...this.map.spawnpoint, })
 
             // 提示玩家游戏玩法
@@ -1067,6 +1085,7 @@ class BedwarsClassicMode {
         }));
 
         // 注册事件
+        this.system.subscribeEvent(this.playerLeaveGameEvent()); // 玩家退出事件
         this.system.subscribeEvent(this.stopPlayerBreakBlockEvent()); // 阻止玩家破坏方块
         this.system.subscribeEvent(this.newEntitySpawnEvent()); // 实体（尤其是弹射物）生成时的事件，用于创建新的事件（比如火球出现后，检查火球是否击中）
         this.system.subscribeEvent(this.entityRemoveEvent()); // 实体（尤其是弹射物）被移除时的事件，用于移除事件
@@ -1074,9 +1093,13 @@ class BedwarsClassicMode {
         this.system.subscribeEvent(this.playerDieEvent()); // 玩家死亡事件
         this.system.subscribeEvent(this.playerHurtByPlayerEvent()); // 玩家被其他玩家攻击事件
         this.system.subscribeEvent(this.playerFellIntoVoidEvent()); // 玩家掉进虚空事件
+        this.system.subscribeEvent(this.playerPlaceBlockOnHeightLimitEvent()); // 玩家在上下限高度放置方块事件
+        this.system.subscribeEvent(this.playerOpenChestEvent()); // 玩家开箱事件
+        this.system.subscribeEvent(this.playerPlaceBlockOnSafeAreaEvent()); // 检查玩家在安全区域放置方块事件
 
         // 注册时间线
         this.system.subscribeTimeline(this.showGamingInfoBoardTimeline()); // 右侧记分板
+        this.system.subscribeTimeline(this.applySaturationTimeline()); // 施加饱和效果
 
     };
 
@@ -1138,7 +1161,128 @@ class BedwarsClassicMode {
 
     // 退出重进检查部分
 
-    // 破坏床部分
+    /** 玩家退出事件，退出后保存数据到该玩家名称的记分板下 */
+    playerLeaveGameEvent() {
+        return new BedwarsEvent(
+            "playerLeaveGame",
+            minecraft.world.beforeEvents.playerLeave,
+            minecraft.world.beforeEvents.playerLeave.subscribe(event => {
+                const player = event.player;
+                let playerData = this.map.getBedwarsPlayer(player);
+                const playerName = player.name;
+                if (playerData) {
+
+                    const teamCode = {
+                        "undefined": 0,
+                        red: 1,
+                        blue: 2,
+                        yellow: 3,
+                        green: 4,
+                        white: 5,
+                        cyan: 6,
+                        pink: 7,
+                        gray: 8,
+                        orange: 9,
+                        brown: 10,
+                        purple: 11,
+                    };
+                    // 在队伍中移除该队员
+                    playerData.team.removePlayer(playerName);
+                    // 备份数据
+                    minecraft.system.run(() => {
+                        // 创建记分板
+                        lib.scoreboard.objective.add(playerName);
+                        // 标记为是玩家数据
+                        lib.scoreboard.player.set(playerName, "isPlayerData", 1);
+                        // 队伍与游戏 ID 信息
+                        lib.scoreboard.player.set(playerName, "team", teamCode[playerData.team.id]);
+                        lib.scoreboard.player.set(playerName, "gameId", playerData.gameId);
+                        // 装备信息
+                        lib.scoreboard.player.set(playerName, "axeTier", playerData.axeTier);
+                        lib.scoreboard.player.set(playerName, "pickaxeTier", playerData.pickaxeTier);
+                        lib.scoreboard.player.set(playerName, "armorTier", playerData.armorTier);
+                        lib.scoreboard.player.setBoolean(playerName, "hasShears", playerData.hasShears);
+                        // 击杀信息
+                        lib.scoreboard.player.set(playerName, "killCount", playerData.killCount);
+                        lib.scoreboard.player.set(playerName, "finalKillCount", playerData.finalKillCount);
+                        lib.scoreboard.player.set(playerName, "destroyBedCount", playerData.destroyBedCount);
+                        // 备份完毕后，销毁该对象
+                        playerData = void 0;
+                        // 如果没有检查玩家重新进入的事件，创建该事件
+                        if (!this.system.getEvent("playerJoinGame")) this.system.subscribeEvent(this.playerJoinGameEvent());
+                    });
+
+                };
+            })
+        );
+    };
+
+    /** 玩家重新进入事件，回到游戏后从玩家的记分板恢复数据 */
+    playerJoinGameEvent() {
+        return new BedwarsEvent(
+            "playerJoinGame",
+            minecraft.world.afterEvents.playerSpawn,
+            minecraft.world.afterEvents.playerSpawn.subscribe(event => {
+
+                const player = event.player;
+                // 设置玩家的重生点
+                player.setSpawnPoint({ dimension: minecraft.world.getDimension("overworld"), ...this.map.spawnpoint, });
+                player.teleport(this.map.spawnpoint);
+                // 如果玩家是退出重进的玩家，则准备恢复数据
+                if (event.initialSpawn) {
+                    const playerData = lib.scoreboard.objective.get(player.name);
+                    const teamCode = {
+                        1: "red",
+                        2: "blue",
+                        3: "yellow",
+                        4: "green",
+                        5: "white",
+                        6: "cyan",
+                        7: "pink",
+                        8: "gray",
+                        9: "orange",
+                        10: "brown",
+                        11: "purple",
+                    };
+                    // 如果满足以下所有条件，重新加入到队伍中：
+                    // 1. 存在数据；
+                    // 2. 玩家的 gameId == 游戏的 gameId（证明为同一局）
+                    // 3. 玩家的队伍信息不是 0
+                    if (
+                        playerData &&
+                        playerData.getScore("gameId") == this.system.gameId &&
+                        playerData.getScore("team") != 0
+                    ) {
+                        // 向队伍中重新添加该玩家
+                        let playerInfo = this.map.teams.find(team => team.id == teamCode[playerData.getScore("team")]).addPlayer(player);
+                        // 还原玩家数据
+                        playerInfo.axeTier = playerData.getScore("axeTier");
+                        playerInfo.pickaxeTier = playerData.getScore("pickaxeTier");
+                        playerInfo.armorTier = playerData.getScore("armorTier");
+                        playerInfo.hasShears = playerData.getScore("hasShears") == 1 ? true : false;
+                        playerInfo.killCount = playerData.getScore("killCount");
+                        playerInfo.finalKillCount = playerData.getScore("finalKillCount");
+                        playerInfo.destroyBedCount = playerData.getScore("destroyBedCount");
+                        // 设置该玩家为已死亡状态，并根据玩家是否有床提示玩家能否重生
+                        playerInfo.rejoined = true;
+                        playerInfo.setDead();
+                        if (playerInfo.team.bedIsExist) player.sendMessage( { translate: "message.playerRejoin.haveBed" } );
+                        else player.sendMessage( { translate: "message.playerRejoin.haveNoBed" } );
+                        // 如果没有玩家重生时间线，注册之以使玩家重生
+                        if (!this.system.getTimeline("playerRespawn")) this.system.subscribeTimeline(this.playerRespawnTimeline());
+                    }
+                    // 否则，设为旁观者
+                    else this.map.spectatorPlayers.push(new BedwarsPlayer(this.system, { team: undefined, player: player }))
+                    // 移除备份数据记分板
+                    lib.scoreboard.objective.remove(playerData);
+                    // 如果不再有玩家数据记分板，移除该事件
+                    if (!lib.scoreboard.objective.getAll().some(obj => lib.scoreboard.player.getOrSetDefault(obj.id, "isPlayerData", 0) == 1)) this.system.unsubscribeEvent("playerJoinGame");
+                };
+            })
+        );
+    };
+
+    // 方块放置、破坏与交互部分
 
     /** 检查破坏床的事件
      * @description 在游戏开始时创建，在所有队伍的床都被摧毁或床自毁[debug]后销毁
@@ -1177,6 +1321,9 @@ class BedwarsClassicMode {
                     // 更新床的状态
                     team.bedIsExist = false;
 
+                    // 如果该队伍在破坏床后已经没有存活玩家，则直接淘汰
+                    if (team.alivePlayers.length == 0) team.setEliminated();
+
                     // 为破坏者添加床破坏数
                     breakerData.destroyBedCount++;
 
@@ -1188,6 +1335,128 @@ class BedwarsClassicMode {
 
                 };
             }, { blockTypes: ["minecraft:bed"] })
+        );
+    };
+
+    /** 检查在上下限高度放置方块的事件 */
+    playerPlaceBlockOnHeightLimitEvent() {
+        return new BedwarsEvent(
+            "playerPlaceBlockOnHeightLimit",
+            minecraft.world.beforeEvents.playerInteractWithBlock,
+            minecraft.world.beforeEvents.playerInteractWithBlock.subscribe(event => {
+
+                /** 交互的玩家 */
+                const player = event.player;
+
+                // 只有当玩家为非创造模式的管理员时，执行取消代码
+                if (player.getGameMode() != "Creative" || player.playerPermissionLevel < 2) {
+
+                    /** 正在使用的方块 */
+                    const block = event.block;
+
+                    /** 正在使用的面 */
+                    const blockFace = event.blockFace;
+
+                    /** 高度上限 */
+                    const heightLimitMax = this.map.heightLimitMax;
+
+                    /** 高度下限 */
+                    const heightLimitMin = this.map.heightLimitMin;
+
+                    // 检查玩家是否在高度上限处放置方块
+                    if (lib.dimension.getPlaceLocation(block, blockFace) > heightLimitMax) {
+                        event.cancel = true;
+                        if (event.isFirstEvent) minecraft.system.run(() => this.system.warnPlayer(player, { translate: "message.heightLimit.max" }));
+                    }
+                    else if (lib.dimension.getPlaceLocation(block, blockFace) < heightLimitMin) {
+                        event.cancel = true;
+                        if (event.isFirstEvent) minecraft.system.run(() => this.system.warnPlayer(player, { translate: "message.heightLimit.min" }));
+                    };
+
+                }
+
+            })
+        );
+    };
+
+    /** 检查玩家开箱事件 */
+    playerOpenChestEvent() {
+        return new BedwarsEvent(
+            "playerOpenChest",
+            minecraft.world.beforeEvents.playerInteractWithBlock,
+            minecraft.world.beforeEvents.playerInteractWithBlock.subscribe(event => {
+                const player = event.player;
+                const block = event.block;
+
+                // 当玩家开箱子时，进行进一步判断
+                if (block.typeId == "minecraft:chest") {
+                    const playerInfo = this.map.getBedwarsPlayer(player);
+                    const chests = this.map.aliveTeams.flatMap(aliveTeam => aliveTeam.chestLocation);
+                    const location = block.location;
+                    const team = (() => {
+                        const teamIndex = chests.findIndex(chest => lib.position3.isEqual(chest, location));
+                        if (teamIndex >= 0) return this.map.aliveTeams[teamIndex];
+                        return void 0;
+                    })();
+                    lib.debug.sendMessage(`§e[BedwarsClassicMode] 玩家开箱！playerInfo.team.id=${playerInfo?.team?.id} team.id=${team?.id}`)
+                    // 当玩家、队伍都为有效数据，且玩家队伍不等于被开箱的队伍时，则取消之
+                    if (team && playerInfo && playerInfo.team.id != team.id) {
+                        event.cancel = true;
+                        if (event.isFirstEvent) minecraft.system.run(() => this.system.warnPlayer(player, { translate: "message.cannotOpenAliveTeamChests", with: { rawtext: [{ text: `${team.getTeamNameWithColor()}队` }] } }));
+                    }
+
+                }
+            })
+        )
+    };
+
+    /** 检查玩家在安全区域放置方块 */
+    playerPlaceBlockOnSafeAreaEvent() {
+        return new BedwarsEvent(
+            "playerPlaceBlockOnSafeArea",
+            minecraft.world.beforeEvents.playerInteractWithBlock,
+            minecraft.world.beforeEvents.playerInteractWithBlock.subscribe(event => {
+
+                const usingItem = event.itemStack;
+                const player = event.player;
+                const block = event.block;
+
+                // 当满足以下所有条件时，阻止玩家放置方块：
+                // 1. 使用的物品为有效的限制方块；
+                // 2. 未对箱子使用，或潜行时对箱子使用；
+                // 3. 在限制点位放置方块。
+                // 
+                if (
+                    (() => {
+                        if (!usingItem) return false;
+                        const limitedBlocks = ["wool", "stained_hardened_clay", "blast_proof_glass", "end_stone", "obsidian", "ladder", "tnt", "planks", "sponge", "bucket"];
+                        const isLimitedBlock = limitedBlocks.some(limitedBlock => usingItem.typeId.includes(limitedBlock));
+                        return isLimitedBlock;
+                    })() &&
+                    (() => {
+                        const blockIsChest = ["minecraft:chest", "minecraft:ender_chest"].includes(block.typeId);
+                        return !blockIsChest || (blockIsChest && player.isSneaking);
+                    })() &&
+                    (() => {
+                        const safeArea = this.map.safeAreaLocation;
+                        const placingLocation = lib.dimension.getPlaceLocation(block, event.blockFace);
+                        const safeAreaRange2 = safeArea.diamond.concat(safeArea.emerald).some(location => lib.position3.distance(location, placingLocation) <= 2);
+                        const safeAreaRange3 = safeArea.trader.some(location => lib.position3.distance(location, placingLocation) <= 3);
+                        const safeAreaRange5 = safeArea.spawnpoint.concat(safeArea.teamResource).some(location => lib.position3.distance(location, placingLocation) <= 5);
+                        return safeAreaRange2 || safeAreaRange3 || safeAreaRange5;
+                    })()
+                ) {
+                    event.cancel = true;
+                    minecraft.system.run(() => {
+                        if (event.isFirstEvent) this.system.warnPlayer(player, { translate: "message.heightLimit.min" });
+                        // 防止假水
+                        if (usingItem.typeId == "minecraft:water_bucket") try {
+                            block.setWaterlogged(true);
+                            block.setWaterlogged(false);
+                        } catch { };
+                    });
+                }
+            })
         );
     };
 
@@ -1217,6 +1486,7 @@ class BedwarsClassicMode {
 
                 // 如果没有玩家重生时间线，则创建之
                 if (!this.system.getTimeline("playerRespawn")) this.system.subscribeTimeline(this.playerRespawnTimeline());
+                if (!this.system.getTimeline("playerInDeathState")) this.system.subscribeTimeline(this.playerInDeathStateTimeline());
 
             }, { entities: this.map.teams.flatMap(team => team.alivePlayers.flatMap(alivePlayer => alivePlayer.player)) })
         );
@@ -1325,7 +1595,7 @@ class BedwarsClassicMode {
         );
     };
 
-    /** 玩家重生时间线 [debug] 应在有玩家退出重进时创建该时间线 */
+    /** 玩家重生时间线 */
     playerRespawnTimeline() {
         return new BedwarsTimeline(
             "playerRespawn",
@@ -1339,14 +1609,56 @@ class BedwarsClassicMode {
                     respawningPlayer.respawnTime--;
                     if (respawningPlayer.respawnTime > 0) {
                         lib.player.setTitle(respawningPlayer.player, { translate: "title.respawning" }, { translate: "subtitle.respawning", with: [`${respawningPlayer.respawnTime}`] }, { fadeInDuration: 0 });
-                        respawningPlayer.player.sendMessage( { translate: "message.respawning", with: [ `${respawningPlayer.respawnTime}` ] } );
+                        respawningPlayer.player.sendMessage({ translate: "message.respawning", with: [`${respawningPlayer.respawnTime}`] });
                     }
-                    if (respawningPlayer.respawnTime == 0) respawningPlayer.respawn();
+                    if (respawningPlayer.respawnTime == 0) {
+                        respawningPlayer.respawn();
+                    };
                 });
 
                 // 如果不存在死亡玩家，则销毁时间线
                 if (respawningPlayers.length == 0) this.system.unsubscribeTimeline("playerRespawn");
 
+            }, 20)
+        );
+    };
+
+    /** 玩家处于死亡状态时的时间线
+     * @description 可能会有一部分玩家在死亡后卡在聊天栏等，不重生，导致一系列问题，所以专门针对这种情况打补丁
+     */
+    playerInDeathStateTimeline() {
+        return new BedwarsTimeline(
+            "playerInDeathState",
+            minecraft.system.runInterval(() => {
+
+                // 检查所有持续死亡时间不为 -1 的玩家
+                const keepDeathPlayers = this.map.teams.flatMap(team => team.alivePlayers).filter(keepDeathPlayer => keepDeathPlayer.keepDeathTime >= 0);
+                keepDeathPlayers.forEach(keepDeathPlayer => {
+                    const player = keepDeathPlayer.player; // 持续死亡时间的玩家
+                    const isDead = player.getComponent("minecraft:health").currentValue <= 0; // 该玩家是否处于死亡状态
+
+                    // 如果玩家处于死亡状态，此时没有床并且还没有重生，则进行死亡计时并在 5 秒后淘汰该玩家
+                    if (isDead && !keepDeathPlayer.team.bedIsExist && !keepDeathPlayer.isDead) {
+                        if (keepDeathPlayer.keepDeathTime >= 0 && keepDeathPlayer.keepDeathTime <= 4) {
+                            player.sendMessage(`§c§l请立即回到游戏！否则你将在${5 - keepDeathPlayer.keepDeathTime}秒后被淘汰！`);
+                            player.playSound("mob.cat.meow");
+                        }
+                        else if (keepDeathPlayer.keepDeathTime >= 5) keepDeathPlayer.setDead();
+                        keepDeathPlayer.keepDeathTime++;
+                    }
+                    // 其他玩家（死亡计时为 0）复活后，重新指定死亡时间
+                    else if (!isDead) {
+
+                        keepDeathPlayer.keepDeathTime = -1;
+
+                        // 如果玩家重生后在重生点附近，则重新重生
+                        if (lib.entity.isNearby(player, this.map.spawnpoint, 2) && player.getGameMode() == "Survival") keepDeathPlayer.respawn();
+                    };
+
+                })
+
+                // 如果没有正处于死亡状态的玩家，移除本时间线
+                if (keepDeathPlayers.length == 0) this.system.unsubscribeTimeline("playerInDeathState");
             }, 20)
         );
     };
@@ -1431,8 +1743,13 @@ class BedwarsClassicMode {
 
     /** 进入结束状态，仅在进入此状态时执行一次 */
     entryGameOverState() {
+
         // 注册事件
         this.system.subscribeEvent(this.stopPlayerBreakBlockEvent()); // 阻止玩家破坏方块
+
+        // 注册时间线
+        this.system.subscribeTimeline(this.applySaturationTimeline()); // 施加饱和效果
+
     };
 
     /** 离开结束状态，仅在退出此状态时执行一次 */
@@ -1620,6 +1937,26 @@ class BedwarsMap {
 
     };
 
+    /** 安全区位置 */
+    safeAreaLocation = {
+
+        /** 重生点，5 格内禁止放置方块 @type {import("@minecraft/server").Vector3[]} */
+        spawnpoint: [],
+
+        /** 商人，3 格内禁止放置方块 @type {import("@minecraft/server").Vector3[]} */
+        trader: [],
+
+        /** 队伍资源点，5 格内禁止放置方块 @type {import("@minecraft/server").Vector3[]} */
+        teamResource: [],
+
+        /** 钻石点，2 格内禁止放置方块 @type {import("@minecraft/server").Vector3[]} */
+        diamond: [],
+
+        /** 绿宝石点，2 格内禁止放置方块 @type {import("@minecraft/server").Vector3[]} */
+        emerald: [],
+
+    }
+
     /**
      * @param {BedwarsSystem} system 系统信息
      * @param {BedwarsMapInfo} info 地图信息
@@ -1642,13 +1979,22 @@ class BedwarsMap {
         if (info.heightLimitMin) this.heightLimitMin = info.heightLimitMin;
         if (info.healPoolRadius) this.healPoolRadius = info.healPoolRadius;
         if (info.disableTeamIslandFlag) this.disableTeamIslandFlag = info.disableTeamIslandFlag;
+
+        // 注册安全区位置
+        this.safeAreaLocation.spawnpoint = this.teams.flatMap(team => team.spawnpointLocation);
+        this.safeAreaLocation.trader = this.traders.flatMap(trader => trader.location);
+        this.safeAreaLocation.teamResource = this.teams.flatMap(team => team.resourceLocation);
+        this.safeAreaLocation.diamond = this.diamondSpawnerInfo.info.flatMap(info => info.location);
+        this.safeAreaLocation.emerald = this.emeraldSpawnerInfo.info.flatMap(info => info.location);
     };
 
     /** 为地图添加队伍
      * @param {BedwarsTeamInfo} teamInfo 
      */
     addTeam(teamInfo) {
-        this.teams.push(new BedwarsTeam(this.system, teamInfo));
+        let team = new BedwarsTeam(this.system, teamInfo);
+        this.teams.push(team);
+        this.aliveTeams.push(team);
         this.teamCount += 1;
     };
 
@@ -2432,19 +2778,122 @@ const mapData = {
                 distributeResource: false,
             },
 
-            // ruins: {}
+            /** 地图：废墟 @type {BedwarsMapInfo} */
+            ruins: {
+                id: "ruins",
+                name: "废墟",
+                mode: "classic",
+                teams: [
+                    {
+                        id: validTeams.red,
+                        bedLocation: { x: -4, y: 71, z: -64 },
+                        bedRotation: "Rotate270",
+                        resourceLocation: { x: 0, y: 72, z: -82 },
+                        spawnpointLocation: { x: 0, y: 72, z: -78 },
+                        chestLocation: { x: 5, y: 72, z: -76 },
+                    },
+                    {
+                        id: validTeams.blue,
+                        bedLocation: { x: 4, y: 71, z: 64 },
+                        bedRotation: "Rotate90",
+                        resourceLocation: { x: 0, y: 72, z: 82 },
+                        spawnpointLocation: { x: 0, y: 72, z: 78 },
+                        chestLocation: { x: -5, y: 72, z: 76 },
+                    },
+                ],
+                teamIslands: [
+                    {
+                        teamId: validTeams.red,
+                        location: { x: -15, y: 61, z: -88 },
+                        loadTime: 2,
+                        flagLocationFrom: { x: -6, y: 76, z: -72 },
+                        flagLocationTo: { x: 6, y: 79, z: -76 },
+                    },
+                    {
+                        teamId: validTeams.blue,
+                        location: { x: -15, y: 61, z: 59 },
+                        loadTime: 2,
+                        rotation: "Rotate180",
+                        flagLocationFrom: { x: 6, y: 76, z: 72 },
+                        flagLocationTo: { x: -6, y: 79, z: 76 },
+                    }
+                ],
+                islands: [
+                    {
+                        structureName: "diamond_island",
+                        location: { x: -60, y: 62, z: -22 },
+                        loadTime: 2,
+                    },
+                    {
+                        structureName: "diamond_island",
+                        location: { x: 35, y: 62, z: -7 },
+                        rotation: "Rotate180",
+                        loadTime: 2,
+                    },
+                    {
+                        structureName: "center_island",
+                        location: { x: -24, y: 61, z: -25 },
+                        loadTime: 5,
+                    }
+                ],
+                traders: [
+                    {
+                        location: { x: 6, y: 72, z: -80 },
+                        rotation: 90,
+                        type: "blocks_and_items"
+                    },
+                    {
+                        location: { x: -6, y: 72, z: 80 },
+                        rotation: 270,
+                        type: "blocks_and_items"
+                    },
+                    {
+                        location: { x: 6, y: 72, z: -79 },
+                        rotation: 90,
+                        type: "weapon_and_armor"
+                    },
+                    {
+                        location: { x: -6, y: 72, z: 79 },
+                        rotation: 270,
+                        type: "weapon_and_armor"
+                    },
+                    {
+                        location: { x: -6, y: 72, z: -79.5 },
+                        rotation: 270,
+                        type: "team_upgrade"
+                    },
+                    {
+                        location: { x: 6, y: 72, z: 79.5 },
+                        rotation: 90,
+                        type: "team_upgrade"
+                    },
+                ],
+                diamondSpawnerLocation: [
+                    { x: -47, y: 69, z: -10 },
+                    { x: 47, y: 69, z: 10 }
+                ],
+                emeraldSpawnerLocation: [
+                    { x: 17, y: 69, z: -6 },
+                    { x: -17, y: 69, z: 6 }
+                ],
+                heightLimitMax: 96,
+                heightLimitMin: 65,
+                healPoolRadius: 20
+            }
 
         },
 
         /** 4 队地图 */
         FourTeams: {
-            aquarium: {},
-            archway: {},
-            boletum: {},
-            carapace: {},
-            chained: {},
-            eastwood: {},
-            orchid: {},
+
+            // aquarium: {},
+            // archway: {},
+            // boletum: {},
+            // carapace: {},
+            // chained: {},
+            // eastwood: {},
+            // orchid: {},
+
         },
 
         /** 8 队地图 */
@@ -2557,8 +3006,18 @@ class BedwarsTeam {
     addPlayer(player) {
         const bedwarsPlayer = new BedwarsPlayer(this.system, { team: this, player: player });
         this.players.push(bedwarsPlayer);
-        this.alivePlayers.push(bedwarsPlayer);
+        if (this.bedIsExist) this.alivePlayers.push(bedwarsPlayer); // 防止在该队伍淘汰后将玩家添加到存活玩家名单中
         return bedwarsPlayer;
+    };
+
+    /** 移除队员 */
+    removePlayer(playerName) {
+        const playersIndex = this.players.findIndex(player => player.player.name == playerName);
+        const alivePlayersIndex = this.alivePlayers.findIndex(alivePlayer => alivePlayer.player.name == playerName);
+        this.players.splice(playersIndex, 1);
+        this.alivePlayers.splice(alivePlayersIndex, 1);
+        lib.debug.printArray(this.players, "team.players");
+        lib.debug.printArray(this.alivePlayers, "team.alivePlayers");
     };
 
     /** 获取本队的队伍颜色代码 */
@@ -2613,7 +3072,7 @@ class BedwarsTeam {
     setInvalid() {
         // 标记为无效和淘汰队伍
         this.isValid = false;
-        this.isEliminated = true;
+        this.setEliminated();
         // 设置床为不存在，并且移除床
         this.destroyBed();
     };
@@ -2621,6 +3080,7 @@ class BedwarsTeam {
     /** 标记为已被淘汰 */
     setEliminated() {
         this.isEliminated = true;
+        this.system.mode.map.aliveTeams.splice(this.system.mode.map.aliveTeams.findIndex(aliveTeam => aliveTeam.id == this.id), 1);
         minecraft.world.sendMessage(["\n", { translate: "message.teamEliminated", with: [`${this.getTeamNameWithColor()}`] }, "\n "])
     };
 
@@ -2655,6 +3115,9 @@ class BedwarsPlayer {
 
     /** 玩家是否已死亡 */
     isDead = false;
+
+    /** 玩家在 Minecraft 意义上的死亡状态的持续时间，在死亡后会自动设为 0 秒，单位：秒 */
+    keepDeathTime = -1;
 
     /** 玩家是否被淘汰 */
     isEliminated = false;
@@ -2694,6 +3157,12 @@ class BedwarsPlayer {
 
     /** 斧子的等级，0：无，1：木，2：铁，3：金，4：钻石 @type {0|1|2|3|4} */
     axeTier = 0;
+
+    /** 盔甲的等级，1：皮革，2：锁链，3：铁，4：钻石 @type {1|2|3|4} */
+    armorTier = 1;
+
+    /** 是否有剪刀 */
+    hasShears = false;
 
     /**
      * @param {BedwarsSystem} system 系统
@@ -2778,6 +3247,7 @@ class BedwarsPlayer {
 
         // --- 设置为已死亡 ---
         this.isDead = true;
+        this.keepDeathTime = 0;
 
         // --- 设置死亡类型 ---
         // 如果玩家死于：实体攻击、投射物、摔落、虚空、爆炸，则为了显示死亡信息应记录，其他类型统一记录为其他
@@ -2810,8 +3280,8 @@ class BedwarsPlayer {
             // 将该玩家从该队伍的存活名单中移除出去
             this.team.alivePlayers.splice(this.team.alivePlayers.findIndex(alivePlayerData => alivePlayerData.player.id == this.player.id), 1);
 
-            // 如果已经被移除的玩家是该队最后一名存活玩家，则淘汰整个队伍
-            if (this.team.alivePlayers.length == 0) this.team.setEliminated();
+            // 如果已经被移除的玩家是该队最后一名存活玩家，并且该队伍仍未被淘汰，则淘汰整个队伍
+            if (this.team.alivePlayers.length == 0 && !this.team.isEliminated) this.team.setEliminated();
 
         };
 
@@ -2837,8 +3307,11 @@ class BedwarsPlayer {
             killerData.getBonus(this);
         };
 
+        // 当该玩家已被淘汰时
+        if (this.isEliminated) null;
+
         // 当玩家被其他玩家当场击杀时
-        if (killer && killer.typeId == "minecraft:player") {
+        else if (killer && killer.typeId == "minecraft:player") {
 
             // 获取击杀者的起床战争信息
             const killerData = this.getMap().getBedwarsPlayer(killer);
@@ -2922,7 +3395,7 @@ class BedwarsPlayer {
 
         // 提醒玩家已经重生
         lib.player.setTitle(this.player, { translate: "title.respawned" }, "", { fadeInDuration: 0 });
-        this.player.sendMessage( { translate: "message.respawned" } );
+        this.player.sendMessage({ translate: "message.respawned" });
 
         // 其他功能
         this.player.setGameMode("Survival");

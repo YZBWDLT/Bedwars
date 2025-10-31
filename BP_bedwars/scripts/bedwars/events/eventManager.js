@@ -7,23 +7,12 @@ import { world } from "@minecraft/server";
 import { createEvent, deleteEventsWithTag } from "../methods/eventManager";
 import { createInterval, deleteIntervalsWithTag } from "../methods/intervalManager";
 
-/** 物品事件函数调用 */
-import { magicMilkCountdown, playerDrinkMagicMilkTest } from "./items/magicMilk";
-import { summonIronGolem, ironGolemCountdown } from "./items/dreamDefender";
-import { createBridge } from "./items/bridgeEgg";
-import { igniteImmediately } from "./items/tnt";
-import { clearBucket } from "./items/waterBucket";
-import { playerDrinkPotionTest } from "./items/potions";
-import { removeEnderPearl } from "./items/enderPearl";
-
 /** 经典模式函数调用 */
 import { equipmentTest } from "./classic/equipment";
-import { applyResistanceNearby, applyYVelocity, dropLoot, preventBreakingVanillaBlocks } from "./classic/explosion";
+import { applyResistanceNearby, applyYVelocity } from "./classic/explosion";
 import { trap } from "./classic/trap";
 import { spawnResources } from "./classic/spawnResources";
-import { goldenAppleEffect, invulnerableAfterGame, teamUpgradeEffects } from "./classic/effects";
 import { gameEvents, teamEliminateAndWin } from "./classic/gameEvents";
-import { healthScoreboard } from "./classic/infoBoard";
 import { gameOverCountdown } from "./classic/afterGaming";
 import { killStyleSettings, mapSettings, selectTeamSettings } from "../methods/bedwarsSettings";
 import { trading } from "./classic/trading";
@@ -36,40 +25,6 @@ import { gameEventsCapture, supplyDragonBuff, teamEliminateAndWinCapture } from 
 import { captureInfoBoard } from "./capture/infoBoard";
 import { convertKillCount, playerDiedCapture, respawnEliminatedPlayers } from "./capture/combat";
 import { playSoundWhenShot } from "./items/bow";
-
-/** 所用到的标签含义 */
-const tags = {
-    /** 游戏前 */ beforeGaming: "beforeGaming",
-    /** 游戏时 */ gaming: "gaming",
-    /** 游戏后 */ afterGaming: "afterGaming",
-    
-    /** 游戏逻辑 */ gameLogic: "gameLogic",
-    /** 战斗相关 */ combat: "combat",
-    /** 药效 */ effects: "effects",
-    /** 装备检测 */ equipmentTest: "equipmentTest",
-    /** 爆炸 */ explosion: "explosion",
-    /** 游戏事件 */ gameEvents: "gameEvents",
-    /** 使用方块 */ playerUseBlock: "playerUseBlock",
-    /** 信息板 */ infoBoard: "infoBoard",
-    /** 破坏方块 */ breakBlock: "breakBlock",
-    /** 玩家退出重进 */ playerLeaveAndRejoin: "playerLeaveAndRejoin",
-    /** 资源生成 */ spawnResources: "spawnResources",
-    /** 交易 */ trading: "trading",
-    /** 陷阱 */ trap: "trap",
-    /** 物品 */ items: "items",
-    /** 设置 */ settings: "settings",
-
-    /** 物品逻辑 */ itemLogic: "itemLogic",
-    /** 床虱 */ bedBug: "bedBug",
-    /** 搭桥蛋 */ bridgeEgg: "bridgeEgg",
-    /** 梦境守护者 */ dreamDefender: "dreamDefender",
-    /** 魔法牛奶 */ magicMilk: "magicMilk",
-    /** 药水 */ potions: "potions",
-    /** TNT */ tnt: "tnt",
-    /** 水桶 */ waterBucket: "waterBucket",
-    /** 末影珍珠 */ enderPearl: "enderPearl",
-    /** 弓 */ bow: "bow",
-}
 
 /** 事件控制器 */
 export const eventManager = {
@@ -86,39 +41,14 @@ export const eventManager = {
         /** 移除游戏前和游戏后事件 */
         deleteEventsWithTag( tags.beforeGaming, tags.afterGaming );
         deleteIntervalsWithTag( tags.beforeGaming, tags.afterGaming );
-        /** 物品：搭桥蛋 */
-        createInterval( "createBridge", () => createBridge(), [ tags.itemLogic, tags.gaming, tags.bridgeEgg ] );
-        /** 物品：梦境守护者 */
-        createEvent( "summonIronGolem", world.beforeEvents.itemUseOn, event => summonIronGolem( event ), [ tags.itemLogic, tags.gaming, tags.dreamDefender ] );
-        createInterval( "ironGolemCountdown", () => ironGolemCountdown(), [ tags.itemLogic, tags.gaming, tags.dreamDefender ] );        
-        /** 物品：魔法牛奶 */
-        createEvent( "playerDrinkMagicMilkTest", world.afterEvents.itemCompleteUse, event => playerDrinkMagicMilkTest( event ), [ tags.itemLogic, tags.gaming, tags.magicMilk ] );
-        createInterval( "magicMilkCountdown", () => magicMilkCountdown(), [ tags.itemLogic, tags.gaming, tags.magicMilk ] );
-        /** 物品：药水 */
-        createEvent( "playerDrinkPotionTest", world.afterEvents.itemCompleteUse, event => playerDrinkPotionTest( event ), [ tags.itemLogic, tags.gaming, tags.potions ] );
-        /** 物品：TNT */
-        createEvent( "tntIgniteImmediately", world.afterEvents.playerPlaceBlock, event => igniteImmediately( event ), [ tags.itemLogic, tags.gaming, tags.tnt, tags.explosion ] );
-        /** 物品：水桶 */
-        createEvent( "clearBucket", world.afterEvents.itemUseOn, event => clearBucket( event ), [ tags.itemLogic, tags.gaming, tags.explosion ] );
-        /** 物品：末影珍珠 */
-        createInterval( "removeEnderPearl", () => removeEnderPearl(), [ tags.itemLogic, tags.gaming, tags.enderPearl ] );
-        /** 物品：弓 */
-        createEvent( "playSoundWhenShot", world.afterEvents.projectileHitEntity, event => playSoundWhenShot( event ), [ tags.itemLogic, tags.gaming, tags.bow ] );
-        /** 游戏逻辑：团队状态效果 */
-        createInterval( "teamUpgradeEffects", () => teamUpgradeEffects(), [ tags.gameLogic, tags.gaming, tags.effects ], 20 );
-        createEvent( "goldenAppleEffect", world.afterEvents.itemCompleteUse, event => goldenAppleEffect(event), [ tags.gameLogic, tags.gaming, tags.effects ] );
         /** 游戏逻辑：装备检测 */
         createInterval( "equipmentTestMain", () => equipmentTest(), [ tags.gameLogic, tags.gaming, tags.equipmentTest ] );
         /** 游戏逻辑：爆炸 */
-        createEvent( "preventBreakingVanillaBlocks", world.beforeEvents.explosion, event => preventBreakingVanillaBlocks(event), [ tags.gameLogic, tags.gaming, tags.explosion ] );
-        createEvent( "dropLoot", world.beforeEvents.explosion, event => dropLoot(event), [ tags.gameLogic, tags.gaming, tags.explosion ] );
         createEvent( "applyYVelocity", world.beforeEvents.explosion, event => applyYVelocity(event), [ tags.gameLogic, tags.gaming, tags.explosion ] );
         createInterval( "applyResistanceNearby", () => applyResistanceNearby(), [ tags.gameLogic, tags.gaming, tags.explosion ] );
         /** 游戏逻辑：游戏事件 */
         createInterval( "gameEventsMain", () => gameEvents(), [ tags.gameLogic, tags.gaming, tags.gameEvents ] );
         createInterval( "teamEliminateAndWin", () => teamEliminateAndWin(), [ tags.gameLogic, tags.gaming, tags.gameEvents ] );
-        /** 游戏逻辑：信息板 */
-        createInterval( "healthScoreboard", () => healthScoreboard(), [ tags.gameLogic, tags.gaming, tags.infoBoard ] );
         /** 游戏逻辑：陷阱 */
         createInterval( "trap", () => trap(), [ tags.gameLogic, tags.gaming, tags.trap ] );
         /** 游戏逻辑：交易 */
@@ -136,8 +66,6 @@ export const eventManager = {
         deleteIntervalsWithTag( tags.beforeGaming, tags.gaming );
         /** 游戏逻辑：游戏结束 */
         createInterval( "gameOverCountdown", () => gameOverCountdown(), [ tags.gameLogic, tags.afterGaming, "gameOver" ] );
-        /** 游戏逻辑：状态效果 */
-        createInterval( "invulnerableAfterGame", () => invulnerableAfterGame(), [ tags.gameLogic, tags.afterGaming, tags.effects ], 20 );
     },
     /** 夺点模式游戏时事件 */
     captureEvents( ) {

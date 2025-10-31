@@ -65,7 +65,7 @@ export const dimension = {
      */
     fillBlock(dimensionId, from, to, blockId) {
         const volume = new BlockVolume(from, to);
-        world.getDimension(dimensionId).fillBlocks(volume, blockId)
+        world.getDimension(dimensionId).fillBlocks(volume, blockId);
     },
 
     /** 令两个坐标间填充方块
@@ -478,16 +478,14 @@ export const scoreboard = {
 
 /**
  * @typedef itemOptions 物品信息可选项
- * @property {number} amount 物品数量
- * @property {enchantment[]} enchantments 物品附魔
- * @property {"none"|"inventory"|"slot"} itemLock 物品锁定
- * @property {string[]} lore 物品备注
- * @property {string} name 物品名称
- * @property {string[]} canPlaceOn 物品可放置于何方块上
- * @property {string[]} canDestroy 物品可破坏何方块
- * @property {boolean} keepOnDeath 物品是否在玩家死亡后保留
- * @property {boolean} clearVelocity （仅在生成物品实体时使用）是否清除物品生成时的向量
- * @property {"overworld"|"nether"|"the_end"} dimension （仅在生成物品实体时使用）在何维度下生成
+ * @property {number} [amount] 物品数量
+ * @property {enchantment[]} [enchantments] 物品附魔
+ * @property {"none"|"inventory"|"slot"} [itemLock] 物品锁定
+ * @property {string[]} [lore] 物品备注
+ * @property {string} [name] 物品名称
+ * @property {string[]} [canPlaceOn] 物品可放置于何方块上
+ * @property {string[]} [canDestroy] 物品可破坏何方块
+ * @property {boolean} [keepOnDeath] 物品是否在玩家死亡后保留
  */
 
 /** 默认物品信息可选项设置 @type {itemOptions} */
@@ -499,9 +497,7 @@ const defaultItemOptions = {
     name: "",
     canPlaceOn: [],
     canDestroy: [],
-    keepOnDeath: false,
-    clearVelocity: false,
-    dimension: "overworld"
+    keepOnDeath: false
 };
 
 /** 物品操作方法 */
@@ -536,15 +532,17 @@ export const item = {
      * @param {Vector} pos 生成位置
      * @param {String} itemId 物品 ID
      * @param {itemOptions} options 物品信息可选项
+     * @param {boolean} clearVelocity 是否清除物品生成时的向量
+     * @param {"overworld"|"nether"|"the_end"} dimensionId 在何维度下生成
      */
-    spawnItem(pos, itemId, options = {}) {
+    spawnItem(pos, itemId, options = {}, clearVelocity = false, dimensionId = "overworld") {
         /** 可选项设置 */ const allOptions = { ...defaultItemOptions, ...options };
         /** 获取 ItemStack */ let item = this.getItemStack(itemId, allOptions);
         // 物品生成
-        if (allOptions.clearVelocity) {
-            world.getDimension(allOptions.dimension).spawnItem(item, pos).clearVelocity();
+        if (clearVelocity) {
+            world.getDimension(dimensionId).spawnItem(item, pos).clearVelocity();
         } else {
-            world.getDimension(allOptions.dimension).spawnItem(item, pos);
+            world.getDimension(dimensionId).spawnItem(item, pos);
         }
     },
 
@@ -553,9 +551,10 @@ export const item = {
      * @param {String} itemId 物品 ID
      * @param {itemOptions} options 物品信息可选项
      */
-    giveItem(player, itemId, options = {}) {
+    giveItem(player, itemId, options = {}, playSound = true) {
         const allOptions = { ...defaultItemOptions, ...options };
         player.getComponent("minecraft:inventory").container.addItem(this.getItemStack(itemId, allOptions));
+        if (playSound) player.playSound("random.pop", {location: player.location, pitch: js.randomRange(0.6, 2.2, 2), volume: 0.25});
     },
 
     /** 设置玩家装备栏
@@ -584,8 +583,8 @@ export const item = {
      * @param {Entity} entity 待清除物品的实体
      * @param {String} itemId 待清除物品的 ID
      */
-    removeItem(entity, itemId, count = 1, data = -1) {
-        entity.runCommand(`clear @s ${itemId} ${data} ${count}`)
+    removeItem(entity, itemId = "", data = "", count = "") {
+        entity.runCommand(`clear @s ${itemId} ${data} ${count}`);
     },
 
     /** 清除物品实体
@@ -872,7 +871,7 @@ export const ui = {
 
 export const js = {
 
-    /** 在[a,b]取随机整数
+    /** 在[a, b]取随机整数
      * @param {number} min 最小值
      * @param {number} max 最大值
      */
@@ -880,6 +879,18 @@ export const js = {
         // 确保 min <= max
         if (min > max) { [min, max] = [max, min]; }
         return Math.floor(Math.random() * (max - min + 1)) + min;    // 生成 [min, max] 之间的随机整数
+    },
+
+    /** 在[a, b]取随机数（可以是浮点数）
+     * @param {number} min 下限
+     * @param {number} max 上限
+     * @param {number} [precision] 保留小数位数（可选，不指定则原样返回）
+     * @returns {number} [a, b] 内的随机数
+     * @throws {Error} 若 a > b
+     */
+    randomRange(min, max, precision) {
+        const raw = Math.random() * (max - min) + min;
+        return precision ? raw : Number(raw.toFixed(precision));
     },
 
     /** 将数字转换为罗马数字的字符串

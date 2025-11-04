@@ -2,11 +2,11 @@
     "format_version": "1.20.50",
     "minecraft:item": {
         "description": {
-            "identifier": "bedwars:upgrade_alarm_trap",
+            "identifier": "bedwars:upgrade_reveal_trap",
             "menu_category": { "category": "items", "is_hidden_in_commands": false }
         },
         "components": {
-            "minecraft:icon": "bedwars_upgrade_alarm_trap"
+            "minecraft:icon": "bedwars_upgrade_reveal_trap"
         }
     }
 }

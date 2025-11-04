@@ -7,7 +7,7 @@
         },
         "components": {
             "minecraft:geometry": "geometry.glass",
-            "minecraft:material_instances": { "*": { "render_method": "blend", "texture": "bedwars_white_blast_proof_glass" } }
+            "minecraft:material_instances": { "*": { "render_method": "blend", "texture": "bedwars_shopitem_blast_proof_glass" } }
         }
     }
 }

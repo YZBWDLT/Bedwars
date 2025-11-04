@@ -8,60 +8,15 @@
  * · 禁止玩家进入商人区域。
  */
 
-import { ContainerSlot } from "@minecraft/server";
-import { getItemAmount, getValidItems, giveItem, hasItem, replaceInventoryItem } from "../../methods/itemManager";
-import { overworld } from "../../methods/positionManager";
+import { getItemAmount, getValidItems, giveItem, hasItem } from "../../methods/itemManager";
 import { eachAlivePlayer, eachValidPlayer, warnPlayer } from "../../methods/bedwarsPlayer";
 import { map } from "../../methods/bedwarsMaps";
 
 /** 交易功能 */
 export function trading() {
 
-    // ===== 为商人供应物品 =====
-    map().validShopitems.forEach( shopitem => {
-
-        /** 获取对应商人 */ const traders = map().getTraders( shopitem.traderType );
-        /** 商品所处物品栏槽位 */ const slot = shopitem.slot;
-        /** 商品 ID */ const shopitemId = shopitem.shopitemId;
-        /** 商品数目 */ const amount = shopitem.itemAmount;
-
-        traders.forEach( trader => {
-            /** 商人对应槽位 @type { ContainerSlot } */ const traderSlot = trader.getComponent( "minecraft:inventory" ).container.getSlot( slot );
-            
-            if ( !traderSlot.hasItem() || traderSlot.typeId !== shopitemId || traderSlot.amount !== amount ) {
-                replaceInventoryItem( trader, shopitemId, slot, { lore: shopitem.getLore(), amount: amount } );
-            }
-        } )
-    } );
-
     // ===== 玩家购买物品 =====
     eachValidPlayer( ( player, playerInfo ) => {
-        /** 获取玩家拥有的商品 */
-        function getShopitem() {
-            /** 所有地图可用商品 */ const shopitems = map().validShopitems;
-            // 先在鼠标光标搜索
-            let shopitemInCursor = shopitems.find( shopitem => player.getComponent( "minecraft:cursor_inventory" ).item?.typeId === shopitem.shopitemId )
-            if ( shopitemInCursor !== undefined ) {
-                return shopitemInCursor;
-            }
-            // 如果未能搜索到，在物品栏搜索
-            else {
-                let shopitemInInventory = shopitems.find( shopitem => getValidItems( player ).find( validItem => validItem.item.typeId === shopitem.shopitemId ) )
-                if ( shopitemInInventory !== undefined ) {
-                    return shopitemInInventory;
-                }
-            }
-        }
-        /** 输入资源类型，返回物品 ID  @param {"iron"|"gold"|"diamond"|"emerald"} resourceType - 资源类型 */
-        function resourceTypeToResourceId( resourceType ) {
-            switch ( resourceType ) {
-                case "iron": return "bedwars:iron_ingot";
-                case "gold": return "bedwars:gold_ingot";
-                case "diamond": return "bedwars:diamond";
-                case "emerald": return "bedwars:emerald";
-            }
-        }
-        /** 玩家选中的商品 */ const shopitem = getShopitem();
 
         // 如果：1. 玩家拥有商品；2. 玩家附近有商人，则启动购买程序
         if (
@@ -86,24 +41,22 @@ export function trading() {
             function purchaseTest( successFunc, options = {} ) {
 
                 /** --- 准备工作 --- */
-                /** 默认设置 @type {purchaseOptions} */ const defaultOptions = { itemGot: false, isTeamUpgrade: false, costAdder: 0, currentLevel: 0, name: "", trapQueueFull: false };
+                /** 默认设置 @type {purchaseOptions} */
+                const defaultOptions = {
+                    itemGot: false,
+                    isTeamUpgrade: false,
+                    costAdder: 0,
+                    currentLevel: 0,
+                    name: "",
+                    trapQueueFull: false
+                };
                 const allOptions = { ...defaultOptions, ...options };
                 /** 实际资源花销 */ const realCostAmount = shopitem.getCostResourceAmount() + allOptions.costAdder
 
                 /** --- 购买物品条件判定 --- */
 
-                /** 如果玩家已拥有了此物品，或者当此物品有等级之分且玩家要购买的等级小于当前等级 + 1 时，则阻止购买 */
-                if ( allOptions.itemGot || ( shopitem.tier !== 0 && shopitem.tier < allOptions.currentLevel + 1 ) ) {
-                    warnPlayer( player, { translate: `message.alreadyGotItem` } );
-                }
-                /** 如果此物品有等级之分，且玩家要购买的等级大于当前等级 + 1时，则阻止购买 */
-                else if ( shopitem.tier !== 0 && shopitem.tier > allOptions.currentLevel + 1 ) { switch ( shopitem.itemType ) {
-                    case "axe": warnPlayer( player, { translate: `message.needItem`, with: { rawtext: [ { translate: `message.bedwars:shopitem_${allOptions.name}_axe` } ] } } ); break;
-                    case "pickaxe": warnPlayer( player, { translate: `message.needItem`, with: { rawtext: [ { translate: `message.bedwars:shopitem_${allOptions.name}_pickaxe` } ] } } ); break;
-                    case "teamUpgrade": warnPlayer( player, { translate: `message.needItem`, with: { rawtext: [ { translate: `message.bedwars:upgrade_${allOptions.name}_tier_${shopitem.tier - 1}` } ] } } ); break;
-                } }
                 /** 如果物品类型为陷阱，且三个陷阱已排满时，则阻止购买 */
-                else if ( shopitem.itemType === "trap" && allOptions.trapQueueFull ) {
+                if ( shopitem.itemType === "trap" && allOptions.trapQueueFull ) {
                     warnPlayer( player, { translate: `message.trapQueueFull` } )
                 }
                 /** 如果玩家资源不够，则阻止购买 */
@@ -133,102 +86,9 @@ export function trading() {
                 }
             }
 
-            // 清除玩家商品
-            player.runCommand( `clear @s ${shopitem.shopitemId}` );
             // 购买逻辑
             switch ( shopitem.itemType ) {
-
-                // 类型为剑时：1. 清除木剑 2. 按团队升级提供锋利附魔 
-                case "sword":
-                    purchaseTest( () => {
-                        player.runCommand( `clear @s bedwars:wooden_sword` );
-                        if ( !playerInfo.getTeam( ).teamUpgrade.sharpenedSwords ) {
-                            player.runCommand( `give @s ${shopitem.itemId} 1 0 {"item_lock":{"mode":"lock_in_inventory"}}` );
-                        }
-                        else {
-                            giveItem( player, shopitem.itemId, { enchantments: [ { id: "sharpness", level: 1 } ], itemLock: "inventory" } )
-                        }        
-                    } )
-                break;
-        
-                // 类型为盔甲时： 1. 记录等级（不直接装备盔甲，让盔甲检测器代为装备）
-                case "armor":
-                    let itemTier = ( shopitem.id === "chain_armor" ) ? 2 : ( ( shopitem.id === "iron_armor" ) ? 3 : ( ( shopitem.id === "diamond_armor" ) ? 4 : 1 ) )
-                    purchaseTest( () => {
-                        playerInfo.equipment.armor = itemTier; 
-                    }, { itemGot: playerInfo.equipment.armor >= itemTier } )
-                break;
-        
-                // 类型为斧头时： 1. 记录等级（不直接给予斧头，让装备检测器代为装备） 2. 按等级依次购买 3. 提供附魔 4. 按团队升级提供锋利附魔
-                case "axe":
-                    purchaseTest( () => {
-                        playerInfo.equipment.axe++;
-                        player.runCommand( `clear @s bedwars:wooden_axe` );
-                        player.runCommand( `clear @s bedwars:stone_axe` );
-                        player.runCommand( `clear @s bedwars:iron_axe` );
-                    }, { currentLevel: playerInfo.equipment.axe, name: shopitem.tier === 2 ? "wooden" : ( shopitem.tier === 3 ? "stone" : ( shopitem.tier === 4 ? "iron" : "wooden" ) ) } )
-                break;
-        
-                // 类型为镐子时： 1. 记录等级（不直接给予镐子，让装备检测器代为装备） 2. 按等级依次购买 3. 提供附魔
-                case "pickaxe":
-                    purchaseTest( () => {
-                        playerInfo.equipment.pickaxe++;
-                        player.runCommand( `clear @s bedwars:wooden_pickaxe` );
-                        player.runCommand( `clear @s bedwars:iron_pickaxe` );
-                        player.runCommand( `clear @s bedwars:golden_pickaxe` );
-                    }, { currentLevel: playerInfo.equipment.pickaxe, name: shopitem.tier === 2 ? "wooden" : ( shopitem.tier === 3 ? "iron" : ( shopitem.tier === 4 ? "golden" : "wooden" ) ) } )
-                break;
-        
-                // 类型为彩色方块时： 1. 重新设置 ID
-                case "coloredBlock":
-                    purchaseTest( () => {
-                        shopitem.setColoredId( playerInfo.team );
-                        player.runCommand( `give @s ${shopitem.itemId} ${shopitem.itemAmount} 0 {"item_lock":{"mode":"lock_in_inventory"}}` );
-                    } )
-                break;
-                
-                // 类型为击退棒时： 1. 提供附魔
-                case "knockbackStick":
-                    purchaseTest( () => {
-                        giveItem( player, "bedwars:knockback_stick", { enchantments: [ { id: "knockback", level: 1 } ] } );
-                    } );
-                break;
-        
-                // 类型为剪刀时： 1. 记录等级（不直接给予剪刀，让装备检测器代为装备）
-                case "shears":
-                    purchaseTest( () => {
-                        playerInfo.equipment.shears = 1;
-                    }, { itemGot: playerInfo.equipment.shears > 0 } )
-                break;
-        
-                // 类型为弓时： 1. 提供附魔
-                case "bow":
-                    purchaseTest( () => {
-                        let enchantments = [];
-                        if ( shopitem.id === "bow_power" ) { enchantments = [ { id: "power", level: 1 } ]; } 
-                        if ( shopitem.id === "bow_power_punch" ) { enchantments = [ { id: "power", level: 1 }, { id: "punch", level: 1 } ]; };
-                        giveItem( player, shopitem.itemId, { enchantments: enchantments } );
-                    } )
-                break;
-                
-                // 类型为药水时 1. 添加Lore <lang>
-                case "potion":
-                    purchaseTest( () => {
-                        switch (shopitem.id) {
-                            case "potion_jump_boost": giveItem( player, shopitem.itemId, { lore: [ "", "§r§9跳跃提升 V (0:45)" ] } ); break;
-                            case "potion_speed": giveItem( player, shopitem.itemId, { lore: [ "", "§r§9迅捷 II (0:45)" ] } ); break;
-                            case "potion_invisibility": giveItem( player, shopitem.itemId, { lore: [ "", "§r§9隐身 (0:30)" ] } ); break;
-                        }
-                    } )
-                break;
-                
-                // 类型为其他物品时： 1. 直接给予该物品
-                case "other":
-                    purchaseTest( () => {
-                        player.runCommand( `give @s ${shopitem.itemId} ${shopitem.itemAmount} 0 {"item_lock":{"mode":"lock_in_inventory"}}` );
-                    } )
-                break;       
-        
+                                                
                 // 类型为非陷阱的团队升级： 1. 更新团队升级的信息
                 case "teamUpgrade": 
                     switch ( shopitem.id ) {

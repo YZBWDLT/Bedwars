@@ -1,7 +1,7 @@
 {
     "format_version": [ 1, 1, 0 ],
     "bedwars:shopitem_wool": { "sound": "cloth", "textures": "bedwars_shopitem_wool" },
-    "bedwars:shopitem_planks": { "sound": "wood", "textures": "bedwars_shopitem_planks" },
+    "bedwars:shopitem_oak_planks": { "sound": "wood", "textures": "bedwars_shopitem_oak_planks" },
     "bedwars:shopitem_end_stone": { "sound": "wood", "textures": "bedwars_shopitem_end_stone" },
     "bedwars:shopitem_blast_proof_glass": { "sound": "glass", "textures": "bedwars_shopitem_blast_proof_glass" },
     "bedwars:shopitem_stained_hardened_clay": { "sound": "stone", "textures": "bedwars_shopitem_stained_hardened_clay" },
@@ -9,6 +9,8 @@
     "bedwars:shopitem_sponge": { "sound": "grass", "textures": "bedwars_shopitem_sponge" },
     "bedwars:shopitem_tnt": { "sound" : "grass", "textures" : { "down" : "bedwars_shopitem_tnt_bottom", "side" : "bedwars_shopitem_tnt_side", "up" : "bedwars_shopitem_tnt_top" } },
     "bedwars:upgrade_heal_pool": { "sound" : "grass", "textures" : { "down" : "bedwars_upgrade_heal_pool_top", "side" : "bedwars_upgrade_heal_pool_side", "up" : "bedwars_upgrade_heal_pool_top" } },
+    "bedwars:category_blocks": { "sound": "stone", "textures": "bedwars_category_blocks" },
+    "bedwars:category_utility": { "sound" : "grass", "textures" : { "down" : "bedwars_category_utility_bottom", "side" : "bedwars_category_utility_side", "up" : "bedwars_category_utility_top" } },
 
     "bedwars:red_blast_proof_glass": { "sound": "glass", "textures": "bedwars_red_blast_proof_glass" },
     "bedwars:blue_blast_proof_glass": { "sound": "glass", "textures": "bedwars_blue_blast_proof_glass" },

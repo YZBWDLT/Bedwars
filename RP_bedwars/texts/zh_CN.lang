@@ -142,7 +142,7 @@ item.bedwars:diamond_boots=钻石靴子
 #### 商店物品
 tile.bedwars:shopitem_wool.name=§a羊毛
 tile.bedwars:shopitem_stained_hardened_clay.name=§a硬化粘土
-tile.bedwars:shopitem_planks.name=§a木板
+tile.bedwars:shopitem_oak_planks.name=§a木板
 tile.bedwars:shopitem_blast_proof_glass.name=§a防爆玻璃
 tile.bedwars:shopitem_end_stone.name=§a末地石
 item.bedwars:shopitem_ladder=§a梯子
@@ -156,13 +156,13 @@ item.bedwars:shopitem_iron_armor=§a永久的铁盔甲
 item.bedwars:shopitem_diamond_armor=§a永久的钻石盔甲
 item.bedwars:shopitem_shears=§a永久的剪刀
 item.bedwars:shopitem_wooden_axe=§a木斧（效率 I）
-item.bedwars:shopitem_stone_axe=§a石斧（效率 I）§r§7（需要木斧）
-item.bedwars:shopitem_iron_axe=§a铁斧（效率 II）§r§7（需要石斧）
-item.bedwars:shopitem_diamond_axe=§a钻石斧（效率 III）§r§7（需要铁斧）
+item.bedwars:shopitem_stone_axe=§a石斧（效率 I）
+item.bedwars:shopitem_iron_axe=§a铁斧（效率 II）
+item.bedwars:shopitem_diamond_axe=§a钻石斧（效率 III）
 item.bedwars:shopitem_wooden_pickaxe=§a木镐（效率 I）
-item.bedwars:shopitem_iron_pickaxe=§a铁镐（效率 II）§r§7（需要木镐）
-item.bedwars:shopitem_golden_pickaxe=§a金镐（效率 III）§r§7（需要铁镐）
-item.bedwars:shopitem_diamond_pickaxe=§a钻石镐（效率 III）§r§7（需要金镐）
+item.bedwars:shopitem_iron_pickaxe=§a铁镐（效率 II）
+item.bedwars:shopitem_golden_pickaxe=§a金镐（效率 III）
+item.bedwars:shopitem_diamond_pickaxe=§a钻石镐（效率 III）
 item.bedwars:shopitem_bow=§a弓
 item.bedwars:shopitem_bow_power=§a弓（力量 I）
 item.bedwars:shopitem_bow_power_punch=§a弓（力量 I，冲击 I）
@@ -180,7 +180,7 @@ item.bedwars:shopitem_water_bucket=§a水桶
 item.bedwars:shopitem_bridge_egg=§a搭桥蛋
 item.bedwars:shopitem_magic_milk=§a魔法牛奶
 tile.bedwars:shopitem_sponge.name=§a海绵
-item.bedwars:shopitem_compact_pop_up_tower=§a弹出式防御塔
+item.bedwars:shopitem_compact_pop_up_tower=§a紧凑型速建塔
 item.bedwars:shopitem_bed=§a床
 
 #### 团队升级物品
@@ -197,10 +197,21 @@ item.bedwars:upgrade_forge_tier_3=§a绿宝石锻炉
 item.bedwars:upgrade_forge_tier_4=§a熔融锻炉
 tile.bedwars:upgrade_heal_pool.name=§a治愈池
 item.bedwars:upgrade_dragon_buff=§a末影龙增益
-item.bedwars:upgrade_its_a_trap=§a这是个陷阱！
+item.bedwars:upgrade_blindness_trap=§a失明陷阱
 item.bedwars:upgrade_counter_offensive_trap=§a反击陷阱
-item.bedwars:upgrade_alarm_trap=§a报警陷阱
+item.bedwars:upgrade_reveal_trap=§a显影陷阱
 item.bedwars:upgrade_miner_fatigue_trap=§a挖掘疲劳陷阱
+
+#### 标签物品
+item.bedwars:category_quick_buy=§b快速购买
+tile.bedwars:category_blocks.name=§a方块
+item.bedwars:category_melee=§a近战
+item.bedwars:category_armor=§a盔甲
+item.bedwars:category_tools=§a工具
+item.bedwars:category_ranged=§a远程
+item.bedwars:category_potions=§a药水
+tile.bedwars:category_utility.name=§a实用道具
+item.bedwars:category_rotating_items=§a轮换物品
 
 #### 设置物品
 item.bedwars:select_team=选择队伍
@@ -401,9 +412,9 @@ title.trapTriggered=§c陷阱触发！
 subtitle.trapTriggered=你的%s已被触发！
 message.trapTriggered=§l§c%s已被触发！
 
-title.trapTriggered.alarmTrap=§c警报！！！
-subtitle.trapTriggered.alarmTrap=你的报警陷阱已被%s队§f的%s§f触发！
-message.trapTriggered.alarmTrap=§l§c报警陷阱已被%s队§c的%s§c触发！
+title.trapTriggered.revealTrap=§c警报！！！
+subtitle.trapTriggered.revealTrap=你的报警陷阱已被%s队§f的%s§f触发！
+message.trapTriggered.revealTrap=§l§c报警陷阱已被%s队§c的%s§c触发！
 
 ### --- 资源点升级消息 ---
 
@@ -459,7 +470,7 @@ message.selectTeam.teamIsFull=%s队§c已满！你不能选择这个队伍！
 ### --- 商店物品消息 ---
 message.bedwars:shopitem_wool=羊毛
 message.bedwars:shopitem_stained_hardened_clay=硬化粘土
-message.bedwars:shopitem_planks=木板
+message.bedwars:shopitem_oak_planks=木板
 message.bedwars:shopitem_blast_proof_glass=防爆玻璃
 message.bedwars:shopitem_end_stone=末地石
 message.bedwars:shopitem_ladder=梯子
@@ -497,7 +508,7 @@ message.bedwars:shopitem_water_bucket=水桶
 message.bedwars:shopitem_bridge_egg=搭桥蛋
 message.bedwars:shopitem_magic_milk=魔法牛奶
 message.bedwars:shopitem_sponge=海绵
-message.bedwars:shopitem_compact_pop_up_tower=弹出式防御塔
+message.bedwars:shopitem_compact_pop_up_tower=紧凑型速建塔
 message.bedwars:shopitem_bed=床
 message.bedwars:upgrade_sharpened_swords=锋利附魔
 message.bedwars:upgrade_reinforced_armor_tier_1=盔甲强化 I
@@ -512,7 +523,7 @@ message.bedwars:upgrade_forge_tier_3=绿宝石锻炉
 message.bedwars:upgrade_forge_tier_4=熔融锻炉
 message.bedwars:upgrade_heal_pool=治愈池
 message.bedwars:upgrade_dragon_buff=末影龙增益
-message.bedwars:upgrade_its_a_trap=这是个陷阱！
+message.bedwars:upgrade_blindness_trap=失明陷阱
 message.bedwars:upgrade_counter_offensive_trap=反击陷阱
-message.bedwars:upgrade_alarm_trap=报警陷阱
+message.bedwars:upgrade_reveal_trap=显影陷阱
 message.bedwars:upgrade_miner_fatigue_trap=挖掘疲劳陷阱

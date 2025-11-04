@@ -2,11 +2,11 @@
     "format_version": "1.20.50",
     "minecraft:item": {
         "description": {
-            "identifier": "bedwars:tag_quick_buy",
+            "identifier": "bedwars:category_tools",
             "menu_category": { "category": "items", "is_hidden_in_commands": false }
         },
         "components": {
-            "minecraft:icon": "bedwars_tag_quick_buy"
+            "minecraft:icon": "bedwars_category_tools"
         }
     }
 }

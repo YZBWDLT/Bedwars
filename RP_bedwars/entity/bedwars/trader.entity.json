@@ -40,6 +40,10 @@
                 "scale": "0.9375",
                 "animate": [
                     "look_at_player"
+                ],
+                "pre_animation": [
+                    "v.skin = query.property('bedwars:trader_skin');",
+                    "v.geometry = query.property('bedwars:trader_geometry') == 'default' ? 0 : 1;"
                 ]
             },
             "animations": {

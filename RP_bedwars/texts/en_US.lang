@@ -142,7 +142,7 @@ item.bedwars:diamond_boots=Diamond Boots
 #### Shopitems
 tile.bedwars:shopitem_wool.name=§aWool
 tile.bedwars:shopitem_stained_hardened_clay.name=§aHardened Clay
-tile.bedwars:shopitem_planks.name=§aPlanks
+tile.bedwars:shopitem_oak_planks.name=§aPlanks
 tile.bedwars:shopitem_blast_proof_glass.name=§aBlast-Proof Glass
 tile.bedwars:shopitem_end_stone.name=§aEnd Stone
 item.bedwars:shopitem_ladder=§aLadder
@@ -156,13 +156,13 @@ item.bedwars:shopitem_iron_armor=§aPermanent Iron Armor
 item.bedwars:shopitem_diamond_armor=§aPermanent Diamond Armor
 item.bedwars:shopitem_shears=§aPermanent Shears
 item.bedwars:shopitem_wooden_axe=§aPermanent Wooden Axe (Efficiency I)
-item.bedwars:shopitem_stone_axe=§aStone Axe (Efficiency I) §r§7(Needs Wooden Axe)
-item.bedwars:shopitem_iron_axe=§aIron Axe (Efficiency II) §r§7(Needs Stone Axe)
-item.bedwars:shopitem_diamond_axe=§aDiamond Stone Axe (Efficiency III) §r§7(Needs Iron Axe)
+item.bedwars:shopitem_stone_axe=§aStone Axe (Efficiency I)
+item.bedwars:shopitem_iron_axe=§aIron Axe (Efficiency II)
+item.bedwars:shopitem_diamond_axe=§aDiamond Stone Axe (Efficiency III)
 item.bedwars:shopitem_wooden_pickaxe=§aPermanent Wooden Pickaxe (Efficiency I)
-item.bedwars:shopitem_iron_pickaxe=§aIron Pickaxe (Efficiency II) §r§7(Needs Wooden Pickaxe)
-item.bedwars:shopitem_golden_pickaxe=§aGolden Pickaxe (Efficiency III) §r§7(Needs Iron Pickaxe)
-item.bedwars:shopitem_diamond_pickaxe=§aDiamond Stone Pickaxe (Efficiency III) §r§7(Needs Golden Pickaxe)
+item.bedwars:shopitem_iron_pickaxe=§aIron Pickaxe (Efficiency II)
+item.bedwars:shopitem_golden_pickaxe=§aGolden Pickaxe (Efficiency III)
+item.bedwars:shopitem_diamond_pickaxe=§aDiamond Stone Pickaxe (Efficiency III)
 item.bedwars:shopitem_bow=§aBow
 item.bedwars:shopitem_bow_power=§aBow (Power I)
 item.bedwars:shopitem_bow_power_punch=§aBow (Power I, Punch I)
@@ -197,10 +197,19 @@ item.bedwars:upgrade_forge_tier_3=§aEmerald Forge
 item.bedwars:upgrade_forge_tier_4=§aMolten Forge
 tile.bedwars:upgrade_heal_pool.name=§aHeal Pool
 item.bedwars:upgrade_dragon_buff=§aDragon Buff
-item.bedwars:upgrade_its_a_trap=§aIt's a Trap!
+item.bedwars:upgrade_blindness_trap=§aBlindness Trap
 item.bedwars:upgrade_counter_offensive_trap=§aCounter-Offensive Trap
-item.bedwars:upgrade_alarm_trap=§aAlarm Trap
+item.bedwars:upgrade_reveal_trap=§aReveal Trap
 item.bedwars:upgrade_miner_fatigue_trap=§aMiner Fatigue Trap
+
+#### 标签物品
+item.bedwars:category_quick_buy=§bQuick Buy
+item.bedwars:category_melee=§aMelee
+item.bedwars:category_armor=§aArmor
+item.bedwars:category_tools=§aTools
+item.bedwars:category_ranged=§aRanged
+item.bedwars:category_potions=§aPotions
+item.bedwars:category_rotating_items=§aRotating Items
 
 #### Settings Items
 item.bedwars:select_team=Select Team
@@ -401,9 +410,9 @@ title.trapTriggered=§cTRAP TRIGGERED!
 subtitle.trapTriggered=Your %s has been set off!
 message.trapTriggered=§l§c%s was set off!
 
-title.trapTriggered.alarmTrap=§cALARM!!!
-subtitle.trapTriggered.alarmTrap=Your Alarm Trap has been set off by Team %s§f %s§f!    #### Hope you can use %1,%2... instead of using %s ~
-message.trapTriggered.alarmTrap=§l§cThe Alarm Trap has been set off by Team %s §c%s§c!
+title.trapTriggered.revealTrap=§cALARM!!!
+subtitle.trapTriggered.revealTrap=Your Alarm Trap has been set off by Team %s§f %s§f!    #### Hope you can use %1,%2... instead of using %s ~
+message.trapTriggered.revealTrap=§l§cThe Alarm Trap has been set off by Team %s §c%s§c!
 
 ### --- Resource Upgrade ---
 
@@ -459,7 +468,7 @@ message.selectTeam.teamIsFull=§c Team %s §cis full! You can't choose this team
 ### --- Shopitems ---
 message.bedwars:shopitem_wool=Wool
 message.bedwars:shopitem_stained_hardened_clay=Stained Hardened Clay
-message.bedwars:shopitem_planks=Planks
+message.bedwars:shopitem_oak_planks=Planks
 message.bedwars:shopitem_blast_proof_glass=Blast-Proof Glass
 message.bedwars:shopitem_end_stone=End Stone
 message.bedwars:shopitem_ladder=Ladder
@@ -512,7 +521,7 @@ message.bedwars:upgrade_forge_tier_3=Emerald Forge
 message.bedwars:upgrade_forge_tier_4=Molten Forge
 message.bedwars:upgrade_heal_pool=Heal Pool
 message.bedwars:upgrade_dragon_buff=Dragon Buff
-message.bedwars:upgrade_its_a_trap=It’s a Trap!
+message.bedwars:upgrade_blindness_trap=Blindness Trap
 message.bedwars:upgrade_counter_offensive_trap=Counter-Offensive Trap
-message.bedwars:upgrade_alarm_trap=Alarm Trap
+message.bedwars:upgrade_reveal_trap=Reveal Trap
 message.bedwars:upgrade_miner_fatigue_trap=Miner Fatigue Trap

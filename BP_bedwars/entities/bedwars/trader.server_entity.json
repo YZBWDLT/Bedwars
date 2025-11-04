@@ -1,11 +1,16 @@
 {
-    "format_version": "1.20.10",
+    "format_version": "1.21.0",
     "minecraft:entity": {
         "description": {
             "identifier": "bedwars:trader",
             "is_spawnable": true,
             "is_summonable": true,
-            "is_experimental": false
+            "is_experimental": false,
+            "properties": {
+                "bedwars:trader_skin": { "client_sync": true, "type": "int", "range": [0, 21], "default": 0 },
+                "bedwars:trader_geometry": { "client_sync": true, "type": "enum", "values": ["default", "slim"], "default": "default" },
+                "bedwars:trader_type": { "type": "enum", "values": ["item", "upgrade"], "default": "item" }
+            }
         },
         "components": {
             "minecraft:type_family": { "family": [ "npc", "trader" ] },
@@ -15,105 +20,47 @@
             "minecraft:physics": {},
             "minecraft:knockback_resistance": { "value": 1.0 },
             "minecraft:damage_sensor": { "triggers": [ { "cause": "all", "deals_damage": false } ] },
-            "minecraft:inventory": { "container_type": "container", "inventory_size": 36 },
+            "minecraft:inventory": { "container_type": "container", "inventory_size": 27 },
             "minecraft:behavior.look_at_player": { "priority": 0 }
         },
         "events": {
-            "assign_skin_randomly": {
-                "filters": { "test": "has_component", "operator": "!=", "value": "minecraft:skin_id" },
-                "randomize": [
-                    { "weight": 1, "add": { "component_groups": [ "skin_0" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_1" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_2" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_3" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_4" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_5" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_6" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_7" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_8" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_9" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_10" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_11" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_12" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_13" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_14" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_15" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_16" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_17" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_18" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_19" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_20" ] } },
-                    { "weight": 1, "add": { "component_groups": [ "skin_21" ] } }
+            "skin_0":{ "set_property": { "bedwars:trader_skin": 0, "bedwars:trader_geometry": "default" } },
+            "skin_1":{ "set_property": { "bedwars:trader_skin": 1, "bedwars:trader_geometry": "default" } },
+            "skin_2":{ "set_property": { "bedwars:trader_skin": 2, "bedwars:trader_geometry": "default" } },
+            "skin_3":{ "set_property": { "bedwars:trader_skin": 3, "bedwars:trader_geometry": "default" } },
+            "skin_4":{ "set_property": { "bedwars:trader_skin": 4, "bedwars:trader_geometry": "slim" } },
+            "skin_5":{ "set_property": { "bedwars:trader_skin": 5, "bedwars:trader_geometry": "default" } },
+            "skin_6":{ "set_property": { "bedwars:trader_skin": 6, "bedwars:trader_geometry": "default" } },
+            "skin_7":{ "set_property": { "bedwars:trader_skin": 7, "bedwars:trader_geometry": "slim" } },
+            "skin_8":{ "set_property": { "bedwars:trader_skin": 8, "bedwars:trader_geometry": "default" } },
+            "skin_9":{ "set_property": { "bedwars:trader_skin": 9, "bedwars:trader_geometry": "default" } },
+            "skin_10":{ "set_property": { "bedwars:trader_skin": 10, "bedwars:trader_geometry": "default" } },
+            "skin_11":{ "set_property": { "bedwars:trader_skin": 11, "bedwars:trader_geometry": "default" } },
+            "skin_12":{ "set_property": { "bedwars:trader_skin": 12, "bedwars:trader_geometry": "default" } },
+            "skin_13":{ "set_property": { "bedwars:trader_skin": 13, "bedwars:trader_geometry": "default" } },
+            "skin_14":{ "set_property": { "bedwars:trader_skin": 14, "bedwars:trader_geometry": "default" } },
+            "skin_15":{ "set_property": { "bedwars:trader_skin": 15, "bedwars:trader_geometry": "default" } },
+            "skin_16":{ "set_property": { "bedwars:trader_skin": 16, "bedwars:trader_geometry": "default" } },
+            "skin_17":{ "set_property": { "bedwars:trader_skin": 17, "bedwars:trader_geometry": "default" } },
+            "skin_18":{ "set_property": { "bedwars:trader_skin": 18, "bedwars:trader_geometry": "default" } },
+            "skin_19":{ "set_property": { "bedwars:trader_skin": 19, "bedwars:trader_geometry": "default" } },
+            "skin_20":{ "set_property": { "bedwars:trader_skin": 20, "bedwars:trader_geometry": "default" } },
+            "skin_21":{ "set_property": { "bedwars:trader_skin": 21, "bedwars:trader_geometry": "default" } },
 
-                ]
+            "item_trader":{
+                "set_property": { "bedwars:trader_type": "item" }
             },
-            "skin_0":{ "add": { "component_groups": [ "skin_0" ] } },
-            "skin_1":{ "add": { "component_groups": [ "skin_1" ] } },
-            "skin_2":{ "add": { "component_groups": [ "skin_2" ] } },
-            "skin_3":{ "add": { "component_groups": [ "skin_3" ] } },
-            "skin_4":{ "add": { "component_groups": [ "skin_4" ] } },
-            "skin_5":{ "add": { "component_groups": [ "skin_5" ] } },
-            "skin_6":{ "add": { "component_groups": [ "skin_6" ] } },
-            "skin_7":{ "add": { "component_groups": [ "skin_7" ] } },
-            "skin_8":{ "add": { "component_groups": [ "skin_8" ] } },
-            "skin_9":{ "add": { "component_groups": [ "skin_9" ] } },
-            "skin_10":{ "add": { "component_groups": [ "skin_10" ] } },
-            "skin_11":{ "add": { "component_groups": [ "skin_11" ] } },
-            "skin_12":{ "add": { "component_groups": [ "skin_12" ] } },
-            "skin_13":{ "add": { "component_groups": [ "skin_13" ] } },
-            "skin_14":{ "add": { "component_groups": [ "skin_14" ] } },
-            "skin_15":{ "add": { "component_groups": [ "skin_15" ] } },
-            "skin_16":{ "add": { "component_groups": [ "skin_16" ] } },
-            "skin_17":{ "add": { "component_groups": [ "skin_17" ] } },
-            "skin_18":{ "add": { "component_groups": [ "skin_18" ] } },
-            "skin_19":{ "add": { "component_groups": [ "skin_19" ] } },
-            "skin_20":{ "add": { "component_groups": [ "skin_20" ] } },
-            "skin_21":{ "add": { "component_groups": [ "skin_21" ] } },
-
-            "blocks_and_items_trader":{ "add": { "component_groups": [ "blocks_and_items_trader" ] } },
-            "weapon_and_armor_trader":{ "add": { "component_groups": [ "weapon_and_armor_trader" ] } },
-            "weapon_and_armor_capture_trader":{ "add": { "component_groups": [ "weapon_and_armor_capture_trader" ] } },
-            "team_upgrade_trader":{ "add": { "component_groups": [ "team_upgrade_trader" ] } }
+            "upgrade_trader":{
+                "set_property": { "bedwars:trader_type": "upgrade" }
+            },
+            "bedwars:remove_gravity_when_interacted": {
+                "add": { "component_groups": [ "remove_gravity_when_interacted" ] }
+            }
         },
         "component_groups": {
-            "skin_0": { "minecraft:skin_id": { "value": 0 } },
-            "skin_1": { "minecraft:skin_id": { "value": 1 } },
-            "skin_2": { "minecraft:skin_id": { "value": 2 } },
-            "skin_3": { "minecraft:skin_id": { "value": 3 } },
-            "skin_4": { "minecraft:skin_id": { "value": 4 } },
-            "skin_5": { "minecraft:skin_id": { "value": 5 } },
-            "skin_6": { "minecraft:skin_id": { "value": 6 } },
-            "skin_7": { "minecraft:skin_id": { "value": 7 } },
-            "skin_8": { "minecraft:skin_id": { "value": 8 } },
-            "skin_9": { "minecraft:skin_id": { "value": 9 } },
-            "skin_10": { "minecraft:skin_id": { "value": 10 } },
-            "skin_11": { "minecraft:skin_id": { "value": 11 } },
-            "skin_12": { "minecraft:skin_id": { "value": 12 } },
-            "skin_13": { "minecraft:skin_id": { "value": 13 } },
-            "skin_14": { "minecraft:skin_id": { "value": 14 } },
-            "skin_15": { "minecraft:skin_id": { "value": 15 } },
-            "skin_16": { "minecraft:skin_id": { "value": 16 } },
-            "skin_17": { "minecraft:skin_id": { "value": 17 } },
-            "skin_18": { "minecraft:skin_id": { "value": 18 } },
-            "skin_19": { "minecraft:skin_id": { "value": 19 } },
-            "skin_20": { "minecraft:skin_id": { "value": 20 } },
-            "skin_21": { "minecraft:skin_id": { "value": 21 } },
-
-            "blocks_and_items_trader": {
-                "minecraft:type_family": { "family": [ "npc", "trader", "blocks_and_items_trader" ] },
-                "minecraft:inventory": { "container_type": "container", "inventory_size": 20 }
-            },
-            "weapon_and_armor_trader": {
-                "minecraft:type_family": { "family": [ "npc", "trader", "weapon_and_armor_trader" ] },
-                "minecraft:inventory": { "container_type": "container", "inventory_size": 20 }
-            },
-            "weapon_and_armor_capture_trader": {
-                "minecraft:type_family": { "family": [ "npc", "trader", "weapon_and_armor_trader", "weapon_and_armor_capture_trader" ] },
-                "minecraft:inventory": { "container_type": "container", "inventory_size": 21 }
-            },
-            "team_upgrade_trader": {
-                "minecraft:type_family": { "family": [ "npc", "trader", "team_upgrade_trader" ] },
-                "minecraft:inventory": { "container_type": "container", "inventory_size": 17 }
+            "remove_gravity_when_interacted": {
+                "minecraft:physics": { "has_collision": false, "has_gravity": false },
+                "minecraft:collision_box": { "height": 0, "width": 0 }
             }
         }
     }

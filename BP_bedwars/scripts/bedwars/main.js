@@ -388,8 +388,11 @@ class BedwarsClassicMode {
     /** 游戏开始倒计时，单位：秒（仅在等待期间使用） */
     gameStartCountdown = 21;
 
-    /** 经典模式中使用的物品类商店物品数据 @type {data.BedwarsItemShopitemInfo[]} */
+    /** 物品类商店物品数据 @type {data.BedwarsItemShopitemInfo[]} */
     itemShopitemData = [];
+
+    /** 团队升级类商店物品数据 @type {data.BedwarsUpgradeShopitemInfo[]} */
+    upgradeShopitemData = [];
 
     /** 下一个事件 */
     nextEvent = {
@@ -1112,6 +1115,7 @@ class BedwarsClassicMode {
 
         // 初始化商店物品
         this.itemShopitemData = Object.values(data.itemShopitemData).filter(data => data.description.classicModeEnabled != false);
+        this.upgradeShopitemData = Object.values(data.upgradeShopitemData).filter(data => data.description.classicModeEnabled != false);
 
         // 注册事件
         this.system.subscribeEvent(this.playerLeaveGameEvent()); // 玩家退出事件
@@ -1777,16 +1781,7 @@ class BedwarsClassicMode {
             "playerTrading",
             minecraft.system.runInterval(() => {
                 this.map.tradingTraders.forEach(tradingTrader => {
-                    // 对于物品商人，执行物品商人的代码
-                    if (tradingTrader.type == "item") {
-                        /** @type {BedwarsItemTrader} */ const itemTrader = tradingTrader;
-                        itemTrader.categoryChangeTest();
-                        itemTrader.itemChangeTest();
-                    }
-                    // 对于团队升级商人，执行团队升级商人的代码
-                    else {
-
-                    };
+                    tradingTrader.itemChangeTest();
 
                     // 如果玩家的视角改变超过 5°，或者玩家和商人之间的距离大于 5 格，则移除物品商人
                     const currentRotation = tradingTrader.player.getRotation();
@@ -2197,7 +2192,7 @@ class BedwarsCaptureMode extends BedwarsClassicMode {
 // --- 商店物品 ---
 
 class BedwarsShopitem {
-    
+
     // ===== 系统和玩家数据 =====
 
     /** 系统 @type {BedwarsSystem} */
@@ -2277,17 +2272,17 @@ class BedwarsShopitem {
     /** 物品在商店内的备注信息
      * @abstract
      */
-    getLore() {};
+    getLore() { };
 
     /** 商店物品的购买检查，只有在检查该物品满足购买条件后才能购买，返回是否成功购买
      * @abstract
      */
-    purchaseTest() {};
+    purchaseTest() { };
 
     /** 成功购买物品时的函数
      * @abstract
      */
-    purchaseSuccess() {};
+    purchaseSuccess() { };
 
 };
 
@@ -2510,8 +2505,14 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
 
     // ===== 描述 =====
 
+    /** 形式 @type {"item"|"itemGroup"} */
+    format = "item";
+
     /** 商店物品类别 @type {"upgrade"|"trap"} */
     category = "upgrade";
+
+    /** 商店队伍 @type {BedwarsTeam} */
+    team;
 
     // ===== 组件 =====
 
@@ -2521,8 +2522,8 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
     /** 在购买此物品时，检查何种团队升级的等级 */
     checkUpgradeTier = "";
 
-    /** 所有等级的描述 @type {string[]} */
-    allTierDescriptions = [];
+    /** 所有等级的描述 @type {data.BedwarsUpgradeShopitemComponent[]} */
+    allComponents = [];
 
     /**
      * @param {BedwarsSystem} system 
@@ -2530,21 +2531,23 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
      * @param {data.BedwarsUpgradeShopitemInfo} info 
      */
     constructor(system, playerInfo, info) {
-        
+
         // ===== 继承类 =====
         super(system, playerInfo);
+        this.team = playerInfo.team;
 
         // ===== 描述部分解析 =====
         this.category = info.description.category;
         if (info.description.description) this.description = info.description.description;
+        this.format = info.description.format;
 
         // ===== 组件部分解析 =====
         /** @type {data.BedwarsUpgradeShopitemComponent} */
         const component = (() => {
             if (info.description.format == "item") return info.component;
-            else return info.components.find(comp => this.team.teamUpgrades[comp.tier.checkUpgradeTier] == comp.tier?.tier - 1 ) ?? info.components[info.components.length - 1];
+            else return info.components.find(comp => this.team.teamUpgrades[comp.tier.checkUpgradeTier] == comp.tier?.tier - 1) ?? info.components[info.components.length - 1];
         })();
-        
+
         // 物品 ID 和数量
         this.shopitemId = component.shopitemId;
         this.amount = component.amount;
@@ -2557,24 +2560,61 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
         // 等级
         if (component.tier?.tier) this.tier = component.tier.tier;
         if (component.tier?.checkUpgradeTier) this.checkUpgradeTier = component.tier.checkUpgradeTier;
-        if (info.description.format == "itemGroup") this.allTierDescriptions = info.components.flatMap(comp => comp.tier.thisTierDescription ?? "");
+        if (info.description.format == "itemGroup") this.allComponents = info.components;
 
     };
 
     /** 物品在商店内的备注信息
      * @override
      */
-    getLore() {};
+    getLore() {
+
+        this.team.teamUpgrades.reinforcedArmor = 2;
+
+        const cost = (() => {
+            if (this.resourceType == data.ResourceType.iron) return `§f${this.resourceAmount} 铁锭`;
+            else if (this.resourceType == data.ResourceType.gold) return `§6${this.resourceAmount} 金锭`;
+            else if (this.resourceType == data.ResourceType.diamond) return `§b${this.resourceAmount} 钻石`;
+            else return `§2${this.resourceAmount} 绿宝石`;
+        })();
+
+        let lore = this.description.flatMap(text => `§r§7${text}`) ?? [];
+
+        if (this.format == "item") lore.push(
+            "",
+            `§r§7花费：${cost}`,
+        )
+        else lore.push(
+            "",
+            ...this.allComponents.flatMap(comp => {
+                const color = this.team.teamUpgrades[comp.tier?.checkUpgradeTier] >= comp.tier?.tier ? "§r§a" : "§r§7"
+                const costThisTier = this.system.mode.map.isSolo ? comp.resource.amountInSolo : comp.resource.amount
+                return `${color}${comp.tier?.tier}级： ${comp.tier?.thisTierDescription}， §r§b${costThisTier} 钻石`;
+            }),
+        );
+
+        if (this.getResourceNeeded() > 0) lore.push(
+            "",
+            `§r§c你没有足够的${this.getResourceName()}！`
+        ); else lore.push(
+            "",
+            `§r§e点击购买！`
+        );
+
+        return lore;
+    };
 
     /** 商店物品的购买检查，只有在检查该物品满足购买条件后才能购买，返回是否成功购买
      * @override
      */
-    purchaseTest() {};
+    purchaseTest() {
+        
+    };
 
     /** 成功购买物品时的函数
      * @override
      */
-    purchaseSuccess() {};
+    purchaseSuccess() { };
 
 };
 
@@ -2683,7 +2723,12 @@ class BedwarsTrader {
     /** 设置商店物品
      * @abstract
      */
-    setShopitem() { };
+    setShopitem() {};
+
+    /** 检查商人的物品是否被拿走，若是商店物品则触发该物品的购买函数，若是分类物品则更改物品分类，若是其他物品则简单移除之
+     * @abstract
+     */
+    itemChangeTest() {};
 
 }
 
@@ -2735,7 +2780,7 @@ class BedwarsItemTrader extends BedwarsTrader {
      */
     setShopitem() {
 
-        // 录入物品数据
+        // 录入物品数据 debug 这里的大量new仍然有优化空间，等到后续再继续优化写法
         this.items = this.system.mode.itemShopitemData.map(data => new BedwarsItemShopitem(this.system, this.playerInfo, data));
         this.quickBuy = this.items.filter(item => item.isQuickBuy);
         this.blocks = this.items.filter(item => item.category == data.ShopitemCategory.blocks);
@@ -2792,69 +2837,19 @@ class BedwarsItemTrader extends BedwarsTrader {
         }
     };
 
-    /** 检查商人的分类物品是否被拿走，若是则更换分类信息并重新显示物品 */
-    categoryChangeTest() {
-
-        // 0 号位 -> 快速购买
-
-        if (!lib.InventoryUtil.slotIsItem(this.trader, 0, "bedwars:category_quick_buy")) {
-            this.playerInfo.tradeInfo.category = data.ShopitemCategory.quickBuy;
-            lib.ItemUtil.removeItem(this.player, "bedwars:category_quick_buy");
-            this.setShopitem();
-        }
-        // 1 号位 -> 方块
-        else if (!lib.InventoryUtil.slotIsItem(this.trader, 1, "bedwars:category_blocks")) {
-            this.playerInfo.tradeInfo.category = data.ShopitemCategory.blocks;
-            lib.ItemUtil.removeItem(this.player, "bedwars:category_blocks");
-            this.setShopitem();
-        }
-        // 2 号位 -> 近战
-        else if (!lib.InventoryUtil.slotIsItem(this.trader, 2, "bedwars:category_melee")) {
-            this.playerInfo.tradeInfo.category = data.ShopitemCategory.melee;
-            lib.ItemUtil.removeItem(this.player, "bedwars:category_melee");
-            this.setShopitem();
-        }
-        // 3 号位 -> 盔甲
-        else if (!lib.InventoryUtil.slotIsItem(this.trader, 3, "bedwars:category_armor")) {
-            this.playerInfo.tradeInfo.category = data.ShopitemCategory.armor;
-            lib.ItemUtil.removeItem(this.player, "bedwars:category_armor");
-            this.setShopitem();
-        }
-        // 4 号位 -> 工具
-        else if (!lib.InventoryUtil.slotIsItem(this.trader, 4, "bedwars:category_tools")) {
-            this.playerInfo.tradeInfo.category = data.ShopitemCategory.tools;
-            lib.ItemUtil.removeItem(this.player, "bedwars:category_tools");
-            this.setShopitem();
-        }
-        // 5 号位 -> 远程
-        else if (!lib.InventoryUtil.slotIsItem(this.trader, 5, "bedwars:category_ranged")) {
-            this.playerInfo.tradeInfo.category = data.ShopitemCategory.ranged;
-            lib.ItemUtil.removeItem(this.player, "bedwars:category_ranged");
-            this.setShopitem();
-        }
-        // 6 号位 -> 药水
-        else if (!lib.InventoryUtil.slotIsItem(this.trader, 6, "bedwars:category_potions")) {
-            this.playerInfo.tradeInfo.category = data.ShopitemCategory.potions;
-            lib.ItemUtil.removeItem(this.player, "bedwars:category_potions");
-            this.setShopitem();
-        }
-        // 7 号位 -> 实用道具
-        else if (!lib.InventoryUtil.slotIsItem(this.trader, 7, "bedwars:category_utility")) {
-            this.playerInfo.tradeInfo.category = data.ShopitemCategory.utility;
-            lib.ItemUtil.removeItem(this.player, "bedwars:category_utility");
-            this.setShopitem();
-        }
-        // 8 号位 -> 轮换物品
-        else if (!lib.InventoryUtil.slotIsItem(this.trader, 8, "bedwars:category_rotating_items")) {
-            this.playerInfo.tradeInfo.category = data.ShopitemCategory.rotatingItems;
-            lib.ItemUtil.removeItem(this.player, "bedwars:category_rotating_items");
-            this.setShopitem();
-        };
-
-    };
-
-    /** 检查商人的商店物品是否被拿走，若是则触发该物品的购买函数 */
+    /** @override */
     itemChangeTest() {
+
+        // 检查 0~8 号位的物品是否为该物品，如果不是则更改分类菜单并重新设置物品
+        Object.values(data.categoryItemData).forEach((data, index) => {
+            if (!lib.InventoryUtil.slotIsItem(this.trader, index, data.icon)) {
+                this.playerInfo.tradeInfo.category = data.category;
+                lib.ItemUtil.removeItem(this.player, data.icon);
+                this.setShopitem();
+            };
+        })
+
+        // 检查对应分类的对应槽位的物品是否为该物品，如果不是则尝试清除并购买该物品
         this.getUsingCategory().forEach((item, index) => {
             const shopitemId = `bedwars:shopitem_${item.id}`
             if (!lib.InventoryUtil.slotIsItem(this.trader, this.getRealSlot(index), shopitemId, item.amount)) {
@@ -2862,8 +2857,9 @@ class BedwarsItemTrader extends BedwarsTrader {
                 lib.ItemUtil.removeItemEntity(shopitemId);
                 item.purchaseTest();
                 this.setShopitem();
-            }
+            };
         });
+
     };
 
 };
@@ -2872,6 +2868,18 @@ class BedwarsItemTrader extends BedwarsTrader {
 class BedwarsUpgradeTrader extends BedwarsTrader {
 
     name = "§b团队模式升级";
+
+    /** 商店物品 @type {BedwarsUpgradeShopitem[]} */
+    items = [];
+
+    /** 团队升级类商店物品 @type {BedwarsUpgradeShopitem[]} */
+    upgrade = [];
+
+    /** 陷阱类商店物品 @type {BedwarsUpgradeShopitem[]} */
+    trap = [];
+
+    /** 陷阱信息物品 @type {data.BedwarsTrapInformation[]} */
+    trapInformation = [];
 
     /**
      * @param {BedwarsSystem} system
@@ -2884,7 +2892,114 @@ class BedwarsUpgradeTrader extends BedwarsTrader {
     /** 设置商店物品
      * @override
      */
-    setShopitem() { };
+    setShopitem() {
+        // 录入物品数据 debug 这里的大量new仍然有优化空间，等到后续再继续优化写法
+        this.items = this.system.mode.upgradeShopitemData.map(data => new BedwarsUpgradeShopitem(this.system, this.playerInfo, data));
+        this.upgrade = this.items.filter(item => item.category == "upgrade");
+        this.trap = this.items.filter(item => item.category == "trap");
+        this.trapInformation = [];
+        for (let i = 0; i < 3; i++) {
+            this.trapInformation.push(data.trapInformationData[this.playerInfo.team.traps[i] ?? "noTrap"]);
+        }
+
+        // 清除物品
+        lib.InventoryUtil.getInventory(this.trader).container.clearAll();
+
+        // 设置物品
+        this.upgrade.forEach((item, index) => { lib.ItemUtil.replaceInventoryItem(this.trader, item.shopitemId, this.getUpdateSlot(index), { lore: item.getLore(), amount: item.amount }); });
+        this.trap.forEach((item, index) => { lib.ItemUtil.replaceInventoryItem(this.trader, item.shopitemId, this.getTrapSlot(index), { lore: item.getLore(), amount: item.amount }); });
+
+        // 设置商店内当前陷阱信息
+        this.trapInformation.forEach((info, index) => {
+            const name = `${info.isValid ? "§r§a" : "§r§c"}陷阱 #${index + 1}：${info.name}`;
+            const lore = [
+                "",
+                `§r§7第${index + 1}个敌人进入你的基地时将触发此陷阱！`,
+                "",
+                "§r§7购买的陷阱将在此排队触发。",
+                "§r§7陷阱的价格将随着队列中陷阱的数量而增加。",
+                "",
+                `§r§7下个陷阱：§b${2 ** this.playerInfo.team.traps.length}钻石`
+            ];
+            lib.ItemUtil.replaceInventoryItem(this.trader, info.icon, this.getTrapInformationSlot(index), { lore: lore, name: name });
+        });
+    };
+
+    /** 从物品信息的优先级中得到实际应当将团队升级物品放到何种槽位
+     * @description 例如，锋利附魔在团队升级中为 0 号物品，则应该放到物品栏第 2 个槽位中去
+     * @param {number} priority 
+     */
+    getUpdateSlot(priority) {
+        // x  0  1  2  x  X  X  X  x 
+        // x  3  4  5  x  X  x  x  x 
+        // x  (6)(7)X  X  X  x  x  x 
+        // 标记 X 的为其他槽位可能需要使用的区域，严禁占用
+        // 原版情况下，只会占用 0~5 一共 6 个槽位，但如果您需要基于此代码添加新内容，至多还能添加 2 项团队升级
+        if (priority >= 0 && priority <= 2) return priority + 1;
+        else if (priority >= 3 && priority <= 5) return priority + 7;
+        else return priority + 13;
+    };
+
+    /** 从物品信息的优先级中得到实际应当将陷阱物品放到何种槽位
+     * @description 例如，失明陷阱在陷阱中为 0 号物品，则应该放到物品栏第 6 个槽位中去
+     * @param {number} priority 
+     */
+    getTrapSlot(priority) {
+        // x  X  X  X  x  0  1  2  x 
+        // x  X  X  X  x  3  (4)(5)x 
+        // x  x  x  X  X  X  (6)(7)x 
+        // 标记 X 的为其他槽位可能需要使用的区域，严禁占用
+        // 原版情况下，只会占用 0~3 一共 4 个槽位，但如果您需要基于此代码添加新内容，至多还能添加 4 项陷阱（建议添加 2 项以内）
+        if (priority >= 0 && priority <= 2) return priority + 5;
+        else if (priority >= 3 && priority <= 5) return priority + 11;
+        else return priority + 18;
+    };
+
+    /** 从物品信息的优先级中得到实际应当将陷阱信息物品放到何种槽位
+     * @description 例如，第一个陷阱为 0 号物品，应该放到物品栏第 22 个槽位中去
+     * @param {number} priority 
+     */
+    getTrapInformationSlot(priority) {
+        // x  X  X  X  x  X  X  X  x 
+        // x  X  X  X  x  X  x  x  x 
+        // x  x  x  0  1  2  x  x  x 
+        // 标记 X 的为其他槽位可能需要使用的区域，严禁占用
+        return priority + 21;
+    };
+
+    /** @override */
+    itemChangeTest() {
+
+        // 检查团队升级物品是否为该物品，如果不是则尝试清除并购买该物品
+        this.upgrade.forEach((item, index) => {
+            if (!lib.InventoryUtil.slotIsItem(this.trader, this.getUpdateSlot(index), item.shopitemId, item.amount)) {
+                lib.ItemUtil.removeItem(this.player, item.shopitemId);
+                lib.ItemUtil.removeItemEntity(item.shopitemId);
+                item.purchaseTest();
+                this.setShopitem();
+            };
+        });
+
+        // 检查陷阱物品是否为该物品，如果不是则尝试清除并购买该物品
+        this.trap.forEach((item, index) => {
+            if (!lib.InventoryUtil.slotIsItem(this.trader, this.getTrapSlot(index), item.shopitemId, item.amount)) {
+                lib.ItemUtil.removeItem(this.player, item.shopitemId);
+                lib.ItemUtil.removeItemEntity(item.shopitemId);
+                item.purchaseTest();
+                this.setShopitem();
+            };
+        });
+
+        // 检查陷阱信息物品是否为该物品，如果不是则尝试清除
+        this.trapInformation.forEach((item, index) => {
+            if (!lib.InventoryUtil.slotIsItem(this.trader, this.getTrapInformationSlot(index), item.icon)) {
+                lib.ItemUtil.removeItem(this.player, item.icon);
+                lib.ItemUtil.removeItemEntity(item.icon);
+                this.setShopitem();
+            };
+        });
+
+    };
 
 };
 

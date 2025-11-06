@@ -201,6 +201,23 @@ import * as minecraft from "@minecraft/server";
  * @property {string[]} [thisTierDescription] （仅限多物品模式可用）显示该等级的用途，最后将显示为：“tier级： thisTierDecription， resourceAmount 钻石”
  */
 
+// BedwarsCategoryItem 定义分类物品信息
+
+/**
+ * @typedef BedwarsCategoryItem
+ * @property {string} icon 物品分类物品的图标物品
+ * @property {ShopitemCategory} category 物品分类的 ID
+ */
+
+// BedwarsTrapInformation 定义当前陷阱信息
+
+/**
+ * @typedef BedwarsTrapInformation
+ * @property {string} icon 陷阱信息的图标物品
+ * @property {string} name 陷阱信息显示为何种名字
+ * @property {boolean} [isValid] 是否为有效的陷阱，有效陷阱将显示为绿色标题
+ */
+
 // ===== enum 定义 =====
 
 /** 所有可用的队伍
@@ -889,6 +906,55 @@ export const mapData = {
 };
 
 // ===== 商人数据 =====
+
+/** 物品类商人标签物品信息 */
+export const categoryItemData = {
+    /** 快速购买 @type {BedwarsCategoryItem} */
+    quickBuy: {
+        icon: "bedwars:category_quick_buy",
+        category: ShopitemCategory.quickBuy,
+    },
+    /** 方块 @type {BedwarsCategoryItem} */
+    blocks: {
+        icon: "bedwars:category_blocks",
+        category: ShopitemCategory.blocks,
+    },
+    /** 近战 @type {BedwarsCategoryItem} */
+    melee: {
+        icon: "bedwars:category_melee",
+        category: ShopitemCategory.melee,
+    },
+    /** 盔甲 @type {BedwarsCategoryItem} */
+    armor: {
+        icon: "bedwars:category_armor",
+        category: ShopitemCategory.armor,
+    },
+    /** 工具 @type {BedwarsCategoryItem} */
+    tools: {
+        icon: "bedwars:category_tools",
+        category: ShopitemCategory.tools,
+    },
+    /** 远程 @type {BedwarsCategoryItem} */
+    ranged: {
+        icon: "bedwars:category_ranged",
+        category: ShopitemCategory.ranged,
+    },
+    /** 药水 @type {BedwarsCategoryItem} */
+    potions: {
+        icon: "bedwars:category_potions",
+        category: ShopitemCategory.potions,
+    },
+    /** 实用道具 @type {BedwarsCategoryItem} */
+    utility: {
+        icon: "bedwars:category_utility",
+        category: ShopitemCategory.utility,
+    },
+    /** 轮换物品 @type {BedwarsCategoryItem} */
+    rotatingItems: {
+        icon: "bedwars:category_rotating_items",
+        category: ShopitemCategory.rotatingItems,
+    },
+};
 
 /** 物品类商店物品基本信息 */
 export const itemShopitemData = {
@@ -1700,4 +1766,37 @@ export const upgradeShopitemData = {
         },
     },
 
+};
+
+/** 陷阱信息 */
+export const trapInformationData = {
+    /** 无陷阱 @type {BedwarsTrapInformation} */
+    noTrap: {
+        icon: "minecraft:light_gray_stained_glass",
+        name: "无陷阱！",
+    },
+    /** 失明陷阱 @type {BedwarsTrapInformation} */
+    blindnessTrap: {
+        icon: "minecraft:tripwire_hook",
+        isValid: true,
+        name: "失明陷阱",
+    },
+    /** 反击陷阱 @type {BedwarsTrapInformation} */
+    counterOffensiveTrap: {
+        icon: "minecraft:feather",
+        isValid: true,
+        name: "反击陷阱",
+    },
+    /** 显影陷阱 @type {BedwarsTrapInformation} */
+    revealTrap: {
+        icon: "minecraft:redstone_torch",
+        isValid: true,
+        name: "显影陷阱",
+    },
+    /** 挖掘疲劳陷阱 @type {BedwarsTrapInformation} */
+    minerFatigueTrap: {
+        icon: "minecraft:iron_pickaxe",
+        isValid: true,
+        name: "挖掘疲劳陷阱",
+    },
 };

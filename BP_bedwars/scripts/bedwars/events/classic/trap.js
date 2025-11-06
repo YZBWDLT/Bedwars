@@ -10,16 +10,12 @@
 import { Player, system } from "@minecraft/server";
 import { eachTeam } from "../../methods/bedwarsTeam";
 import { BedwarsTeam } from "../../methods/bedwarsTeam";
-import { replaceInventoryItem } from "../../methods/itemManager";
 import { eachNearbyPlayer, entityIsNearby, getPlayerNearby, showTitle } from "../../methods/playerManager";
-import { eachAlivePlayer, getPlayerBedwarsInfo, playerIsAlive, warnPlayer } from "../../methods/bedwarsPlayer";
+import { getPlayerBedwarsInfo, playerIsAlive, warnPlayer } from "../../methods/bedwarsPlayer";
 import { Vector } from "../../methods/positionManager";
 
 /** 陷阱机制控制函数 */
 export function trap() {
-
-    /** 在玩家物品栏中显示陷阱 */
-    eachAlivePlayer( ( player, playerInfo ) => showTrapsInInventory( player, playerInfo.getTeam() ) )
 
     /** 陷阱触发与警报 */
     eachTeam( team => {
@@ -166,53 +162,6 @@ function alarming( team ) {
         team.trapInfo.alarmedTimes = 0;
     };
 
-}
-
-/** 在玩家物品栏里显示陷阱信息
- * @param {Player} player 玩家
- * @param {BedwarsTeam} team 玩家对应的队伍信息
-*/
-function showTrapsInInventory( player, team ) {
-
-    /** 获取陷阱列表信息 */
-    let traps = [ team.teamUpgrade.trap1Type, team.teamUpgrade.trap2Type, team.teamUpgrade.trap3Type ];
-
-    /** 获取陷阱名称 @param { "" | "its_a_trap" | "counter_offensive_trap" | "alarm_trap" | "miner_fatigue_trap" } trapQueueType 陷阱类型 */
-    let trapName = ( trapQueueType ) => { switch ( trapQueueType ) {
-        case "": return "无陷阱！";
-        case "its_a_trap": return "这是个陷阱！";
-        case "counter_offensive_trap": return "反击陷阱";
-        case "alarm_trap": return "报警陷阱";
-        case "miner_fatigue_trap": return "挖掘疲劳陷阱";
-    } };
-
-    /** 获取陷阱颜色 @param { "" | "its_a_trap" | "counter_offensive_trap" | "alarm_trap" | "miner_fatigue_trap" } trapQueueType 陷阱类型 */
-    let trapColor = ( trapQueueType ) => {
-        return trapQueueType === "" ? "§r§c" : "§r§a";
-    };
-    
-    /** 获取下个陷阱要消耗的钻石数 */
-    let nextTrapNeedsDiamond = () => {
-        if ( traps[0] === "" ) { return "§b1 钻石"; }
-        else if ( traps[1] === "" ) { return "§b2 钻石"; }
-        else if ( traps[2] === "" ) { return "§b4 钻石"; }
-        else { return "§c陷阱队列已满！"; }
-    };
-    
-    /** 获取陷阱的代表物品 @param { "" | "its_a_trap" | "counter_offensive_trap" | "alarm_trap" | "miner_fatigue_trap" } trapQueueType 陷阱类型 */
-    let trapItem = ( trapQueueType ) => { switch ( trapQueueType ) {
-        case "": return "minecraft:light_gray_stained_glass";
-        case "its_a_trap": return "minecraft:tripwire_hook";
-        case "counter_offensive_trap": return "minecraft:feather";
-        case "alarm_trap": return "minecraft:redstone_torch";
-        case "miner_fatigue_trap": return "minecraft:iron_pickaxe";
-    } };
-    
-    /** 在玩家物品栏放置物品 */
-    for ( let i = 0; i < 3; i++ ) {
-        replaceInventoryItem( player, trapItem( traps[i] ), 15+i, { name: `${trapColor( traps[i] )}陷阱 #${i+1} ： ${trapName( traps[i] )}`, lore: [ `§r§7第${i+1}个敌人进入你的基地时将触发此陷阱！`, "", "§r§7购买的陷阱将在此排队触发。\n陷阱的价格将随着队列中陷阱的数量而增加。", "", `§r§7下个陷阱： ${nextTrapNeedsDiamond()}` ], itemLock: "slot" } )
-    };
-    
 }
 
 /** ===== 方法 ===== */

@@ -524,7 +524,7 @@ export class ItemUtil {
             const itemStack = new ItemStack(itemId, thisStackSize);
 
             // 添加附魔
-            if (enchantments) enchantments.filter(enchantment => enchantment.level > 0).forEach(enchantment => itemStack.getComponent("minecraft:enchantable").addEnchantment({ type: new EnchantmentType(enchantment.id), level: enchantment.level }));
+            if (enchantments) enchantments.filter(enchantment => enchantment.level > 0).forEach(enchantment => itemStack.getComponent("minecraft:enchantable")?.addEnchantment({ type: new EnchantmentType(enchantment.id), level: enchantment.level }));
 
             // 添加物品锁定
             if (itemLock) itemStack.lockMode = itemLock;

@@ -102,6 +102,7 @@
         "bedwars_upgrade_sharpened_swords": { "textures": "textures/items/diamond_sword" },
         "bedwars_upgrade_reinforced_armor": { "textures": "textures/items/diamond_chestplate" },
         "bedwars_upgrade_maniac_miner": { "textures": "textures/items/gold_pickaxe" },
+        "bedwars_upgrade_cushioned_boots": { "textures": "textures/items/diamond_boots" },
         "bedwars_upgrade_dragon_buff": { "textures": "textures/items/ender_dragon_spawn_egg" },
         "bedwars_upgrade_blindness_trap": { "textures": "textures/blocks/trip_wire_source" },
         "bedwars_upgrade_miner_fatigue_trap": { "textures": "textures/items/iron_pickaxe" },

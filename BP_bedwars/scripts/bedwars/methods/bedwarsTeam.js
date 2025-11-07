@@ -5,7 +5,6 @@
 
 import { world } from "@minecraft/server";
 
-import { getPlayerBedwarsInfo, playerIsValid } from "./bedwarsPlayer";
 import { overworld, positionManager, Vector } from "./positionManager";
 import { map } from "./bedwarsMaps";
 
@@ -23,12 +22,6 @@ import { map } from "./bedwarsMaps";
 /** 【类】队伍类 */
 export class BedwarsTeam{
 
-    /** 队伍 ID  @type {validTeams} */ id = "red";
-    /** 床信息，包括床位置、朝向、存在信息 */ bedInfo = {
-        /** 床脚位置 */ pos: new Vector( 0, 0, 0 ),
-        /** 朝向 @type { "None" | "Rotate90" | "Rotate180" | "Rotate270" } */ rotation: "None",
-        /** 床是否存在 */ isExist: true,
-    }
     /** 资源点信息，包括资源点位置和各类资源生成次数、倒计时 */ spawnerInfo = {
         /** 资源生成位置 */ spawnerPos: new Vector( 0, 0, 0 ),
         /** 铁生成次数 */ ironSpawned: 0,
@@ -38,21 +31,6 @@ export class BedwarsTeam{
         /** 金生成倒计时 */ goldCountdown: 120,
         /** 绿宝石生成倒计时 */ emeraldCountdown: 1500
     }
-    /** 重生点信息 */ spawnpoint = new Vector( 0, 0, 0 );
-    /** 队伍是否有效，开始时未分配到队员的队伍即为无效队伍 */ isValid = true;
-    /** 队伍是否被淘汰，淘汰的队伍是没有床、没有存活队员的有效队伍 */ isEliminated = false;
-    /** 箱子位置 */ chestPos = new Vector( 0, 0, 0 );
-    /** 团队升级信息 */ teamUpgrade = {
-        /** 盔甲强化等级 @type {0|1|2|3|4} */ reinforcedArmor: 0,
-        /** 治愈池 */ healPool: false,
-        /** 疯狂矿工等级 @type {0|1|2} */ maniacMiner: 0,
-        /** 锋利附魔 */ sharpenedSwords: false,
-        /** 锻炉等级 @type {0|1|2|3|4} */ forge: 0,
-        /** 末影龙增益 */ dragonBuff: false,
-        /** 陷阱 #1，为""时则为空 @type {""|"its_a_trap"|"counter_offensive_trap"|"alarm_trap"|"miner_fatigue_trap"} */ trap1Type: "",
-        /** 陷阱 #2，为""时则为空 @type {""|"its_a_trap"|"counter_offensive_trap"|"alarm_trap"|"miner_fatigue_trap"} */ trap2Type: "",
-        /** 陷阱 #3，为""时则为空 @type {""|"its_a_trap"|"counter_offensive_trap"|"alarm_trap"|"miner_fatigue_trap"} */ trap3Type: ""
-    };
     /** 陷阱信息 */ trapInfo = {
         /** 陷阱冷却启用状态 */ cooldownEnabled: false,
         /** 陷阱冷却倒计时，单位：游戏刻 */ cooldown: 600,
@@ -63,65 +41,6 @@ export class BedwarsTeam{
         /** 床位置 @type {Vector[]} */ bedsPos: [],
         /** 队伍当前积分 */ score: 1500,
         /** 其他队伍合计的床数 */ otherTeamBedAmount: 1,
-    };
-    /** 
-     * @param {validTeams} id 队伍 ID
-     * @param {teamInfo} teamInfo 队伍基本信息
-     */
-    constructor( id, teamInfo ) {
-        const { bedPos, bedRotation, resourceSpawnerPos, spawnpointPos, chestPos } = teamInfo
-        this.id = id;
-        this.bedInfo.pos = bedPos;
-        this.bedInfo.rotation = bedRotation;
-        this.spawnerInfo.spawnerPos = positionManager.center( resourceSpawnerPos );
-        this.spawnpoint = positionManager.center( spawnpointPos );
-        this.chestPos = chestPos;
-    };
-    /** 获取本队的队伍颜色 */
-    getTeamColor( ) {
-        switch ( this.id ) {
-            case "red": return `§c`;
-            case "blue": return `§9`;
-            case "yellow": return `§e`;
-            case "green": return `§a`;
-            case "white": return `§f`;
-            case "cyan": return `§3`;
-            case "pink": return `§d`;
-            case "gray": return `§7`;
-            case "orange": return `§6`;
-            case "brown": return `§n`;
-            case "purple": default: return `§5`;
-        }
-    };
-    /** 获取本队的队伍全名 */
-    getTeamName( ) {
-        switch ( this.id ) {
-            case "red": return "红";
-            case "blue": return "蓝";
-            case "yellow": return "黄";
-            case "green": return "绿";
-            case "white": return "白";
-            case "cyan": return "青";
-            case "pink": return "粉";
-            case "gray": return "灰";
-            case "orange": return "橙";
-            case "brown": return "棕";
-            case "purple": default: return "紫";
-        }
-    };
-    /** 获取本队的带颜色的队伍名
-     * @description 例如："§c红"
-     */
-    getTeamNameWithColor( ) {
-        return `${this.getTeamColor()}${this.getTeamName()}`;
-    };
-    /** 获取本队所有玩家 */
-    getTeamMember( ) {
-        return world.getPlayers().filter( player => { return playerIsValid(player) && getPlayerBedwarsInfo( player ).team === this.id } )
-    };
-    /** 获取本队未被淘汰的玩家 */
-    getAliveTeamMember( ) {
-        return world.getPlayers().filter( player => { return playerIsValid(player) && getPlayerBedwarsInfo( player ).team === this.id && !(getPlayerBedwarsInfo( player ).isEliminated) } )
     };
     /** 放置床 */
     setBed( ){
@@ -160,18 +79,4 @@ export class BedwarsTeam{
         } );
         return this.captureInfo.otherTeamBedAmount;
     };
-}
-
-/** 使每个队伍都执行一个函数
- * @param {function(BedwarsTeam)} func - 一个接受 BedwarsTeam 类型参数的函数
- */
-export function eachTeam( func ) {
-    map().teamList.forEach( team => { func( team ) } )
-}
-
-/** 从队伍 ID 获取队伍信息
- * @param {validTeams} id 输入队伍的 ID
- */
-export function getTeam( id ) {
-    return map().teamList.find( team => team.id === id );
 }

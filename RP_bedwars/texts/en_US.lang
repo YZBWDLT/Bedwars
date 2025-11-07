@@ -206,11 +206,13 @@ item.bedwars:upgrade_miner_fatigue_trap=§aMiner Fatigue Trap
 
 #### 标签物品
 item.bedwars:category_quick_buy=§bQuick Buy
+tile.bedwars:category_blocks.name=§aBlocks
 item.bedwars:category_melee=§aMelee
 item.bedwars:category_armor=§aArmor
 item.bedwars:category_tools=§aTools
 item.bedwars:category_ranged=§aRanged
 item.bedwars:category_potions=§aPotions
+tile.bedwars:category_utility.name=§aUtility
 item.bedwars:category_rotating_items=§aRotating Items
 
 #### Settings Items

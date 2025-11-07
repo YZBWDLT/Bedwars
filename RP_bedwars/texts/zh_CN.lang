@@ -523,6 +523,7 @@ message.bedwars:upgrade_forge_tier_1=铁锻炉
 message.bedwars:upgrade_forge_tier_2=金锻炉
 message.bedwars:upgrade_forge_tier_3=绿宝石锻炉
 message.bedwars:upgrade_forge_tier_4=熔融锻炉
+message.bedwars:upgrade_heal_pool=治愈池
 message.bedwars:upgrade_cushioned_boots_tier_1=缓冲靴子 I
 message.bedwars:upgrade_cushioned_boots_tier_2=缓冲靴子 II
 message.bedwars:upgrade_dragon_buff=末影龙增益

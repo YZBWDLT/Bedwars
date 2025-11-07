@@ -524,7 +524,7 @@ export class ItemUtil {
             const itemStack = new ItemStack(itemId, thisStackSize);
 
             // 添加附魔
-            if (enchantments) enchantments.filter(enchantment => enchantment.level > 0).forEach(enchantment => itemStack.getComponent("minecraft:enchantable")?.addEnchantment({ type: new EnchantmentType(enchantment.id), level: enchantment.level }));
+            if (enchantments) enchantments.forEach(enchantment => this.addEnchantment(itemStack, enchantment));
 
             // 添加物品锁定
             if (itemLock) itemStack.lockMode = itemLock;
@@ -616,6 +616,23 @@ export class ItemUtil {
      */
     static removeItemEntity(itemId, dimension = "overworld") {
         world.getDimension(dimension).getEntities({ type: "minecraft:item" }).filter(item => item.getComponent("minecraft:item").itemStack.typeId === itemId).forEach(item => { item.remove() });
+    };
+
+    /** 尝试为物品添加附魔，无法添加的附魔将不会添加
+     * @param {ItemStack} item 
+     * @param {EnchantmentInfo} enchantment 
+     */
+    static addEnchantment(item, enchantment) {
+        // 如果附魔等级为小于等于 0 级，终止运行
+        if (enchantment.level <= 0) return item;
+        const comp = item.getComponent("minecraft:enchantable");
+        // 如果无法附魔，终止运行
+        if (!comp) return item;
+        const enchantmentData = { type: new EnchantmentType(enchantment.id), level: enchantment.level};
+        // 如果附魔不能添加，终止运行
+        if (!comp.canAddEnchantment(enchantmentData)) return item;
+        comp.addEnchantment(enchantmentData);
+        return item;
     };
 
 };

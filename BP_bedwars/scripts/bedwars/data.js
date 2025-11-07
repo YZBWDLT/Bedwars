@@ -31,6 +31,7 @@ import * as minecraft from "@minecraft/server";
  * @property {number} [healPoolRadius] 治愈池半径
  * @property {boolean} [disableTeamIslandFlag] 是否在本地图禁用旗帜
  * @property {boolean} [isSolo] 是否为单挑模式（通常意义上是 8 队模式），单挑模式会影响资源的生成速度和物资售价
+ * @property {string[]} [removeItemEntity] 地图将移除物品掉落物的类型
  */
 
 // TraderInfo 定义商人的位置、朝向、类型和其他基本信息
@@ -188,6 +189,7 @@ import * as minecraft from "@minecraft/server";
 
 /** BedwarsUpgradeShopitemComponent
  * @typedef BedwarsUpgradeShopitemComponent
+ * @property {TeamUpgrade|Trap} id 团队升级 ID
  * @property {string} shopitemId 商店物品 ID
  * @property {number} amount 在商店中显示为多少物品
  * @property {BedwarsResourceComponent} resource 指定该物品的资源需求
@@ -197,7 +199,6 @@ import * as minecraft from "@minecraft/server";
 /** BedwarsUpgradeTierComponent
  * @typedef BedwarsUpgradeTierComponent
  * @property {number} tier 团队升级等级，只有当该队伍的对应升级的等级 = tier - 1 时允许购买
- * @property {string} checkUpgradeTier 在购买此物品时，检查何种团队升级的等级
  * @property {string[]} [thisTierDescription] （仅限多物品模式可用）显示该等级的用途，最后将显示为：“tier级： thisTierDecription， resourceAmount 钻石”
  */
 
@@ -253,7 +254,9 @@ export const ShopitemCategory = {
     rotatingItems: "rotatingItems",
 };
 
-/** 资源类型 @enum {string} */
+/** 资源类型
+ * @enum {string}
+ */
 export const ResourceType = {
     iron: "iron",
     gold: "gold",
@@ -275,6 +278,29 @@ export const KillStyle = {
     meme: "meme",
     pack: "pack",
     newThreeKingdom: "newThreeKingdom"
+};
+
+/** 所有团队升级
+ * @enum {string}
+ */
+export const TeamUpgrade = {
+    sharpenedSwords: "sharpenedSwords",
+    reinforcedArmor: "reinforcedArmor",
+    maniacMiner: "maniacMiner",
+    forge: "forge",
+    healPool: "healPool",
+    cushionedBoots: "cushionedBoots",
+    dragonBuff: "dragonBuff",
+};
+
+/** 所有陷阱
+ * @enum {string}
+ */
+export const Trap = {
+    blindnessTrap: "blindnessTrap",
+    counterOffensiveTrap: "counterOffensiveTrap",
+    revealTrap: "revealTrap",
+    minerFatigueTrap: "minerFatigueTrap",
 };
 
 // ===== 地图数据 =====
@@ -1562,10 +1588,11 @@ export const upgradeShopitemData = {
             description: ["你方所有成员的剑和斧将永久获得锋利I附魔！"],
         },
         component: {
+            id: TeamUpgrade.sharpenedSwords,
             shopitemId: "bedwars:upgrade_sharpened_swords",
             amount: 1,
             resource: { type: ResourceType.diamond, amount: 8, amountInSolo: 4 },
-            tier: { tier: 1, checkUpgradeTier: "sharpenedSwords", },
+            tier: { tier: 1 },
         }
     },
     /** 盔甲强化 @type {BedwarsUpgradeShopitemInfo} */
@@ -1577,28 +1604,32 @@ export const upgradeShopitemData = {
         },
         components: [
             {
+                id: TeamUpgrade.reinforcedArmor,
                 shopitemId: "bedwars:upgrade_reinforced_armor_tier_1",
                 amount: 1,
                 resource: { type: ResourceType.diamond, amount: 5, amountInSolo: 2 },
-                tier: { tier: 1, checkUpgradeTier: "reinforcedArmor", thisTierDescription: ["保护 I"] },
+                tier: { tier: 1, thisTierDescription: ["保护 I"] },
             },
             {
+                id: TeamUpgrade.reinforcedArmor,
                 shopitemId: "bedwars:upgrade_reinforced_armor_tier_2",
                 amount: 2,
                 resource: { type: ResourceType.diamond, amount: 10, amountInSolo: 4 },
-                tier: { tier: 2, checkUpgradeTier: "reinforcedArmor", thisTierDescription: ["保护 II"] },
+                tier: { tier: 2, thisTierDescription: ["保护 II"] },
             },
             {
+                id: TeamUpgrade.reinforcedArmor,
                 shopitemId: "bedwars:upgrade_reinforced_armor_tier_3",
                 amount: 3,
                 resource: { type: ResourceType.diamond, amount: 20, amountInSolo: 8 },
-                tier: { tier: 3, checkUpgradeTier: "reinforcedArmor", thisTierDescription: ["保护 III"] },
+                tier: { tier: 3, thisTierDescription: ["保护 III"] },
             },
             {
+                id: TeamUpgrade.reinforcedArmor,
                 shopitemId: "bedwars:upgrade_reinforced_armor_tier_4",
                 amount: 4,
                 resource: { type: ResourceType.diamond, amount: 30, amountInSolo: 16 },
-                tier: { tier: 4, checkUpgradeTier: "reinforcedArmor", thisTierDescription: ["保护 IV"] },
+                tier: { tier: 4, thisTierDescription: ["保护 IV"] },
             }
         ]
     },
@@ -1611,16 +1642,18 @@ export const upgradeShopitemData = {
         },
         components: [
             {
+                id: TeamUpgrade.maniacMiner,
                 shopitemId: "bedwars:upgrade_maniac_miner_tier_1",
                 amount: 1,
                 resource: { type: ResourceType.diamond, amount: 4, amountInSolo: 2 },
-                tier: { tier: 1, checkUpgradeTier: "maniacMiner", thisTierDescription: ["急迫 I"] },
+                tier: { tier: 1, thisTierDescription: ["急迫 I"] },
             },
             {
+                id: TeamUpgrade.maniacMiner,
                 shopitemId: "bedwars:upgrade_maniac_miner_tier_2",
                 amount: 2,
                 resource: { type: ResourceType.diamond, amount: 6, amountInSolo: 4 },
-                tier: { tier: 2, checkUpgradeTier: "maniacMiner", thisTierDescription: ["急迫 II"] },
+                tier: { tier: 2, thisTierDescription: ["急迫 II"] },
             }
         ]
     },
@@ -1633,28 +1666,32 @@ export const upgradeShopitemData = {
         },
         components: [
             {
+                id: TeamUpgrade.forge,
                 shopitemId: "bedwars:upgrade_forge_tier_1",
                 amount: 1,
                 resource: { type: ResourceType.diamond, amount: 4, amountInSolo: 2 },
-                tier: { tier: 1, checkUpgradeTier: "forge", thisTierDescription: ["+50%资源"] },
+                tier: { tier: 1, thisTierDescription: ["+50%资源"] },
             },
             {
+                id: TeamUpgrade.forge,
                 shopitemId: "bedwars:upgrade_forge_tier_2",
                 amount: 2,
                 resource: { type: ResourceType.diamond, amount: 8, amountInSolo: 4 },
-                tier: { tier: 2, checkUpgradeTier: "forge", thisTierDescription: ["+100%资源"] },
+                tier: { tier: 2, thisTierDescription: ["+100%资源"] },
             },
             {
+                id: TeamUpgrade.forge,
                 shopitemId: "bedwars:upgrade_forge_tier_3",
                 amount: 3,
                 resource: { type: ResourceType.diamond, amount: 12, amountInSolo: 6 },
-                tier: { tier: 3, checkUpgradeTier: "forge", thisTierDescription: ["生成绿宝石"] },
+                tier: { tier: 3, thisTierDescription: ["生成绿宝石"] },
             },
             {
+                id: TeamUpgrade.forge,
                 shopitemId: "bedwars:upgrade_forge_tier_4",
                 amount: 4,
                 resource: { type: ResourceType.diamond, amount: 16, amountInSolo: 8 },
-                tier: { tier: 4, checkUpgradeTier: "forge", thisTierDescription: ["+200%资源"] },
+                tier: { tier: 4, thisTierDescription: ["+200%资源"] },
             }
         ]
     },
@@ -1666,10 +1703,11 @@ export const upgradeShopitemData = {
             description: ["基地附近的队伍成员将获得生命恢复效果！"],
         },
         component: {
+            id: TeamUpgrade.healPool,
             shopitemId: "bedwars:upgrade_heal_pool",
             amount: 1,
             resource: { type: ResourceType.diamond, amount: 3, amountInSolo: 1 },
-            tier: { tier: 1, checkUpgradeTier: "healPool" }
+            tier: { tier: 1 }
         }
     },
     /** 缓冲靴子 @type {BedwarsUpgradeShopitemInfo} */
@@ -1681,16 +1719,18 @@ export const upgradeShopitemData = {
         },
         components: [
             {
+                id: TeamUpgrade.cushionedBoots,
                 shopitemId: "bedwars:upgrade_cushioned_boots_tier_1",
                 amount: 1,
                 resource: { type: ResourceType.diamond, amount: 2, amountInSolo: 1 },
-                tier: { tier: 1, checkUpgradeTier: "cushionedBoots", thisTierDescription: ["摔落缓冲 I"] },
+                tier: { tier: 1, thisTierDescription: ["摔落缓冲 I"] },
             },
             {
+                id: TeamUpgrade.cushionedBoots,
                 shopitemId: "bedwars:upgrade_cushioned_boots_tier_2",
                 amount: 2,
                 resource: { type: ResourceType.diamond, amount: 4, amountInSolo: 2 },
-                tier: { tier: 2, checkUpgradeTier: "cushionedBoots", thisTierDescription: ["摔落缓冲 II"] },
+                tier: { tier: 2, thisTierDescription: ["摔落缓冲 II"] },
             }
         ]
     },
@@ -1704,10 +1744,11 @@ export const upgradeShopitemData = {
             captureModeEnabled: false,
         },
         component: {
+            id: TeamUpgrade.dragonBuff,
             shopitemId: "bedwars:upgrade_dragon_buff",
             amount: 1,
             resource: { type: ResourceType.diamond, amount: 5 },
-            tier: { tier: 1, checkUpgradeTier: "dragonBuff" },
+            tier: { tier: 1 },
         }
     },
 
@@ -1721,6 +1762,7 @@ export const upgradeShopitemData = {
             description: ["造成失明与缓慢效果，持续8秒。"],
         },
         component: {
+            id: Trap.blindnessTrap,
             shopitemId: "bedwars:upgrade_blindness_trap",
             amount: 1,
             resource: { type: ResourceType.diamond, amount: 1 },
@@ -1734,6 +1776,7 @@ export const upgradeShopitemData = {
             description: ["赋予基地附近的队友速度 II 与跳跃提升 II", "效果，持续15秒。"],
         },
         component: {
+            id: Trap.counterOffensiveTrap,
             shopitemId: "bedwars:upgrade_counter_offensive_trap",
             amount: 1,
             resource: { type: ResourceType.diamond, amount: 1 },
@@ -1747,6 +1790,7 @@ export const upgradeShopitemData = {
             description: ["显示隐身的玩家，", "及其名称与队伍名。"],
         },
         component: {
+            id: Trap.revealTrap,
             shopitemId: "bedwars:upgrade_reveal_trap",
             amount: 1,
             resource: { type: ResourceType.diamond, amount: 1 },
@@ -1757,9 +1801,10 @@ export const upgradeShopitemData = {
         description: {
             format: "item",
             category: "trap",
-            description: [ "造成挖掘疲劳效果，持续8秒。" ],
+            description: ["造成挖掘疲劳效果，持续8秒。"],
         },
         component: {
+            id: Trap.minerFatigueTrap,
             shopitemId: "bedwars:upgrade_miner_fatigue_trap",
             amount: 1,
             resource: { type: ResourceType.diamond, amount: 1 },

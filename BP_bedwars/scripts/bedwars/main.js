@@ -2092,7 +2092,7 @@ class BedwarsClassicMode {
             minecraft.system.runInterval(() => {
                 this.map.aliveTeams.forEach(aliveTeam => {
                     if (aliveTeam.teamUpgrades.maniacMiner > 0)
-                        aliveTeam.alivePlayers.forEach(alivePlayer => alivePlayer.player.addEffect("haste", 600, aliveTeam.teamUpgrades.maniacMiner - 1));
+                        aliveTeam.alivePlayers.forEach(alivePlayer => alivePlayer.player.addEffect("haste", 600, { amplifier: aliveTeam.teamUpgrades.maniacMiner - 1 }));
                     if (aliveTeam.teamUpgrades.healPool)
                         aliveTeam.alivePlayers.filter(alivePlayer => lib.EntityUtil.isNearby(alivePlayer.player, aliveTeam.spawnpointLocation, this.map.healPoolRadius)).forEach(alivePlayer => alivePlayer.player.addEffect("regeneration", 100));
                 });
@@ -2214,6 +2214,9 @@ class BedwarsShopitem {
 
     // ===== 组件 =====
 
+    /** 商店物品 ID，对于物品类商品将决定显示的物品和给予的物品，而对于团队升级类商品将决定对何种数据进行操作 */
+    id = "";
+
     /** 要购买此物品的资源类型 @type {data.ResourceType} */
     resourceType = data.ResourceType.iron;
 
@@ -2310,9 +2313,6 @@ class BedwarsItemShopitem extends BedwarsShopitem {
     isShears = false;
 
     // ===== 组件 =====
-
-    /** 商店物品 ID */
-    id = "";
 
     /** 按照何种物品 ID 给予物品 */
     itemId = "";
@@ -2519,9 +2519,6 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
     /** 商店物品 ID */
     shopitemId = "";
 
-    /** 在购买此物品时，检查何种团队升级的等级 */
-    checkUpgradeTier = "";
-
     /** 所有等级的描述 @type {data.BedwarsUpgradeShopitemComponent[]} */
     allComponents = [];
 
@@ -2545,21 +2542,25 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
         /** @type {data.BedwarsUpgradeShopitemComponent} */
         const component = (() => {
             if (info.description.format == "item") return info.component;
-            else return info.components.find(comp => this.team.teamUpgrades[comp.tier.checkUpgradeTier] == comp.tier?.tier - 1) ?? info.components[info.components.length - 1];
+            else return info.components.find(comp => this.team.teamUpgrades[comp.id] == comp.tier?.tier - 1) ?? info.components[info.components.length - 1];
         })();
 
         // 物品 ID 和数量
         this.shopitemId = component.shopitemId;
         this.amount = component.amount;
 
-        // 资源类型和资源数量
+        // 资源类型和资源数量，其中如果是陷阱则按照原价 * 2 ^ (当前陷阱数 - 1)的方法定价，最高 4 钻石
         this.resourceType = component.resource.type;
         this.resourceAmount = component.resource.amount;
         if (component.resource.amountInSolo && system.mode.map.isSolo) this.resourceAmount = component.resource.amountInSolo;
+        if (this.category == "trap") {
+            this.resourceAmount = this.resourceAmount * (2 ** this.team.traps.length);
+            if (this.resourceAmount > 4) this.resourceAmount = 4;
+        }
 
         // 等级
         if (component.tier?.tier) this.tier = component.tier.tier;
-        if (component.tier?.checkUpgradeTier) this.checkUpgradeTier = component.tier.checkUpgradeTier;
+        this.id = component.id;
         if (info.description.format == "itemGroup") this.allComponents = info.components;
 
     };
@@ -2568,8 +2569,6 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
      * @override
      */
     getLore() {
-
-        this.team.teamUpgrades.reinforcedArmor = 2;
 
         const cost = (() => {
             if (this.resourceType == data.ResourceType.iron) return `§f${this.resourceAmount} 铁锭`;
@@ -2587,7 +2586,7 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
         else lore.push(
             "",
             ...this.allComponents.flatMap(comp => {
-                const color = this.team.teamUpgrades[comp.tier?.checkUpgradeTier] >= comp.tier?.tier ? "§r§a" : "§r§7"
+                const color = this.team.teamUpgrades[comp.id] >= comp.tier?.tier ? "§r§a" : "§r§7"
                 const costThisTier = this.system.mode.map.isSolo ? comp.resource.amountInSolo : comp.resource.amount
                 return `${color}${comp.tier?.tier}级： ${comp.tier?.thisTierDescription}， §r§b${costThisTier} 钻石`;
             }),
@@ -2608,13 +2607,63 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
      * @override
      */
     purchaseTest() {
-        
+        const player = this.player.player;
+
+        // 如果是多物品团队升级（整数型）且队伍当前等级 != tier - 1时，阻止购买
+        if (this.category == "upgrade" && this.format == "itemGroup" && this.team.teamUpgrades[this.id] != this.tier - 1) {
+            this.system.warnPlayer(player, { translate: `message.alreadyGotItem` });
+            return false;
+        }
+        // 如果是单物品团队升级（布尔型）且队伍当前有此升级时，阻止购买
+        else if (this.category == "upgrade" && this.format == "item" && this.team.teamUpgrades[this.id]) {
+            this.system.warnPlayer(player, { translate: `message.alreadyGotItem` });
+            return false;
+        }
+        // 如果是陷阱且陷阱排满，阻止购买
+        else if (this.category == "trap" && this.team.traps.length >= 3) {
+            this.system.warnPlayer(player, { translate: `message.trapQueueFull` });
+            return false;
+        }
+        // 如果玩家资源不足，返回还需要多少资源
+        else if (this.getResourceNeeded() > 0) {
+            this.system.warnPlayer(player, { translate: `message.resourceNotEnough`, with: { rawtext: [{ translate: `item.${this.getResourceTypeId()}` }, { translate: `item.${this.getResourceTypeId()}` }, { text: `${this.resourceNeeded}` }] } });
+            return false;
+        }
+        // 其他情况则允许购买，清除资源并提示玩家已购买
+        else {
+            lib.ItemUtil.removeItem(player, this.getResourceTypeId(), -1, this.resourceAmount);
+            player.playSound("note.pling", { pitch: 2, location: player.location });
+            this.team.players.forEach(playerData => playerData.player.sendMessage({ translate: `message.purchaseTeamUpgradeSuccessfully`, with: { rawtext: [{ text: `${player.name}` }, { translate: `message.${this.shopitemId}` }] } }))
+            this.purchaseSuccess();
+            return true;
+        }
     };
 
     /** 成功购买物品时的函数
      * @override
      */
-    purchaseSuccess() { };
+    purchaseSuccess() {
+        // 单物品团队升级（布尔型）
+        if (this.category == "upgrade" && this.format == "item") {
+            this.team.teamUpgrades[this.id] = true;
+            // 如果该物品是锋利附魔，调用队伍的锋利附魔函数
+            if (this.id == data.TeamUpgrade.sharpenedSwords) {
+                this.team.applySharpness();
+            }
+        }
+        // 多物品团队升级（整数型）
+        else if (this.category == "upgrade" && this.format == "itemGroup") {
+            this.team.teamUpgrades[this.id]++;
+            // 如果该物品是盔甲强化或缓冲靴子，重新给予盔甲
+            if (this.id == data.TeamUpgrade.reinforcedArmor || this.id == data.TeamUpgrade.cushionedBoots) {
+                this.team.alivePlayers.forEach(alivePlayer => alivePlayer.giveArmor());
+            };
+        }
+        // 陷阱
+        else if (this.category == "trap") {
+            this.team.traps.push(this.id);
+        }
+    };
 
 };
 
@@ -2723,12 +2772,12 @@ class BedwarsTrader {
     /** 设置商店物品
      * @abstract
      */
-    setShopitem() {};
+    setShopitem() { };
 
     /** 检查商人的物品是否被拿走，若是商店物品则触发该物品的购买函数，若是分类物品则更改物品分类，若是其他物品则简单移除之
      * @abstract
      */
-    itemChangeTest() {};
+    itemChangeTest() { };
 
 }
 
@@ -2919,7 +2968,7 @@ class BedwarsUpgradeTrader extends BedwarsTrader {
                 "§r§7购买的陷阱将在此排队触发。",
                 "§r§7陷阱的价格将随着队列中陷阱的数量而增加。",
                 "",
-                `§r§7下个陷阱：§b${2 ** this.playerInfo.team.traps.length}钻石`
+                this.playerInfo.team.traps.length >= 3 ? `§r§c陷阱已排满！` : `§r§7下个陷阱：§b${2 ** this.playerInfo.team.traps.length} 钻石`
             ];
             lib.ItemUtil.replaceInventoryItem(this.trader, info.icon, this.getTrapInformationSlot(index), { lore: lore, name: name });
         });
@@ -3148,11 +3197,14 @@ class BedwarsMap {
         if (info.ironSpawnTimes) this.ironSpawnTimes = info.ironSpawnTimes;
         if (info.distributeResource) this.distributeResource = info.distributeResource;
         if (info.clearVelocity) this.clearVelocity = info.clearVelocity;
-        if (info.heightLimitMax) this.heightLimitMax = info.heightLimitMax;
-        if (info.heightLimitMin) this.heightLimitMin = info.heightLimitMin;
         if (info.healPoolRadius) this.healPoolRadius = info.healPoolRadius;
         if (info.disableTeamIslandFlag) this.disableTeamIslandFlag = info.disableTeamIslandFlag;
         if (info.isSolo) this.isSolo = info.isSolo;
+
+        // 高度限制
+        if (info.heightLimitMax) this.heightLimitMax = info.heightLimitMax;
+        if (info.heightLimitMin) this.heightLimitMin = info.heightLimitMin;
+        this.spawnpoint = {x: 0, y: this.heightLimitMax + 7, z: 0}
 
         // 注册安全区位置
         this.safeAreaLocation.spawnpoint = this.teams.flatMap(team => team.spawnpointLocation);
@@ -3637,6 +3689,27 @@ class BedwarsTeam {
         minecraft.world.sendMessage(["\n", { translate: "message.teamEliminated", with: [`${this.getTeamNameWithColor()}`] }, "\n "])
     };
 
+    // ===== 玩家购买团队升级 =====
+
+    /** 对队伍内的玩家的物品添加锋利附魔 */
+    applySharpness() {
+        if (this.teamUpgrades.sharpenedSwords) this.alivePlayers.forEach(alivePlayer => {
+            const sharpnessItems = [
+                "bedwars:wooden_sword",
+                "bedwars:stone_sword",
+                "bedwars:iron_sword",
+                "bedwars:diamond_sword",
+                "bedwars:wooden_axe",
+                "bedwars:stone_axe",
+                "bedwars:iron_axe",
+                "bedwars:diamond_axe"
+            ];
+            lib.InventoryUtil.getValidItems(alivePlayer.player)
+                .filter(item => sharpnessItems.includes(item.item.typeId))
+                .forEach(item => lib.ItemUtil.replaceInventoryItem(alivePlayer.player, item.item.typeId, item.slot, { enchantments: [{ id: "sharpness", level: 1 }] }));
+        });
+    };
+
 };
 
 // ===== 玩家 =====
@@ -3726,6 +3799,9 @@ class BedwarsPlayer {
         rotation: void 0,
 
     };
+
+    /** 魔法牛奶剩余时长，剩余 0 秒时为禁用状态，单位：秒 */
+    magicMilkCountdown = 0;
 
     /**
      * @param {BedwarsSystem} system 系统
@@ -4086,7 +4162,10 @@ class BedwarsPlayer {
         const featherFallingTier = this.team.teamUpgrades.cushionedBoots;
         /** @type {lib.EnchantmentInfo[]} */ let enchantment = [];
         /** @type {lib.EnchantmentInfo[]} */ let enchantmentForBoots = [];
-        if (protectionTier > 0) enchantment.push({ id: "protection", level: protectionTier });
+        if (protectionTier > 0) {
+            enchantment.push({ id: "protection", level: protectionTier });
+            enchantmentForBoots.push({ id: "protection", level: protectionTier });
+        }
         if (featherFallingTier > 0) enchantmentForBoots.push({ id: "feather_falling", level: featherFallingTier });
 
         // 头盔与胸甲供应

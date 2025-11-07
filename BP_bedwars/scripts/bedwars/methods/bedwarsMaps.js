@@ -10,34 +10,6 @@ import { eventManager } from "../events/eventManager";
 import { tickToSecond } from "./time";
 import { shopitems } from "./bedwarsShopitem";
 
-/**
- * @typedef islandInfo 岛屿信息
- * @property { Vector } pos 岛屿加载起点位置（x、y、z的最小值）
- * @property { "team_island" | "diamond_island" | "center_island" | "side_island" | "diamond_island_1" | "diamond_island_2" | "center_island_1" | "center_island_2" | "center_island_3" | "center_island_4" } type 岛屿类型
- * @property { "None" | "Rotate90" | "Rotate180" | "Rotate270" } rotation 岛屿按照旋转加载
- * @property { "None" | "X" | "Z" | "XZ" } mirror 岛屿按照镜像加载
- */
-
-/**
- * @typedef teamIslandColorInfo 队伍岛屿颜色信息
- * @property { import("./bedwarsTeam.js").validTeams | "lime" } color 设置的羊毛颜色（备注：如果为绿队，请使用lime而非green！）
- * @property { Vector } pos1 在/fill的替换命令中，设置的坐标起点
- * @property { Vector } pos2 在/fill的替换命令中，设置的坐标终点
- */
-
-/**
- * @typedef traderInfo 商人信息
- * @property { "blocks_and_items" | "weapon_and_armor" | "team_upgrade" | "weapon_and_armor_capture" } type - 商人类型
- * @property { Vector } pos - 新增的商人位置
- * @property { Number } direction - 商人的初始朝向，为 0 ~ 360
- */
-
-/**
- * @typedef spawnerInfo 资源点信息
- * @property { "diamond" | "emerald" } type 资源点类型
- * @property { Vector } pos 资源点位置，需传入钻石块或绿宝石块的位置
- */
-
 /** 【类】地图类，控制地图全局的运行方式 */
 export class BedwarsMap{
 
@@ -55,14 +27,8 @@ export class BedwarsMap{
         /** 是否在每次生成时，在3*3范围内分散式地生成资源 */ distributeResource: true,
         /** 是否清除生成资源的向量 */ clearResourceVelocity: true
     };
-    /** 地图重生点，玩家死亡后将重生于此 */ spawnpointPos = new Vector( 0, 100, 0 );
-    /** 队伍数，在使用addTeams方法时，此数值将自加 */ teamCount = 0;
-    /** 全体队伍信息 @type {BedwarsTeam[]} */ teamList = [];
-    /** 游戏ID，只有ID与本局游戏相同的玩家允许进入游戏 */ gameId = randomInt( 1000, 9999 )
-    /** 游戏阶段，0：游戏前；1：游戏中；2：游戏结束 @type {0|1|2|3|4} */ gameStage = 0;
     /** 游戏结束后，自动开启下一场游戏的倒计时，单位：游戏刻 */ nextGameCountdown = 200;
     /** 游戏开始倒计时 */ gameStartCountdown = settings.beforeGaming.waiting.gameStartWaitingTime;
-    /** 商人信息，包括位置、朝向、类型 @type {traderInfo[]} */ traderInfo = [];
     /** 玩家是否可以进入商店 */ playerCouldIntoShop = true;
     /** 游戏事件，包括下一个事件的倒计时、下一个事件的ID、下一个事件的名称 */
     gameEvent = {
@@ -76,51 +42,6 @@ export class BedwarsMap{
         /** 地图是否正在加载 */ isLoading: false,
         /** 加载状态，0：准备工作，1：清空地图时，2：加载结构时，3：设置队伍岛屿颜色和床所需时 @type { 0 | 1 | 2 | 3 }  */
         loadStage: 0,
-        /** 地图清空 */
-        mapClear: {
-            /** 正在清除的层数 */ currentLayer: 116,
-            /** 间隔多长时间清除下一层，单位：游戏刻 */ timeCostPerLayer: 6,
-            /** 倒计时，单位：游戏刻 */ countdown: 690,
-            /** 移除本层并使层数自减 */ clear: () => {
-                this.loadInfo.mapClear.currentLayer--;
-                for ( let i of [ 1, -1 ] ) { for ( let j of [ 1, -1 ] ) {
-                    overworld.runCommand( `fill 0 ${this.loadInfo.mapClear.currentLayer} 0 ${i*this.mapSize.x} ${this.loadInfo.mapClear.currentLayer} ${j*this.mapSize.z} air` )
-                } }
-            },
-        },
-        /** 结构加载 */
-        mapReload: {
-            /** 全部岛屿信息 @type { islandInfo[] } */ islands: [ ],
-            /** 加载结构所需的时间，单位：游戏刻 */ totalTime: 300,
-            /** 加载倒计时，单位：游戏刻 */ countdown: 300,
-            /** 加载岛屿 */ loadStructure: () => {
-                this.loadInfo.mapReload.islands.forEach( island => {
-                    const { pos, rotation, mirror, type } = island;
-                    world.structureManager.place( `${this.id}:${type}`, overworld, pos, { animationMode: "Blocks", animationSeconds: tickToSecond( this.loadInfo.mapReload.totalTime, "float" ), mirror, rotation, } )
-                } )
-            },
-            /** 设置边界 */ loadBorder: () => {
-                for ( let i of [ 1, -1 ] ) { for ( let j of [ 1, -1 ] ) {
-                    overworld.runCommand( `fill ${i*this.mapSize.x} 0 ${i*this.mapSize.z} ${j*this.mapSize.x} 0 ${j*this.mapSize.z*(-1)} border_block` );
-                } }
-            },
-
-        },
-        /** 设置队伍岛屿的羊毛颜色 */
-        teamIslandColor: {
-            /** 是否设置队伍羊毛颜色 */ isEnabled: true,
-            /** 设置队伍岛屿颜色和床阶段的倒计时，单位：游戏刻 */ countdown: 20,
-            /** 队伍岛屿的颜色信息 @type {teamIslandColorInfo[]} */ colors: [],
-            /** 设置队伍岛屿的羊毛颜色 */ load: () => {
-                this.loadInfo.teamIslandColor.colors.forEach( info => {
-                    let { color, pos1, pos2 } = info;
-                    const { x: x1, y: y1, z: z1 } = pos1;
-                    const { x: x2, y: y2, z: z2 } = pos2;
-                    overworld.runCommand( `fill ${x1} ${y1} ${z1} ${x2} ${y2} ${z2} ${color}_wool replace white_wool` );    
-                } )
-            }
-        },
-
     };
     /** 地图大小信息 */
     mapSize = {
@@ -129,11 +50,6 @@ export class BedwarsMap{
         /** 上一张地图的 x 方向半边长大小 */ prevX: 105,
         /** 上一张地图的 z 方向半边长大小 */ prevZ: 105,
     }
-    /** 高度限制信息 */
-    heightLimit = {
-        /** 最高高度限制 */ max: 110,
-        /** 最低高度限制 */ min: 50
-    };
     /** @type {"classic"|"capture"} 地图模式，classic=经典，capture=夺点模式 */ mode = "classic";
     /** 夺点模式信息 */
     captureInfo = {
@@ -141,85 +57,8 @@ export class BedwarsMap{
         /** 游戏结束倒计时，单位：秒 */ gameOverCountdown: 1500,
         /** 优势方 @type {import("./bedwarsTeam.js").validTeams|"none"} */ dominantTeam: "none",
     };
-    /** 地图版本 */ version = "Alpha 1.1_01";
-    /** 地图允许的商店物品 */ validShopitems = [ ...shopitems.blocksAndItems, ...shopitems.weaponAndArmor, ...shopitems.teamUpgrade, ];
-
-    /** 【构建器】
-     * @param {String} id 地图 ID
-     * @param {String} name 地图名称
-     * @param {islandInfo[]} islands 岛屿信息
-     * @param {teamIslandColorInfo[]} teamIslandColor 队伍岛屿信息
-     */
-    constructor( id, name, islands, teamIslandColor ) {
-        this.id = id;
-        this.name = name;
-        this.loadInfo.mapReload.islands = islands;
-        this.loadInfo.teamIslandColor.colors = teamIslandColor;
-
-        this.spawnpointPos = new Vector( 0, this.heightLimit.max + 7, 0 );
-    };
-
-    // ===== 队伍操作 =====
-
-    /** 添加队伍信息
-     * @param {...BedwarsTeam} teams 要加入的队伍信息
-     */
-    addTeams( ...teams ) {
-        const currentTeams = [ ...this.teamList, ...teams ];
-        this.teamList = currentTeams;
-        this.teamCount = currentTeams.length;
-    };
-
-    /** 从队伍 ID 获取队伍信息
-     * @param {import("./bedwarsTeam.js").validTeams} id 输入队伍的 ID
-     */
-    getTeam( id ) {
-        return this.teamList.find( team => team.id === id );
-    };
-
-    /** 获取未被淘汰的队伍 */
-    getAliveTeam( ) {
-        return this.teamList.filter( team => team.isEliminated === false )
-    };
-
-    /** 使每个队伍都执行一个函数
-     * @param {function(BedwarsTeam)} func - 一个接受 BedwarsTeam 类型参数的函数
-     */
-    eachTeam( func ) {
-        this.teamList.forEach( team => { func( team ) } )
-    };
-
-    // ===== 资源点操作 =====
-
-    /** 添加资源点信息
-     * @param {...spawnerInfo} spawners 资源点信息
-     */
-    addSpawners( ...spawners ) {
-        spawners.forEach( spawner => {
-            const { type, pos } = spawner;
-            const changedPos = positionManager.add( positionManager.center( pos ), 0, 2, 0 );
-            this.spawnerInfo[`${type}Info`].push( { pos: changedPos, spawned: 0, } );
-        } );
-    };
 
     // ===== 商人操作 =====
-
-    /** 添加商人信息
-     * @param {...traderInfo} traders 商人信息
-     */
-    addTraders( ...traders ) {
-        traders.forEach( trader => {
-            const { pos, direction, type } = trader;
-            this.traderInfo.push( { pos: positionManager.center( pos ), direction, type } );
-        } )
-    };
-
-    /** 获取具有特定家族的商人
-     * @param {import("./bedwarsShopitem.js").traderType} traderType 
-     */
-    getTraders( traderType ) {
-        return overworld.getEntities( { type: "bedwars:trader" } ).filter( trader => trader.getComponent( "minecraft:type_family" ).hasTypeFamily( `${traderType}_trader` ) );
-    };
 
     /** 设置下一个事件
      * @param {Number} nextEventCountdown 距离下一个事件的倒计时，单位：游戏刻
@@ -231,40 +70,7 @@ export class BedwarsMap{
         this.gameEvent.nextEventName = nextEventName;
     };
 
-
-
-    /** 移除边界外的实体
-     * @param {String} entityId 要移除的实体ID
-     * @param {number} range 检测的范围，默认值：0。例：若填写为-5，则检测到离边界5格以内则移除。
-     * @param {boolean} upTest 是否测试顶面，如果为false则忽略顶面的测试
-     */
-    removeEntityOutOfBorder( entityId, range = 0, upTest = true ) {
-        overworld.getEntities( { type: entityId } ).forEach( entity => {    
-            /** 如果该实体将欲出界，移除之 */
-            if (
-                ( upTest && Math.abs( entity.location.x ) > 105 + range )
-                || Math.abs( entity.location.z ) > 105 + range
-                || entity.location.y > map().heightLimit.max + range
-                || entity.location.y < 0 + range
-            ) {
-                entity.remove();
-            }
-        } )
-    };
-
     /** ===== 游戏阶段转换方法 ===== */
-
-    /** 游戏开始
-     * @description 基础功能：设置地图阶段为1，触发游戏时事件。
-     * @description 额外功能：允许PVP，随机分配队伍，安置实体等
-     */
-    gameStart() {
-
-        /** 触发游戏时事件 */
-        eventManager.classicEvents();
-        if ( this.mode === "capture" ) { eventManager.captureEvents(); }
-
-    };
 
     /** 游戏结束
      * @description 基础功能：设置地图阶段为1，触发游戏时事件。
@@ -281,11 +87,6 @@ export class BedwarsMap{
     };
 
     /** ===== 不同模式适配方法 ===== */
-
-    /** 获取地图是否为solo模式 */
-    isSolo( ) {
-        return this.teamCount > 4
-    };
     
     /** 获取地图模式名 */
     modeName( ) {
@@ -313,6 +114,3 @@ export class BedwarsMap{
     };
 
 }
-
-/** 地图信息 @return {BedwarsMap} */
-export let map = () => { return world.bedwarsMap };

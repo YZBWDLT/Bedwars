@@ -5,7 +5,7 @@
  */
 
 import { ItemCompleteUseAfterEvent } from "@minecraft/server";
-import { BedwarsPlayer, playerIsValid, eachValidPlayer, getPlayerBedwarsInfo } from "../../methods/bedwarsPlayer";
+import { playerIsValid, eachValidPlayer, getPlayerBedwarsInfo } from "../../methods/bedwarsPlayer";
 
 /** 玩家饮用魔法牛奶检测
  * @param {ItemCompleteUseAfterEvent} event 

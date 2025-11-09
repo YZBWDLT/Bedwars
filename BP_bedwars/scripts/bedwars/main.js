@@ -124,14 +124,18 @@ class BedwarsSystem {
         lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁所有事件。`);
     };
 
-    /** 获取特定 ID 的时间线 */
+    /** 获取特定 ID 的时间线
+     * @param {string} timelineTypeId 
+     */
     getTimeline(timelineTypeId) {
         let index = this.systemTimelines.findIndex(timeline => timeline.typeId == timelineTypeId);
         if (index != -1) return this.systemTimelines[index];
         return;
     };
 
-    /** 获取特定 ID 的事件 */
+    /** 获取特定 ID 的事件
+     * @param {string} eventTypeId 
+     */
     getEvent(eventTypeId) {
         let index = this.systemEvents.findIndex(event => event.typeId == eventTypeId);
         if (index != -1) return this.systemEvents[index];
@@ -226,14 +230,14 @@ class BedwarsSettings {
             /** 金基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔/(1+速度加成) */
             gold: 75,
 
-            /** 钻石基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔-200*等级） */
-            diamond: 800,
+            /** 钻石基准生成间隔，单位：秒。实际生成间隔为（基准间隔-10*等级） */
+            diamond: 40,
 
-            /** 绿宝石基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔-200*等级） */
-            emerald: 1500,
+            /** 绿宝石基准生成间隔，单位：秒。实际生成间隔为（基准间隔-10*等级） */
+            emerald: 75,
 
-            /** 单挑模式下的生成间隔乘数 */
-            soloSpeedMultiplier: 6
+            /** 单挑模式下，在单位时间内的生成数量乘数，将影响铁锭和金锭的生成速度 */
+            soloSpeedMultiplier: 0.6
 
         },
 
@@ -1113,11 +1117,14 @@ class BedwarsClassicMode {
 
         }));
 
+        // 生成资源点实体
+        this.map.spawnSpawner();
+
         // 初始化商店物品
         this.itemShopitemData = Object.values(data.itemShopitemData).filter(data => data.description.classicModeEnabled != false);
         this.upgradeShopitemData = Object.values(data.upgradeShopitemData).filter(data => data.description.classicModeEnabled != false);
 
-        // 注册事件
+        // 注册事件 debug 可以考虑在物品购买后再添加物品对应事件
         this.system.subscribeEvent(this.playerLeaveGameEvent()); // 玩家退出事件
         this.system.subscribeEvent(this.stopPlayerBreakBlockEvent()); // 阻止玩家破坏方块
         this.system.subscribeEvent(this.newEntitySpawnEvent()); // 实体（尤其是弹射物）生成时的事件，用于创建新的事件（比如火球出现后，检查火球是否击中）
@@ -1132,22 +1139,25 @@ class BedwarsClassicMode {
         this.system.subscribeEvent(this.playerEatGoldenAppleEvent()); // 检查玩家吃下金苹果事件
         this.system.subscribeEvent(this.playerDrinkPotionEvent()); // 检查玩家喝下药水事件
         this.system.subscribeEvent(this.igniteTntImmediatelyEvent()); // 放置 TNT 则立刻点燃事件
-        this.system.subscribeEvent(this.stopExplosionBreakBlockEvent()); // 阻止爆炸破坏方块
-        this.system.subscribeEvent(this.explosionDropBedwarsBlocksEvent()); // 令爆炸可以使自定义方块掉落
         this.system.subscribeEvent(this.playerTradeEvent()); // 玩家交易事件
+        this.system.subscribeEvent(this.arrowHitEntityEvent()); // 弓箭击中事件
+        this.system.subscribeEvent(this.magicMilkUseEvent()); // 使用魔法牛奶事件
+        this.system.subscribeEvent(this.dreamDefenderUseEvent()); // 使用梦境守护者事件，使用后生成梦境守护者
+        this.system.subscribeEvent(this.waterBucketUseEvent()); // 使用水桶事件，使用后收回桶
         // this.system.subscribeEvent(this.worldSettingsEvent()); // 世界设置事件
         // this.system.subscribeEvent(this.killStyleSettingsEvent()); // 击杀样式设置事件
         // this.system.subscribeEvent(this.selectTeamSettingsEvent()); // 队伍选择设置事件
-        // this.system.subscribeEvent(this.dreamDefenderUseEvent()); // 使用梦境守护者事件，使用后生成梦境守护者
-        // this.system.subscribeEvent(this.magicMilkUseEvent()); // 使用魔法牛奶事件
-        // this.system.subscribeEvent(this.waterBucketUseEvent()); // 使用水桶事件，使用后收回桶
 
         // 注册时间线
         this.system.subscribeTimeline(this.showGamingInfoBoardTimeline()); // 右侧记分板
         this.system.subscribeTimeline(this.applySaturationTimeline()); // 施加饱和效果
         this.system.subscribeTimeline(this.applyTeamUpgradeEffectTimeline()); // 施加团队升级效果
         this.system.subscribeTimeline(this.showPlayerHealthTimeline()); // 玩家血量显示
+        this.system.subscribeTimeline(this.removeEnderPearlTimeline()); // 移除过界末影珍珠时间线
         if (!this.system.settings.miscellaneous.playerCanThrowItemsInVoid) this.system.subscribeTimeline(this.stopPlayerThrowItemInVoidTimeline()); // 禁止玩家在虚空扔出物品时间线
+        this.system.subscribeTimeline(this.removeItemTimeline()); // 禁止特定类型的掉落物存在
+        this.system.subscribeTimeline(this.spawnTeamResourceTimeline()); // 生成队伍类型资源时间线（包括铁、金、绿宝石）
+        this.system.subscribeTimeline(this.spawnMapResourceTimeline()); // 生成地图类型资源时间线（包括钻石、绿宝石）
 
     };
 
@@ -1167,14 +1177,18 @@ class BedwarsClassicMode {
             minecraft.world.afterEvents.entitySpawn.subscribe(event => {
 
                 // 如果生成了火球，则触发对应检查事件
-                if (event.entity.typeId == "bedwars:fireball" && !this.system.getEvent("fireballHitBlock")) {
-                    this.system.subscribeEvent(this.fireballHitBlockEvent());
-                    this.system.subscribeEvent(this.fireballHitEntityEvent());
+                if (event.entity.typeId == "bedwars:fireball") {
+                    if (!this.system.getEvent("fireballHitBlock")) this.system.subscribeEvent(this.fireballHitBlockEvent());
+                    if (!this.system.getEvent("fireballHitEntity")) this.system.subscribeEvent(this.fireballHitEntityEvent());
+                    if (!this.system.getEvent("applyMomentum")) this.system.subscribeEvent(this.applyMomentumEvent());
+                    if (!this.system.getEvent("stopExplosionBreakBlock")) this.system.subscribeEvent(this.stopExplosionBreakBlockEvent());
+                    if (!this.system.getEvent("explosionDropBedwarsBlocks")) this.system.subscribeEvent(this.explosionDropBedwarsBlocksEvent());
+                    if (!this.system.getTimeline("explosionApplyResistance")) this.system.subscribeTimeline(this.explosionApplyResistanceTimeline());
                 }
                 // 如果生成了床虱，则触发对应检查事件
-                else if (event.entity.typeId == "bedwars:bed_bug" && !this.system.getEvent("bedBugHitBlock")) {
-                    this.system.subscribeEvent(this.bedBugHitBlockEvent());
-                    this.system.subscribeEvent(this.bedBugHitEntityEvent());
+                else if (event.entity.typeId == "bedwars:bed_bug") {
+                    if (!this.system.getEvent("bedBugHitBlock")) this.system.subscribeEvent(this.bedBugHitBlockEvent());
+                    if (!this.system.getEvent("bedBugHitBlock")) this.system.subscribeEvent(this.bedBugHitEntityEvent());
                 }
                 // 如果生成了搭桥蛋，则触发对应检查事件
                 else if (event.entity.typeId == "bedwars:bridge_egg" && !this.system.getTimeline("bridgeEggCreateBridge")) {
@@ -1749,6 +1763,142 @@ class BedwarsClassicMode {
         );
     };
 
+    // 资源生成
+
+    /** 生成团队类型资源时间线（包括铁、金、绿宝石）
+     * @add 在游戏开始时创建
+     * @highFrequency 该方法会每游戏刻执行代码
+     */
+    spawnTeamResourceTimeline() {
+        return new BedwarsTimeline(
+            "spawnTeamResource",
+            minecraft.system.runInterval(() => {
+                const teams = (() => {
+                    if (this.system.settings.gaming.invalidTeam.spawnResources) return this.map.teams;
+                    else return this.map.teams.filter(team => team.isValid);
+                })();
+                teams.forEach(team => {
+
+                    // 变量准备
+
+                    /** 资源点位置 */
+                    const resourceLocation = team.resourceLocation
+                    /** 在资源点附近的非旁观玩家 */
+                    const nearbyPlayers = lib.PlayerUtil.getNearby(resourceLocation, 2.5).filter(player => player.getGameMode() != minecraft.GameMode.Spectator);
+                    /** 铁生成信息 */
+                    const ironData = team.ironSpawnerInfo;
+                    /** 金生成信息 */
+                    const goldData = team.goldSpawnerInfo;
+                    /** 绿宝石生成信息 */
+                    const emeraldData = team.emeraldSpawnerInfo;
+                    /** 锻炉加成，0级加成0%（合计1+0%），1级加成50%（合计1+50%），2级3级加成100%（合计1+100%），4级加成200%（合计1+200%） */
+                    const forgeBonus = (tier => {
+                        switch (tier) {
+                            case 0: default: return 1;
+                            case 1: return 1.5;
+                            case 2: case 3: return 2;
+                            case 4: return 3;
+                        }
+                    })(team.teamUpgrades.forge);
+                    /** 游戏设置 */
+                    const gameSettings = this.system.settings.gaming;
+                    /** 生成资源逻辑 @param {string} itemId */
+                    const spawnResource = (itemId, amount = 1) => {
+                        // 如果资源点附近有玩家，直接给予玩家物品
+                        if (nearbyPlayers.length > 0) nearbyPlayers.forEach(player => lib.ItemUtil.giveItem(player, itemId, {amount: amount}));
+                        // 否则，生成掉落物，先尝试以 3*3 分散式生成
+                        else if (this.map.distributeResource) lib.ItemUtil.spawnItem(lib.Vector3Util.add(resourceLocation, lib.JSUtil.randomInt(-1, 1), 0, lib.JSUtil.randomInt(-1, 1)), itemId, {amount: amount}, this.map.clearVelocity);
+                        // 否则，按原位生成
+                        else lib.ItemUtil.spawnItem(resourceLocation, itemId, {amount: amount}, this.map.clearVelocity);
+                    };
+
+                    // 如果生成点附近有玩家，清除生成次数
+                    if (nearbyPlayers.length > 0) {
+                        ironData.spawnedTimes = 0;
+                        goldData.spawnedTimes = 0;
+                        emeraldData.spawnedTimes = 0;
+                    }
+
+                    // 倒计时（绿宝石的倒计时以秒为单位）
+                    ironData.countdown--;
+                    goldData.countdown--;
+                    if (minecraft.system.currentTick % 20 == 0) emeraldData.countdown--;
+
+                    // 各自的倒计时结束后，尝试生成资源
+                    if (ironData.countdown <= 0) {
+                        // 当生成次数小于等于铁的规定最大生成次数时，生成铁
+                        if (team.ironSpawnerInfo.spawnedTimes < gameSettings.resourceLimit.iron * forgeBonus) {
+                            spawnResource("bedwars:iron_ingot", this.map.ironSpawnTimes);
+                            team.ironSpawnerInfo.spawnedTimes = team.ironSpawnerInfo.spawnedTimes + this.map.ironSpawnTimes;
+                        };
+                        // 重置倒计时
+                        ironData.countdown = Math.floor(gameSettings.resourceInterval.iron * this.map.ironSpawnTimes / (this.map.isSolo ? gameSettings.resourceInterval.soloSpeedMultiplier : 1.0) / forgeBonus);
+                    };
+                    if (goldData.countdown <= 0) {
+                        // 当生成次数小于等于金的规定最大生成次数时，生成金
+                        if (team.goldSpawnerInfo.spawnedTimes < gameSettings.resourceLimit.gold * forgeBonus) {
+                            spawnResource("bedwars:gold_ingot");
+                            team.goldSpawnerInfo.spawnedTimes++;
+                        }
+                        // 重置倒计时
+                        goldData.countdown = Math.floor(gameSettings.resourceInterval.gold / (this.map.isSolo ? gameSettings.resourceInterval.soloSpeedMultiplier : 1.0) / forgeBonus);
+                    };
+                    if (emeraldData.countdown <= 0) {
+                        // 当生成次数小于等于绿宝石的规定最大生成次数时，并且已解锁绿宝石锻炉后，生成绿宝石
+                        if (team.emeraldSpawnerInfo.spawnedTimes < gameSettings.resourceLimit.emerald && team.teamUpgrades.forge >= 3) {
+                            spawnResource("bedwars:emerald");
+                            team.emeraldSpawnerInfo.spawnedTimes++;
+                        }
+                        // 重置倒计时
+                        emeraldData.countdown = gameSettings.resourceInterval.emerald - 10;
+                    };
+                });
+            })
+        );
+    };
+
+    /** 生成地图类型资源时间线（包括钻石、绿宝石） debug 这里等级的显示有所精简
+     * @add 在游戏开始时创建
+     */
+    spawnMapResourceTimeline() {
+        return new BedwarsTimeline(
+            "spawnMapResourceTimeline",
+            minecraft.system.runInterval(() => {
+                const diamondData = this.map.diamondSpawnerInfo;
+                const emeraldData = this.map.emeraldSpawnerInfo;
+                // 倒计时
+                diamondData.countdown--;
+                emeraldData.countdown--;
+                // 对于每类资源点：
+                diamondData.info.forEach(data => {
+                    // 如果资源点附近有玩家，则清除生成次数
+                    if (lib.PlayerUtil.getNearby(data.location, 2.5).length > 0) data.spawnedTimes = 0;
+                    // 更新倒计时显示
+                    if (data.textLine3) data.textLine3.nameTag = `§e在 §c${diamondData.countdown} §e秒后产出`;
+                    // 当倒计时结束后，尝试生成资源并记录次数（默认，钻石最多能生成 8 次）
+                    if (diamondData.countdown <= 0 && data.spawnedTimes < this.system.settings.gaming.resourceLimit.diamond) {
+                        lib.ItemUtil.spawnItem(lib.Vector3Util.add(data.location, 0, 2, 0), "bedwars:diamond", {}, this.map.clearVelocity);
+                        data.spawnedTimes++;
+                    };
+                });
+                emeraldData.info.forEach(data => {
+                    // 如果资源点附近有玩家，则清除生成次数
+                    if (lib.PlayerUtil.getNearby(data.location, 2.5).length > 0) data.spawnedTimes = 0;
+                    // 更新倒计时显示
+                    if (data.textLine3) data.textLine3.nameTag = `§e在 §c${emeraldData.countdown} §e秒后产出`;
+                    // 当倒计时结束后，尝试生成资源并记录次数（默认，绿宝石最多能生成 4 次）
+                    if (emeraldData.countdown <= 0 && data.spawnedTimes < this.system.settings.gaming.resourceLimit.emerald) {
+                        lib.ItemUtil.spawnItem(lib.Vector3Util.add(data.location, 0, 2, 0), "bedwars:emerald", {}, this.map.clearVelocity);
+                        data.spawnedTimes++;
+                    };
+                });
+                // 重置倒计时
+                if (diamondData.countdown <= 0) diamondData.countdown = this.system.settings.gaming.resourceInterval.diamond - 10 * diamondData.level;
+                if (emeraldData.countdown <= 0) emeraldData.countdown = this.system.settings.gaming.resourceInterval.emerald - 10 * emeraldData.level;
+            }, 20)
+        );
+    };
+
     // 交易
 
     /** 玩家与商人交互事件（开始交易）
@@ -1781,14 +1931,16 @@ class BedwarsClassicMode {
             "playerTrading",
             minecraft.system.runInterval(() => {
                 this.map.tradingTraders.forEach(tradingTrader => {
+
+                    // 检查玩家是否拿走了物品
                     tradingTrader.itemChangeTest();
 
                     // 如果玩家的视角改变超过 5°，或者玩家和商人之间的距离大于 5 格，则移除物品商人
                     const currentRotation = tradingTrader.player.getRotation();
                     const tradingRotation = tradingTrader.playerInfo.tradeInfo.rotation;
                     if (
-                        Math.abs(currentRotation.x - tradingRotation.x) > 5
-                        || Math.abs(currentRotation.y - tradingRotation.y) > 5
+                        Math.abs(currentRotation.x - tradingRotation.x) > 10
+                        || Math.abs(currentRotation.y - tradingRotation.y) > 10
                         || lib.Vector3Util.distance(tradingTrader.trader.location, tradingTrader.player.location) > 5
                     ) {
                         tradingTrader.playerInfo.unlockAllItems();
@@ -1814,12 +1966,17 @@ class BedwarsClassicMode {
             minecraft.world.afterEvents.playerPlaceBlock.subscribe(event => {
                 lib.DimensionUtil.setBlock(event.dimension.id, event.block.location, "minecraft:air");
                 lib.EntityUtil.add("minecraft:tnt", lib.Vector3Util.center(event.block.location));
+                if (!this.system.getEvent("applyMomentum")) this.system.subscribeEvent(this.applyMomentumEvent());
+                if (!this.system.getEvent("stopExplosionBreakBlock")) this.system.subscribeEvent(this.stopExplosionBreakBlockEvent());
+                if (!this.system.getEvent("explosionDropBedwarsBlocks")) this.system.subscribeEvent(this.explosionDropBedwarsBlocksEvent());
+                if (!this.system.getTimeline("explosionApplyResistance")) this.system.subscribeTimeline(this.explosionApplyResistanceTimeline());
             }, { blockTypes: ["bedwars:tnt"] })
         );
     };
 
     /** 阻止爆炸破坏方块
-     * @add 在游戏开始时创建
+     * @add 在出现火球或 TNT 时创建时间线
+     * @remove 在爆炸物消失后销毁
      */
     stopExplosionBreakBlockEvent() {
         return new BedwarsEvent(
@@ -1833,12 +1990,18 @@ class BedwarsClassicMode {
                 ];
                 const impactedBlocks = event.getImpactedBlocks();
                 event.setImpactedBlocks(impactedBlocks.filter(block => !block.typeId.includes("minecraft:") || breakableVanillaBlocks.includes(block.typeId)));
+                minecraft.system.run(() => {
+                    // 如果没有爆炸物，撤销事件
+                    const explosives = lib.EntityUtil.get("bedwars:fireball").concat(lib.EntityUtil.get("minecraft:tnt"));
+                    if (explosives.length == 0) this.system.unsubscribeEvent("stopExplosionBreakBlock");
+                });
             })
         );
     };
 
     /** 令爆炸可以使自定义方块掉落事件
-     * @add 在游戏开始时创建
+     * @add 在出现火球或 TNT 时创建时间线
+     * @remove 在爆炸物消失后销毁
      */
     explosionDropBedwarsBlocksEvent() {
         return new BedwarsEvent(
@@ -1864,15 +2027,57 @@ class BedwarsClassicMode {
                     if (!minecraft.world.gameRules.tntExplosionDropDecay && event.source.typeId === "minecraft:tnt") return lootBlocks.includes(block.typeId);
                     else return lootBlocks.includes(block.typeId) && Math.random() < 0.33;
                 }).map(block => ({ id: block.typeId, location: block.location }));
-                minecraft.system.run(() => dropBlocks.forEach(block => lib.ItemUtil.spawnItem(block.location, block.id, {}, false)));
-
+                minecraft.system.run(() => {
+                    dropBlocks.forEach(block => lib.ItemUtil.spawnItem(block.location, block.id, {}, false));
+                    // 如果没有爆炸物，撤销事件
+                    const explosives = lib.EntityUtil.get("bedwars:fireball").concat(lib.EntityUtil.get("minecraft:tnt"));
+                    if (explosives.length == 0) this.system.unsubscribeEvent("explosionDropBedwarsBlocks");
+                });
             })
         );
     };
 
-    /** 爆炸对附近实体施加动量 */
+    /** 爆炸对附近实体施加动量
+     * @add 在出现火球或 TNT 时创建时间线
+     * @remove 在爆炸物消失后销毁
+     */
     applyMomentumEvent() {
-        // debug
+        return new BedwarsEvent(
+            "applyMomentum",
+            minecraft.world.beforeEvents.explosion,
+            minecraft.world.beforeEvents.explosion.subscribe(event => {
+                if (!event.source) return;
+                const {x: locX, y: locY, z: locZ} = event.source.location;
+                minecraft.system.run(() => {
+                    lib.PlayerUtil.getNearby({x: locX, y: locY, z: locZ}, 4).forEach(player => {
+                        const {x, y, z} = player.location;
+                        const connection = {x: x-locX, y: y-locY, z: z-locZ}
+                        player.applyImpulse(lib.Vector3Util.normalize(connection));
+                    });
+                    // 如果没有爆炸物，撤销事件
+                    const explosives = lib.EntityUtil.get("bedwars:fireball").concat(lib.EntityUtil.get("minecraft:tnt"));
+                    if (explosives.length == 0) this.system.unsubscribeEvent("applyMomentum");
+                });
+            })
+        );
+    };
+
+    /** 爆炸对附近的玩家添加抗性提升效果
+     * @add 在出现火球或 TNT 时创建时间线
+     * @remove 在爆炸物消失后销毁
+     * @highFrequency 该方法会每游戏刻执行代码
+     */
+    explosionApplyResistanceTimeline() {
+        return new BedwarsTimeline(
+            "explosionApplyResistance",
+            minecraft.system.runInterval(() => {
+                const explosives = lib.EntityUtil.get("bedwars:fireball").concat(lib.EntityUtil.get("minecraft:tnt"));
+                explosives.forEach(explosive => {
+                    lib.PlayerUtil.getNearby(explosive.location, 2.5).forEach(player => player.addEffect("resistance", 5, {showParticles: false, amplifier: 3}));
+                });
+                if (explosives.length == 0) this.system.unsubscribeTimeline("explosionApplyResistance");
+            })
+        );
     };
 
     // 道具
@@ -1971,9 +2176,9 @@ class BedwarsClassicMode {
             let silverfish = event.dimension.spawnEntity("minecraft:silverfish", event.location);
 
             // 添加对应的起床战争信息
-            let player = event.source;
-            let playerInfo = this.map.getBedwarsPlayer(player);
-            if (playerInfo && playerInfo.team) {
+            const player = event.source;
+            const playerInfo = this.map.getBedwarsPlayer(player);
+            if (playerInfo && playerInfo?.team) {
                 silverfish.team = playerInfo.team;
                 silverfish.triggerEvent(`team_${playerInfo.team.id}`);
                 silverfish.killTimer = 0;
@@ -1997,10 +2202,44 @@ class BedwarsClassicMode {
     };
 
     /** 使用梦境守护者事件，使用后生成梦境守护者
-     * @add 在游戏开始时创建 debug
+     * @add 在游戏开始时创建
      */
     dreamDefenderUseEvent() {
-        // debug
+        return new BedwarsEvent(
+            "dreamDefenderUse",
+            minecraft.world.beforeEvents.playerInteractWithBlock,
+            minecraft.world.beforeEvents.playerInteractWithBlock.subscribe(event => {
+                if (event.isFirstEvent && event.itemStack?.typeId == "bedwars:dream_defender") {
+                    minecraft.system.run(() => {
+                        // 生成梦境守护者（铁傀儡）
+                        let ironGolem = event.block.dimension.spawnEntity("minecraft:iron_golem", lib.DimensionUtil.getPlaceLocation(event.block, event.blockFace));
+                        const player = event.player;
+                        const playerData = this.map.getBedwarsPlayer(player);
+                        // 对非创造模式的玩家，移除其一个刷怪蛋
+                        if (player.getGameMode() != minecraft.GameMode.Creative) lib.ItemUtil.removeItem(player, "bedwars:dream_defender", -1, 1);
+                        // 添加对应的起床战争信息
+                        if (playerData?.team) {
+                            ironGolem.team = playerData.team;
+                            ironGolem.triggerEvent(`team_${playerData.team.id}`);
+                            ironGolem.killTimer = 0;
+                            ironGolem.owner = player;
+                            ironGolem.nameSetter = () => {
+                                const index = Math.floor( ironGolem.killTimer / 24 );
+                                const bars = "■■■■■■■■■■";
+                                const timePassedColor = ironGolem.team.id === "gray" ? "§8" : "§7";
+                                if ( index >= 0 && index <= 9 ) {
+                                    return bars.slice(0, 10 - index) + timePassedColor + bars.slice(10 - index);
+                                }
+                                return `${timePassedColor}■■■■■■■■■■`;
+                            };
+                            ironGolem.nameTag = `§8[§r${ironGolem.team.getTeamColor()}${ironGolem.nameSetter()}§8]\n§l${ironGolem.team.getTeamNameWithColor()}队 §r${ironGolem.team.getTeamColor()}铁傀儡`;
+                        };
+                    // 当没有梦境守护者时间线时，触发梦境守护者时间线
+                    if (!this.system.getTimeline("dreamDefenderCountdown")) this.system.subscribeTimeline(this.dreamDefenderCountdownTimeline());
+                    });
+                };
+            })
+        );
     };
 
     /** 梦境守护者计时器，用于设定梦境守护者的名字和倒计时
@@ -2008,22 +2247,53 @@ class BedwarsClassicMode {
      * @remove 在梦境守护者全部消灭后销毁
      */
     dreamDefenderCountdownTimeline() {
-        // debug
+        return new BedwarsTimeline(
+            "dreamDefenderCountdown",
+            minecraft.system.runInterval(() => {
+                const ironGolems = lib.EntityUtil.get("minecraft:iron_golem").filter(ironGolem => ironGolem.killTimer != undefined);
+                // 对床虱计时并设定名称，倒计时结束后则杀死之
+                ironGolems.forEach(ironGolem => {
+                    ironGolem.killTimer++;
+                    ironGolem.nameTag = `§8[§r${ironGolem.team.getTeamColor()}${ironGolem.nameSetter()}§8]\n§l${ironGolem.team.getTeamNameWithColor()}队 §r${ironGolem.team.getTeamColor()}铁傀儡`;
+                    if (ironGolem.killTimer >= 240) ironGolem.kill();
+                });
+                // 若之后不再存在任何床虱，销毁时间线
+                if (ironGolems.length == 0) this.system.unsubscribeTimeline("dreamDefenderCountdown");
+            }, 20)
+        );
     };
 
     /** 使用魔法牛奶事件
-     * @add 在游戏开始时创建 debug
+     * @add 在游戏开始时创建
      */
     magicMilkUseEvent() {
-        // debug
+        return new BedwarsEvent(
+            "magicMilkUseEvent",
+            minecraft.world.afterEvents.itemCompleteUse,
+            minecraft.world.afterEvents.itemCompleteUse.subscribe(event => {
+                const playerData = this.map.getBedwarsPlayer(event.source);
+                if (event.itemStack.typeId == "bedwars:magic_milk" && playerData) playerData.magicMilkCountdown = 30;
+                if (!this.system.getTimeline("magicMilkCountdown")) this.system.subscribeTimeline(this.magicMilkCountdownTimeline());
+            })
+        )
     };
 
     /** 魔法牛奶倒计时时间线
-     * @add 在有玩家使用魔法牛奶后创建 debug
-     * @remove 在所有玩家魔法牛奶均过倒计时后销毁 debug
+     * @add 在有玩家使用魔法牛奶后创建
+     * @remove 在所有玩家魔法牛奶均过倒计时后销毁
      */
     magicMilkCountdownTimeline() {
-        // debug
+        return new BedwarsTimeline(
+            "magicMilkCountdown",
+            minecraft.system.runInterval(() => {
+                const countdownPlayers = this.map.teams.flatMap(team => team.alivePlayers).filter(player => player.magicMilkCountdown > 0);
+                countdownPlayers.forEach(player => {
+                    player.magicMilkCountdown--;
+                    if (player.magicMilkCountdown <= 0) player.player.sendMessage({ translate: "message.magicMilkTimeOut" });
+                });
+                if (countdownPlayers.length == 0) this.system.unsubscribeTimeline("magicMilkCountdown");
+            }, 20)
+        );
     };
 
     /** 搭桥蛋搭桥时间线
@@ -2058,19 +2328,30 @@ class BedwarsClassicMode {
     };
 
     /** 水桶收桶事件
-     * @add 在游戏开始时创建 debug
+     * @add 在游戏开始时创建
      */
     waterBucketUseEvent() {
-        // debug
+        return new BedwarsEvent(
+            "waterBucketUse",
+            minecraft.world.afterEvents.playerInteractWithBlock,
+            minecraft.world.afterEvents.playerInteractWithBlock.subscribe(event => {
+                if (event.beforeItemStack?.typeId == "minecraft:water_bucket") lib.ItemUtil.removeItem(event.player, "minecraft:bucket");
+            })
+        )
     };
 
     /** 移除过界末影珍珠时间线
-     * @add 在生成末影珍珠后创建 debug
-     * @remove 在无末影珍珠时销毁 debug
+     * @add 在生成末影珍珠后创建
+     * @remove 在无末影珍珠时销毁
      * @highFrequency 该方法会每游戏刻执行代码
      */
     removeEnderPearlTimeline() {
-
+        return new BedwarsTimeline(
+            "removeEnderPearl",
+            minecraft.system.runInterval(() => {
+                lib.EntityUtil.get("minecraft:ender_pearl").forEach(enderPearl => this.map.projectileOutOfBorder(enderPearl, -5, false));
+            })
+        );
     };
 
     /** 弓箭击中事件
@@ -2078,7 +2359,23 @@ class BedwarsClassicMode {
      * @remove 在无箭时销毁 debug
      */
     arrowHitEntityEvent() {
-        // debug
+        return new BedwarsEvent(
+            "arrowHitEntity",
+            minecraft.world.afterEvents.projectileHitEntity,
+            minecraft.world.afterEvents.projectileHitEntity.subscribe(event => {
+                // 当击中物为箭时，当射击者和被射击者都是有效玩家时，并且二者所处队伍不同时，播放音效并向射击者提示剩余血量
+                const projectile = event.projectile;
+                /** @type {minecraft.Player} */ const shooter = event.source;
+                /** @type {minecraft.Player} */ const hit = event.getEntityHit().entity;
+                const shooterData = this.map.getBedwarsPlayer(shooter);
+                const hitData = this.map.getBedwarsPlayer(hit);
+                if (projectile.typeId && shooterData && hitData && shooterData.team?.id != hitData.team?.id) {
+                    shooter.playSound("random.orb");
+                    hit.playSound("random.orb");
+                    shooter.sendMessage({ translate: "message.bowHitHealth", with: { rawtext: [{ text: `${hit.nameTag}` }, { text: `${hit.getComponent("minecraft:health").currentValue.toFixed(1)}` }] } })
+                }
+            })
+        )
     };
 
     // 其他杂项内容
@@ -2136,6 +2433,19 @@ class BedwarsClassicMode {
                 });
             })
         );
+    }
+
+    /** 禁止特定类型的掉落物存在
+     * @add 在游戏开始时创建（仅限地图设定了这类物品时创建）
+     * @highFrequency 该方法会每游戏刻执行代码
+     */
+    removeItemTimeline() {
+        return new BedwarsTimeline(
+            "removeItem",
+            minecraft.system.runInterval(() => {
+                this.map.removeItemEntity.forEach(itemId => lib.ItemUtil.removeItemEntity(itemId));
+            })
+        )
     }
 
     // ===== 结束状态 =====
@@ -3075,8 +3385,8 @@ class BedwarsMap {
         /** 钻石点等级 */
         level: 1,
 
-        /** 距离下次生成剩余的时长，单位：游戏刻 */
-        countdown: 600,
+        /** 距离下次生成剩余的时长，单位：秒 */
+        countdown: 30,
 
         /** 钻石点位置与生成次数信息 @type {data.SpawnerInfo[]} */
         info: []
@@ -3089,8 +3399,8 @@ class BedwarsMap {
         /** 绿宝石点等级 */
         level: 1,
 
-        /** 距离下次生成剩余的时长，单位：游戏刻 */
-        countdown: 1300,
+        /** 距离下次生成剩余的时长，单位：秒 */
+        countdown: 65,
 
         /** 绿宝石点位置与生成次数信息 @type {data.SpawnerInfo[]} */
         info: []
@@ -3159,6 +3469,9 @@ class BedwarsMap {
 
     };
 
+    /** 地图将移除物品掉落物的类型 @type {string[]} */
+    removeItemEntity = ["minecraft:stick"];
+
     /** 安全区位置 */
     safeAreaLocation = {
 
@@ -3195,7 +3508,7 @@ class BedwarsMap {
         info.diamondSpawnerLocation.forEach(location => this.addDiamondSpawner(location));
         info.emeraldSpawnerLocation.forEach(location => this.addEmeraldSpawner(location));
         if (info.ironSpawnTimes) this.ironSpawnTimes = info.ironSpawnTimes;
-        if (info.distributeResource) this.distributeResource = info.distributeResource;
+        if (info.distributeResource !== undefined) this.distributeResource = info.distributeResource;
         if (info.clearVelocity) this.clearVelocity = info.clearVelocity;
         if (info.healPoolRadius) this.healPoolRadius = info.healPoolRadius;
         if (info.disableTeamIslandFlag) this.disableTeamIslandFlag = info.disableTeamIslandFlag;
@@ -3204,7 +3517,10 @@ class BedwarsMap {
         // 高度限制
         if (info.heightLimitMax) this.heightLimitMax = info.heightLimitMax;
         if (info.heightLimitMin) this.heightLimitMin = info.heightLimitMin;
-        this.spawnpoint = {x: 0, y: this.heightLimitMax + 7, z: 0}
+        this.spawnpoint = { x: 0, y: this.heightLimitMax + 7, z: 0 };
+
+        // 将要移除的物品掉落物
+        if (info.removeItemEntity) this.removeItemEntity.push(...info.removeItemEntity);
 
         // 注册安全区位置
         this.safeAreaLocation.spawnpoint = this.teams.flatMap(team => team.spawnpointLocation);
@@ -3224,22 +3540,43 @@ class BedwarsMap {
         this.teamCount += 1;
     };
 
-    /** 添加新的钻石生成点
+    /** 添加新的钻石生成点信息
      * @param {minecraft.Vector3} location 
      */
     addDiamondSpawner(location) {
         /** @type {data.SpawnerInfo} */
-        const spawnerInfo = { location: location, spawnedTimes: 1 };
+        const spawnerInfo = { location: lib.Vector3Util.center(location), spawnedTimes: 0 };
         this.diamondSpawnerInfo.info.push(spawnerInfo);
     };
 
-    /** 添加新的绿宝石生成点
+    /** 添加新的绿宝石生成点信息
      * @param {minecraft.Vector3} location 
      */
     addEmeraldSpawner(location) {
         /** @type {data.SpawnerInfo} */
-        const spawnerInfo = { location: location, spawnedTimes: 1 };
+        const spawnerInfo = { location: lib.Vector3Util.center(location), spawnedTimes: 0 };
         this.emeraldSpawnerInfo.info.push(spawnerInfo);
+    };
+
+    /** 生成资源生成点 */
+    spawnSpawner() {
+        this.diamondSpawnerInfo.info.forEach(info => {
+            info.spawnerEntity = lib.EntityUtil.add("bedwars:diamond_spawner", lib.Vector3Util.add(info.location, 0, 1, 0));
+            info.textLine1 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 5.5, 0));
+            info.textLine2 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 5.0, 0));
+            info.textLine3 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 4.5, 0));
+            info.textLine1.nameTag = `§e等级 §c${lib.JSUtil.intToRoman(this.emeraldSpawnerInfo.level)}`
+            info.textLine2.nameTag = `§b§l钻石`;
+        });
+        this.emeraldSpawnerInfo.info.forEach(info => {
+            info.spawnerEntity = lib.EntityUtil.add("bedwars:emerald_spawner", lib.Vector3Util.add(info.location, 0, 1, 0));
+            info.textLine1 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 5.5, 0));
+            info.textLine2 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 5.0, 0));
+            info.textLine3 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 4.5, 0));
+            info.textLine1.nameTag = `§e等级 §c${lib.JSUtil.intToRoman(this.emeraldSpawnerInfo.level)}`
+            info.textLine2.nameTag = `§2§l绿宝石`;
+        });
+
     };
 
     /** 获取地图结构加载完成需要的时间 */
@@ -3546,6 +3883,39 @@ class BedwarsTeam {
     /** 床是否仍然存在 */
     bedIsExist = true;
 
+    /** 铁生成信息 */
+    ironSpawnerInfo = {
+
+        /** 距离下次生成剩余的时长，单位：游戏刻， */
+        countdown: 6,
+
+        /** 生成次数 */
+        spawnedTimes: 0
+
+    };
+
+    /** 金生成信息 */
+    goldSpawnerInfo = {
+
+        /** 距离下次生成剩余的时长，单位：游戏刻 */
+        countdown: 20,
+
+        /** 生成次数 */
+        spawnedTimes: 0
+
+    };
+
+    /** 绿宝石生成信息 */
+    emeraldSpawnerInfo = {
+
+        /** 距离下次生成剩余的时长，单位：秒 */
+        countdown: 75,
+
+        /** 生成次数 */
+        spawnedTimes: 0
+
+    };
+
     /** 团队升级 */
     teamUpgrades = {
 
@@ -3584,7 +3954,7 @@ class BedwarsTeam {
         this.id = info.id;
         this.bedLocation = info.bedLocation;
         if (info.bedRotation) this.bedRotation = info.bedRotation;
-        this.resourceLocation = info.resourceLocation;
+        this.resourceLocation = lib.Vector3Util.center(info.resourceLocation);
         this.spawnpointLocation = info.spawnpointLocation;
         this.chestLocation = info.chestLocation;
     };
@@ -3993,6 +4363,7 @@ class BedwarsPlayer {
         lib.ItemUtil.removeItem(this.player);
         this.player.setGameMode("Spectator");
         this.resetAttackedInfo();
+        this.magicMilkCountdown = 0;
 
     };
 

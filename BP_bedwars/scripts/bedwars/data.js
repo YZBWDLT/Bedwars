@@ -81,8 +81,12 @@ import * as minecraft from "@minecraft/server";
 
 /**
  * @typedef SpawnerInfo
- * @property {minecraft.Vector3} location 资源点位置
+ * @property {minecraft.Vector3} location 资源点位置（资源点的钻石块或绿宝石块的位置）
  * @property {number} spawnedTimes 生成次数
+ * @property {minecraft.Entity} [spawnerEntity] 动画实体
+ * @property {minecraft.Entity} [textLine1] 第一行文本展示实体，通常用于展示等级
+ * @property {minecraft.Entity} [textLine2] 第二行文本展示实体，通常用于展示类型
+ * @property {minecraft.Entity} [textLine3] 第三行文本展示实体，通常用于展示下一个资源在何时产出
  */
 
 // BedwarsTeamInfo 定义队伍的 ID、床的位置、资源点位置等信息
@@ -914,7 +918,9 @@ export const mapData = {
             // glacier: {},
             // lighthouse: {},
             // playground: {},
-            // rooftop: {},
+            // rooftop: {
+            //     removeItemEntity: ["minecraft:white_carpet"]
+            // },
             // waterfall: {}
 
         },

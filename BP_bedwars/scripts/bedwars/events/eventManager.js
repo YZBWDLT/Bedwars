@@ -8,15 +8,10 @@ import { createEvent, deleteEventsWithTag } from "../methods/eventManager";
 import { createInterval, deleteIntervalsWithTag } from "../methods/intervalManager";
 
 /** 经典模式函数调用 */
-import { equipmentTest } from "./classic/equipment";
-import { applyResistanceNearby, applyYVelocity } from "./classic/explosion";
 import { trap } from "./classic/trap";
-import { spawnResources } from "./classic/spawnResources";
 import { gameEvents, teamEliminateAndWin } from "./classic/gameEvents";
 import { gameOverCountdown } from "./classic/afterGaming";
 import { killStyleSettings, mapSettings, selectTeamSettings } from "../methods/bedwarsSettings";
-import { trading } from "./classic/trading";
-import { playerItemLocker, removeInvalidItems } from "./classic/items";
 
 /** 夺点模式函数调用 */
 import { playerBreakBedTestCapture } from "./capture/playerBreakBed";
@@ -24,7 +19,6 @@ import { playerPlaceBedTest } from "./capture/playerPlaceBed";
 import { gameEventsCapture, supplyDragonBuff, teamEliminateAndWinCapture } from "./capture/gameEvents";
 import { captureInfoBoard } from "./capture/infoBoard";
 import { convertKillCount, playerDiedCapture, respawnEliminatedPlayers } from "./capture/combat";
-import { playSoundWhenShot } from "./items/bow";
 
 /** 事件控制器 */
 export const eventManager = {
@@ -38,26 +32,11 @@ export const eventManager = {
     },
     /** 经典模式游戏时事件 */
     classicEvents() {
-        /** 移除游戏前和游戏后事件 */
-        deleteEventsWithTag( tags.beforeGaming, tags.afterGaming );
-        deleteIntervalsWithTag( tags.beforeGaming, tags.afterGaming );
-        /** 游戏逻辑：装备检测 */
-        createInterval( "equipmentTestMain", () => equipmentTest(), [ tags.gameLogic, tags.gaming, tags.equipmentTest ] );
-        /** 游戏逻辑：爆炸 */
-        createEvent( "applyYVelocity", world.beforeEvents.explosion, event => applyYVelocity(event), [ tags.gameLogic, tags.gaming, tags.explosion ] );
-        createInterval( "applyResistanceNearby", () => applyResistanceNearby(), [ tags.gameLogic, tags.gaming, tags.explosion ] );
         /** 游戏逻辑：游戏事件 */
         createInterval( "gameEventsMain", () => gameEvents(), [ tags.gameLogic, tags.gaming, tags.gameEvents ] );
         createInterval( "teamEliminateAndWin", () => teamEliminateAndWin(), [ tags.gameLogic, tags.gaming, tags.gameEvents ] );
         /** 游戏逻辑：陷阱 */
         createInterval( "trap", () => trap(), [ tags.gameLogic, tags.gaming, tags.trap ] );
-        /** 游戏逻辑：交易 */
-        createInterval( "trading", () => trading(), [ tags.gameLogic, tags.gaming, tags.trading ] )
-        /** 游戏逻辑：资源生成 */
-        createInterval( "spawnResources", () => spawnResources(), [ tags.gameLogic, tags.gaming, tags.spawnResources ] );
-        /** 游戏逻辑：物品 */
-        createInterval( "playerItemLocker", () => playerItemLocker(), [ tags.gameLogic, tags.gaming, tags.items ] );
-        createInterval( "removeInvalidItems", () => removeInvalidItems(), [ tags.gameLogic, tags.gaming, tags.items ] );
     },
     /** 经典模式游戏后事件 */
     classicAfterEvents() {

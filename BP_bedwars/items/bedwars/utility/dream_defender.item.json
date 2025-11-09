@@ -5,7 +5,6 @@
             "identifier": "bedwars:dream_defender"
         },
         "components": {
-            "minecraft:entity_placer": { "entity": "minecraft:iron_golem" },
             "minecraft:icon": "bedwars_dream_defender"
         }
     }

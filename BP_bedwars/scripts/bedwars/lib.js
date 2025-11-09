@@ -177,6 +177,21 @@ export class Vector3Util {
         return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2 + (z2 - z1) ** 2);
     };
 
+    /** 返回向量模长
+     * @param {import("@minecraft/server").Vector3} vector3 
+     */
+    static length(vector3) {
+        return Math.sqrt(vector3.x ** 2 + vector3.y ** 2 + vector3.z ** 2);
+    };
+
+    /** 返回归一化的向量
+     * @param {import("@minecraft/server").Vector3} vector3 
+     * @returns {import("@minecraft/server").Vector3}
+     */
+    static normalize(vector3) {
+        return { x: vector3.x / this.length(vector3), y: vector3.y / this.length(vector3), z: vector3.z / this.length(vector3) };
+    };
+
 }
 
 // ===== 玩家 & 实体 =====

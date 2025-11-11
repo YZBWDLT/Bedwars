@@ -286,6 +286,13 @@ export class PlayerUtil {
         return minecraft.world.getDimension(dimension).getPlayers({ location: pos, maxDistance: r });
     };
 
+    /** 移除玩家的末影箱物品
+     * @param {minecraft.Player} player 
+     */
+    static resetEnderChest(player) {
+        for (let i = 0; i < 27; i++) player.runCommand(`replaceitem entity @s slot.enderchest ${i} air`);
+    };
+
     /** 设置标题
      * @param {minecraft.Player} player 待展示标题的玩家
      * @param {(string | import("@minecraft/server").RawMessage)[]} title 标题

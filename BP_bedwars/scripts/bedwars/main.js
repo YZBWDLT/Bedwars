@@ -575,7 +575,7 @@ class BedwarsClassicMode {
         lib.ItemUtil.removeItem(player);
 
         // 清除玩家的末影箱
-        player.runCommand(`function lib/modify_data/reset_ender_chest`);
+        lib.PlayerUtil.resetEnderChest(player);
 
         // 清除玩家的药效
         player.getEffects().forEach(effect => player.removeEffect(effect.typeId));
@@ -1808,11 +1808,11 @@ class BedwarsClassicMode {
                     /** 生成资源逻辑 @param {string} itemId */
                     const spawnResource = (itemId, amount = 1) => {
                         // 如果资源点附近有玩家，直接给予玩家物品
-                        if (nearbyPlayers.length > 0) nearbyPlayers.forEach(player => lib.ItemUtil.giveItem(player, itemId, {amount: amount}));
+                        if (nearbyPlayers.length > 0) nearbyPlayers.forEach(player => lib.ItemUtil.giveItem(player, itemId, { amount: amount }));
                         // 否则，生成掉落物，先尝试以 3*3 分散式生成
-                        else if (this.map.distributeResource) lib.ItemUtil.spawnItem(lib.Vector3Util.add(resourceLocation, lib.JSUtil.randomInt(-1, 1), 0, lib.JSUtil.randomInt(-1, 1)), itemId, {amount: amount}, this.map.clearVelocity);
+                        else if (this.map.distributeResource) lib.ItemUtil.spawnItem(lib.Vector3Util.add(resourceLocation, lib.JSUtil.randomInt(-1, 1), 0, lib.JSUtil.randomInt(-1, 1)), itemId, { amount: amount }, this.map.clearVelocity);
                         // 否则，按原位生成
-                        else lib.ItemUtil.spawnItem(resourceLocation, itemId, {amount: amount}, this.map.clearVelocity);
+                        else lib.ItemUtil.spawnItem(resourceLocation, itemId, { amount: amount }, this.map.clearVelocity);
                     };
 
                     // 如果生成点附近有玩家，清除生成次数
@@ -1926,7 +1926,7 @@ class BedwarsClassicMode {
 
     /** 玩家交易过程时间线
      * @add 在有玩家和商人交互后创建
-     * @remove 在没有玩家和商人交易时销毁 debug
+     * @remove 在没有玩家和商人交易时销毁
      * @highFrequency 该方法会每游戏刻执行代码
      */
     playerTradingTimeline() {
@@ -1952,9 +1952,38 @@ class BedwarsClassicMode {
                         this.map.removeTrader(tradingTrader.trader);
                     }
                 });
+                // 当有队伍购买陷阱后创建队伍陷阱时间线 debug 或许存在更好的优化方式
+                const trappedTeams = this.map.teams.filter(team => team.traps.length > 0);
+                if (trappedTeams.length > 0 && !this.system.getTimeline("trap")) this.system.subscribeTimeline(this.trapTimeline());
+                // 移除此时间线
                 if (this.map.tradingTraders.length == 0) this.system.unsubscribeTimeline("playerTrading");
             })
         )
+    };
+
+    // 陷阱
+
+    /** 队伍陷阱时间线
+     * @add 当有队伍购买陷阱后创建时间线
+     * @remove 当不存在拥有陷阱的队伍后移除时间线
+     */
+    trapTimeline() {
+        return new BedwarsTimeline(
+            "trap",
+            minecraft.system.runInterval(() => {
+                const trappedTeams = this.map.teams.filter(team => team.traps.length > 0);
+                trappedTeams.forEach(trappedTeam => {
+                    const invaderData = this.map.teams
+                        // 非本队玩家
+                        .filter(invaderTeam => invaderTeam.id != trappedTeam.id)
+                        .flatMap(invaderTeam => invaderTeam.alivePlayers)
+                        // 在床 10 格附近且未喝牛奶
+                        .filter(invader => lib.EntityUtil.isNearby(invader.player, trappedTeam.bedLocation, 10) && invader.magicMilkCountdown == 0)[0];
+                    if (invaderData && !trappedTeam.isWaitingTrapCooldown) trappedTeam.triggerTrap(invaderData);
+                });
+                if (trappedTeams.length == 0) this.system.unsubscribeTimeline("trap");
+            }, 20)
+        );
     };
 
     // 爆炸
@@ -2050,11 +2079,11 @@ class BedwarsClassicMode {
             minecraft.world.beforeEvents.explosion,
             minecraft.world.beforeEvents.explosion.subscribe(event => {
                 if (!event.source) return;
-                const {x: locX, y: locY, z: locZ} = event.source.location;
+                const { x: locX, y: locY, z: locZ } = event.source.location;
                 minecraft.system.run(() => {
-                    lib.PlayerUtil.getNearby({x: locX, y: locY, z: locZ}, 4).forEach(player => {
-                        const {x, y, z} = player.location;
-                        const connection = {x: x-locX, y: y-locY, z: z-locZ}
+                    lib.PlayerUtil.getNearby({ x: locX, y: locY, z: locZ }, 4).forEach(player => {
+                        const { x, y, z } = player.location;
+                        const connection = { x: x - locX, y: y - locY, z: z - locZ }
                         player.applyImpulse(lib.Vector3Util.normalize(connection));
                     });
                     // 如果没有爆炸物，撤销事件
@@ -2076,7 +2105,7 @@ class BedwarsClassicMode {
             minecraft.system.runInterval(() => {
                 const explosives = lib.EntityUtil.get("bedwars:fireball").concat(lib.EntityUtil.get("minecraft:tnt"));
                 explosives.forEach(explosive => {
-                    lib.PlayerUtil.getNearby(explosive.location, 2.5).forEach(player => player.addEffect("resistance", 5, {showParticles: false, amplifier: 3}));
+                    lib.PlayerUtil.getNearby(explosive.location, 2.5).forEach(player => player.addEffect("resistance", 5, { showParticles: false, amplifier: 3 }));
                 });
                 if (explosives.length == 0) this.system.unsubscribeTimeline("explosionApplyResistance");
             })
@@ -2207,7 +2236,7 @@ class BedwarsClassicMode {
                     // 其他情况，选为目标
                     else return true;
                 })[0];
-                if (nearestAttackablePlayer) silverfish.applyDamage(0.01, {cause: minecraft.EntityDamageCause.entityAttack, damagingEntity: nearestAttackablePlayer});
+                if (nearestAttackablePlayer) silverfish.applyDamage(0.01, { cause: minecraft.EntityDamageCause.entityAttack, damagingEntity: nearestAttackablePlayer });
             };
 
             // 当没有床虱时间线时，触发床虱时间线
@@ -2240,16 +2269,16 @@ class BedwarsClassicMode {
                             ironGolem.killTimer = 0;
                             ironGolem.owner = player;
                             ironGolem.nameSetter = () => {
-                                const index = Math.floor( ironGolem.killTimer / 24 );
+                                const index = Math.floor(ironGolem.killTimer / 24);
                                 const bars = "■■■■■■■■■■";
                                 const timePassedColor = ironGolem.team.id === "gray" ? "§8" : "§7";
-                                if ( index >= 0 && index <= 9 ) {
+                                if (index >= 0 && index <= 9) {
                                     return bars.slice(0, 10 - index) + timePassedColor + bars.slice(10 - index);
                                 }
                                 return `${timePassedColor}■■■■■■■■■■`;
                             };
                             ironGolem.nameTag = `§8[§r${ironGolem.team.getTeamColor()}${ironGolem.nameSetter()}§8]\n§l${ironGolem.team.getTeamNameWithColor()}队 §r${ironGolem.team.getTeamColor()}铁傀儡`;
-                            
+
                             // 为铁傀儡添加一个最近的目标
                             const nearestAttackablePlayer = lib.PlayerUtil.getNearby(spawnLocation, 16).filter(attackablePlayer => {
                                 const attackablePlayerData = this.map.getBedwarsPlayer(attackablePlayer);
@@ -2260,11 +2289,11 @@ class BedwarsClassicMode {
                                 // 其他情况，选为目标
                                 else return true;
                             })[0];
-                            if (nearestAttackablePlayer) ironGolem.applyDamage(0.01, {cause: minecraft.EntityDamageCause.entityAttack, damagingEntity: nearestAttackablePlayer});
+                            if (nearestAttackablePlayer) ironGolem.applyDamage(0.01, { cause: minecraft.EntityDamageCause.entityAttack, damagingEntity: nearestAttackablePlayer });
 
                         };
-                    // 当没有梦境守护者时间线时，触发梦境守护者时间线
-                    if (!this.system.getTimeline("dreamDefenderCountdown")) this.system.subscribeTimeline(this.dreamDefenderCountdownTimeline());
+                        // 当没有梦境守护者时间线时，触发梦境守护者时间线
+                        if (!this.system.getTimeline("dreamDefenderCountdown")) this.system.subscribeTimeline(this.dreamDefenderCountdownTimeline());
                     });
                 };
             })
@@ -3974,6 +4003,9 @@ class BedwarsTeam {
     /** 陷阱 @type {("blindnessTrap"|"counterOffensiveTrap"|"revealTrap"|"minerFatigueTrap"|undefined)[]} */
     traps = [];
 
+    /** 是否正在等待陷阱冷却，在陷阱冷却期不能触发陷阱 */
+    isWaitingTrapCooldown = false;
+
     /** 
      * @param {BedwarsSystem} system 
      * @param {data.BedwarsTeamInfo} info
@@ -4113,6 +4145,80 @@ class BedwarsTeam {
      */
     getTeamNameWithColor() {
         return `${this.getTeamColor()}${this.getTeamName()}`;
+    };
+
+    // ===== 陷阱 =====
+
+    /** 触发陷阱
+     * @param {BedwarsPlayer} invader 代表触发陷阱的入侵者
+     */
+    triggerTrap(invader) {
+
+        /** 第一个陷阱 */
+        const trapId = this.traps.splice(0, 1)[0];
+
+        /** 广播陷阱消息 @param {"blindness_trap"|"counter_offensive_trap"|"miner_fatigue_trap"} trapIdSnakeCase */
+        const broadcast = (trapIdSnakeCase) => {
+            this.players.forEach(player => {
+                lib.PlayerUtil.setTitle(player.player, { translate: "title.trapTriggered" }, { translate: "subtitle.trapTriggered", with: { rawtext: [{ translate: `message.bedwars:upgrade_${trapIdSnakeCase}` }] } });
+                this.system.warnPlayer(player.player, { translate: "message.trapTriggered", with: { rawtext: [{ translate: `message.bedwars:upgrade_${trapIdSnakeCase}` }] } })
+            });
+        };
+
+        // 触发陷阱
+        switch (trapId) {
+            case "blindnessTrap":
+                // 播报消息
+                broadcast("blindness_trap");
+                // 对敌人施加 debuff
+                invader.player.addEffect("blindness", 160);
+                invader.player.addEffect("slowness", 160);
+                break;
+            case "counterOffensiveTrap":
+                // 播报消息
+                broadcast("counter_offensive_trap");
+                // 对在床附近的玩家施加 buff
+                this.alivePlayers
+                    .filter(alivePlayer => lib.EntityUtil.isNearby(alivePlayer.player, this.bedLocation, 25))
+                    .forEach(alivePlayer => {
+                        alivePlayer.player.addEffect("jump_boost", 300, { amplifier: 1 });
+                        alivePlayer.player.addEffect("speed", 300, { amplifier: 1 });
+                    });
+                break;
+            case "revealTrap":
+                /** 向玩家播放报警音效 @param {minecraft.Player} player */
+                const playsound = async (player) => {
+                    // 合计播放 28 次循环，每次循环播放 1 低 1 高两种音效
+                    for (let i = 0; i < 28; i++) {
+                        player.playSound("note.pling", { pitch: 1.5, location: player.location });
+                        await minecraft.system.waitTicks(2);
+                        player.playSound("note.pling", { pitch: 1.7, location: player.location });
+                        await minecraft.system.waitTicks(2);
+                    };
+                };
+                // 对入侵者播放音效，并移除入侵者的隐身效果
+                playsound(invader.player);
+                invader.player.removeEffect("invisibility");
+                // 对本队玩家播放音效，设置标题并在聊天栏提醒玩家
+                this.players.forEach(player => {
+                    playsound(player.player);
+                    lib.PlayerUtil.setTitle(player.player, { translate: "title.trapTriggered.revealTrap" }, { translate: "subtitle.trapTriggered.revealTrap", with: [`${invader.team.getTeamNameWithColor()}`, `${invader.player.nameTag}`] });
+                    this.system.warnPlayer(player.player, { translate: "message.trapTriggered.revealTrap", with: [`${invader.team.getTeamNameWithColor()}`, `${invader.player.nameTag}`] });
+                });
+                break;
+            case "minerFatigueTrap":
+                // 播报消息
+                broadcast("miner_fatigue_trap");
+                // 对敌人施加 debuff
+                invader.player.addEffect("mining_fatigue", 200);
+                break;
+            default: break;
+        };
+
+        // 启用等待期，并在 30 秒后解除等待
+        this.isWaitingTrapCooldown = true;
+        minecraft.system.runTimeout(() => this.isWaitingTrapCooldown = false, 600);
+
     };
 
 };

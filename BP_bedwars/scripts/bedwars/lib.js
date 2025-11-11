@@ -1,11 +1,10 @@
-/**
- * 库函数
- */
+// *-*-*-*-*-*-* 库函数 *-*-*-*-*-*-*
+// 在库函数中实现原版相关功能，并在其他文件中调用。
 
 // ===== 导入部分 =====
 
-import { world, Entity, Player, ItemStack, EnchantmentType, EquipmentSlot, EntityInventoryComponent, ScoreboardObjective, ScoreboardIdentity, DisplaySlotId, BlockVolume, Structure, system, Block, Direction, ItemLockMode } from "@minecraft/server";
-import { ActionFormData, MessageFormData, ModalFormData, FormCancelationReason } from "@minecraft/server-ui";
+import * as minecraft from "@minecraft/server";
+import * as ui from "@minecraft/server-ui";
 
 // ===== 世界 =====
 
@@ -19,21 +18,21 @@ export class StructureUtil {
      * @param {import("@minecraft/server").StructurePlaceOptions} options 加载选项
      */
     static placeAsync(structure, dimensionId, location, options) {
-        world.structureManager.place(structure, world.getDimension(dimensionId), location, options);
+        minecraft.world.structureManager.place(structure, minecraft.world.getDimension(dimensionId), location, options);
         let animationSeconds = options?.animationSeconds ? options.animationSeconds : 0;
-        return system.waitTicks(animationSeconds * 20);
+        return minecraft.system.waitTicks(animationSeconds * 20);
     };
 
     /** 获取结构
      * @param {string} structureId 结构 ID，包含命名空间
      */
     static get(structureId) {
-        return world.structureManager.get(structureId);
+        return minecraft.world.structureManager.get(structureId);
     };
 
     /** 获取所有结构名 */
     static getAll() {
-        return world.structureManager.getWorldStructureIds();
+        return minecraft.world.structureManager.getWorldStructureIds();
     };
 
     /** 移除结构
@@ -41,7 +40,7 @@ export class StructureUtil {
      */
     static remove(structureId) {
         let executed = true;
-        try { world.structureManager.delete(structureId); } catch { executed = false; }
+        try { minecraft.world.structureManager.delete(structureId); } catch { executed = false; }
         return executed;
     };
 
@@ -64,8 +63,8 @@ export class DimensionUtil {
      * @param {string} blockId 方块 ID
      */
     static fillBlock(dimensionId, from, to, blockId) {
-        const volume = new BlockVolume(from, to);
-        world.getDimension(dimensionId).fillBlocks(volume, blockId);
+        const volume = new minecraft.BlockVolume(from, to);
+        minecraft.world.getDimension(dimensionId).fillBlocks(volume, blockId);
     };
 
     /** 令两个坐标间填充方块
@@ -76,8 +75,8 @@ export class DimensionUtil {
      * @param {string} toBlockId 待替换的方块 ID
      */
     static replaceBlock(dimensionId, from, to, replaceBlockIds, toBlockId) {
-        const volume = new BlockVolume(from, to);
-        world.getDimension(dimensionId).fillBlocks(volume, toBlockId, { blockFilter: { includeTypes: replaceBlockIds } })
+        const volume = new minecraft.BlockVolume(from, to);
+        minecraft.world.getDimension(dimensionId).fillBlocks(volume, toBlockId, { blockFilter: { includeTypes: replaceBlockIds } })
     };
 
     /** 在某个位置放置方块
@@ -86,14 +85,14 @@ export class DimensionUtil {
      * @param {string} blockId 待替换的方块 ID
      */
     static setBlock(dimensionId, location, blockId) {
-        world.getDimension(dimensionId).setBlockType(location, blockId);
-        return world.getDimension(dimensionId).getBlock(location);
+        minecraft.world.getDimension(dimensionId).setBlockType(location, blockId);
+        return minecraft.world.getDimension(dimensionId).getBlock(location);
     };
 
     /** 获取和方块交互后，实际放置的方块位置
      * @description 专门适用于interactWithBlock前事件
-     * @param {Block} interactedBlock 
-     * @param {Direction} interactedBlockFace 
+     * @param {minecraft.Block} interactedBlock 
+     * @param {minecraft.Direction} interactedBlockFace 
      */
     static getPlaceLocation(interactedBlock, interactedBlockFace) {
         const blockLocation = interactedBlock.location;
@@ -220,7 +219,7 @@ export class EntityUtil {
      * @param {"overworld"|"nether"|"the_end"} dimensionId 待生成的维度
      */
     static add(typeId, location, options, dimensionId = "overworld") {
-        return world.getDimension(dimensionId).spawnEntity(typeId, location, options);
+        return minecraft.world.getDimension(dimensionId).spawnEntity(typeId, location, options);
     };
 
     /** 获取实体
@@ -228,24 +227,24 @@ export class EntityUtil {
      * @param {"overworld"|"nether"|"the_end"} dimensionId 待检查的维度
      */
     static get(typeId, dimensionId = "overworld") {
-        return world.getDimension(dimensionId).getEntities({ type: typeId });
+        return minecraft.world.getDimension(dimensionId).getEntities({ type: typeId });
     };
 
     /** 检查实体是否在特定位置周围
-     * @param {Entity} entity 待检查的实体
+     * @param {minecraft.Entity} entity 待检查的实体
      * @param {import("@minecraft/server").Vector3} pos 待检查的坐标
      * @param {number} r 待检查的范围
      * @param {"overworld"|"nether"|"the_end"|"entity_dimension"} dimensionId 待检查的维度，指定为entity_dimension时将在实体自身维度检测
      */
     static isNearby(entity, pos, r, dimensionId = "entity_dimension") {
         if (dimensionId === "entity_dimension") return entity.dimension.getEntities({ location: pos, maxDistance: r }).some(nearbyEntity => nearbyEntity.id === entity.id);
-        else return world.getDimension(dimensionId).getEntities({ location: pos, maxDistance: r }).some(nearbyEntity => nearbyEntity.id === entity.id);
+        else return minecraft.world.getDimension(dimensionId).getEntities({ location: pos, maxDistance: r }).some(nearbyEntity => nearbyEntity.id === entity.id);
     };
 
     /**
      * 检查实体是否在特定长方体区域内
-     * @param {Entity} entity 待检查的实体
-     * @param {BlockVolume} volume 方块区域
+     * @param {minecraft.Entity} entity 待检查的实体
+     * @param {minecraft.BlockVolume} volume 方块区域
      * @param {"overworld"|"nether"|"the_end"|"entity_dimension"} dimensionId 待检查的维度，指定为entity_dimension时将在实体自身维度检测
      */
     static isInVolume(entity, volume, dimensionId = "entity_dimension") {
@@ -253,14 +252,14 @@ export class EntityUtil {
         let to = volume.to;
         let delta = Vector3Util.add({ x: 0, y: 0, z: 0 }, to.x - from.x, to.y - from.y, to.z - from.z);
         if (dimensionId == "entity_dimension") return entity.dimension.getEntities({ location: from, volume: delta }).some(nearbyEntity => nearbyEntity.id === entity.id);
-        else return world.getDimension(dimensionId).getEntities({ location: from, volume: delta }).some(nearbyEntity => nearbyEntity.id === entity.id);
+        else return minecraft.world.getDimension(dimensionId).getEntities({ location: from, volume: delta }).some(nearbyEntity => nearbyEntity.id === entity.id);
     };
 
     /** 移除其他除玩家之外的实体
      * @param {"overworld"|"nether"|"the_end"} dimensionId 维度 ID
      */
     static removeAll(dimensionId = "overworld") {
-        world.getDimension(dimensionId).getEntities().filter(entity => entity.typeId != "minecraft:player").forEach(entity => entity.remove());
+        minecraft.world.getDimension(dimensionId).getEntities().filter(entity => entity.typeId != "minecraft:player").forEach(entity => entity.remove());
     };
 
 };
@@ -270,12 +269,12 @@ export class PlayerUtil {
 
     /** 获取全部玩家 */
     static getAll() {
-        return world.getAllPlayers();
+        return minecraft.world.getAllPlayers();
     };
 
     /** 获取玩家数目 */
     static getAmount() {
-        return world.getAllPlayers().length;
+        return minecraft.world.getAllPlayers().length;
     };
 
     /** 获取离特定位置较接近的玩家
@@ -284,11 +283,11 @@ export class PlayerUtil {
      * @param {"overworld"|"nether"|"the_end"} [dimension] 
      */
     static getNearby(pos, r, dimension = "overworld") {
-        return world.getDimension(dimension).getPlayers({ location: pos, maxDistance: r });
+        return minecraft.world.getDimension(dimension).getPlayers({ location: pos, maxDistance: r });
     };
 
     /** 设置标题
-     * @param {Player} player 待展示标题的玩家
+     * @param {minecraft.Player} player 待展示标题的玩家
      * @param {(string | import("@minecraft/server").RawMessage)[]} title 标题
      * @param {(string | import("@minecraft/server").RawMessage)[]} subtitle 副标题，默认值""
      * @param {TitleOptions} options 可选项
@@ -308,7 +307,7 @@ export class ScoreboardObjectiveUtil {
      */
     static add(id, displayName) {
         try {
-            let objective = world.scoreboard.addObjective(id, displayName);
+            let objective = minecraft.world.scoreboard.addObjective(id, displayName);
             return objective;
         }
         catch (error) {
@@ -320,22 +319,22 @@ export class ScoreboardObjectiveUtil {
      * @param {string} id 记分项 ID
      */
     static get(id) {
-        return world.scoreboard.getObjective(id);
+        return minecraft.world.scoreboard.getObjective(id);
     };
 
     /** 获取所有记分项
      * @param {string} id 记分项 ID
      */
     static getAll() {
-        return world.scoreboard.getObjectives();
+        return minecraft.world.scoreboard.getObjectives();
     };
 
     /** 尝试移除一个记分项，并返回是否成功执行
-     * @param { ScoreboardObjective | string } id 记分项的 ID 。
+     * @param { minecraft.ScoreboardObjective | string } id 记分项的 ID 。
      */
     static remove(id) {
         try {
-            world.scoreboard.removeObjective(id);
+            minecraft.world.scoreboard.removeObjective(id);
             return true;
         }
         catch {
@@ -349,14 +348,14 @@ export class ScoreboardObjectiveUtil {
     };
 
     /** 尝试在特定位置显示记分项，并返回上一个在该位置显示的记分项数据
-     * @param {DisplaySlotId} displaySlot 显示的位置
+     * @param {minecraft.DisplaySlotId} displaySlot 显示的位置
      * @param {string} id 显示的记分项 ID 。如果为无效记分项则不处理
      * @param {"ascending"|"descending"} order 排列顺序
      */
     static display(displaySlot, id, order = "descending") {
 
         const objective = this.get(id);
-        /** 上一个记分项 */ let lastObjective = world.scoreboard.getObjectiveAtDisplaySlot(displaySlot)?.objective;
+        /** 上一个记分项 */ let lastObjective = minecraft.world.scoreboard.getObjectiveAtDisplaySlot(displaySlot)?.objective;
 
         // 当待显示的记分项为无效记分项时，返回上一个记分项的信息
         if (objective === undefined) {
@@ -366,7 +365,7 @@ export class ScoreboardObjectiveUtil {
         else {
             const orderInt = (order === "ascending" ? 0 : 1);
             try {
-                return world.scoreboard.setObjectiveAtDisplaySlot(displaySlot, { objective: objective, sortOrder: orderInt });
+                return minecraft.world.scoreboard.setObjectiveAtDisplaySlot(displaySlot, { objective: objective, sortOrder: orderInt });
             }
             catch {
                 return lastObjective;
@@ -376,7 +375,7 @@ export class ScoreboardObjectiveUtil {
 
     /** 尝试添加并在特定位置显示记分项，并返回该记分项和上一个在该位置显示的记分项数据
      * @param {string} id 记分项 ID
-     * @param {DisplaySlotId} displaySlot 显示的位置
+     * @param {minecraft.DisplaySlotId} displaySlot 显示的位置
      * @param {string} [displayName] 记分项显示名称
      * @param {"ascending"|"descending"} order 排列顺序
      */
@@ -388,10 +387,10 @@ export class ScoreboardObjectiveUtil {
 
     /** 尝试隐藏特定显示位置的记分项，并返回上一个在该位置显示的记分项数据
      * @debug 【当心！】仍需测试是否会在无记分项显示时报错
-     * @param {DisplaySlotId} displaySlot 
+     * @param {minecraft.DisplaySlotId} displaySlot 
      */
     static hide(displaySlot) {
-        return world.scoreboard.clearObjectiveAtDisplaySlot(displaySlot);
+        return minecraft.world.scoreboard.clearObjectiveAtDisplaySlot(displaySlot);
     };
 
 };
@@ -401,7 +400,7 @@ export class ScoreboardPlayerUtil {
 
     /** 为追踪对象添加分数
      * @param {string} objectiveId 
-     * @param {Entity|ScoreboardIdentity|string} participant 
+     * @param {minecraft.Entity|minecraft.ScoreboardIdentity|string} participant 
      * @param {number} score 
      */
     static add(objectiveId, participant, score) {
@@ -410,7 +409,7 @@ export class ScoreboardPlayerUtil {
 
     /** 为追踪对象设置分数
      * @param {string} objectiveId 
-     * @param {Entity|ScoreboardIdentity|string} participant 
+     * @param {minecraft.Entity|minecraft.ScoreboardIdentity|string} participant 
      * @param {number} score 
      */
     static set(objectiveId, participant, score) {
@@ -420,7 +419,7 @@ export class ScoreboardPlayerUtil {
 
     /** 为追踪对象设置为布尔值分数，false 输入为 0 分，true 输入为 1 分
      * @param {string} objectiveId 
-     * @param {Entity|ScoreboardIdentity|string} participant 
+     * @param {minecraft.Entity|minecraft.ScoreboardIdentity|string} participant 
      * @param {boolean} score 
      */
     static setBoolean(objectiveId, participant, score) {
@@ -430,7 +429,7 @@ export class ScoreboardPlayerUtil {
 
     /** 获取追踪对象的分数，若无法获取时则返回 undefined
      * @param {string} objectiveId 
-     * @param {Entity|ScoreboardIdentity|string} participant 
+     * @param {minecraft.Entity|minecraft.ScoreboardIdentity|string} participant 
      */
     static get(objectiveId, participant) {
         try {
@@ -450,7 +449,7 @@ export class ScoreboardPlayerUtil {
 
     /** 获取分数，若获取不到则设置为默认值
      * @param {string} objectiveId 
-     * @param {Entity|ScoreboardIdentity|string} participant 
+     * @param {minecraft.Entity|minecraft.ScoreboardIdentity|string} participant 
      * @param {string} defaultScore 
      */
     static getOrSetDefault(objectiveId, participant, defaultScore) {
@@ -463,7 +462,7 @@ export class ScoreboardPlayerUtil {
 
     /** 移除追踪对象的分数
      * @param {string} objectiveId 
-     * @param {Entity|ScoreboardIdentity|string} participant 
+     * @param {minecraft.Entity|minecraft.ScoreboardIdentity|string} participant 
      */
     static remove(objectiveId, participant) {
         return ScoreboardObjectiveUtil.get(objectiveId)?.removeParticipant(participant);
@@ -501,7 +500,7 @@ export class ScoreboardPlayerUtil {
  * @typedef ItemOptions 物品信息可选项
  * @property {number} [amount] 物品数量
  * @property {EnchantmentInfo[]} [enchantments] 物品附魔
- * @property {ItemLockMode} [itemLock] 物品锁定
+ * @property {minecraft.ItemLockMode} [itemLock] 物品锁定
  * @property {string[]} [lore] 物品备注
  * @property {string} [name] 物品名称
  * @property {string[]} [canPlaceOn] 物品可放置于何方块上
@@ -524,19 +523,19 @@ export class ItemUtil {
         // 如果未指定数量，则设置一个物品数量默认值
         if (!amount) amount = 1;
 
-        /** @type {ItemStack[]} */
+        /** @type {minecraft.ItemStack[]} */
         let itemStacks = [];
 
         // 按组进行计算
         while (amount > 0) {
 
             // 检查要添加的物品的数量最大值，防止数值溢出
-            const maxStackSize = new ItemStack(itemId).maxAmount;
+            const maxStackSize = new minecraft.ItemStack(itemId).maxAmount;
             const thisStackSize = amount > maxStackSize ? maxStackSize : amount;
             amount = amount - maxStackSize;
 
             // 基础物品堆叠
-            const itemStack = new ItemStack(itemId, thisStackSize);
+            const itemStack = new minecraft.ItemStack(itemId, thisStackSize);
 
             // 添加附魔
             if (enchantments) enchantments.forEach(enchantment => this.addEnchantment(itemStack, enchantment));
@@ -575,13 +574,13 @@ export class ItemUtil {
      */
     static spawnItem(location, itemId, options = {}, clearVelocity = false, dimensionId = "overworld") {
         this.getItemStacks(itemId, options).forEach(itemStack => {
-            if (clearVelocity) world.getDimension(dimensionId).spawnItem(itemStack, location).clearVelocity();
-            else world.getDimension(dimensionId).spawnItem(itemStack, location);
+            if (clearVelocity) minecraft.world.getDimension(dimensionId).spawnItem(itemStack, location).clearVelocity();
+            else minecraft.world.getDimension(dimensionId).spawnItem(itemStack, location);
         });
     };
 
     /** 给予玩家物品，多出的物品将会溢出生成掉落物
-     * @param {Player} player 待给予物品的玩家
+     * @param {minecraft.Player} player 待给予物品的玩家
      * @param {string} itemId 物品 ID
      * @param {ItemOptions} options 物品信息可选项
      * @param {boolean} playSound 是否播放“啵”的一声音效 
@@ -590,15 +589,15 @@ export class ItemUtil {
         this.getItemStacks(itemId, options).forEach(itemStack => {
             const container = player.getComponent("minecraft:inventory").container;
             if (container.emptySlotsCount > 0) container.addItem(itemStack);
-            else world.getDimension(player.dimension.id).spawnItem(itemStack, player.location).clearVelocity();
+            else minecraft.world.getDimension(player.dimension.id).spawnItem(itemStack, player.location).clearVelocity();
         });
         if (playSound) player.playSound("random.pop", { location: player.location, pitch: JSUtil.randomRange(0.6, 2.2, 2), volume: 0.25 });
     };
 
     /** 设置玩家装备栏，超出的装备（比如第 2 件）将会忽略
-     * @param {Player} player 待给予装备的玩家
+     * @param {minecraft.Player} player 待给予装备的玩家
      * @param {string} itemId 物品 ID
-     * @param {EquipmentSlot} slot 装备槽
+     * @param {minecraft.EquipmentSlot} slot 装备槽
      * @param {ItemOptions} options 物品信息可选项
      */
     static replaceEquipmentItem(player, itemId, slot, options = {}) {
@@ -606,7 +605,7 @@ export class ItemUtil {
     };
 
     /** 设置实体物品栏特定位置的物品，超出的物品（比如第 2 件）将会忽略
-     * @param {Entity} entity 待设置物品的实体
+     * @param {minecraft.Entity} entity 待设置物品的实体
      * @param {string} itemId 物品 ID
      * @param {number} slot 槽位位置
      * @param {ItemOptions} options 物品信息可选项
@@ -616,7 +615,7 @@ export class ItemUtil {
     };
 
     /** 清除物品
-     * @param {Player} player 待清除物品的实体
+     * @param {minecraft.Player} player 待清除物品的实体
      * @param {string} itemId 待清除物品的 ID
      * @param {string | number} data
      * @param {string | number} maxCount
@@ -630,11 +629,11 @@ export class ItemUtil {
      * @param {"overworld"|"nether"|"the_end"} dimension
      */
     static removeItemEntity(itemId, dimension = "overworld") {
-        world.getDimension(dimension).getEntities({ type: "minecraft:item" }).filter(item => item.getComponent("minecraft:item").itemStack.typeId === itemId).forEach(item => { item.remove() });
+        minecraft.world.getDimension(dimension).getEntities({ type: "minecraft:item" }).filter(item => item.getComponent("minecraft:item").itemStack.typeId === itemId).forEach(item => { item.remove() });
     };
 
     /** 尝试为物品添加附魔，无法添加的附魔将不会添加
-     * @param {ItemStack} item 
+     * @param {minecraft.ItemStack} item 
      * @param {EnchantmentInfo} enchantment 
      */
     static addEnchantment(item, enchantment) {
@@ -643,7 +642,7 @@ export class ItemUtil {
         const comp = item.getComponent("minecraft:enchantable");
         // 如果无法附魔，终止运行
         if (!comp) return item;
-        const enchantmentData = { type: new EnchantmentType(enchantment.id), level: enchantment.level};
+        const enchantmentData = { type: new minecraft.EnchantmentType(enchantment.id), level: enchantment.level};
         // 如果附魔不能添加，终止运行
         if (!comp.canAddEnchantment(enchantmentData)) return item;
         comp.addEnchantment(enchantmentData);
@@ -656,7 +655,7 @@ export class ItemUtil {
 export class InventoryUtil {
 
     /** 获取实体物品栏
-     * @param {Entity} entity 待获取实体
+     * @param {minecraft.Entity} entity 待获取实体
      */
     static getInventory(entity) {
         const inventory = entity.getComponent("minecraft:inventory");
@@ -665,7 +664,7 @@ export class InventoryUtil {
 
     /** 获取实体物品栏内的第 index 位物品
      * @remark 获取到的 item 可能是 undefined
-     * @param {Entity} entity 待获取物品栏物品的实体
+     * @param {minecraft.Entity} entity 待获取物品栏物品的实体
      * @param {number} index 物品栏的第 index 位物品
      */
     static getItem(entity, index) {
@@ -675,7 +674,7 @@ export class InventoryUtil {
 
     /** 获取实体物品栏内的全部物品及对应槽位
      * @remark 获取到的 item 可能是 undefined
-     * @param {Entity} entity 待获取物品栏物品的实体
+     * @param {minecraft.Entity} entity 待获取物品栏物品的实体
      */
     static getItems(entity) {
         const inventory = this.getInventory(entity);
@@ -687,15 +686,15 @@ export class InventoryUtil {
     };
 
     /** 获取实体物品栏内的有效物品及对应槽位
-     * @param {Entity} entity 待获取物品栏物品的实体
-     * @returns {{item: ItemStack, slot: number}[]}
+     * @param {minecraft.Entity} entity 待获取物品栏物品的实体
+     * @returns {{item: minecraft.ItemStack, slot: number}[]}
      */
     static getValidItems(entity) {
         return this.getItems(entity).filter(itemInfo => itemInfo.item !== undefined);
     };
 
     /** 获取实体物品栏内的全部槽位
-     * @param {Entity} entity 待获取物品栏物品的实体
+     * @param {minecraft.Entity} entity 待获取物品栏物品的实体
      */
     static getSlots(entity) {
         const inventory = this.getInventory(entity);
@@ -707,7 +706,7 @@ export class InventoryUtil {
     };
 
     /** 获取实体物品栏的某个特定槽位
-     * @param {Entity} entity 待获取物品栏物品的实体
+     * @param {minecraft.Entity} entity 待获取物品栏物品的实体
      * @param {number} slot 物品栏槽位编号
      */
     static getSlot(entity, slot) {
@@ -716,7 +715,7 @@ export class InventoryUtil {
     };
 
     /** 获取实体物品栏的某个槽位是否为特定物品
-     * @param {Entity} entity 待获取物品栏物品的实体
+     * @param {minecraft.Entity} entity 待获取物品栏物品的实体
      * @param {number} slot 物品栏槽位编号
      * @param {string} itemId 待检查的物品 ID
      * @param {number} [amount] 待检查的物品数目
@@ -730,15 +729,15 @@ export class InventoryUtil {
     };
 
     /** 获取实体物品栏内的有效物品及对应槽位
-     * @param {Entity} entity 待获取物品栏物品的实体
+     * @param {minecraft.Entity} entity 待获取物品栏物品的实体
      */
     static getValidSlots(entity) {
         return this.getSlots(entity).filter(slotInfo => slotInfo.slotContainer.hasItem());
     };
 
     /** 将物品栏内的所有物品都设置锁定状态
-     * @param {Entity} entity 待锁定物品栏物品的实体
-     * @param {ItemLockMode} mode 锁定模式
+     * @param {minecraft.Entity} entity 待锁定物品栏物品的实体
+     * @param {minecraft.ItemLockMode} mode 锁定模式
      */
     static lockAllItems(entity, mode) {
         this.getValidSlots(entity).forEach(itemData => {
@@ -747,7 +746,7 @@ export class InventoryUtil {
     };
 
     /** 获取实体是否拥有物品
-     * @param {Entity} entity 待检测实体
+     * @param {minecraft.Entity} entity 待检测实体
      * @param {string} itemId 物品 ID
      * @param {number|string} [quantity] 待检测物品的数量，可写为范围式
      * @param {string} [location] 待检测物品的槽位
@@ -764,7 +763,7 @@ export class InventoryUtil {
     };
 
     /** 获取物品数目 
-     * @param {Entity} entity 待获取物品数目的实体
+     * @param {minecraft.Entity} entity 待获取物品数目的实体
      * @param {string} itemId 待获取物品数目的物品
      */
     static hasItemAmount(entity, itemId) {
@@ -831,15 +830,15 @@ export class UIUtil {
      * @param {string|import("@minecraft/server").RawMessage} title UI 标题
      */
     addAction(buttons, body = "", title = "") {
-        let actionUi = new ActionFormData().body(body).title(title);
+        let actionUi = new ui.ActionFormData().body(body).title(title);
         buttons.forEach(button => { actionUi.button(button.text, button.iconPath); })
         return actionUi;
     };
 
     /** 展示一个 ActionFormUI，返回是否成功显示了 UI
-     * @param {ActionFormData} actionUi 待显示的 UI
-     * @param {Player} player 向哪个玩家显示 UI
-     * @param {function(FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
+     * @param {ui.ActionFormData} actionUi 待显示的 UI
+     * @param {minecraft.Player} player 向哪个玩家显示 UI
+     * @param {function(ui.FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
      * @param {function(number): void} selectedFn 若 UI 操作被选择执行的函数（参数 1：按钮索引）
      */
     showAction(actionUi, player, canceledFn, selectedFn) {
@@ -856,8 +855,8 @@ export class UIUtil {
 
     /** 添加并立即展示一个 ActionFormUI，返回是否成功显示了 UI
      * @param {actionButtons[]} buttons 按钮信息
-     * @param {Player} player 向哪个玩家显示 UI
-     * @param {function(FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
+     * @param {minecraft.Player} player 向哪个玩家显示 UI
+     * @param {function(ui.FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
      * @param {string|import("@minecraft/server").RawMessage} body UI 内容
      * @param {string|import("@minecraft/server").RawMessage} title UI 标题
      */
@@ -872,15 +871,15 @@ export class UIUtil {
      * @param {string|import("@minecraft/server").RawMessage} title UI 标题
      */
     addMessage(buttons, body = "", title = "") {
-        let messageUi = new MessageFormData().body(body).title(title);
+        let messageUi = new ui.MessageFormData().body(body).title(title);
         messageUi.button1(buttons[0].text).button2(buttons[1].text);
         return messageUi;
     };
 
     /** 展示一个 MessageFormUI，返回是否成功显示了 UI
-     * @param {MessageFormData} messageUi 待显示的 UI
-     * @param {Player} player 向哪个玩家显示 UI
-     * @param {function(FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
+     * @param {ui.MessageFormData} messageUi 待显示的 UI
+     * @param {minecraft.Player} player 向哪个玩家显示 UI
+     * @param {function(ui.FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
      * @param {function(number): void} selectedFn 若 UI 操作被选择执行的函数（参数 1：按钮索引）
      */
     showMessage(messageUi, player, canceledFn, selectedFn) {
@@ -889,8 +888,8 @@ export class UIUtil {
 
     /** 添加并立即展示一个 MessageFormUI，返回是否成功显示了 UI
      * @param {messageButtons[]} buttons 按钮信息（注：buttons 内应有两个按钮信息）
-     * @param {Player} player 向哪个玩家显示 UI
-     * @param {function(FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
+     * @param {minecraft.Player} player 向哪个玩家显示 UI
+     * @param {function(ui.FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
      * @param {string|import("@minecraft/server").RawMessage} body UI 内容
      * @param {string|import("@minecraft/server").RawMessage} title UI 标题
      */
@@ -905,7 +904,7 @@ export class UIUtil {
      * @param {string|import("@minecraft/server").RawMessage} submit 提交按钮内容
      */
     addModal(buttons, title = "", submit = "提交") {
-        let modalUi = new ModalFormData().title(title).submitButton(submit);
+        let modalUi = new ui.ModalFormData().title(title).submitButton(submit);
         buttons.forEach(button => {
             if (button.type === "dropdown") { modalUi.dropdown(button.label, button.options, button.defaultValue); }
             else if (button.type === "slider") { modalUi.slider(button.label, button.min, button.max, button.step, button.defaultValue); }
@@ -916,9 +915,9 @@ export class UIUtil {
     };
 
     /** 展示一个 ModalFormUI，返回是否成功显示了 UI
-     * @param {ModalFormData} modalUi 待显示的 UI
-     * @param {Player} player 向哪个玩家显示 UI
-     * @param {function(FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
+     * @param {ui.ModalFormData} modalUi 待显示的 UI
+     * @param {minecraft.Player} player 向哪个玩家显示 UI
+     * @param {function(ui.FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
      * @param {function((string|number|boolean)[]): void} submittedFn 若 UI 操作被选择执行的函数（参数 1：按钮返回值）
      */
     showModal(modalUi, player, canceledFn, submittedFn) {
@@ -935,8 +934,8 @@ export class UIUtil {
 
     /** 添加并立即展示一个 ModalFormUI，返回是否成功显示了 UI
      * @param {(dropdownButton|sliderButton|textFieldButton|toggleButton)[]} buttons 
-     * @param {Player} player 向哪个玩家显示 UI
-     * @param {function(FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
+     * @param {minecraft.Player} player 向哪个玩家显示 UI
+     * @param {function(ui.FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
      * @param {function((string|number|boolean)[]): void} submittedFn 若 UI 操作被选择执行的函数（参数 1：按钮返回值）
      * @param {string|import("@minecraft/server").RawMessage} title UI 标题
      * @param {string|import("@minecraft/server").RawMessage} submit 提交按钮内容
@@ -947,13 +946,13 @@ export class UIUtil {
     };
 
     /** 关闭所有 UI（目前暂无法使用）
-     * @param {Player} player 
+     * @param {minecraft.Player} player 
      */
     close(player) {
 
     };
 
-}
+};
 
 // ===== js 基本方法 =====
 
@@ -979,6 +978,15 @@ export class JSUtil {
     static randomRange(min, max, precision) {
         const raw = Math.random() * (max - min) + min;
         return precision ? raw : Number(raw.toFixed(precision));
+    };
+
+    /** 将数值限制到[a, b]内
+     * @param {number} value 
+     * @param {number} min 
+     * @param {number} max 
+     */
+    static clamp(value, min, max) {
+        return Math.max(min, Math.min(value, max));
     };
 
     /** 将数字转换为罗马数字的字符串
@@ -1120,7 +1128,7 @@ export class Debug {
      * @param {any} message 待返回的消息
      */
     static sendMessage(message) {
-        world.sendMessage(`${message}`)
+        minecraft.world.sendMessage(`${message}`)
     };
 
     /** 打印数组
@@ -1128,7 +1136,7 @@ export class Debug {
      * @param {string} arrayName 待打印数组的名称
      */
     static printArray(array, arrayName) {
-        world.sendMessage(`§a${arrayName} = §r§f[§b${array.join(", ")}§r§f]`)
+        minecraft.world.sendMessage(`§a${arrayName} = §r§f[§b${array.join(", ")}§r§f]`)
     };
 
     /** 打印对象
@@ -1162,10 +1170,10 @@ export class Debug {
         }
         // 打印模式
         if (mode === "chat") {
-            world.sendMessage(printString.join("\n"));
+            minecraft.world.sendMessage(printString.join("\n"));
         }
         else {
-            world.getAllPlayers().forEach(player => {
+            minecraft.world.getAllPlayers().forEach(player => {
                 player.onScreenDisplay.setActionBar(printString.join("\n"));
             });
         }

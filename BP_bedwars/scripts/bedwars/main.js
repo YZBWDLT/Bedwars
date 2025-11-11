@@ -1,3 +1,6 @@
+// *-*-*-*-*-*-* 起床战争主函数 *-*-*-*-*-*-*
+// 在主函数中实现起床战争的全部功能，部分需要穷举的数据存储在 data.js 中。
+
 // ===== 模块导入 =====
 
 import * as minecraft from "@minecraft/server"
@@ -1188,7 +1191,7 @@ class BedwarsClassicMode {
                 // 如果生成了床虱，则触发对应检查事件
                 else if (event.entity.typeId == "bedwars:bed_bug") {
                     if (!this.system.getEvent("bedBugHitBlock")) this.system.subscribeEvent(this.bedBugHitBlockEvent());
-                    if (!this.system.getEvent("bedBugHitBlock")) this.system.subscribeEvent(this.bedBugHitEntityEvent());
+                    if (!this.system.getEvent("bedBugHitEntity")) this.system.subscribeEvent(this.bedBugHitEntityEvent());
                 }
                 // 如果生成了搭桥蛋，则触发对应检查事件
                 else if (event.entity.typeId == "bedwars:bridge_egg" && !this.system.getTimeline("bridgeEggCreateBridge")) {
@@ -2177,10 +2180,10 @@ class BedwarsClassicMode {
 
             // 添加对应的起床战争信息
             const player = event.source;
-            const playerInfo = this.map.getBedwarsPlayer(player);
-            if (playerInfo && playerInfo?.team) {
-                silverfish.team = playerInfo.team;
-                silverfish.triggerEvent(`team_${playerInfo.team.id}`);
+            const playerData = this.map.getBedwarsPlayer(player);
+            if (playerData && playerData.team) {
+                silverfish.team = playerData.team;
+                silverfish.triggerEvent(`team_${playerData.team.id}`);
                 silverfish.killTimer = 0;
                 silverfish.owner = player;
                 silverfish.nameSetter = () => {
@@ -2193,6 +2196,18 @@ class BedwarsClassicMode {
                     return `${timePassedColor}■■■■■`;
                 };
                 silverfish.nameTag = `§8[§r${silverfish.team.getTeamColor()}${silverfish.nameSetter()}§8]\n§l${silverfish.team.getTeamNameWithColor()}队 §r${silverfish.team.getTeamColor()}蠹虫`;
+
+                // 为蠹虫添加一个最近的目标
+                const nearestAttackablePlayer = lib.PlayerUtil.getNearby(event.location, 16).filter(attackablePlayer => {
+                    const attackablePlayerData = this.map.getBedwarsPlayer(attackablePlayer);
+                    // 如果不是起床战争玩家，不选为目标
+                    if (!attackablePlayerData) return false;
+                    // 如果同队，不选为目标
+                    else if (attackablePlayerData.team == playerData.team) return false;
+                    // 其他情况，选为目标
+                    else return true;
+                })[0];
+                if (nearestAttackablePlayer) silverfish.applyDamage(0.01, {cause: minecraft.EntityDamageCause.entityAttack, damagingEntity: nearestAttackablePlayer});
             };
 
             // 当没有床虱时间线时，触发床虱时间线
@@ -2212,7 +2227,8 @@ class BedwarsClassicMode {
                 if (event.isFirstEvent && event.itemStack?.typeId == "bedwars:dream_defender") {
                     minecraft.system.run(() => {
                         // 生成梦境守护者（铁傀儡）
-                        let ironGolem = event.block.dimension.spawnEntity("minecraft:iron_golem", lib.DimensionUtil.getPlaceLocation(event.block, event.blockFace));
+                        const spawnLocation = lib.DimensionUtil.getPlaceLocation(event.block, event.blockFace);
+                        const ironGolem = event.block.dimension.spawnEntity("bedwars:iron_golem", spawnLocation);
                         const player = event.player;
                         const playerData = this.map.getBedwarsPlayer(player);
                         // 对非创造模式的玩家，移除其一个刷怪蛋
@@ -2233,6 +2249,19 @@ class BedwarsClassicMode {
                                 return `${timePassedColor}■■■■■■■■■■`;
                             };
                             ironGolem.nameTag = `§8[§r${ironGolem.team.getTeamColor()}${ironGolem.nameSetter()}§8]\n§l${ironGolem.team.getTeamNameWithColor()}队 §r${ironGolem.team.getTeamColor()}铁傀儡`;
+                            
+                            // 为铁傀儡添加一个最近的目标
+                            const nearestAttackablePlayer = lib.PlayerUtil.getNearby(spawnLocation, 16).filter(attackablePlayer => {
+                                const attackablePlayerData = this.map.getBedwarsPlayer(attackablePlayer);
+                                // 如果不是起床战争玩家，不选为目标
+                                if (!attackablePlayerData) return false;
+                                // 如果同队，不选为目标
+                                else if (attackablePlayerData.team == playerData.team) return false;
+                                // 其他情况，选为目标
+                                else return true;
+                            })[0];
+                            if (nearestAttackablePlayer) ironGolem.applyDamage(0.01, {cause: minecraft.EntityDamageCause.entityAttack, damagingEntity: nearestAttackablePlayer});
+
                         };
                     // 当没有梦境守护者时间线时，触发梦境守护者时间线
                     if (!this.system.getTimeline("dreamDefenderCountdown")) this.system.subscribeTimeline(this.dreamDefenderCountdownTimeline());
@@ -2250,7 +2279,7 @@ class BedwarsClassicMode {
         return new BedwarsTimeline(
             "dreamDefenderCountdown",
             minecraft.system.runInterval(() => {
-                const ironGolems = lib.EntityUtil.get("minecraft:iron_golem").filter(ironGolem => ironGolem.killTimer != undefined);
+                const ironGolems = lib.EntityUtil.get("bedwars:iron_golem").filter(ironGolem => ironGolem.killTimer != undefined);
                 // 对床虱计时并设定名称，倒计时结束后则杀死之
                 ironGolems.forEach(ironGolem => {
                     ironGolem.killTimer++;
@@ -2369,7 +2398,7 @@ class BedwarsClassicMode {
                 /** @type {minecraft.Player} */ const hit = event.getEntityHit().entity;
                 const shooterData = this.map.getBedwarsPlayer(shooter);
                 const hitData = this.map.getBedwarsPlayer(hit);
-                if (projectile.typeId && shooterData && hitData && shooterData.team?.id != hitData.team?.id) {
+                if (projectile.typeId == "minecraft:arrow" && shooterData && hitData && shooterData.team?.id != hitData.team?.id) {
                     shooter.playSound("random.orb");
                     hit.playSound("random.orb");
                     shooter.sendMessage({ translate: "message.bowHitHealth", with: { rawtext: [{ text: `${hit.nameTag}` }, { text: `${hit.getComponent("minecraft:health").currentValue.toFixed(1)}` }] } })
@@ -3955,9 +3984,29 @@ class BedwarsTeam {
         this.bedLocation = info.bedLocation;
         if (info.bedRotation) this.bedRotation = info.bedRotation;
         this.resourceLocation = lib.Vector3Util.center(info.resourceLocation);
-        this.spawnpointLocation = info.spawnpointLocation;
+        this.spawnpointLocation = lib.Vector3Util.center(info.spawnpointLocation);
         this.chestLocation = info.chestLocation;
     };
+
+    // ===== 队伍状态 =====
+
+    /** 标记为无效队伍 */
+    setInvalid() {
+        // 标记为无效和淘汰队伍
+        this.isValid = false;
+        this.setEliminated();
+        // 设置床为不存在，并且移除床
+        this.destroyBed();
+    };
+
+    /** 标记为已被淘汰 */
+    setEliminated() {
+        this.isEliminated = true;
+        this.system.mode.map.aliveTeams.splice(this.system.mode.map.aliveTeams.findIndex(aliveTeam => aliveTeam.id == this.id), 1);
+        minecraft.world.sendMessage(["\n", { translate: "message.teamEliminated", with: [`${this.getTeamNameWithColor()}`] }, "\n "])
+    };
+
+    // ===== 床 =====
 
     /** 放置床 */
     placeBed() {
@@ -3974,6 +4023,8 @@ class BedwarsTeam {
         minecraft.world.getDimension("overworld").runCommand(`setblock ${x} ${y} ${z} air destroy`);
         lib.ItemUtil.removeItemEntity("minecraft:bed");
     };
+
+    // ===== 玩家 =====
 
     /** 添加队员
      * @param {minecraft.Player} player 待添加的玩家
@@ -3994,6 +4045,34 @@ class BedwarsTeam {
         lib.Debug.printArray(this.players, "team.players");
         lib.Debug.printArray(this.alivePlayers, "team.alivePlayers");
     };
+
+    /** 传送玩家到重生点
+     * @param {minecraft.Player} player 
+     */
+    teleportPlayerToSpawnpoint(player) {
+        player.teleport(this.spawnpointLocation, { facingLocation: this.bedLocation });
+    };
+
+    /** 对队伍内的玩家的物品添加锋利附魔 */
+    applySharpness() {
+        if (this.teamUpgrades.sharpenedSwords) this.alivePlayers.forEach(alivePlayer => {
+            const sharpnessItems = [
+                "bedwars:wooden_sword",
+                "bedwars:stone_sword",
+                "bedwars:iron_sword",
+                "bedwars:diamond_sword",
+                "bedwars:wooden_axe",
+                "bedwars:stone_axe",
+                "bedwars:iron_axe",
+                "bedwars:diamond_axe"
+            ];
+            lib.InventoryUtil.getValidItems(alivePlayer.player)
+                .filter(item => sharpnessItems.includes(item.item.typeId))
+                .forEach(item => lib.ItemUtil.replaceInventoryItem(alivePlayer.player, item.item.typeId, item.slot, { enchantments: [{ id: "sharpness", level: 1 }] }));
+        });
+    };
+
+    // ===== 队伍文本 =====
 
     /** 获取本队的队伍颜色代码 */
     getTeamColor() {
@@ -4034,50 +4113,6 @@ class BedwarsTeam {
      */
     getTeamNameWithColor() {
         return `${this.getTeamColor()}${this.getTeamName()}`;
-    };
-
-    /** 传送玩家到重生点
-     * @param {minecraft.Player} player 
-     */
-    teleportPlayerToSpawnpoint(player) {
-        player.teleport(this.spawnpointLocation, { facingLocation: this.bedLocation });
-    };
-
-    /** 标记为无效队伍 */
-    setInvalid() {
-        // 标记为无效和淘汰队伍
-        this.isValid = false;
-        this.setEliminated();
-        // 设置床为不存在，并且移除床
-        this.destroyBed();
-    };
-
-    /** 标记为已被淘汰 */
-    setEliminated() {
-        this.isEliminated = true;
-        this.system.mode.map.aliveTeams.splice(this.system.mode.map.aliveTeams.findIndex(aliveTeam => aliveTeam.id == this.id), 1);
-        minecraft.world.sendMessage(["\n", { translate: "message.teamEliminated", with: [`${this.getTeamNameWithColor()}`] }, "\n "])
-    };
-
-    // ===== 玩家购买团队升级 =====
-
-    /** 对队伍内的玩家的物品添加锋利附魔 */
-    applySharpness() {
-        if (this.teamUpgrades.sharpenedSwords) this.alivePlayers.forEach(alivePlayer => {
-            const sharpnessItems = [
-                "bedwars:wooden_sword",
-                "bedwars:stone_sword",
-                "bedwars:iron_sword",
-                "bedwars:diamond_sword",
-                "bedwars:wooden_axe",
-                "bedwars:stone_axe",
-                "bedwars:iron_axe",
-                "bedwars:diamond_axe"
-            ];
-            lib.InventoryUtil.getValidItems(alivePlayer.player)
-                .filter(item => sharpnessItems.includes(item.item.typeId))
-                .forEach(item => lib.ItemUtil.replaceInventoryItem(alivePlayer.player, item.item.typeId, item.slot, { enchantments: [{ id: "sharpness", level: 1 }] }));
-        });
     };
 
 };
@@ -4207,46 +4242,7 @@ class BedwarsPlayer {
 
     };
 
-    /** 获取地图 */
-    getMap() {
-        return this.system.mode.map;
-    };
-
-    /** 击杀玩家后，获得的物资奖励
-     * @param {BedwarsPlayer} killedPlayerInfo 
-     */
-    getBonus(killedPlayerInfo) {
-        const killedPlayer = killedPlayerInfo.player;
-
-        // 播放音效
-        this.player.playSound("random.orb", { location: this.player.location });
-
-        // 记录击杀数
-        if (killedPlayerInfo.team.bedIsExist) this.killCount++;
-        else this.finalKillCount++;
-
-        // 击杀奖励
-        const ironAmount = lib.InventoryUtil.hasItemAmount(killedPlayer, "bedwars:iron_ingot");
-        if (ironAmount > 0) {
-            lib.ItemUtil.giveItem(this.player, "bedwars:iron_ingot", { amount: ironAmount })
-            this.player.sendMessage(`§f+${ironAmount}块铁锭`);
-        };
-        const goldAmount = lib.InventoryUtil.hasItemAmount(killedPlayer, "bedwars:gold_ingot");
-        if (goldAmount > 0) {
-            lib.ItemUtil.giveItem(this.player, "bedwars:gold_ingot", { amount: goldAmount })
-            this.player.sendMessage(`§6+${goldAmount}块金锭`);
-        };
-        const diamondAmount = lib.InventoryUtil.hasItemAmount(killedPlayer, "bedwars:diamond");
-        if (diamondAmount > 0) {
-            lib.ItemUtil.giveItem(this.player, "bedwars:diamond", { amount: diamondAmount })
-            this.player.sendMessage(`§b+${diamondAmount}钻石`);
-        };
-        const emeraldAmount = lib.InventoryUtil.hasItemAmount(killedPlayer, "bedwars:emerald");
-        if (emeraldAmount > 0) {
-            lib.ItemUtil.giveItem(this.player, "bedwars:emerald", { amount: emeraldAmount })
-            this.player.sendMessage(`§2+${emeraldAmount}绿宝石`);
-        };
-    };
+    // ===== 玩家状态 =====
 
     /** 设置玩家为已死亡，同时检查床的存在性，如果没有床则设为已淘汰
      * @param {minecraft.EntityDamageCause} deathType 
@@ -4323,7 +4319,7 @@ class BedwarsPlayer {
         else if (killer && killer.typeId == "minecraft:player") {
 
             // 获取击杀者的起床战争信息
-            const killerData = this.getMap().getBedwarsPlayer(killer);
+            const killerData = this.system.mode.map.getBedwarsPlayer(killer);
 
             if (!killerData || !killerData.team) defaultDeath(); // 如果击杀者起床信息不存在，或击杀者起床信息的队伍不存在，则触发普通死亡样式（虽然实际运行过程中应该不太可能，但万一呢？）
             else if (this.deathType == "projectile") killedByOthers("beShot", killerData); // 被射杀
@@ -4337,7 +4333,7 @@ class BedwarsPlayer {
             // 获取该实体是否拥有主人信息
             /** @type {minecraft.Player|undefined} */
             const owner = killer.owner;
-            const ownerData = this.getMap().getBedwarsPlayer(owner);
+            const ownerData = this.system.mode.map.getBedwarsPlayer(owner);
 
             if (!owner) defaultDeath(); // 如果不存在主人（比如万一是个僵尸呢），触发普通死亡样式
             else killedByOthers("beKilledGolem", ownerData); // 否则，是被其主人的傀儡击杀，给予其主人奖励
@@ -4348,7 +4344,7 @@ class BedwarsPlayer {
         else if (this.lastAttacker) {
 
             /** 上一个攻击者的起床战争信息 */
-            const attackerData = this.getMap().getBedwarsPlayer(this.lastAttacker);
+            const attackerData = this.system.mode.map.getBedwarsPlayer(this.lastAttacker);
 
             if (this.deathType == "entityExplosion") killedByOthers("beKilled", attackerData); // 被其他玩家活活炸死（例如用火焰弹不断爆破）
             else if (this.deathType == "fall") killedByOthers("beKilledFall", attackerData); // 被其他玩家扔下去摔死
@@ -4376,11 +4372,11 @@ class BedwarsPlayer {
         this.lastAttacker = attacker;
         this.timeSinceLastAttack = 0;
 
-        // 移除隐身状态[debug]
-        // if ( player.getComponent( "minecraft:is_sheared" ) ) {
-        //     player.triggerEvent( "show_armor" );
-        //     player.sendMessage( { translate: "message.beHitWhenInvisibility" } );
-        // }
+        // 移除隐身状态
+        if (this.player.getProperty("bedwars:is_invisible")) {
+            this.player.triggerEvent("show_armor");
+            this.player.sendMessage({ translate: "message.beHitWhenInvisibility" });
+        };
 
     };
 
@@ -4452,6 +4448,42 @@ class BedwarsPlayer {
     }
 
     // ===== 物品 =====
+
+    /** 击杀玩家后，获得的物资奖励
+     * @param {BedwarsPlayer} killedPlayerInfo 
+     */
+    getBonus(killedPlayerInfo) {
+        const killedPlayer = killedPlayerInfo.player;
+
+        // 播放音效
+        this.player.playSound("random.orb", { location: this.player.location });
+
+        // 记录击杀数
+        if (killedPlayerInfo.team.bedIsExist) this.killCount++;
+        else this.finalKillCount++;
+
+        // 击杀奖励
+        const ironAmount = lib.InventoryUtil.hasItemAmount(killedPlayer, "bedwars:iron_ingot");
+        if (ironAmount > 0) {
+            lib.ItemUtil.giveItem(this.player, "bedwars:iron_ingot", { amount: ironAmount })
+            this.player.sendMessage(`§f+${ironAmount}块铁锭`);
+        };
+        const goldAmount = lib.InventoryUtil.hasItemAmount(killedPlayer, "bedwars:gold_ingot");
+        if (goldAmount > 0) {
+            lib.ItemUtil.giveItem(this.player, "bedwars:gold_ingot", { amount: goldAmount })
+            this.player.sendMessage(`§6+${goldAmount}块金锭`);
+        };
+        const diamondAmount = lib.InventoryUtil.hasItemAmount(killedPlayer, "bedwars:diamond");
+        if (diamondAmount > 0) {
+            lib.ItemUtil.giveItem(this.player, "bedwars:diamond", { amount: diamondAmount })
+            this.player.sendMessage(`§b+${diamondAmount}钻石`);
+        };
+        const emeraldAmount = lib.InventoryUtil.hasItemAmount(killedPlayer, "bedwars:emerald");
+        if (emeraldAmount > 0) {
+            lib.ItemUtil.giveItem(this.player, "bedwars:emerald", { amount: emeraldAmount })
+            this.player.sendMessage(`§2+${emeraldAmount}绿宝石`);
+        };
+    };
 
     /** 生成时（游戏刚开始和重生时）给予装备 */
     giveEquipmentWhileSpawn() {

@@ -10,6 +10,17 @@
                 "events": {
                     "death": { "sound": "" }
                 }
+            },
+            "bedwars:iron_golem": {
+                "events" : {
+                    "ambient": "mob.irongolem.say",
+                    "death": "mob.irongolem.death",
+                    "hurt": "mob.irongolem.hit",
+                    "step": "mob.irongolem.walk",
+                    "throw": "mob.irongolem.throw"
+                },
+                "pitch" : [ 0.80, 1.0 ],
+                "volume" : 1.0
             }
         }
     }

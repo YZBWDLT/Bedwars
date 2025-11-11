@@ -1,11 +1,23 @@
 {
-    "format_version": "1.18.20",
+    "format_version": "1.21.0",
     "minecraft:entity": {
         "description": {
             "identifier": "minecraft:player",
             "is_spawnable": false,
             "is_summonable": false,
             "is_experimental": false,
+            "properties": {
+                "bedwars:is_invisible": {
+                    "type": "bool",
+                    "default": false,
+                    "client_sync": true
+                },
+                "bedwars:team": {
+                    "type": "enum",
+                    "values": ["none", "red", "blue", "green", "yellow", "white", "pink", "gray", "cyan", "brown", "purple", "orange"],
+                    "default": "none"
+                }
+            },
             "scripts": { "animate": [ "is_invisibility_test" ] },
             "animations": { "is_invisibility_test": "controller.animation.player.is_invisibility_test" }
         },
@@ -37,29 +49,17 @@
 
             "minecraft:damage_sensor": {
                 "triggers": [
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_red", "subject": "self" }, { "test": "is_family", "value": "team_red", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_blue", "subject": "self" }, { "test": "is_family", "value": "team_blue", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_green", "subject": "self" }, { "test": "is_family", "value": "team_green", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_yellow", "subject": "self" }, { "test": "is_family", "value": "team_yellow", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_white", "subject": "self" }, { "test": "is_family", "value": "team_white", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_pink", "subject": "self" }, { "test": "is_family", "value": "team_pink", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_gray", "subject": "self" }, { "test": "is_family", "value": "team_gray", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_cyan", "subject": "self" }, { "test": "is_family", "value": "team_cyan", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_brown", "subject": "self" }, { "test": "is_family", "value": "team_brown", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_purple", "subject": "self" }, { "test": "is_family", "value": "team_purple", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_family", "value": "team_orange", "subject": "self" }, { "test": "is_family", "value": "team_orange", "subject": "other" }, { "test": "is_family", "value": "player", "subject": "other" } ] } }, "deals_damage": false },
-
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_red", "subject": "self" }, { "test": "is_family", "value": "team_red", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_blue", "subject": "self" }, { "test": "is_family", "value": "team_blue", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_green", "subject": "self" }, { "test": "is_family", "value": "team_green", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_yellow", "subject": "self" }, { "test": "is_family", "value": "team_yellow", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_white", "subject": "self" }, { "test": "is_family", "value": "team_white", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_pink", "subject": "self" }, { "test": "is_family", "value": "team_pink", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_gray", "subject": "self" }, { "test": "is_family", "value": "team_gray", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_cyan", "subject": "self" }, { "test": "is_family", "value": "team_cyan", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_brown", "subject": "self" }, { "test": "is_family", "value": "team_brown", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_purple", "subject": "self" }, { "test": "is_family", "value": "team_purple", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } },
-                    { "on_damage": { "filters": { "all_of": [ { "test": "is_visible", "value": false, "subject": "self" }, { "test": "is_family", "value": "team_orange", "subject": "self" }, { "test": "is_family", "value": "team_orange", "subject": "other", "operator": "!=" } ] }, "event": "show_armor" } }
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "red", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "red", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "blue", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "blue", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "green", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "green", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "yellow", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "yellow", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "white", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "white", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "pink", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "pink", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "gray", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "gray", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "cyan", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "cyan", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "brown", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "brown", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "purple", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "purple", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "orange", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "orange", "subject": "other" } ] } }, "deals_damage": false }
                 ]
             }
         },
@@ -70,21 +70,21 @@
             "minecraft:trigger_raid": { "add": { "component_groups": [ "minecraft:raid_trigger" ] } },
             "minecraft:remove_raid_trigger": { "remove": { "component_groups": [ "minecraft:raid_trigger" ] } },
 
-            "team_red": { "add": { "component_groups": [ "team_red" ] } },
-            "team_blue": { "add": { "component_groups": [ "team_blue" ] } },
-            "team_green": { "add": { "component_groups": [ "team_green" ] } },
-            "team_yellow": { "add": { "component_groups": [ "team_yellow" ] } },
-            "team_white": { "add": { "component_groups": [ "team_white" ] } },
-            "team_pink": { "add": { "component_groups": [ "team_pink" ] } },
-            "team_gray": { "add": { "component_groups": [ "team_gray" ] } },
-            "team_cyan": { "add": { "component_groups": [ "team_cyan" ] } },
-            "team_brown": { "add": { "component_groups": [ "team_brown" ] } },
-            "team_purple": { "add": { "component_groups": [ "team_purple" ] } },
-            "team_orange": { "add": { "component_groups": [ "team_orange" ] } },
-            "remove_team": { "add": { "component_groups": [ "remove_team" ] } },
+            "team_red": { "set_property": { "bedwars:team": "red" } },
+            "team_blue": { "set_property": { "bedwars:team": "blue" } },
+            "team_green": { "set_property": { "bedwars:team": "green" } },
+            "team_yellow": { "set_property": { "bedwars:team": "yellow" } },
+            "team_white": { "set_property": { "bedwars:team": "white" } },
+            "team_pink": { "set_property": { "bedwars:team": "pink" } },
+            "team_gray": { "set_property": { "bedwars:team": "gray" } },
+            "team_cyan": { "set_property": { "bedwars:team": "cyan" } },
+            "team_brown": { "set_property": { "bedwars:team": "brown" } },
+            "team_purple": { "set_property": { "bedwars:team": "purple" } },
+            "team_orange": { "set_property": { "bedwars:team": "orange" } },
+            "remove_team": { "set_property": { "bedwars:team": "none" } },
 
-            "hide_armor": { "add": { "component_groups": [ "hide_armor" ] } },
-            "show_armor": { "remove": { "component_groups": [ "hide_armor" ] } }
+            "hide_armor": { "set_property": { "bedwars:is_invisible": true } },
+            "show_armor": { "set_property": { "bedwars:is_invisible": false } }
         },
 
         "component_groups": {
@@ -98,22 +98,7 @@
             "minecraft:raid_trigger": {
                 "minecraft:raid_trigger": { "triggered_event": { "event": "minecraft:remove_raid_trigger", "target": "self" } },
                 "minecraft:spell_effects": { "remove_effects": "bad_omen" }
-            },
-
-            "team_red": { "minecraft:type_family": { "family": [ "player", "have_team", "team_red" ] } },
-            "team_blue": { "minecraft:type_family": { "family": [ "player", "have_team", "team_blue" ] } },
-            "team_green": { "minecraft:type_family": { "family": [ "player", "have_team", "team_green" ] } },
-            "team_yellow": { "minecraft:type_family": { "family": [ "player", "have_team", "team_yellow" ] } },
-            "team_white": { "minecraft:type_family": { "family": [ "player", "have_team", "team_white" ] } },
-            "team_pink": { "minecraft:type_family": { "family": [ "player", "have_team", "team_pink" ] } },
-            "team_gray": { "minecraft:type_family": { "family": [ "player", "have_team", "team_gray" ] } },
-            "team_cyan": { "minecraft:type_family": { "family": [ "player", "have_team", "team_cyan" ] } },
-            "team_brown": { "minecraft:type_family": { "family": [ "player", "have_team", "team_brown" ] } },
-            "team_purple": { "minecraft:type_family": { "family": [ "player", "have_team", "team_purple" ] } },
-            "team_orange": { "minecraft:type_family": { "family": [ "player", "have_team", "team_orange" ] } },
-            "remove_team": { "minecraft:type_family": { "family": [ "player" ] } },
-
-            "hide_armor": { "minecraft:is_sheared": { } }
+            }
         }
     }
 }

@@ -2,7 +2,7 @@
     "format_version": "1.21.0",
     "minecraft:entity": {
         "description": {
-            "identifier": "minecraft:silverfish",
+            "identifier": "bedwars:iron_golem",
             "is_spawnable": true,
             "is_summonable": true,
             "is_experimental": false,
@@ -16,62 +16,74 @@
         },
 
         "components": {
-            "minecraft:is_hidden_when_invisible": { },
-            "minecraft:experience_reward": { "on_death": "query.last_hit_by_player ? 5 : 0" },
-            "minecraft:type_family": { "family":["silverfish", "monster", "lightweight", "mob", "arthropod" ] },
-            "minecraft:breathable": { "total_supply": 15, "suffocate_time": 0 },
-            "minecraft:nameable": { "always_show": true, "allow_name_tag_renaming": true },
-            "minecraft:loot": { "table": "loot_tables/entities/silverfish.json" },
-            "minecraft:health": { "value": 8, "max": 8 },
+            "minecraft:type_family": { "family": [ "irongolem", "mob" ] },
+            "minecraft:nameable": { "allow_name_tag_renaming": true, "always_show": true },
+            "minecraft:collision_box": { "width": 1.4, "height": 2.9 },
+            "minecraft:health": { "value": 30, "max": 30 },
             "minecraft:hurt_on_condition": { "damage_conditions": [ { "filters": { "test": "in_lava", "subject": "self", "operator": "==", "value": true }, "cause": "lava", "damage_per_tick": 4 } ] },
             "minecraft:movement": { "value": 0.25 },
-            "minecraft:navigation.walk": { "can_path_over_water": true },
+            "minecraft:navigation.walk": { "can_path_over_water": false, "avoid_water": true, "avoid_damage_blocks": true },
             "minecraft:movement.basic": { },
             "minecraft:jump.static": { },
             "minecraft:can_climb": { },
-            "minecraft:attack": { "damage": 1 },
-            "minecraft:collision_box": { "width": 0.4, "height": 0.3 },
-            "minecraft:despawn": { "despawn_from_distance": {} },
-            "minecraft:behavior.float": { "priority": 1 },
-            "minecraft:behavior.nearest_attackable_target": { "priority": 2, "attack_interval": 10, "entity_types": [ { "filters": { "any_of": [ { "test" : "is_family", "subject" : "other", "value" : "player"}, { "test" : "is_family", "subject" : "other", "value" : "snowgolem"}, { "test" : "is_family", "subject" : "other", "value" : "irongolem"} ] }, "max_dist": 8 } ] },
+            "minecraft:attack": { "damage": { "range_min": 4, "range_max": 10 } },
+            "minecraft:knockback_resistance": { "value": 1.0 },
+            "minecraft:leashable": { "soft_distance": 4.0, "hard_distance": 6.0, "max_distance": 10.0 },
+            "minecraft:behavior.melee_attack": { "priority": 1, "track_target": true },
+            "minecraft:behavior.move_towards_target": { "priority": 2, "speed_multiplier": 0.9, "within_radius": 32 },
+            "minecraft:behavior.random_stroll": { "priority": 6, "speed_multiplier": 0.6, "xz_dist": 16 },
+            "minecraft:behavior.look_at_player": { "priority": 7, "look_distance": 6.0, "probability": 0.02 },
+            "minecraft:behavior.random_look_around": { "priority": 8 },
+            "minecraft:behavior.hurt_by_target": { "priority": 2, "entity_types": { "filters": { "test": "is_family", "subject": "other", "operator": "!=", "value": "creeper" } } },
+            "minecraft:persistent": { },
             "minecraft:physics": { },
             "minecraft:pushable": { "is_pushable": true, "is_pushable_by_piston": true },
+            "minecraft:follow_range": { "value": 64 },
             "minecraft:conditional_bandwidth_optimization": { },
-            "minecraft:block_climber": { }
+            "minecraft:preferred_path": {
+                "max_fall_blocks": 1,
+                "jump_cost": 5,
+                "default_block_cost": 1.5,
+                "preferred_path_blocks": [
+                    { "cost": 0, "blocks": [ "grass_path" ] },
+                    { "cost": 1, "blocks": [ "cobblestone", "stone", "stonebrick", "sandstone", "mossy_cobblestone", "stone_slab", "stone_slab2", "stone_slab3", "stone_slab4", "double_stone_slab", "double_stone_slab2", "double_stone_slab3", "double_stone_slab4", "wooden_slab", "double_wooden_slab", "planks", "brick_block", "nether_brick", "red_nether_brick", "end_bricks", "red_sandstone", "stained_glass", "glass", "glowstone", "prismarine", "emerald_block", "diamond_block", "lapis_block", "gold_block", "redstone_block", "purple_glazed_terracotta", "white_glazed_terracotta", "orange_glazed_terracotta", "magenta_glazed_terracotta", "light_blue_glazed_terracotta", "yellow_glazed_terracotta", "lime_glazed_terracotta", "pink_glazed_terracotta", "gray_glazed_terracotta", "silver_glazed_terracotta", "cyan_glazed_terracotta", "blue_glazed_terracotta", "brown_glazed_terracotta", "green_glazed_terracotta", "red_glazed_terracotta", "black_glazed_terracotta" ] },
+                    { "cost": 50, "blocks": [ "bed", "lectern", "composter", "grindstone", "blast_furnace", "smoker", "fletching_table", "cartography_table", "brewing_stand", "smithing_table", "cauldron", "barrel", "loom", "stonecutter" ] }
+                ]
+            },
+            "minecraft:damage_sensor": {
+                "triggers": [
+                    { "cause": "fall", "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "red", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "red", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "blue", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "blue", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "green", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "green", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "yellow", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "yellow", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "white", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "white", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "pink", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "pink", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "gray", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "gray", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "cyan", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "cyan", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "brown", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "brown", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "purple", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "purple", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "orange", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "orange", "subject": "other" } ] } }, "deals_damage": false }
+                ]
+            }
+
         },
 
         "events": {
-            "minecraft:entity_spawned": { "add": { "component_groups": [ "minecraft:silverfish_calm", "vanilla_components" ] } },
-            "minecraft:become_angry": { "remove": { "component_groups": [ "minecraft:silverfish_calm" ] }, "add": { "component_groups": [ "minecraft:silverfish_angry" ] } },
-            "minecraft:on_calm": { "remove": { "component_groups": [ "minecraft:silverfish_angry" ] }, "add": { "component_groups": [ "minecraft:silverfish_calm" ] } },
-            
-            "team_red": { "add": { "component_groups": [ "team_red", "bedwars_silverfish" ] }, "set_property": { "bedwars:team": "red" }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
-            "team_blue": { "add": { "component_groups": [ "team_blue", "bedwars_silverfish" ] }, "set_property": { "bedwars:team": "blue" }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
-            "team_green": { "add": { "component_groups": [ "team_green", "bedwars_silverfish" ] }, "set_property": { "bedwars:team": "green" }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
-            "team_yellow": { "add": { "component_groups": [ "team_yellow", "bedwars_silverfish" ] }, "set_property": { "bedwars:team": "yellow" }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
-            "team_white": { "add": { "component_groups": [ "team_white", "bedwars_silverfish" ] }, "set_property": { "bedwars:team": "white" }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
-            "team_pink": { "add": { "component_groups": [ "team_pink", "bedwars_silverfish" ] }, "set_property": { "bedwars:team": "pink" }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
-            "team_gray": { "add": { "component_groups": [ "team_gray", "bedwars_silverfish" ] }, "set_property": { "bedwars:team": "gray" }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
-            "team_cyan": { "add": { "component_groups": [ "team_cyan", "bedwars_silverfish" ] }, "set_property": { "bedwars:team": "cyan" }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
-            "team_brown": { "add": { "component_groups": [ "team_brown", "bedwars_silverfish" ] }, "set_property": { "bedwars:team": "brown" }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
-            "team_purple": { "add": { "component_groups": [ "team_purple", "bedwars_silverfish" ] }, "set_property": { "bedwars:team": "purple" }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } },
-            "team_orange": { "add": { "component_groups": [ "team_orange", "bedwars_silverfish" ] }, "set_property": { "bedwars:team": "cyan" }, "remove": { "component_groups": [ "minecraft:silverfish_calm", "minecraft:silverfish_angry", "vanilla_components" ] } }
+            "team_red": { "add": { "component_groups": [ "team_red" ] }, "set_property": { "bedwars:team": "red" } },
+            "team_blue": { "add": { "component_groups": [ "team_blue" ] }, "set_property": { "bedwars:team": "blue" } },
+            "team_green": { "add": { "component_groups": [ "team_green" ] }, "set_property": { "bedwars:team": "green" } },
+            "team_yellow": { "add": { "component_groups": [ "team_yellow" ] }, "set_property": { "bedwars:team": "yellow" } },
+            "team_white": { "add": { "component_groups": [ "team_white" ] }, "set_property": { "bedwars:team": "white" } },
+            "team_pink": { "add": { "component_groups": [ "team_pink" ] }, "set_property": { "bedwars:team": "pink" } },
+            "team_gray": { "add": { "component_groups": [ "team_gray" ] }, "set_property": { "bedwars:team": "gray" } },
+            "team_cyan": { "add": { "component_groups": [ "team_cyan" ] }, "set_property": { "bedwars:team": "cyan" } },
+            "team_brown": { "add": { "component_groups": [ "team_brown" ] }, "set_property": { "bedwars:team": "brown" } },
+            "team_purple": { "add": { "component_groups": [ "team_purple" ] }, "set_property": { "bedwars:team": "purple" } },
+            "team_orange": { "add": { "component_groups": [ "team_cyan" ] }, "set_property": { "bedwars:team": "cyan" } }
         },
 
         "component_groups": {
-            "vanilla_components": {
-                "minecraft:behavior.silverfish_merge_with_stone": { "priority": 5 }
-            },
-            "minecraft:silverfish_calm": {
-                "minecraft:on_target_acquired" : { "event": "minecraft:become_angry", "target": "self" }
-            },
-            "minecraft:silverfish_angry": {
-                "minecraft:angry": { "duration": -1, "broadcast_anger": true, "broadcast_range": 20, "calm_event": { "event": "minecraft:on_calm", "target": "self" } },
-                "minecraft:behavior.melee_attack": { "priority": 0, "track_target": true },
-                "minecraft:behavior.silverfish_wake_up_friends": { "priority": 1 },
-                "minecraft:behavior.hurt_by_target": { "priority": 1, "alert_same_type": true }
-            },
-
             "team_red": {
                 "minecraft:behavior.nearest_attackable_target": {
                     "priority": 0,
@@ -422,26 +434,6 @@
                     "broadcast_anger_on_being_attacked": true,
                     "broadcast_anger_when_dying": true,
                     "duration": 241
-                }
-            },
-
-            "bedwars_silverfish": {
-                "minecraft:experience_reward": { "on_bred": 0, "on_death": 0 },
-                "minecraft:nameable": { "allow_name_tag_renaming": true, "always_show": true },
-                "minecraft:damage_sensor": {
-                    "triggers": [
-                        { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "red", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "red", "subject": "other" } ] } }, "deals_damage": false },
-                        { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "blue", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "blue", "subject": "other" } ] } }, "deals_damage": false },
-                        { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "green", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "green", "subject": "other" } ] } }, "deals_damage": false },
-                        { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "yellow", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "yellow", "subject": "other" } ] } }, "deals_damage": false },
-                        { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "white", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "white", "subject": "other" } ] } }, "deals_damage": false },
-                        { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "pink", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "pink", "subject": "other" } ] } }, "deals_damage": false },
-                        { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "gray", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "gray", "subject": "other" } ] } }, "deals_damage": false },
-                        { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "cyan", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "cyan", "subject": "other" } ] } }, "deals_damage": false },
-                        { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "brown", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "brown", "subject": "other" } ] } }, "deals_damage": false },
-                        { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "purple", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "purple", "subject": "other" } ] } }, "deals_damage": false },
-                        { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "orange", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "orange", "subject": "other" } ] } }, "deals_damage": false }
-                    ]
                 }
             }
         }

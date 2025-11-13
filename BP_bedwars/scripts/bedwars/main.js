@@ -53,7 +53,8 @@ class BedwarsSystem {
         /** 地图信息 @type {data.BedwarsMapInfo[]} */
         let maps = [];
 
-        if (this.settings.mapEnabled.classicTwoTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.TwoTeams));
+        // if (this.settings.mapEnabled.classicTwoTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.TwoTeams));
+        if (this.settings.mapEnabled.classicFourTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.FourTeams));
 
         let randomMap = maps[lib.JSUtil.randomInt(0, maps.length - 1)];
         if (randomMap.mode == "classic") {
@@ -366,7 +367,7 @@ class BedwarsEvent {
 // 例如，游戏前、游戏时都使用什么逻辑，都通过模式调用 Minecraft 的接口（world 的前事件、后事件和 system.runInterval 等）
 // 来执行，并对系统传入 Minecraft 传回的参数，方便后续管理。
 // 模式内部有几个特殊方法：entry...State(){} 和 exit...State() {}，它们在阶段变更时执行。一共有 5 个阶段。
-// 此外，...Timeline()的方法为时间线方法，...Event()方法为事件放发，可以调用它们以注册时间线或事件。
+// 此外，timeline...()的方法为时间线方法，event...()方法为事件放发，可以调用它们以注册时间线或事件。
 // 一切其他模式都是基于 BedwarsClassicMode（经典模式）的模式构建的。
 // 【优化指南】在不必要的情况下，为性能考虑，模式内的代码会传入较高延迟的 system.runInterval，并且在符合特定条件时会销毁。
 // 例如蠹虫生成后，蠹虫存活倒计时才开始计时，并在蠹虫全部消失后销毁时间线。事件也是类似的道理，在不需要时应销毁。
@@ -437,7 +438,7 @@ class BedwarsClassicMode {
     // ===== 通用事件与时间线 =====
 
     /** 施加饱和状态效果时间线 */
-    applySaturationTimeline() {
+    timelineApplySaturation() {
         return new BedwarsTimeline(
             "applySaturation",
             minecraft.system.runInterval(() => {
@@ -447,7 +448,7 @@ class BedwarsClassicMode {
     };
 
     /** 显示游戏前的信息板 */
-    showBeforeGamingInfoBoardTimeline() {
+    timelineShowBeforeGamingInfoBoard() {
         return new BedwarsTimeline(
             "showBeforeGamingInfoboard",
             minecraft.system.runInterval(() => {
@@ -502,7 +503,7 @@ class BedwarsClassicMode {
     };
 
     /** 游戏前时间线 */
-    beforeGamingTimeline() {
+    timelineBeforeGaming() {
         return new BedwarsTimeline(
             "beforeGaming",
             minecraft.system.runInterval(() => {
@@ -525,7 +526,7 @@ class BedwarsClassicMode {
     };
 
     /** 阻止玩家破坏方块的事件 */
-    stopPlayerBreakBlockEvent() {
+    eventStopPlayerBreakBlock() {
         return new BedwarsEvent(
             "stopPlayerBreakBlock",
             minecraft.world.beforeEvents.playerBreakBlock,
@@ -595,7 +596,7 @@ class BedwarsClassicMode {
     };
 
     /** 游戏前玩家进入游戏的事件 */
-    playerSpawnBeforeGameEvent() {
+    eventPlayerSpawnBeforeGame() {
         return new BedwarsEvent(
             "playerSpawnBeforeGame",
             minecraft.world.afterEvents.playerSpawn,
@@ -607,7 +608,7 @@ class BedwarsClassicMode {
     };
 
     /** 显示游戏中的信息板 */
-    showGamingInfoBoardTimeline() {
+    timelineShowGamingInfoBoard() {
         return new BedwarsTimeline(
             "showGamingInfoboard",
             minecraft.system.runInterval(() => {
@@ -684,17 +685,17 @@ class BedwarsClassicMode {
     };
 
     /** 世界设置事件 */
-    worldSettingsEvent() {
+    eventWorldSettings() {
         // debug
     };
 
     /** 击杀样式设置事件 */
-    killStyleSettingsEvent() {
+    eventKillStyleSettings() {
         // debug
     };
 
     /** 队伍选择设置事件 */
-    selectTeamSettingsEvent() {
+    eventSelectTeamSettings() {
         // debug
     };
 
@@ -763,19 +764,19 @@ class BedwarsClassicMode {
         minecraft.world.setDefaultSpawnLocation({ x: 0, y: 121, z: 0 });
 
         // 注册时间线
-        this.system.subscribeTimeline(this.showBeforeGamingInfoBoardTimeline()); // 右侧信息板
-        this.system.subscribeTimeline(this.beforeGamingTimeline()); // 游戏前时间线
-        this.system.subscribeTimeline(this.applySaturationTimeline()); // 施加饱和效果
+        this.system.subscribeTimeline(this.timelineShowBeforeGamingInfoBoard()); // 右侧信息板
+        this.system.subscribeTimeline(this.timelineBeforeGaming()); // 游戏前时间线
+        this.system.subscribeTimeline(this.timelineApplySaturation()); // 施加饱和效果
 
         // 注册事件
-        this.system.subscribeEvent(this.stopPlayerBreakBlockEvent()); // 阻止玩家破坏方块
-        // this.system.subscribeEvent(this.worldSettingsEvent()); // 世界设置事件
-        // this.system.subscribeEvent(this.killStyleSettingsEvent()); // 击杀样式设置事件
-        // this.system.subscribeEvent(this.selectTeamSettingsEvent()); // 队伍选择设置事件
+        this.system.subscribeEvent(this.eventStopPlayerBreakBlock()); // 阻止玩家破坏方块
+        // this.system.subscribeEvent(this.eventWorldSettings()); // 世界设置事件
+        // this.system.subscribeEvent(this.eventKillStyleSettings()); // 击杀样式设置事件
+        // this.system.subscribeEvent(this.eventSelectTeamSettings()); // 队伍选择设置事件
 
         // 在有玩家进入前，等待玩家进入后清除，有玩家时则直接清除
-        if (lib.PlayerUtil.getAmount() < 1) this.system.subscribeEvent(this.playerSpawnWhenClearingMapEvent()); // 当有玩家进入后，再清除地图
-        else this.system.subscribeTimeline(this.clearMapTimeline()); // 清空地图状态的主时间线
+        if (lib.PlayerUtil.getAmount() < 1) this.system.subscribeEvent(this.eventPlayerSpawnWhenClearingMap()); // 当有玩家进入后，再清除地图
+        else this.system.subscribeTimeline(this.timelineClearMap()); // 清空地图状态的主时间线
 
     };
 
@@ -790,13 +791,13 @@ class BedwarsClassicMode {
     };
 
     /** 玩家进入后触发清除地图的事件 */
-    playerSpawnWhenClearingMapEvent() {
+    eventPlayerSpawnWhenClearingMap() {
         return new BedwarsEvent(
             "playerSpawnWhenClearingMap",
             minecraft.world.afterEvents.playerSpawn,
             minecraft.world.afterEvents.playerSpawn.subscribe(() => {
                 // 当有玩家进入后，启用时间线并销毁此事件
-                this.system.subscribeTimeline(this.clearMapTimeline()); // 清空地图状态的主时间线
+                this.system.subscribeTimeline(this.timelineClearMap()); // 清空地图状态的主时间线
                 this.system.unsubscribeEvent("playerSpawnWhenClearingMap"); // 销毁此事件
             })
         );
@@ -804,7 +805,7 @@ class BedwarsClassicMode {
     };
 
     /** 清空地图状态的时间线 */
-    clearMapTimeline() {
+    timelineClearMap() {
         return new BedwarsTimeline(
             "clearMap",
             minecraft.system.runInterval(() => { // 每 6 * clearLayer 刻执行 1 次
@@ -865,7 +866,7 @@ class BedwarsClassicMode {
             // 加载队伍岛屿
             for (const teamIsland of this.map.teamIslands) {
                 await lib.StructureUtil.placeAsync(`${this.map.id}:team_island`, "overworld", teamIsland.location, { animationMode: "Layers", animationSeconds: teamIsland.loadTime / this.map.getStructureLoadSpeed(), rotation: teamIsland.rotation, mirror: teamIsland.mirror });
-                if (!this.map.disableTeamIslandFlag) lib.DimensionUtil.replaceBlock("overworld", teamIsland.flagLocationFrom, teamIsland.flagLocationTo, ["minecraft:white_wool"], `minecraft:${teamIsland.teamId}_wool`);
+                if (!this.map.disableTeamIslandFlag) lib.DimensionUtil.replaceBlock("overworld", teamIsland.flagLocationFrom, teamIsland.flagLocationTo, ["minecraft:white_wool"], `minecraft:${teamIsland.teamId == data.ValidTeams.green ? "lime": teamIsland.teamId}_wool`);
             }
 
             // 加载普通岛屿
@@ -885,16 +886,16 @@ class BedwarsClassicMode {
         })();
 
         // 注册时间线
-        this.system.subscribeTimeline(this.calculateLoadTimeCountdownTimeline()); // 倒计时显示
-        this.system.subscribeTimeline(this.showBeforeGamingInfoBoardTimeline()); // 右侧信息板
-        this.system.subscribeTimeline(this.beforeGamingTimeline()); // 游戏前时间线
-        this.system.subscribeTimeline(this.applySaturationTimeline()); // 施加饱和效果
+        this.system.subscribeTimeline(this.timelineCalculateLoadTimeCountdown()); // 倒计时显示
+        this.system.subscribeTimeline(this.timelineShowBeforeGamingInfoBoard()); // 右侧信息板
+        this.system.subscribeTimeline(this.timelineBeforeGaming()); // 游戏前时间线
+        this.system.subscribeTimeline(this.timelineApplySaturation()); // 施加饱和效果
 
         // 注册事件
-        this.system.subscribeEvent(this.stopPlayerBreakBlockEvent()); // 阻止玩家破坏方块
-        // this.system.subscribeEvent(this.worldSettingsEvent()); // 世界设置事件
-        // this.system.subscribeEvent(this.killStyleSettingsEvent()); // 击杀样式设置事件
-        // this.system.subscribeEvent(this.selectTeamSettingsEvent()); // 队伍选择设置事件
+        this.system.subscribeEvent(this.eventStopPlayerBreakBlock()); // 阻止玩家破坏方块
+        // this.system.subscribeEvent(this.eventWorldSettings()); // 世界设置事件
+        // this.system.subscribeEvent(this.eventKillStyleSettings()); // 击杀样式设置事件
+        // this.system.subscribeEvent(this.eventSelectTeamSettings()); // 队伍选择设置事件
 
     };
 
@@ -909,7 +910,7 @@ class BedwarsClassicMode {
     };
 
     /** 计算生成剩余时间 */
-    calculateLoadTimeCountdownTimeline() {
+    timelineCalculateLoadTimeCountdown() {
         return new BedwarsTimeline(
             "calculateLoadTimeCountdown",
             minecraft.system.runInterval(() => {
@@ -924,26 +925,26 @@ class BedwarsClassicMode {
     entryWaitingState() {
 
         // 注册时间线
-        this.system.subscribeTimeline(this.showBeforeGamingInfoBoardTimeline()); // 右侧记分板
-        this.system.subscribeTimeline(this.beforeGamingTimeline()); // 游戏前时间线
-        this.system.subscribeTimeline(this.applySaturationTimeline()); // 施加饱和效果
+        this.system.subscribeTimeline(this.timelineShowBeforeGamingInfoBoard()); // 右侧记分板
+        this.system.subscribeTimeline(this.timelineBeforeGaming()); // 游戏前时间线
+        this.system.subscribeTimeline(this.timelineApplySaturation()); // 施加饱和效果
 
         // 注册事件
-        this.system.subscribeEvent(this.stopPlayerBreakBlockEvent()); // 阻止玩家破坏方块
-        // this.system.subscribeEvent(this.worldSettingsEvent()); // 世界设置事件
-        // this.system.subscribeEvent(this.killStyleSettingsEvent()); // 击杀样式设置事件
-        // this.system.subscribeEvent(this.selectTeamSettingsEvent()); // 队伍选择设置事件
+        this.system.subscribeEvent(this.eventStopPlayerBreakBlock()); // 阻止玩家破坏方块
+        // this.system.subscribeEvent(this.eventWorldSettings()); // 世界设置事件
+        // this.system.subscribeEvent(this.eventKillStyleSettings()); // 击杀样式设置事件
+        // this.system.subscribeEvent(this.eventSelectTeamSettings()); // 队伍选择设置事件
 
         // 人数检查的时间线和事件
         if (lib.PlayerUtil.getAmount() < this.system.settings.beforeGaming.waiting.minPlayerCount) // 人数不足时注册的时间线和事件
-            this.system.subscribeEvent(this.playerSpawnWhenWaitingEvent());
+            this.system.subscribeEvent(this.eventPlayerSpawnWhenWaiting());
         else {  // 人数足够时注册的时间线和事件
 
             // 令倒计时等于设置值
             this.gameStartCountdown = this.system.settings.beforeGaming.waiting.gameStartWaitingTime;
 
-            this.system.subscribeTimeline(this.gameStartCountdownTimeline());
-            this.system.subscribeEvent(this.playerLeaveWhenWaitingEvent());
+            this.system.subscribeTimeline(this.timelineGameStartCountdown());
+            this.system.subscribeEvent(this.eventPlayerLeaveWhenWaiting());
 
         }
     };
@@ -959,21 +960,19 @@ class BedwarsClassicMode {
     };
 
     /** 当玩家进入后，检查是否符合开启游戏的条件的事件 */
-    playerSpawnWhenWaitingEvent() {
+    eventPlayerSpawnWhenWaiting() {
         return new BedwarsEvent(
             "playerSpawnWhenWaiting",
             minecraft.world.afterEvents.playerSpawn,
             minecraft.world.afterEvents.playerSpawn.subscribe(() => {
                 // 如果人数充足，检查玩家人数是否会又不足，并开始游戏倒计时
                 if (lib.PlayerUtil.getAmount() >= this.system.settings.beforeGaming.waiting.minPlayerCount) {
-                    lib.Debug.sendMessage(`[BedwarsClassicMode] 符合转换条件！开始游戏倒计时。`);
-
                     // 令倒计时等于设置值
                     this.gameStartCountdown = this.system.settings.beforeGaming.waiting.gameStartWaitingTime;
 
                     // 注册或销毁时间线或事件
-                    this.system.subscribeTimeline(this.gameStartCountdownTimeline());
-                    this.system.subscribeEvent(this.playerLeaveWhenWaitingEvent());
+                    this.system.subscribeTimeline(this.timelineGameStartCountdown());
+                    this.system.subscribeEvent(this.eventPlayerLeaveWhenWaiting());
                     this.system.unsubscribeEvent("playerSpawnWhenWaiting");
                 };
             })
@@ -981,7 +980,7 @@ class BedwarsClassicMode {
     };
 
     /** 当玩家离开后，检查是否符合终止开启游戏的条件的事件 */
-    playerLeaveWhenWaitingEvent() {
+    eventPlayerLeaveWhenWaiting() {
         return new BedwarsEvent(
             "playerLeaveWhenWaiting",
             minecraft.world.afterEvents.playerLeave,
@@ -995,10 +994,9 @@ class BedwarsClassicMode {
                         player.sendMessage({ translate: "message.needsMorePlayer" });
                         player.onScreenDisplay.setTitle({ translate: "title.needsMorePlayer" }, { fadeInDuration: 0, stayDuration: 40, fadeOutDuration: 0 });
                         player.playSound("note.hat", { location: player.location });
-                    })
-                    lib.Debug.sendMessage(`[BedwarsClassicMode] 符合转换条件！中止游戏倒计时。`)
+                    });
                     // 重新注册或销毁时间线
-                    this.system.subscribeEvent(this.playerSpawnWhenWaitingEvent());
+                    this.system.subscribeEvent(this.eventPlayerSpawnWhenWaiting());
                     this.system.unsubscribeTimeline("gameStartCountdown");
                     this.system.unsubscribeEvent("playerLeaveWhenWaiting");
                 }
@@ -1008,7 +1006,7 @@ class BedwarsClassicMode {
     };
 
     /** 玩家足够时执行的时间线 */
-    gameStartCountdownTimeline() {
+    timelineGameStartCountdown() {
         return new BedwarsTimeline(
             "gameStartCountdown",
             minecraft.system.runInterval(() => {
@@ -1038,7 +1036,6 @@ class BedwarsClassicMode {
                     });
                 }
                 else if (this.gameStartCountdown <= 0) {
-                    lib.Debug.sendMessage(`[BedwarsClassicMode] 符合条件！已退出等待状态。`)
                     this.exitWaitingState();
                 }
             }, 20)
@@ -1128,39 +1125,39 @@ class BedwarsClassicMode {
         this.upgradeShopitemData = Object.values(data.upgradeShopitemData).filter(data => data.description.classicModeEnabled != false);
 
         // 注册事件 debug 可以考虑在物品购买后再添加物品对应事件
-        this.system.subscribeEvent(this.playerLeaveGameEvent()); // 玩家退出事件
-        this.system.subscribeEvent(this.stopPlayerBreakBlockEvent()); // 阻止玩家破坏方块
-        this.system.subscribeEvent(this.newEntitySpawnEvent()); // 实体（尤其是弹射物）生成时的事件，用于创建新的事件（比如火球出现后，检查火球是否击中）
-        this.system.subscribeEvent(this.entityRemoveEvent()); // 实体（尤其是弹射物）被移除时的事件，用于移除事件
-        this.system.subscribeEvent(this.playerBreakBedEvent()); // 玩家破坏床的事件
-        this.system.subscribeEvent(this.playerDieEvent()); // 玩家死亡事件
-        this.system.subscribeEvent(this.playerHurtByPlayerEvent()); // 玩家被其他玩家攻击事件
-        this.system.subscribeEvent(this.playerFellIntoVoidEvent()); // 玩家掉进虚空事件
-        this.system.subscribeEvent(this.playerPlaceBlockOnHeightLimitEvent()); // 玩家在上下限高度放置方块事件
-        this.system.subscribeEvent(this.playerOpenChestEvent()); // 玩家开箱事件
-        this.system.subscribeEvent(this.playerPlaceBlockOnSafeAreaEvent()); // 检查玩家在安全区域放置方块事件
-        this.system.subscribeEvent(this.playerEatGoldenAppleEvent()); // 检查玩家吃下金苹果事件
-        this.system.subscribeEvent(this.playerDrinkPotionEvent()); // 检查玩家喝下药水事件
-        this.system.subscribeEvent(this.igniteTntImmediatelyEvent()); // 放置 TNT 则立刻点燃事件
-        this.system.subscribeEvent(this.playerTradeEvent()); // 玩家交易事件
-        this.system.subscribeEvent(this.arrowHitEntityEvent()); // 弓箭击中事件
-        this.system.subscribeEvent(this.magicMilkUseEvent()); // 使用魔法牛奶事件
-        this.system.subscribeEvent(this.dreamDefenderUseEvent()); // 使用梦境守护者事件，使用后生成梦境守护者
-        this.system.subscribeEvent(this.waterBucketUseEvent()); // 使用水桶事件，使用后收回桶
-        // this.system.subscribeEvent(this.worldSettingsEvent()); // 世界设置事件
-        // this.system.subscribeEvent(this.killStyleSettingsEvent()); // 击杀样式设置事件
-        // this.system.subscribeEvent(this.selectTeamSettingsEvent()); // 队伍选择设置事件
+        this.system.subscribeEvent(this.eventPlayerLeaveGame()); // 玩家退出事件
+        this.system.subscribeEvent(this.eventStopPlayerBreakBlock()); // 阻止玩家破坏方块
+        this.system.subscribeEvent(this.eventNewEntitySpawn()); // 实体（尤其是弹射物）生成时的事件，用于创建新的事件（比如火球出现后，检查火球是否击中）
+        this.system.subscribeEvent(this.eventEntityRemove()); // 实体（尤其是弹射物）被移除时的事件，用于移除事件
+        this.system.subscribeEvent(this.eventPlayerBreakBed()); // 玩家破坏床的事件
+        this.system.subscribeEvent(this.eventPlayerDie()); // 玩家死亡事件
+        this.system.subscribeEvent(this.eventPlayerHurtByPlayer()); // 玩家被其他玩家攻击事件
+        this.system.subscribeEvent(this.eventPlayerFellIntoVoid()); // 玩家掉进虚空事件
+        this.system.subscribeEvent(this.eventPlayerPlaceBlockOnHeightLimit()); // 玩家在上下限高度放置方块事件
+        this.system.subscribeEvent(this.eventPlayerOpenChest()); // 玩家开箱事件
+        this.system.subscribeEvent(this.eventPlayerPlaceBlockOnSafeArea()); // 检查玩家在安全区域放置方块事件
+        this.system.subscribeEvent(this.eventPlayerEatGoldenApple()); // 检查玩家吃下金苹果事件
+        this.system.subscribeEvent(this.eventPlayerDrinkPotion()); // 检查玩家喝下药水事件
+        this.system.subscribeEvent(this.eventIgniteTntImmediately()); // 放置 TNT 则立刻点燃事件
+        this.system.subscribeEvent(this.eventPlayerTrade()); // 玩家交易事件
+        this.system.subscribeEvent(this.eventArrowHitEntity()); // 弓箭击中事件
+        this.system.subscribeEvent(this.eventMagicMilkUse()); // 使用魔法牛奶事件
+        this.system.subscribeEvent(this.eventDreamDefenderUse()); // 使用梦境守护者事件，使用后生成梦境守护者
+        this.system.subscribeEvent(this.eventWaterBucketUse()); // 使用水桶事件，使用后收回桶
+        // this.system.subscribeEvent(this.eventWorldSettings()); // 世界设置事件
+        // this.system.subscribeEvent(this.eventKillStyleSettings()); // 击杀样式设置事件
+        // this.system.subscribeEvent(this.eventSelectTeamSettings()); // 队伍选择设置事件
 
         // 注册时间线
-        this.system.subscribeTimeline(this.showGamingInfoBoardTimeline()); // 右侧记分板
-        this.system.subscribeTimeline(this.applySaturationTimeline()); // 施加饱和效果
-        this.system.subscribeTimeline(this.applyTeamUpgradeEffectTimeline()); // 施加团队升级效果
-        this.system.subscribeTimeline(this.showPlayerHealthTimeline()); // 玩家血量显示
-        this.system.subscribeTimeline(this.removeEnderPearlTimeline()); // 移除过界末影珍珠时间线
-        if (!this.system.settings.miscellaneous.playerCanThrowItemsInVoid) this.system.subscribeTimeline(this.stopPlayerThrowItemInVoidTimeline()); // 禁止玩家在虚空扔出物品时间线
-        this.system.subscribeTimeline(this.removeItemTimeline()); // 禁止特定类型的掉落物存在
-        this.system.subscribeTimeline(this.spawnTeamResourceTimeline()); // 生成队伍类型资源时间线（包括铁、金、绿宝石）
-        this.system.subscribeTimeline(this.spawnMapResourceTimeline()); // 生成地图类型资源时间线（包括钻石、绿宝石）
+        this.system.subscribeTimeline(this.timelineShowGamingInfoBoard()); // 右侧记分板
+        this.system.subscribeTimeline(this.timelineApplySaturation()); // 施加饱和效果
+        this.system.subscribeTimeline(this.timelineApplyTeamUpgradeEffect()); // 施加团队升级效果
+        this.system.subscribeTimeline(this.timelineShowPlayerHealth()); // 玩家血量显示
+        this.system.subscribeTimeline(this.timelineRemoveEnderPearl()); // 移除过界末影珍珠时间线
+        if (!this.system.settings.miscellaneous.playerCanThrowItemsInVoid) this.system.subscribeTimeline(this.timelineStopPlayerThrowItemInVoid()); // 禁止玩家在虚空扔出物品时间线
+        this.system.subscribeTimeline(this.timelineRemoveItem()); // 禁止特定类型的掉落物存在
+        this.system.subscribeTimeline(this.timelineSpawnTeamResource()); // 生成队伍类型资源时间线（包括铁、金、绿宝石）
+        this.system.subscribeTimeline(this.timelineSpawnMapResource()); // 生成地图类型资源时间线（包括钻石、绿宝石）
 
     };
 
@@ -1173,7 +1170,7 @@ class BedwarsClassicMode {
     /** 当某些实体生成后，则开始对应的事件检查
      * @add 在游戏开始时创建
      */
-    newEntitySpawnEvent() {
+    eventNewEntitySpawn() {
         return new BedwarsEvent(
             "newEntitySpawn",
             minecraft.world.afterEvents.entitySpawn,
@@ -1181,21 +1178,21 @@ class BedwarsClassicMode {
 
                 // 如果生成了火球，则触发对应检查事件
                 if (event.entity.typeId == "bedwars:fireball") {
-                    if (!this.system.getEvent("fireballHitBlock")) this.system.subscribeEvent(this.fireballHitBlockEvent());
-                    if (!this.system.getEvent("fireballHitEntity")) this.system.subscribeEvent(this.fireballHitEntityEvent());
-                    if (!this.system.getEvent("applyMomentum")) this.system.subscribeEvent(this.applyMomentumEvent());
-                    if (!this.system.getEvent("stopExplosionBreakBlock")) this.system.subscribeEvent(this.stopExplosionBreakBlockEvent());
-                    if (!this.system.getEvent("explosionDropBedwarsBlocks")) this.system.subscribeEvent(this.explosionDropBedwarsBlocksEvent());
-                    if (!this.system.getTimeline("explosionApplyResistance")) this.system.subscribeTimeline(this.explosionApplyResistanceTimeline());
+                    if (!this.system.getEvent("fireballHitBlock")) this.system.subscribeEvent(this.eventFireballHitBlock());
+                    if (!this.system.getEvent("fireballHitEntity")) this.system.subscribeEvent(this.eventFireballHitEntity());
+                    if (!this.system.getEvent("applyMomentum")) this.system.subscribeEvent(this.eventApplyMomentum());
+                    if (!this.system.getEvent("stopExplosionBreakBlock")) this.system.subscribeEvent(this.eventStopExplosionBreakBlock());
+                    if (!this.system.getEvent("explosionDropBedwarsBlocks")) this.system.subscribeEvent(this.eventExplosionDropBedwarsBlocks());
+                    if (!this.system.getTimeline("explosionApplyResistance")) this.system.subscribeTimeline(this.timelineExplosionApplyResistance());
                 }
                 // 如果生成了床虱，则触发对应检查事件
                 else if (event.entity.typeId == "bedwars:bed_bug") {
-                    if (!this.system.getEvent("bedBugHitBlock")) this.system.subscribeEvent(this.bedBugHitBlockEvent());
-                    if (!this.system.getEvent("bedBugHitEntity")) this.system.subscribeEvent(this.bedBugHitEntityEvent());
+                    if (!this.system.getEvent("bedBugHitBlock")) this.system.subscribeEvent(this.eventBedBugHitBlock());
+                    if (!this.system.getEvent("bedBugHitEntity")) this.system.subscribeEvent(this.eventBedBugHitEntity());
                 }
                 // 如果生成了搭桥蛋，则触发对应检查事件
                 else if (event.entity.typeId == "bedwars:bridge_egg" && !this.system.getTimeline("bridgeEggCreateBridge")) {
-                    this.system.subscribeTimeline(this.bridgeEggCreateBridgeTimeline());
+                    this.system.subscribeTimeline(this.timelineBridgeEggCreateBridge());
                 }
             })
         );
@@ -1204,7 +1201,7 @@ class BedwarsClassicMode {
     /** 当某些实体消失后，则停止对应的事件检查
      * @add 在游戏开始时创建
      */
-    entityRemoveEvent() {
+    eventEntityRemove() {
         return new BedwarsEvent(
             "entityRemove",
             minecraft.world.afterEvents.entityRemove,
@@ -1233,7 +1230,7 @@ class BedwarsClassicMode {
     /** 玩家退出事件，退出后保存数据到该玩家名称的记分板下
      * @add 在游戏开始时创建
      */
-    playerLeaveGameEvent() {
+    eventPlayerLeaveGame() {
         return new BedwarsEvent(
             "playerLeaveGame",
             minecraft.world.beforeEvents.playerLeave,
@@ -1280,7 +1277,7 @@ class BedwarsClassicMode {
                         // 备份完毕后，销毁该对象
                         playerData = void 0;
                         // 如果没有检查玩家重新进入的事件，创建该事件
-                        if (!this.system.getEvent("playerJoinGame")) this.system.subscribeEvent(this.playerJoinGameEvent());
+                        if (!this.system.getEvent("playerJoinGame")) this.system.subscribeEvent(this.eventPlayerJoinGame());
                     });
 
                 };
@@ -1292,7 +1289,7 @@ class BedwarsClassicMode {
      * @add 在有玩家退出游戏后创建
      * @remove 在所有玩家回到游戏后销毁 debug 如果本来就没有玩家退出时有人进入怎么办？
      */
-    playerJoinGameEvent() {
+    eventPlayerJoinGame() {
         return new BedwarsEvent(
             "playerJoinGame",
             minecraft.world.afterEvents.playerSpawn,
@@ -1343,7 +1340,7 @@ class BedwarsClassicMode {
                         if (playerInfo.team.bedIsExist) player.sendMessage({ translate: "message.playerRejoin.haveBed" });
                         else player.sendMessage({ translate: "message.playerRejoin.haveNoBed" });
                         // 如果没有玩家重生时间线，注册之以使玩家重生
-                        if (!this.system.getTimeline("playerRespawn")) this.system.subscribeTimeline(this.playerRespawnTimeline());
+                        if (!this.system.getTimeline("playerRespawn")) this.system.subscribeTimeline(this.timelinePlayerRespawn());
                     }
                     // 否则，设为旁观者
                     else this.map.spectatorPlayers.push(new BedwarsPlayer(this.system, { team: undefined, player: player }))
@@ -1362,7 +1359,7 @@ class BedwarsClassicMode {
      * @add 在游戏开始时创建
      * @remove 在所有队伍的床都被摧毁或床自毁后销毁 debug
      */
-    playerBreakBedEvent() {
+    eventPlayerBreakBed() {
         return new BedwarsEvent(
             "playerBreakBed",
             minecraft.world.afterEvents.playerBreakBlock,
@@ -1416,7 +1413,7 @@ class BedwarsClassicMode {
     /** 检查在上下限高度放置方块的事件
      * @add 在游戏开始时创建
      */
-    playerPlaceBlockOnHeightLimitEvent() {
+    eventPlayerPlaceBlockOnHeightLimit() {
         return new BedwarsEvent(
             "playerPlaceBlockOnHeightLimit",
             minecraft.world.beforeEvents.playerInteractWithBlock,
@@ -1459,7 +1456,7 @@ class BedwarsClassicMode {
     /** 检查玩家开箱事件
      * @add 在游戏开始时创建
      */
-    playerOpenChestEvent() {
+    eventPlayerOpenChest() {
         return new BedwarsEvent(
             "playerOpenChest",
             minecraft.world.beforeEvents.playerInteractWithBlock,
@@ -1491,7 +1488,7 @@ class BedwarsClassicMode {
     /** 检查玩家在安全区域放置方块
      * @add 在游戏开始时创建
      */
-    playerPlaceBlockOnSafeAreaEvent() {
+    eventPlayerPlaceBlockOnSafeArea() {
         return new BedwarsEvent(
             "playerPlaceBlockOnSafeArea",
             minecraft.world.beforeEvents.playerInteractWithBlock,
@@ -1550,7 +1547,7 @@ class BedwarsClassicMode {
     /** 玩家死亡事件
      * @add 在游戏开始时创建
      */
-    playerDieEvent() {
+    eventPlayerDie() {
         return new BedwarsEvent(
             "playerDie",
             minecraft.world.afterEvents.entityDie,
@@ -1572,8 +1569,8 @@ class BedwarsClassicMode {
                 playerData?.setDead(deathType, killer);
 
                 // 如果没有玩家重生时间线，则创建之
-                if (!this.system.getTimeline("playerRespawn")) this.system.subscribeTimeline(this.playerRespawnTimeline());
-                if (!this.system.getTimeline("playerInDeathState")) this.system.subscribeTimeline(this.playerInDeathStateTimeline());
+                if (!this.system.getTimeline("playerRespawn")) this.system.subscribeTimeline(this.timelinePlayerRespawn());
+                if (!this.system.getTimeline("playerInDeathState")) this.system.subscribeTimeline(this.timelinePlayerInDeathState());
 
             }, { entities: this.map.teams.flatMap(team => team.alivePlayers.flatMap(alivePlayer => alivePlayer.player)) })
         );
@@ -1582,7 +1579,7 @@ class BedwarsClassicMode {
     /** 检查被玩家攻击事件
      * @add 在游戏开始时创建
      */
-    playerHurtByPlayerEvent() {
+    eventPlayerHurtByPlayer() {
         return new BedwarsEvent(
             "playerHurtByPlayer",
             minecraft.world.afterEvents.entityHurt,
@@ -1603,7 +1600,7 @@ class BedwarsClassicMode {
                 // 如果受伤，检查伤害者是否正常，正常则记录伤害者，并开始计时，同时撤销隐身玩家的盔甲隐藏状态
                 if (damagerData && damagerData.team) {
                     playerData.beAttacked(damager);
-                    if (!this.system.getTimeline("playerAttackedTimer")) this.system.subscribeTimeline(this.playerAttackedTimerTimeline());
+                    if (!this.system.getTimeline("playerAttackedTimer")) this.system.subscribeTimeline(this.timelinePlayerAttackedTimer());
                 }
 
             }, { entities: this.map.teams.flatMap(team => team.alivePlayers.flatMap(alivePlayer => alivePlayer.player)) })
@@ -1614,7 +1611,7 @@ class BedwarsClassicMode {
      * @add 在有玩家被攻击后创建
      * @remove 无被攻击玩家时销毁
      */
-    playerAttackedTimerTimeline() {
+    timelinePlayerAttackedTimer() {
         return new BedwarsTimeline(
             "playerAttackedTimer",
             minecraft.system.runInterval(() => {
@@ -1637,7 +1634,7 @@ class BedwarsClassicMode {
      * @add 在生成火球后创建
      * @remove 在无火球时销毁
      */
-    fireballHitBlockEvent() {
+    eventFireballHitBlock() {
         return new BedwarsEvent(
             "fireballHitBlock",
             minecraft.world.afterEvents.projectileHitBlock,
@@ -1651,7 +1648,7 @@ class BedwarsClassicMode {
      * @add 在生成火球后创建
      * @remove 在无火球时销毁
      */
-    fireballHitEntityEvent() {
+    eventFireballHitEntity() {
         return new BedwarsEvent(
             "fireballHitEntity",
             minecraft.world.afterEvents.projectileHitEntity,
@@ -1675,7 +1672,7 @@ class BedwarsClassicMode {
                 const playerData = this.map.getBedwarsPlayer(player);
                 if (playerData && playerData.team.id != throwerData.team.id) {
                     playerData.beAttacked(thrower);
-                    if (!this.system.getTimeline("playerAttackedTimer")) this.system.subscribeTimeline(this.playerAttackedTimerTimeline());
+                    if (!this.system.getTimeline("playerAttackedTimer")) this.system.subscribeTimeline(this.timelinePlayerAttackedTimer());
                 }
             });
         }
@@ -1685,7 +1682,7 @@ class BedwarsClassicMode {
     /** 玩家进入虚空事件
      * @add 在游戏开始时创建
      */
-    playerFellIntoVoidEvent() {
+    eventPlayerFellIntoVoid() {
         return new BedwarsEvent(
             "playerFellIntoVoid",
             minecraft.world.afterEvents.entityHurt,
@@ -1699,7 +1696,7 @@ class BedwarsClassicMode {
      * @add 在有本局未淘汰玩家重新进入游戏时、或有玩家死亡时创建
      * @remove 在不存在死亡玩家时销毁
      */
-    playerRespawnTimeline() {
+    timelinePlayerRespawn() {
         return new BedwarsTimeline(
             "playerRespawn",
             minecraft.system.runInterval(() => {
@@ -1729,7 +1726,7 @@ class BedwarsClassicMode {
     /** 玩家处于死亡状态时的时间线
      * @description 可能会有一部分玩家在死亡后卡在聊天栏等，不重生，导致一系列问题，所以专门针对这种情况打补丁
      */
-    playerInDeathStateTimeline() {
+    timelinePlayerInDeathState() {
         return new BedwarsTimeline(
             "playerInDeathState",
             minecraft.system.runInterval(() => {
@@ -1772,7 +1769,7 @@ class BedwarsClassicMode {
      * @add 在游戏开始时创建
      * @highFrequency 该方法会每游戏刻执行代码
      */
-    spawnTeamResourceTimeline() {
+    timelineSpawnTeamResource() {
         return new BedwarsTimeline(
             "spawnTeamResource",
             minecraft.system.runInterval(() => {
@@ -1860,12 +1857,12 @@ class BedwarsClassicMode {
         );
     };
 
-    /** 生成地图类型资源时间线（包括钻石、绿宝石） debug 这里等级的显示有所精简
+    /** 生成地图类型资源时间线（包括钻石、绿宝石）
      * @add 在游戏开始时创建
      */
-    spawnMapResourceTimeline() {
+    timelineSpawnMapResource() {
         return new BedwarsTimeline(
-            "spawnMapResourceTimeline",
+            "spawnMapResource",
             minecraft.system.runInterval(() => {
                 const diamondData = this.map.diamondSpawnerInfo;
                 const emeraldData = this.map.emeraldSpawnerInfo;
@@ -1907,7 +1904,7 @@ class BedwarsClassicMode {
     /** 玩家与商人交互事件（开始交易）
      * @add 在游戏开始时创建
      */
-    playerTradeEvent() {
+    eventPlayerTrade() {
         return new BedwarsEvent(
             "playerTrade",
             minecraft.world.afterEvents.playerInteractWithEntity,
@@ -1918,7 +1915,7 @@ class BedwarsClassicMode {
                 const playerData = this.map.getBedwarsPlayer(player);
                 if (traderData && playerData) {
                     traderData.interacted(player, playerData);
-                    if (!this.system.getTimeline("playerTrading")) this.system.subscribeTimeline(this.playerTradingTimeline());
+                    if (!this.system.getTimeline("playerTrading")) this.system.subscribeTimeline(this.timelinePlayerTrading());
                 }
             })
         );
@@ -1929,7 +1926,7 @@ class BedwarsClassicMode {
      * @remove 在没有玩家和商人交易时销毁
      * @highFrequency 该方法会每游戏刻执行代码
      */
-    playerTradingTimeline() {
+    timelinePlayerTrading() {
         return new BedwarsTimeline(
             "playerTrading",
             minecraft.system.runInterval(() => {
@@ -1954,7 +1951,7 @@ class BedwarsClassicMode {
                 });
                 // 当有队伍购买陷阱后创建队伍陷阱时间线 debug 或许存在更好的优化方式
                 const trappedTeams = this.map.teams.filter(team => team.traps.length > 0);
-                if (trappedTeams.length > 0 && !this.system.getTimeline("trap")) this.system.subscribeTimeline(this.trapTimeline());
+                if (trappedTeams.length > 0 && !this.system.getTimeline("trap")) this.system.subscribeTimeline(this.timelineTrap());
                 // 移除此时间线
                 if (this.map.tradingTraders.length == 0) this.system.unsubscribeTimeline("playerTrading");
             })
@@ -1967,7 +1964,7 @@ class BedwarsClassicMode {
      * @add 当有队伍购买陷阱后创建时间线
      * @remove 当不存在拥有陷阱的队伍后移除时间线
      */
-    trapTimeline() {
+    timelineTrap() {
         return new BedwarsTimeline(
             "trap",
             minecraft.system.runInterval(() => {
@@ -1991,17 +1988,17 @@ class BedwarsClassicMode {
     /** 放置 TNT 则立刻点燃事件
      * @add 在游戏开始时创建
      */
-    igniteTntImmediatelyEvent() {
+    eventIgniteTntImmediately() {
         return new BedwarsEvent(
             "igniteTntImmediately",
             minecraft.world.afterEvents.playerPlaceBlock,
             minecraft.world.afterEvents.playerPlaceBlock.subscribe(event => {
                 lib.DimensionUtil.setBlock(event.dimension.id, event.block.location, "minecraft:air");
                 lib.EntityUtil.add("minecraft:tnt", lib.Vector3Util.center(event.block.location));
-                if (!this.system.getEvent("applyMomentum")) this.system.subscribeEvent(this.applyMomentumEvent());
-                if (!this.system.getEvent("stopExplosionBreakBlock")) this.system.subscribeEvent(this.stopExplosionBreakBlockEvent());
-                if (!this.system.getEvent("explosionDropBedwarsBlocks")) this.system.subscribeEvent(this.explosionDropBedwarsBlocksEvent());
-                if (!this.system.getTimeline("explosionApplyResistance")) this.system.subscribeTimeline(this.explosionApplyResistanceTimeline());
+                if (!this.system.getEvent("applyMomentum")) this.system.subscribeEvent(this.eventApplyMomentum());
+                if (!this.system.getEvent("stopExplosionBreakBlock")) this.system.subscribeEvent(this.eventStopExplosionBreakBlock());
+                if (!this.system.getEvent("explosionDropBedwarsBlocks")) this.system.subscribeEvent(this.eventExplosionDropBedwarsBlocks());
+                if (!this.system.getTimeline("explosionApplyResistance")) this.system.subscribeTimeline(this.timelineExplosionApplyResistance());
             }, { blockTypes: ["bedwars:tnt"] })
         );
     };
@@ -2010,7 +2007,7 @@ class BedwarsClassicMode {
      * @add 在出现火球或 TNT 时创建时间线
      * @remove 在爆炸物消失后销毁
      */
-    stopExplosionBreakBlockEvent() {
+    eventStopExplosionBreakBlock() {
         return new BedwarsEvent(
             "stopExplosionBreakBlock",
             minecraft.world.beforeEvents.explosion,
@@ -2035,7 +2032,7 @@ class BedwarsClassicMode {
      * @add 在出现火球或 TNT 时创建时间线
      * @remove 在爆炸物消失后销毁
      */
-    explosionDropBedwarsBlocksEvent() {
+    eventExplosionDropBedwarsBlocks() {
         return new BedwarsEvent(
             "explosionDropBedwarsBlocks",
             minecraft.world.beforeEvents.explosion,
@@ -2073,7 +2070,7 @@ class BedwarsClassicMode {
      * @add 在出现火球或 TNT 时创建时间线
      * @remove 在爆炸物消失后销毁
      */
-    applyMomentumEvent() {
+    eventApplyMomentum() {
         return new BedwarsEvent(
             "applyMomentum",
             minecraft.world.beforeEvents.explosion,
@@ -2099,7 +2096,7 @@ class BedwarsClassicMode {
      * @remove 在爆炸物消失后销毁
      * @highFrequency 该方法会每游戏刻执行代码
      */
-    explosionApplyResistanceTimeline() {
+    timelineExplosionApplyResistance() {
         return new BedwarsTimeline(
             "explosionApplyResistance",
             minecraft.system.runInterval(() => {
@@ -2117,7 +2114,7 @@ class BedwarsClassicMode {
     /** 玩家吃下金苹果事件，控制金苹果的伤害吸收效果最多维持两颗黄心
      * @add 在游戏开始时创建
      */
-    playerEatGoldenAppleEvent() {
+    eventPlayerEatGoldenApple() {
         return new BedwarsEvent(
             "playerEatGoldenApple",
             minecraft.world.afterEvents.itemCompleteUse,
@@ -2135,7 +2132,7 @@ class BedwarsClassicMode {
     /** 玩家喝下药水事件
      * @add 在游戏开始时创建
      */
-    playerDrinkPotionEvent() {
+    eventPlayerDrinkPotion() {
         return new BedwarsEvent(
             "playerDrinkPotion",
             minecraft.world.afterEvents.itemCompleteUse,
@@ -2156,7 +2153,7 @@ class BedwarsClassicMode {
      * @add 在生成床虱雪球后创建
      * @remove 在无床虱雪球时销毁
      */
-    bedBugHitBlockEvent() {
+    eventBedBugHitBlock() {
         return new BedwarsEvent(
             "bedBugHitBlock",
             minecraft.world.afterEvents.projectileHitBlock,
@@ -2168,7 +2165,7 @@ class BedwarsClassicMode {
      * @add 在生成床虱雪球后创建
      * @remove 在无床虱雪球时销毁
      */
-    bedBugHitEntityEvent() {
+    eventBedBugHitEntity() {
         return new BedwarsEvent(
             "bedBugHitEntity",
             minecraft.world.afterEvents.projectileHitEntity,
@@ -2181,7 +2178,7 @@ class BedwarsClassicMode {
      * @add 在生成床虱后创建
      * @remove 在床虱全部消灭后销毁
      */
-    bedBugCountdownTimeline() {
+    timelineBedBugCountdown() {
         return new BedwarsTimeline(
             "bedBugCountdown",
             minecraft.system.runInterval(() => {
@@ -2240,7 +2237,7 @@ class BedwarsClassicMode {
             };
 
             // 当没有床虱时间线时，触发床虱时间线
-            if (this.system.getTimeline("bedBugCountdown") == undefined) this.system.subscribeTimeline(this.bedBugCountdownTimeline());
+            if (this.system.getTimeline("bedBugCountdown") == undefined) this.system.subscribeTimeline(this.timelineBedBugCountdown());
 
         };
     };
@@ -2248,7 +2245,7 @@ class BedwarsClassicMode {
     /** 使用梦境守护者事件，使用后生成梦境守护者
      * @add 在游戏开始时创建
      */
-    dreamDefenderUseEvent() {
+    eventDreamDefenderUse() {
         return new BedwarsEvent(
             "dreamDefenderUse",
             minecraft.world.beforeEvents.playerInteractWithBlock,
@@ -2293,7 +2290,7 @@ class BedwarsClassicMode {
 
                         };
                         // 当没有梦境守护者时间线时，触发梦境守护者时间线
-                        if (!this.system.getTimeline("dreamDefenderCountdown")) this.system.subscribeTimeline(this.dreamDefenderCountdownTimeline());
+                        if (!this.system.getTimeline("dreamDefenderCountdown")) this.system.subscribeTimeline(this.timelineDreamDefenderCountdown());
                     });
                 };
             })
@@ -2304,7 +2301,7 @@ class BedwarsClassicMode {
      * @add 在生成梦境守护者后创建
      * @remove 在梦境守护者全部消灭后销毁
      */
-    dreamDefenderCountdownTimeline() {
+    timelineDreamDefenderCountdown() {
         return new BedwarsTimeline(
             "dreamDefenderCountdown",
             minecraft.system.runInterval(() => {
@@ -2324,14 +2321,14 @@ class BedwarsClassicMode {
     /** 使用魔法牛奶事件
      * @add 在游戏开始时创建
      */
-    magicMilkUseEvent() {
+    eventMagicMilkUse() {
         return new BedwarsEvent(
-            "magicMilkUseEvent",
+            "magicMilkUse",
             minecraft.world.afterEvents.itemCompleteUse,
             minecraft.world.afterEvents.itemCompleteUse.subscribe(event => {
                 const playerData = this.map.getBedwarsPlayer(event.source);
                 if (event.itemStack.typeId == "bedwars:magic_milk" && playerData) playerData.magicMilkCountdown = 30;
-                if (!this.system.getTimeline("magicMilkCountdown")) this.system.subscribeTimeline(this.magicMilkCountdownTimeline());
+                if (!this.system.getTimeline("magicMilkCountdown")) this.system.subscribeTimeline(this.timelineMagicMilkCountdown());
             })
         )
     };
@@ -2340,7 +2337,7 @@ class BedwarsClassicMode {
      * @add 在有玩家使用魔法牛奶后创建
      * @remove 在所有玩家魔法牛奶均过倒计时后销毁
      */
-    magicMilkCountdownTimeline() {
+    timelineMagicMilkCountdown() {
         return new BedwarsTimeline(
             "magicMilkCountdown",
             minecraft.system.runInterval(() => {
@@ -2359,7 +2356,7 @@ class BedwarsClassicMode {
      * @remove 在无搭桥蛋时销毁
      * @highFrequency 该方法会每游戏刻执行代码
      */
-    bridgeEggCreateBridgeTimeline() {
+    timelineBridgeEggCreateBridge() {
         return new BedwarsTimeline(
             "bridgeEggCreateBridge",
             minecraft.system.runInterval(() => {
@@ -2388,7 +2385,7 @@ class BedwarsClassicMode {
     /** 水桶收桶事件
      * @add 在游戏开始时创建
      */
-    waterBucketUseEvent() {
+    eventWaterBucketUse() {
         return new BedwarsEvent(
             "waterBucketUse",
             minecraft.world.afterEvents.playerInteractWithBlock,
@@ -2403,7 +2400,7 @@ class BedwarsClassicMode {
      * @remove 在无末影珍珠时销毁
      * @highFrequency 该方法会每游戏刻执行代码
      */
-    removeEnderPearlTimeline() {
+    timelineRemoveEnderPearl() {
         return new BedwarsTimeline(
             "removeEnderPearl",
             minecraft.system.runInterval(() => {
@@ -2416,7 +2413,7 @@ class BedwarsClassicMode {
      * @add 在生成箭后创建 debug
      * @remove 在无箭时销毁 debug
      */
-    arrowHitEntityEvent() {
+    eventArrowHitEntity() {
         return new BedwarsEvent(
             "arrowHitEntity",
             minecraft.world.afterEvents.projectileHitEntity,
@@ -2441,7 +2438,7 @@ class BedwarsClassicMode {
     /** 团队升级时间线
      * @add 在游戏开始时创建
      */
-    applyTeamUpgradeEffectTimeline() {
+    timelineApplyTeamUpgradeEffect() {
         return new BedwarsTimeline(
             "applyTeamUpgradeEffect",
             minecraft.system.runInterval(() => {
@@ -2459,7 +2456,7 @@ class BedwarsClassicMode {
      * @add 在游戏开始时创建
      * @highFrequency 该方法会每游戏刻执行代码
      */
-    showPlayerHealthTimeline() {
+    timelineShowPlayerHealth() {
         return new BedwarsTimeline(
             "showPlayerHealth",
             minecraft.system.runInterval(() => {
@@ -2472,7 +2469,7 @@ class BedwarsClassicMode {
      * @add 在游戏开始时创建（仅限设置：不允许玩家在虚空扔物品时创建）
      * @highFrequency 该方法会每游戏刻执行代码
      */
-    stopPlayerThrowItemInVoidTimeline() {
+    timelineStopPlayerThrowItemInVoid() {
         return new BedwarsTimeline(
             "stopPlayerThrowItemInVoid",
             minecraft.system.runInterval(() => {
@@ -2497,7 +2494,7 @@ class BedwarsClassicMode {
      * @add 在游戏开始时创建（仅限地图设定了这类物品时创建）
      * @highFrequency 该方法会每游戏刻执行代码
      */
-    removeItemTimeline() {
+    timelineRemoveItem() {
         return new BedwarsTimeline(
             "removeItem",
             minecraft.system.runInterval(() => {
@@ -2512,14 +2509,14 @@ class BedwarsClassicMode {
     entryGameOverState() {
 
         // 注册事件
-        this.system.subscribeEvent(this.stopPlayerBreakBlockEvent()); // 阻止玩家破坏方块
-        // this.system.subscribeEvent(this.worldSettingsEvent()); // 世界设置事件
-        // this.system.subscribeEvent(this.killStyleSettingsEvent()); // 击杀样式设置事件
-        // this.system.subscribeEvent(this.selectTeamSettingsEvent()); // 队伍选择设置事件
+        this.system.subscribeEvent(this.eventStopPlayerBreakBlock()); // 阻止玩家破坏方块
+        // this.system.subscribeEvent(this.eventWorldSettings()); // 世界设置事件
+        // this.system.subscribeEvent(this.eventKillStyleSettings()); // 击杀样式设置事件
+        // this.system.subscribeEvent(this.eventSelectTeamSettings()); // 队伍选择设置事件
 
         // 注册时间线
-        this.system.subscribeTimeline(this.applySaturationTimeline()); // 施加饱和效果
-        this.system.subscribeTimeline(this.applyResistanceTimeline()); // 施加抗性提升效果
+        this.system.subscribeTimeline(this.timelineApplySaturation()); // 施加饱和效果
+        this.system.subscribeTimeline(this.timelineApplyResistance()); // 施加抗性提升效果
 
     };
 
@@ -2528,7 +2525,7 @@ class BedwarsClassicMode {
     };
 
     /** 结束后施加抗性提升状态效果 */
-    applyResistanceTimeline() {
+    timelineApplyResistance() {
         return new BedwarsTimeline(
             "applyResistance",
             minecraft.system.runInterval(() => {
@@ -4074,8 +4071,6 @@ class BedwarsTeam {
         const alivePlayersIndex = this.alivePlayers.findIndex(alivePlayer => alivePlayer.player.name == playerName);
         this.players.splice(playersIndex, 1);
         this.alivePlayers.splice(alivePlayersIndex, 1);
-        lib.Debug.printArray(this.players, "team.players");
-        lib.Debug.printArray(this.alivePlayers, "team.alivePlayers");
     };
 
     /** 传送玩家到重生点
@@ -4712,3 +4707,17 @@ minecraft.world.afterEvents.worldLoad.subscribe(() => {
     bedwarsSystem.settings.beforeGaming.waiting.minPlayerCount = 1;
     bedwarsSystem.settings.beforeGaming.waiting.gameStartWaitingTime = 1;
 });
+
+// ===== 待办事项 =====
+
+// debug
+// 1. 在完成后移除所有 lib.Debug 函数和 debug 标记
+// 2. 恢复加载速度为中等 [重加载设置]
+// 3. 添加一项新的开发者设置，当重新开始游戏后，调整为创造模式 [如果玩家是管理员，调整为创造模式]
+// 4. 在物品购买后再添加对应事件，包括物品和陷阱
+// 5. eventPlayerJoinGame 函数应该设置为游戏开始时添加
+// 6. eventPlayerBreakBed 函数在对应事件下也应销毁
+// 7. 检查玩家接近钻石点和绿宝石点不灵敏，1 秒间隔还是太长
+// 8. 更新了游戏事件后，应当把资源点的等级显示更新
+// 9. 检查一些 unsubscribe，检查时可以用 .some
+// 10. 添加文雨的皮肤

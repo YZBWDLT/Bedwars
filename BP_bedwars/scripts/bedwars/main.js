@@ -54,7 +54,8 @@ class BedwarsSystem {
         let maps = [];
 
         // if (this.settings.mapEnabled.classicTwoTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.TwoTeams));
-        if (this.settings.mapEnabled.classicFourTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.FourTeams));
+        // if (this.settings.mapEnabled.classicFourTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.FourTeams));
+        if (this.settings.mapEnabled.classicEightTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.EightTeams));
 
         let randomMap = maps[lib.JSUtil.randomInt(0, maps.length - 1)];
         if (randomMap.mode == "classic") {
@@ -186,7 +187,7 @@ class BedwarsSettings {
             clearSpeed: 6,
 
             /** 加载地图的速度，0：非常慢，1：慢，2：较慢，3：中等，4：较快，5：快，6：非常快 [debug] */
-            loadSpeed: 6,
+            loadSpeed: 0,
 
         },
 
@@ -866,7 +867,11 @@ class BedwarsClassicMode {
             // 加载队伍岛屿
             for (const teamIsland of this.map.teamIslands) {
                 await lib.StructureUtil.placeAsync(`${this.map.id}:team_island`, "overworld", teamIsland.location, { animationMode: "Layers", animationSeconds: teamIsland.loadTime / this.map.getStructureLoadSpeed(), rotation: teamIsland.rotation, mirror: teamIsland.mirror });
-                if (!this.map.disableTeamIslandFlag) lib.DimensionUtil.replaceBlock("overworld", teamIsland.flagLocationFrom, teamIsland.flagLocationTo, ["minecraft:white_wool"], `minecraft:${teamIsland.teamId == data.ValidTeams.green ? "lime": teamIsland.teamId}_wool`);
+                // 指定了队伍旗帜颜色后，设置旗帜颜色
+                if (teamIsland.flagLocationFrom && teamIsland.flagLocationTo) {
+                    const color = teamIsland.teamId == data.ValidTeams.green ? "lime": teamIsland.teamId;
+                    lib.DimensionUtil.replaceBlock("overworld", teamIsland.flagLocationFrom, teamIsland.flagLocationTo, ["minecraft:white_wool"], `minecraft:${color}_wool`);
+                };
             }
 
             // 加载普通岛屿
@@ -1807,7 +1812,12 @@ class BedwarsClassicMode {
                         // 如果资源点附近有玩家，直接给予玩家物品
                         if (nearbyPlayers.length > 0) nearbyPlayers.forEach(player => lib.ItemUtil.giveItem(player, itemId, { amount: amount }));
                         // 否则，生成掉落物，先尝试以 3*3 分散式生成
-                        else if (this.map.distributeResource) lib.ItemUtil.spawnItem(lib.Vector3Util.add(resourceLocation, lib.JSUtil.randomInt(-1, 1), 0, lib.JSUtil.randomInt(-1, 1)), itemId, { amount: amount }, this.map.clearVelocity);
+                        else if (this.map.distributeResource) {
+                            for (let i = 0; i < amount; i++) {
+                                const spawnLocation = lib.Vector3Util.add(resourceLocation, lib.JSUtil.randomInt(-1, 1), 0, lib.JSUtil.randomInt(-1, 1))
+                                lib.ItemUtil.spawnItem(spawnLocation, itemId, {}, this.map.clearVelocity);
+                            }
+                        }
                         // 否则，按原位生成
                         else lib.ItemUtil.spawnItem(resourceLocation, itemId, { amount: amount }, this.map.clearVelocity);
                     };
@@ -3507,9 +3517,6 @@ class BedwarsMap {
     /** 治愈池半径 */
     healPoolRadius = 20;
 
-    /** 是否在本地图禁用旗帜 */
-    disableTeamIslandFlag = false;
-
     /** 是否为单挑模式 */
     isSolo = false;
 
@@ -3564,9 +3571,8 @@ class BedwarsMap {
         info.emeraldSpawnerLocation.forEach(location => this.addEmeraldSpawner(location));
         if (info.ironSpawnTimes) this.ironSpawnTimes = info.ironSpawnTimes;
         if (info.distributeResource !== undefined) this.distributeResource = info.distributeResource;
-        if (info.clearVelocity) this.clearVelocity = info.clearVelocity;
+        if (info.clearVelocity !== undefined) this.clearVelocity = info.clearVelocity;
         if (info.healPoolRadius) this.healPoolRadius = info.healPoolRadius;
-        if (info.disableTeamIslandFlag) this.disableTeamIslandFlag = info.disableTeamIslandFlag;
         if (info.isSolo) this.isSolo = info.isSolo;
 
         // 高度限制

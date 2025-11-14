@@ -29,7 +29,6 @@ import * as minecraft from "@minecraft/server";
  * @property {number} [heightLimitMax] 最高高度限制，在高于此高度的位置放置方块会阻止
  * @property {number} [heightLimitMin] 最低高度限制，在低于此高度的位置放置方块会阻止
  * @property {number} [healPoolRadius] 治愈池半径
- * @property {boolean} [disableTeamIslandFlag] 是否在本地图禁用旗帜
  * @property {boolean} [isSolo] 是否为单挑模式（通常意义上是 8 队模式），单挑模式会影响资源的生成速度和物资售价
  * @property {string[]} [removeItemEntity] 地图将移除物品掉落物的类型
  */
@@ -511,7 +510,6 @@ export const mapData = {
                 heightLimitMin: 69,
                 healPoolRadius: 15,
                 distributeResource: false,
-                disableTeamIslandFlag: true
             },
 
             /** 地图：花园 @type {BedwarsMapInfo} */
@@ -1164,7 +1162,7 @@ export const mapData = {
                     }
                 ],
                 traders: [
-                    { 
+                    {
                         type: "item",
                         location: { x: -9, y: 65, z: -75.5 },
                         rotation: 90,
@@ -1175,7 +1173,7 @@ export const mapData = {
                         rotation: 270,
                     },
 
-                    { 
+                    {
                         type: "item",
                         location: { x: 75.5, y: 65, z: -9 },
                         rotation: 180,
@@ -1186,7 +1184,7 @@ export const mapData = {
                         rotation: 90,
                     },
 
-                    { 
+                    {
                         type: "item",
                         location: { x: 9, y: 65, z: 75.5 },
                         rotation: 270,
@@ -1197,7 +1195,7 @@ export const mapData = {
                         rotation: 90,
                     },
 
-                    { 
+                    {
                         type: "item",
                         location: { x: -75.5, y: 65, z: 9 },
                         rotation: 90,
@@ -1230,7 +1228,8 @@ export const mapData = {
             /** 蘑菇岛 @type {BedwarsMapInfo} */
             boletum: {
                 id: "boletum",
-                name: "蘑菇岛（待测试）",
+                name: "蘑菇岛",
+                mode: "classic",
                 teams: [
                     {
                         id: ValidTeams.red,
@@ -1330,7 +1329,7 @@ export const mapData = {
                 traders: [
                     {
                         type: "item",
-                        location: { x: -5, y: 68, z: 79.5 },
+                        location: { x: -5, y: 68, z: 80.5 },
                         rotation: 180,
                     },
                     {
@@ -1363,12 +1362,12 @@ export const mapData = {
 
                     {
                         type: "item",
-                        location: { x: 79.5, y: 68, z: 3 },
+                        location: { x: 80.5, y: 68, z: 3 },
                         rotation: 90,
                     },
                     {
                         type: "upgrade",
-                        location: { x: 80.5 , y: 68, z: -8 },
+                        location: { x: 80.5, y: 68, z: -8 },
                         rotation: 270,
                     },
 
@@ -1387,11 +1386,12 @@ export const mapData = {
                 heightLimitMin: 65,
                 healPoolRadius: 17,
             },
-            
+
             /** 甲壳 @type {BedwarsMapInfo} */
             carapace: {
                 id: "carapace",
-                name: "甲壳（待测试）",
+                name: "甲壳",
+                mode: "classic",
                 teams: [
                     {
                         id: ValidTeams.red,
@@ -1554,7 +1554,8 @@ export const mapData = {
             /** 铁索连环 @type {BedwarsMapInfo} */
             chained: {
                 id: "chained",
-                name: "铁索连环（待测试）",
+                name: "铁索连环",
+                mode: "classic",
                 teams: [
                     {
                         id: ValidTeams.red,
@@ -1714,7 +1715,8 @@ export const mapData = {
             /** 伊斯特伍德 @type {BedwarsMapInfo} */
             eastwood: {
                 id: "eastwood",
-                name: "伊斯特伍德（待测试）",
+                name: "伊斯特伍德",
+                mode: "classic",
                 teams: [
                     {
                         id: ValidTeams.red,
@@ -1822,7 +1824,7 @@ export const mapData = {
                         location: { x: 70, y: 66, z: -4 },
                         rotation: 90,
                     },
-                    
+
                     {
                         type: "item",
                         location: { x: -6, y: 66, z: 70 },
@@ -1833,7 +1835,7 @@ export const mapData = {
                         location: { x: 4, y: 66, z: 70 },
                         rotation: 180,
                     },
-                    
+
                     {
                         type: "item",
                         location: { x: -70, y: 66, z: -6 },
@@ -1844,7 +1846,7 @@ export const mapData = {
                         location: { x: -70, y: 66, z: 4 },
                         rotation: 270,
                     },
-                    
+
                     {
                         type: "item",
                         location: { x: 6, y: 66, z: -70 },
@@ -1874,7 +1876,8 @@ export const mapData = {
             /** 兰花 @type {BedwarsMapInfo} */
             orchid: {
                 id: "orchid",
-                name: "兰花（待测试）",
+                name: "兰花",
+                mode: "classic",
                 teams: [
                     {
                         id: ValidTeams.red,
@@ -2046,14 +2049,598 @@ export const mapData = {
         /** 8 队地图 */
         EightTeams: {
 
-            // amazon: {},
+            /** 亚马逊 @type {BedwarsMapInfo} */
+            amazon: {
+                id: "amazon",
+                name: "亚马逊",
+                mode: "classic",
+                teams: [
+                    {
+                        id: ValidTeams.red,
+                        bedLocation: { x: -33, y: 65, z: -80 },
+                        bedRotation: minecraft.StructureRotation.Rotate270,
+                        resourceLocation: { x: -33, y: 65, z: -100 },
+                        spawnpointLocation: { x: -33, y: 65, z: -95 },
+                        chestLocation: { x: -36, y: 66, z: -93 },
+                    },
+                    {
+                        id: ValidTeams.blue,
+                        bedLocation: { x: 33, y: 65, z: -80 },
+                        bedRotation: minecraft.StructureRotation.Rotate270,
+                        resourceLocation: { x: 33, y: 65, z: -100 },
+                        spawnpointLocation: { x: 33, y: 65, z: -95 },
+                        chestLocation: { x: 36, y: 66, z: -93 },
+                    },
+                    {
+                        id: ValidTeams.green,
+                        bedLocation: { x: 80, y: 65, z: -33 },
+                        resourceLocation: { x: 100, y: 65, z: -33 },
+                        spawnpointLocation: { x: 95, y: 65, z: -33 },
+                        chestLocation: { x: 93, y: 66, z: -36 },
+                    },
+                    {
+                        id: ValidTeams.yellow,
+                        bedLocation: { x: 80, y: 65, z: 33 },
+                        resourceLocation: { x: 100, y: 65, z: 33 },
+                        spawnpointLocation: { x: 95, y: 65, z: 33 },
+                        chestLocation: { x: 93, y: 66, z: 36 },
+                    },
+                    {
+                        id: ValidTeams.cyan,
+                        bedLocation: { x: 33, y: 65, z: 80 },
+                        bedRotation: minecraft.StructureRotation.Rotate90,
+                        resourceLocation: { x: 33, y: 65, z: 100 },
+                        spawnpointLocation: { x: 33, y: 65, z: 95 },
+                        chestLocation: { x: 36, y: 66, z: 93 },
+                    },
+                    {
+                        id: ValidTeams.white,
+                        bedLocation: { x: -33, y: 65, z: 80 },
+                        bedRotation: minecraft.StructureRotation.Rotate90,
+                        resourceLocation: { x: -33, y: 65, z: 100 },
+                        spawnpointLocation: { x: -33, y: 65, z: 95 },
+                        chestLocation: { x: -36, y: 66, z: 93 },
+                    },
+                    {
+                        id: ValidTeams.pink,
+                        bedLocation: { x: -80, y: 65, z: 33 },
+                        bedRotation: minecraft.StructureRotation.Rotate180,
+                        resourceLocation: { x: -100, y: 65, z: 33 },
+                        spawnpointLocation: { x: -95, y: 65, z: 33 },
+                        chestLocation: { x: -93, y: 66, z: 36 },
+                    },
+                    {
+                        id: ValidTeams.gray,
+                        bedLocation: { x: -80, y: 65, z: -33 },
+                        bedRotation: minecraft.StructureRotation.Rotate180,
+                        resourceLocation: { x: -100, y: 65, z: -33 },
+                        spawnpointLocation: { x: -95, y: 65, z: -33 },
+                        chestLocation: { x: -93, y: 66, z: -36 },
+                    },
+
+                ],
+                teamIslands: [
+                    {
+                        teamId: ValidTeams.red,
+                        location: { x: -54, y: 53, z: -102 },
+                        mirror: minecraft.StructureMirrorAxis.X,
+                        loadTime: 3,
+                        flagLocationFrom: { x: -47, y: 68, z: -86 },
+                        flagLocationTo: { x: -25, y: 83, z: -98 },
+                    },
+                    {
+                        teamId: ValidTeams.blue,
+                        location: { x: 20, y: 53, z: -102 },
+                        mirror: minecraft.StructureMirrorAxis.XZ,
+                        loadTime: 3,
+                        flagLocationFrom: { x: 47, y: 68, z: -86 },
+                        flagLocationTo: { x: 25, y: 83, z: -98 },
+                    },
+                    {
+                        teamId: ValidTeams.green,
+                        location: { x: 75, y: 53, z: -54 },
+                        rotation: minecraft.StructureRotation.Rotate90,
+                        mirror: minecraft.StructureMirrorAxis.X,
+                        loadTime: 3,
+                        flagLocationFrom: { x: 86, y: 68, z: -47 },
+                        flagLocationTo: { x: 98, y: 83, z: -25 },
+                    },
+                    {
+                        teamId: ValidTeams.yellow,
+                        location: { x: 75, y: 53, z: 20 },
+                        rotation: minecraft.StructureRotation.Rotate90,
+                        mirror: minecraft.StructureMirrorAxis.XZ,
+                        loadTime: 3,
+                        flagLocationFrom: { x: 86, y: 68, z: 47 },
+                        flagLocationTo: { x: 98, y: 83, z: 25 },
+                    },
+                    {
+                        teamId: ValidTeams.cyan,
+                        location: { x: 20, y: 53, z: 75 },
+                        mirror: minecraft.StructureMirrorAxis.Z,
+                        loadTime: 3,
+                        flagLocationFrom: { x: 47, y: 68, z: 86 },
+                        flagLocationTo: { x: 25, y: 83, z: 98 },
+                    },
+                    {
+                        teamId: ValidTeams.white,
+                        location: { x: -54, y: 53, z: 75 },
+                        loadTime: 3,
+                    },
+                    {
+                        teamId: ValidTeams.pink,
+                        location: { x: -102, y: 53, z: 20 },
+                        rotation: minecraft.StructureRotation.Rotate90,
+                        mirror: minecraft.StructureMirrorAxis.Z,
+                        loadTime: 3,
+                        flagLocationFrom: { x: -86, y: 68, z: 47 },
+                        flagLocationTo: { x: -98, y: 83, z: 25 },
+                    },
+                    {
+                        teamId: ValidTeams.gray,
+                        location: { x: -102, y: 53, z: -54 },
+                        rotation: minecraft.StructureRotation.Rotate90,
+                        loadTime: 3,
+                        flagLocationFrom: { x: -86, y: 68, z: -47 },
+                        flagLocationTo: { x: -98, y: 83, z: -25 },
+                    },
+                ],
+                islands: [
+                    {
+                        structureName: "diamond_island",
+                        location: { x: -83, y: 56, z: 69 },
+                        loadTime: 1,
+                    },
+                    {
+                        structureName: "diamond_island",
+                        location: { x: -84, y: 56, z: -83 },
+                        rotation: minecraft.StructureRotation.Rotate90,
+                        loadTime: 1,
+                    },
+                    {
+                        structureName: "diamond_island",
+                        location: { x: 68, y: 56, z: -84 },
+                        rotation: minecraft.StructureRotation.Rotate180,
+                        loadTime: 1,
+                    },
+                    {
+                        structureName: "diamond_island",
+                        location: { x: 69, y: 56, z: 68 },
+                        rotation: minecraft.StructureRotation.Rotate270,
+                        loadTime: 1,
+                    },
+                    {
+                        structureName: "center_island_1",
+                        location: { x: -62, y: 45, z: -62 },
+                        loadTime: 11,
+                    },
+                    {
+                        structureName: "center_island_2",
+                        location: { x: 2, y: 45, z: -62 },
+                        loadTime: 10,
+                    },
+                    {
+                        structureName: "center_island_3",
+                        location: { x: -62, y: 45, z: 0 },
+                        loadTime: 11,
+                    },
+                    {
+                        structureName: "center_island_4",
+                        location: { x: 2, y: 45, z: 0 },
+                        loadTime: 10,
+                    }
+                ],
+                traders: [
+                    {
+                        location: { x: -26, y: 65, z: -95.5 },
+                        rotation: 90,
+                        type: "item"
+                    },
+                    {
+                        location: { x: -39, y: 65, z: -95.5 },
+                        rotation: 270,
+                        type: "upgrade"
+                    },
+
+                    {
+                        location: { x: 39, y: 65, z: -95.5 },
+                        rotation: 90,
+                        type: "item"
+                    },
+                    {
+                        location: { x: 26, y: 65, z: -95.5 },
+                        rotation: 270,
+                        type: "upgrade"
+                    },
+
+                    {
+                        location: { x: 95.5, y: 65, z: -26 },
+                        rotation: 180,
+                        type: "item"
+                    },
+                    {
+                        location: { x: 95.5, y: 65, z: -39 },
+                        rotation: 0,
+                        type: "upgrade"
+                    },
+
+                    {
+                        location: { x: 95.5, y: 65, z: 39 },
+                        rotation: 180,
+                        type: "item"
+                    },
+                    {
+                        location: { x: 95.5, y: 65, z: 26 },
+                        rotation: 0,
+                        type: "upgrade"
+                    },
+
+                    {
+                        location: { x: 26, y: 65, z: 95.5 },
+                        rotation: 270,
+                        type: "item"
+                    },
+                    {
+                        location: { x: 39, y: 65, z: 95.5 },
+                        rotation: 90,
+                        type: "upgrade"
+                    },
+
+                    {
+                        location: { x: -39, y: 65, z: 95.5 },
+                        rotation: 270,
+                        type: "item"
+                    },
+                    {
+                        location: { x: -26, y: 65, z: 95.5 },
+                        rotation: 90,
+                        type: "upgrade"
+                    },
+
+                    {
+                        location: { x: -95.5, y: 65, z: 26 },
+                        rotation: 0,
+                        type: "item"
+                    },
+                    {
+                        location: { x: -95.5, y: 65, z: 39 },
+                        rotation: 180,
+                        type: "upgrade"
+                    },
+
+                    {
+                        location: { x: -95.5, y: 65, z: -39 },
+                        rotation: 0,
+                        type: "item"
+                    },
+                    {
+                        location: { x: -95.5, y: 65, z: -26 },
+                        rotation: 180,
+                        type: "upgrade"
+                    },
+                ],
+                diamondSpawnerLocation: [
+                    { x: 76, y: 61, z: 75 },
+                    { x: -75, y: 61, z: 76 },
+                    { x: 75, y: 61, z: -76 },
+                    { x: -76, y: 61, z: -75 },
+                ],
+                emeraldSpawnerLocation: [
+                    { x: 0, y: 78, z: 33 },
+                    { x: 0, y: 78, z: -33 },
+                    { x: 33, y: 78, z: 0 },
+                    { x: -33, y: 78, z: 0 },
+                ],
+                isSolo: true,
+                heightLimitMax: 90,
+                heightLimitMin: 55,
+                healPoolRadius: 19,
+                distributeResource: false,
+                ironSpawnTimes: 3,
+            },
             // deadwood: {},
             // glacier: {},
             // lighthouse: {},
             // playground: {},
-            // rooftop: {
-            //     removeItemEntity: ["minecraft:white_carpet"]
-            // },
+
+            /** 屋顶 @type {BedwarsMapInfo} */
+            rooftop: {
+                id: "rooftop",
+                name: "屋顶",
+                mode: "classic",
+                teams: [
+                    {
+                        id: ValidTeams.red,
+                        bedLocation: { x: -34, y: 66, z: -79 },
+                        bedRotation: minecraft.StructureRotation.Rotate270,
+                        resourceLocation: { x: -34, y: 66, z: -96 },
+                        spawnpointLocation: { x: -34, y: 66, z: -89 },
+                        chestLocation: { x: -38, y: 66, z: -85 },
+                    },
+                    {
+                        id: ValidTeams.blue,
+                        bedLocation: { x: 34, y: 66, z: -79 },
+                        bedRotation: minecraft.StructureRotation.Rotate270,
+                        resourceLocation: { x: 34, y: 66, z: -96 },
+                        spawnpointLocation: { x: 34, y: 66, z: -89 },
+                        chestLocation: { x: 38, y: 66, z: -85 },
+                    },
+                    {
+                        id: ValidTeams.green,
+                        bedLocation: { x: 79, y: 66, z: -34 },
+                        resourceLocation: { x: 96, y: 66, z: -34 },
+                        spawnpointLocation: { x: 89, y: 66, z: -34 },
+                        chestLocation: { x: 85, y: 66, z: -38 },
+                    },
+                    {
+                        id: ValidTeams.yellow,
+                        bedLocation: { x: 79, y: 66, z: 34 },
+                        resourceLocation: { x: 96, y: 66, z: 34 },
+                        spawnpointLocation: { x: 89, y: 66, z: 34 },
+                        chestLocation: { x: 85, y: 66, z: 38 },
+                    },
+                    {
+                        id: ValidTeams.cyan,
+                        bedLocation: { x: 34, y: 66, z: 79 },
+                        bedRotation: minecraft.StructureRotation.Rotate90,
+                        resourceLocation: { x: 34, y: 66, z: 96 },
+                        spawnpointLocation: { x: 34, y: 66, z: 89 },
+                        chestLocation: { x: 38, y: 66, z: 85 },
+                    },
+                    {
+                        id: ValidTeams.white,
+                        bedLocation: { x: -34, y: 66, z: 79 },
+                        bedRotation: minecraft.StructureRotation.Rotate90,
+                        resourceLocation: { x: -34, y: 66, z: 96 },
+                        spawnpointLocation: { x: -34, y: 66, z: 89 },
+                        chestLocation: { x: -38, y: 66, z: 85 },
+                    },
+                    {
+                        id: ValidTeams.pink,
+                        bedLocation: { x: -79, y: 66, z: 34 },
+                        bedRotation: minecraft.StructureRotation.Rotate180,
+                        resourceLocation: { x: -96, y: 66, z: 34 },
+                        spawnpointLocation: { x: -89, y: 66, z: 34 },
+                        chestLocation: { x: -85, y: 66, z: 38 },
+                    },
+                    {
+                        id: ValidTeams.gray,
+                        bedLocation: { x: -79, y: 66, z: -34 },
+                        bedRotation: minecraft.StructureRotation.Rotate180,
+                        resourceLocation: { x: -96, y: 66, z: -34 },
+                        spawnpointLocation: { x: -89, y: 66, z: -34 },
+                        chestLocation: { x: -85, y: 66, z: -38 },
+                    },
+
+                ],
+                teamIslands: [
+                    {
+                        teamId: ValidTeams.red,
+                        location: { x: -47, y: 20, z: -100 },
+                        mirror: minecraft.StructureMirrorAxis.X,
+                        loadTime: 4,
+                        flagLocationFrom: { x: -42, y: 66, z: -83 },
+                        flagLocationTo: { x: -40, y: 81, z: -87 },
+                    },
+                    {
+                        teamId: ValidTeams.blue,
+                        location: { x: 21, y: 20, z: -100 },
+                        mirror: minecraft.StructureMirrorAxis.XZ,
+                        loadTime: 4,
+                        flagLocationFrom: { x: 42, y: 66, z: -83 },
+                        flagLocationTo: { x: 40, y: 81, z: -87 },
+                    },
+                    {
+                        teamId: ValidTeams.green,
+                        location: { x: 75, y: 20, z: -47 },
+                        rotation: minecraft.StructureRotation.Rotate90,
+                        mirror: minecraft.StructureMirrorAxis.X,
+                        loadTime: 4,
+                        flagLocationFrom: { x: 83, y: 66, z: -42 },
+                        flagLocationTo: { x: 87, y: 81, z: -40 },
+                    },
+                    {
+                        teamId: ValidTeams.yellow,
+                        location: { x: 75, y: 20, z: 21 },
+                        rotation: minecraft.StructureRotation.Rotate90,
+                        mirror: minecraft.StructureMirrorAxis.XZ,
+                        loadTime: 4,
+                        flagLocationFrom: { x: 83, y: 66, z: 42 },
+                        flagLocationTo: { x: 87, y: 81, z: 40 },
+                    },
+                    {
+                        teamId: ValidTeams.cyan,
+                        location: { x: 21, y: 20, z: 75 },
+                        mirror: minecraft.StructureMirrorAxis.Z,
+                        loadTime: 4,
+                        flagLocationFrom: { x: 42, y: 66, z: 83 },
+                        flagLocationTo: { x: 40, y: 81, z: 87 },
+                    },
+                    {
+                        teamId: ValidTeams.white,
+                        location: { x: -47, y: 20, z: 75 },
+                        loadTime: 4,
+                    },
+                    {
+                        teamId: ValidTeams.pink,
+                        location: { x: -100, y: 20, z: 21 },
+                        rotation: minecraft.StructureRotation.Rotate90,
+                        mirror: minecraft.StructureMirrorAxis.Z,
+                        loadTime: 4,
+                        flagLocationFrom: { x: -83, y: 66, z: 42 },
+                        flagLocationTo: { x: -87, y: 81, z: 40 },
+                    },
+                    {
+                        teamId: ValidTeams.gray,
+                        location: { x: -100, y: 20, z: -47 },
+                        rotation: minecraft.StructureRotation.Rotate90,
+                        loadTime: 4,
+                        flagLocationFrom: { x: -83, y: 66, z: -42 },
+                        flagLocationTo: { x: -87, y: 81, z: -40 },
+                    },
+                ],
+                islands: [
+                    {
+                        structureName: "diamond_island",
+                        location: { x: -49, y: 20, z: -49 },
+                        loadTime: 2,
+                    },
+                    {
+                        structureName: "diamond_island",
+                        location: { x: 29, y: 20, z: -49 },
+                        rotation: minecraft.StructureRotation.Rotate90,
+                        loadTime: 2,
+                    },
+                    {
+                        structureName: "diamond_island",
+                        location: { x: 29, y: 20, z: 29 },
+                        rotation: minecraft.StructureRotation.Rotate180,
+                        loadTime: 2,
+                    },
+                    {
+                        structureName: "diamond_island",
+                        location: { x: -49, y: 20, z: 29 },
+                        rotation: minecraft.StructureRotation.Rotate270,
+                        loadTime: 2,
+                    },
+                    {
+                        structureName: "center_island_1",
+                        location: { x: -22, y: 20, z: 24 },
+                        loadTime: 9,
+                    },
+                    {
+                        structureName: "center_island_1",
+                        location: { x: -70, y: 20, z: -18 },
+                        rotation: minecraft.StructureRotation.Rotate90,
+                        loadTime: 9,
+                    },
+                    {
+                        structureName: "center_island_1",
+                        location: { x: -18, y: 20, z: -70 },
+                        rotation: minecraft.StructureRotation.Rotate180,
+                        loadTime: 9,
+                    },
+                    {
+                        structureName: "center_island_1",
+                        location: { x: 24, y: 20, z: -22 },
+                        rotation: minecraft.StructureRotation.Rotate270,
+                        loadTime: 9,
+                    },
+                    {
+                        structureName: "center_island_2",
+                        location: { x: -22, y: 20, z: -22 },
+                        loadTime: 11,
+                    },
+                ],
+                traders: [
+                    {
+                        location: { x: -28, y: 66, z: -90.5 },
+                        rotation: 90,
+                        type: "item"
+                    },
+                    {
+                        location: { x: -40, y: 66, z: -90.5 },
+                        rotation: 270,
+                        type: "upgrade"
+                    },
+
+                    {
+                        location: { x: 40, y: 66, z: -90.5 },
+                        rotation: 90,
+                        type: "item"
+                    },
+                    {
+                        location: { x: 28, y: 66, z: -90.5 },
+                        rotation: 270,
+                        type: "upgrade"
+                    },
+
+                    {
+                        location: { x: 90.5, y: 66, z: -28 },
+                        rotation: 180,
+                        type: "item"
+                    },
+                    {
+                        location: { x: 90.5, y: 66, z: -40 },
+                        rotation: 0,
+                        type: "upgrade"
+                    },
+
+                    {
+                        location: { x: 90.5, y: 66, z: 40 },
+                        rotation: 180,
+                        type: "item"
+                    },
+                    {
+                        location: { x: 90.5, y: 66, z: 28 },
+                        rotation: 0,
+                        type: "upgrade"
+                    },
+
+                    {
+                        location: { x: 28, y: 66, z: 90.5 },
+                        rotation: 270,
+                        type: "item"
+                    },
+                    {
+                        location: { x: 40, y: 66, z: 90.5 },
+                        rotation: 90,
+                        type: "upgrade"
+                    },
+
+                    {
+                        location: { x: -40, y: 66, z: 90.5 },
+                        rotation: 270,
+                        type: "item"
+                    },
+                    {
+                        location: { x: -28, y: 66, z: 90.5 },
+                        rotation: 90,
+                        type: "upgrade"
+                    },
+
+                    {
+                        location: { x: -90.5, y: 66, z: 28 },
+                        rotation: 0,
+                        type: "item"
+                    },
+                    {
+                        location: { x: -90.5, y: 66, z: 40 },
+                        rotation: 180,
+                        type: "upgrade"
+                    },
+
+                    {
+                        location: { x: -90.5, y: 66, z: -40 },
+                        rotation: 0,
+                        type: "item"
+                    },
+                    {
+                        location: { x: -90.5, y: 66, z: -28 },
+                        rotation: 180,
+                        type: "upgrade"
+                    },
+                ],
+                diamondSpawnerLocation: [
+                    { x: 39, y: 70, z: 39 },
+                    { x: -39, y: 70, z: 39 },
+                    { x: 39, y: 70, z: -39 },
+                    { x: -39, y: 70, z: -39 },
+                ],
+                emeraldSpawnerLocation: [
+                    { x: 11, y: 79, z: 11 },
+                    { x: -11, y: 79, z: -11 },
+                    { x: 11, y: 70, z: 13 },
+                    { x: -11, y: 70, z: -13 },
+                ],
+                isSolo: true,
+                heightLimitMax: 91,
+                heightLimitMin: 62,
+                healPoolRadius: 14,
+                distributeResource: false,
+                ironSpawnTimes: 3,
+                removeItemEntity: ["minecraft:white_carpet"],
+            },
             // waterfall: {}
 
         },

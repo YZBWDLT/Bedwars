@@ -187,7 +187,7 @@ class BedwarsSettings {
             clearSpeed: 6,
 
             /** 加载地图的速度，0：非常慢，1：慢，2：较慢，3：中等，4：较快，5：快，6：非常快 [debug] */
-            loadSpeed: 0,
+            loadSpeed: 6,
 
         },
 
@@ -4712,6 +4712,7 @@ minecraft.world.afterEvents.worldLoad.subscribe(() => {
     let bedwarsSystem = new BedwarsSystem();
     bedwarsSystem.settings.beforeGaming.waiting.minPlayerCount = 1;
     bedwarsSystem.settings.beforeGaming.waiting.gameStartWaitingTime = 1;
+    bedwarsSystem.settings.gaming.invalidTeam.enableTest = false;
 });
 
 // ===== 待办事项 =====

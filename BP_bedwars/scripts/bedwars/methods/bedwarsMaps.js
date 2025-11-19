@@ -70,22 +70,6 @@ export class BedwarsMap{
         this.gameEvent.nextEventName = nextEventName;
     };
 
-    /** ===== 游戏阶段转换方法 ===== */
-
-    /** 游戏结束
-     * @description 基础功能：设置地图阶段为1，触发游戏时事件。
-     * @description 额外功能：设置下一场游戏的倒计时，清除所有的末影龙。
-     */
-    gameOver() {
-        /** 设置地图阶段 */ this.gameStage = 2;
-        /** 触发游戏后事件 */
-        eventManager.classicAfterEvents();
-        if ( this.mode === "capture" ) { eventManager.captureAfterEvents(); }
-
-        /** 设置下一场游戏的倒计时 */ this.nextGameCountdown = 200;
-        /** 清除所有的末影龙 */ overworld.getEntities( { type: "minecraft:ender_dragon" } ).forEach( dragon => { dragon.kill(); } );
-    };
-
     /** ===== 不同模式适配方法 ===== */
     
     /** 获取地图模式名 */

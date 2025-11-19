@@ -53,8 +53,8 @@ class BedwarsSystem {
         /** 地图信息 @type {data.BedwarsMapInfo[]} */
         let maps = [];
 
-        // if (this.settings.mapEnabled.classicTwoTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.TwoTeams));
-        // if (this.settings.mapEnabled.classicFourTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.FourTeams));
+        if (this.settings.mapEnabled.classicTwoTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.TwoTeams));
+        if (this.settings.mapEnabled.classicFourTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.FourTeams));
         if (this.settings.mapEnabled.classicEightTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.EightTeams));
 
         let randomMap = maps[lib.JSUtil.randomInt(0, maps.length - 1)];
@@ -869,7 +869,7 @@ class BedwarsClassicMode {
                 await lib.StructureUtil.placeAsync(`${this.map.id}:team_island`, "overworld", teamIsland.location, { animationMode: "Layers", animationSeconds: teamIsland.loadTime / this.map.getStructureLoadSpeed(), rotation: teamIsland.rotation, mirror: teamIsland.mirror });
                 // 指定了队伍旗帜颜色后，设置旗帜颜色
                 if (teamIsland.flagLocationFrom && teamIsland.flagLocationTo) {
-                    const color = teamIsland.teamId == data.ValidTeams.green ? "lime": teamIsland.teamId;
+                    const color = teamIsland.teamId == data.ValidTeams.green ? "lime" : teamIsland.teamId;
                     lib.DimensionUtil.replaceBlock("overworld", teamIsland.flagLocationFrom, teamIsland.flagLocationTo, ["minecraft:white_wool"], `minecraft:${color}_wool`);
                 };
             }
@@ -1096,16 +1096,14 @@ class BedwarsClassicMode {
             player.setSpawnPoint({ dimension: minecraft.world.getDimension("overworld"), ...this.map.spawnpoint, })
 
             // 提示玩家游戏玩法
-            /** @type {(minecraft.RawMessage | string)[]} */
-            let introMessage = [
+            lib.PlayerUtil.showLineMessage(player, [
                 { translate: "message.greenLine" },
                 this.map.getStartIntro().title,
                 "",
                 this.map.getStartIntro().intro,
                 "",
                 { translate: "message.greenLine" },
-            ]
-            player.sendMessage(introMessage.flatMap((message, index) => index == introMessage.length - 1 ? [message] : [message, "§r\n"]));
+            ]);
 
             // 为玩家选定击杀样式
             let killStyles = Object.keys(data.KillStyle);
@@ -1166,8 +1164,19 @@ class BedwarsClassicMode {
 
     };
 
-    /** 离开游戏状态，仅在退出此状态时执行一次 */
+    /** 离开游戏状态，仅在退出此状态时执行一次
+     * 
+     * 备注：该函数不会在 BedwarsMode 内执行，而是在队伍被淘汰后通过 BedwarsMap.gameOver() 函数运行，这要求其他方法在覆写该函数时，必须保留该函数的名称。
+     */
     exitGamingState() {
+        // 移除所有事件和时间线，状态数 +1
+        this.system.unsubscribeAllTimelines();
+        this.system.unsubscribeAllEvents();
+        this.system.gameStage++;
+        // 注册下一状态的事件和时间线
+        this.entryGameOverState();
+        // 移除所有的末影龙
+        lib.EntityUtil.get("minecraft:ender_dragon").forEach(dragon => dragon.kill());
     };
 
     // 实体生成检查，当对应实体生成后再触发对应的事件
@@ -2520,30 +2529,42 @@ class BedwarsClassicMode {
 
         // 注册事件
         this.system.subscribeEvent(this.eventStopPlayerBreakBlock()); // 阻止玩家破坏方块
+        this.system.subscribeEvent(this.eventGameOverPlayerFellIntoVoid()); // 玩家掉进虚空后，将玩家传送回来
         // this.system.subscribeEvent(this.eventWorldSettings()); // 世界设置事件
         // this.system.subscribeEvent(this.eventKillStyleSettings()); // 击杀样式设置事件
         // this.system.subscribeEvent(this.eventSelectTeamSettings()); // 队伍选择设置事件
 
         // 注册时间线
         this.system.subscribeTimeline(this.timelineApplySaturation()); // 施加饱和效果
-        this.system.subscribeTimeline(this.timelineApplyResistance()); // 施加抗性提升效果
+        this.system.subscribeTimeline(this.timelineShowGamingInfoBoard()); // 右侧记分板
+
+        // 施加抗性提升效果
+        lib.PlayerUtil.getAll().forEach(player => player.addEffect("resistance", 210, { amplifier: 9, showParticles: false }));
+        
+        // 在 10 秒之后，离开结束状态
+        minecraft.system.runTimeout(() => this.exitGameOverState(), 200);
 
     };
 
     /** 离开结束状态，仅在退出此状态时执行一次 */
     exitGameOverState() {
+        // 移除所有事件和时间线，令系统生成一个新的地图，并弃用此实例
+        this.system.unsubscribeAllTimelines();
+        this.system.unsubscribeAllEvents();
+        this.system.resetMap();
     };
 
-    /** 结束后施加抗性提升状态效果 */
-    timelineApplyResistance() {
-        return new BedwarsTimeline(
-            "applyResistance",
-            minecraft.system.runInterval(() => {
-                lib.PlayerUtil.getAll().forEach(player => player.addEffect("resistance", 110, { amplifier: 9, showParticles: false }));
-            }, 20)
+    /** 玩家掉进虚空后，将玩家传送回来 */
+    eventGameOverPlayerFellIntoVoid() {
+        return new BedwarsEvent(
+            "gameOverPlayerFellIntoVoid",
+            minecraft.world.afterEvents.entityHurt,
+            minecraft.world.afterEvents.entityHurt.subscribe(event => {
+                const teleportLocation = lib.Vector3Util.add(this.map.spawnpoint, 0, -3, 0);
+                if (event.damageSource.cause == "void") event.hurtEntity.teleport(teleportLocation);
+            }, { entityTypes: ["minecraft:player"] })
         );
     };
-
 
 };
 
@@ -2945,6 +2966,22 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
      */
     getLore() {
 
+        // 输出效果
+        // ----- 单个物品形式 -----
+        // 物品描述
+        //
+        // 花费：x 钻石
+        //
+        // 你没有足够的钻石！/点击购买！/陷阱已排满！（仅陷阱）
+        // ----- 多个物品形式 ----
+        // 物品描述
+        //
+        // 1 级：此等级用途， x 钻石
+        // 2 级：此等级用途， x 钻石
+        // ...
+        //
+        // 你没有足够的钻石！/点击购买！
+
         const cost = (() => {
             if (this.resourceType == data.ResourceType.iron) return `§f${this.resourceAmount} 铁锭`;
             else if (this.resourceType == data.ResourceType.gold) return `§6${this.resourceAmount} 金锭`;
@@ -2954,26 +2991,18 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
 
         let lore = this.description.flatMap(text => `§r§7${text}`) ?? [];
 
-        if (this.format == "item") lore.push(
-            "",
-            `§r§7花费：${cost}`,
-        )
-        else lore.push(
-            "",
-            ...this.allComponents.flatMap(comp => {
-                const color = this.team.teamUpgrades[comp.id] >= comp.tier?.tier ? "§r§a" : "§r§7"
-                const costThisTier = this.system.mode.map.isSolo ? comp.resource.amountInSolo : comp.resource.amount
-                return `${color}${comp.tier?.tier}级： ${comp.tier?.thisTierDescription}， §r§b${costThisTier} 钻石`;
-            }),
-        );
+        lore.push("");
+        if (this.format == "item") lore.push(`§r§7花费：${cost}`,)
+        else lore.push(...this.allComponents.flatMap(comp => {
+            const color = this.team.teamUpgrades[comp.id] >= comp.tier?.tier ? "§r§a" : "§r§7"
+            const costThisTier = this.system.mode.map.isSolo ? comp.resource.amountInSolo : comp.resource.amount
+            return `${color}${comp.tier?.tier}级： ${comp.tier?.thisTierDescription}， §r§b${costThisTier} 钻石`;
+        }));
 
-        if (this.getResourceNeeded() > 0) lore.push(
-            "",
-            `§r§c你没有足够的${this.getResourceName()}！`
-        ); else lore.push(
-            "",
-            `§r§e点击购买！`
-        );
+        lore.push("");
+        if (this.category == "trap" && this.team.traps.length >= 3) lore.push(`§r§c陷阱已排满！`);
+        else if (this.getResourceNeeded() > 0) lore.push(`§r§c你没有足够的${this.getResourceName()}！`);
+        else lore.push(`§r§e点击购买！`);
 
         return lore;
     };
@@ -3595,7 +3624,7 @@ class BedwarsMap {
      * @param {data.BedwarsTeamInfo} teamInfo 
      */
     addTeam(teamInfo) {
-        let team = new BedwarsTeam(this.system, teamInfo);
+        let team = new BedwarsTeam(this.system, this, teamInfo);
         this.teams.push(team);
         this.aliveTeams.push(team);
         this.teamCount += 1;
@@ -3899,6 +3928,46 @@ class BedwarsMap {
 
     };
 
+    /** 游戏结束函数
+     * @param {BedwarsTeam | undefined} team 代表一个获胜的队伍，亦可以输入 undefined，代表各队伍打成了平手
+     */
+    gameOver(team) {
+        // 设置为离开游戏状态
+        this.system.mode.exitGamingState();
+        // 如果没有队伍胜利，则对全体通报游戏结束的消息
+        if (!team) lib.PlayerUtil.getAll().forEach(player => {
+            player.onScreenDisplay.setTitle({ translate: "title.gameOver" });
+            player.sendMessage({ translate: "message.gameOver.endInATie" });
+        })
+        // 否则，则为某队伍获胜
+        else this.teams.flatMap(team => team.players).concat(this.spectatorPlayers).forEach(playerData => {
+            // 播放【胜利！】或【游戏结束！】标题
+            if (playerData.team.id == team.id) playerData.player.onScreenDisplay.setTitle({ translate: "title.victory" });
+            else playerData.player.onScreenDisplay.setTitle({ translate: "title.gameOver" });
+            // 播放获胜玩家及击杀排行榜
+            const killRank = this.teams
+                .flatMap(team => team.players)
+                .map(playerData => ({
+                    name: playerData.player.name,
+                    totalKillCount: playerData.killCount + playerData.finalKillCount
+                }))
+                .sort((a, b) => b.totalKillCount - a.totalKillCount);
+            /** @type {(minecraft.RawMessage | string)[]} */
+            let message = [
+                { translate: "message.greenLine" },
+                "§l§f      起床战争§r      ",
+                "",
+                `${team.getTeamNameWithColor()}队§7 - ${team.players.flatMap(playerData => playerData.player.name).join(", ")}`,
+                "",
+                `§e§l击杀数第一名§r§7 - ${killRank[0].name} - ${killRank[0].totalKillCount}`
+            ];
+            if (killRank[1]) message.push(`§6§l击杀数第二名§r§7 - ${killRank[1].name} - ${killRank[1].totalKillCount}`);
+            if (killRank[2]) message.push(`§6§l击杀数第三名§r§7 - ${killRank[2].name} - ${killRank[2].totalKillCount}`);
+            message.push( "", { translate: "message.greenLine" }, );
+            lib.PlayerUtil.showLineMessage(playerData.player, message);
+        });
+    };
+
 };
 
 // ===== 队伍 =====
@@ -3910,6 +3979,9 @@ class BedwarsTeam {
 
     /** 游戏系统 @type {BedwarsSystem} */
     system;
+
+    /** 队伍所归属的地图 @type {BedwarsMap} */
+    map;
 
     /** ID，代表一个独一无二的队伍 @type {data.ValidTeams} */
     id = "";
@@ -4011,10 +4083,12 @@ class BedwarsTeam {
 
     /** 
      * @param {BedwarsSystem} system 
+     * @param {BedwarsMap} map
      * @param {data.BedwarsTeamInfo} info
      */
-    constructor(system, info) {
+    constructor(system, map, info) {
         this.system = system;
+        this.map = map;
         this.id = info.id;
         this.bedLocation = info.bedLocation;
         if (info.bedRotation) this.bedRotation = info.bedRotation;
@@ -4037,8 +4111,9 @@ class BedwarsTeam {
     /** 标记为已被淘汰 */
     setEliminated() {
         this.isEliminated = true;
-        this.system.mode.map.aliveTeams.splice(this.system.mode.map.aliveTeams.findIndex(aliveTeam => aliveTeam.id == this.id), 1);
-        minecraft.world.sendMessage(["\n", { translate: "message.teamEliminated", with: [`${this.getTeamNameWithColor()}`] }, "\n "])
+        this.map.aliveTeams.splice(this.map.aliveTeams.findIndex(aliveTeam => aliveTeam.id == this.id), 1);
+        minecraft.world.sendMessage(["\n", { translate: "message.teamEliminated", with: [`${this.getTeamNameWithColor()}`] }, "\n "]);
+        if (this.map.aliveTeams.length == 1) this.map.gameOver(this.map.aliveTeams[0]);
     };
 
     // ===== 床 =====
@@ -4421,7 +4496,6 @@ class BedwarsPlayer {
 
         // 当该玩家已被淘汰时
         if (this.isEliminated) null;
-
         // 当玩家被其他玩家当场击杀时
         else if (killer && killer.typeId == "minecraft:player") {
 
@@ -4433,7 +4507,6 @@ class BedwarsPlayer {
             else killedByOthers("beKilled", killerData); // 其他
 
         }
-
         // 当玩家被其他实体（例如蠹虫或铁傀儡）当场击杀时
         else if (killer) {
 
@@ -4446,7 +4519,6 @@ class BedwarsPlayer {
             else killedByOthers("beKilledGolem", ownerData); // 否则，是被其主人的傀儡击杀，给予其主人奖励
 
         }
-
         // 当玩家未被实际存在的实体击杀，但是有上一次攻击的玩家时
         else if (this.lastAttacker) {
 

@@ -3,14 +3,8 @@
 /** MC 核心事件 */
 import { world } from "@minecraft/server";
 
-/** 方法类函数调用 */
-import { createEvent, deleteEventsWithTag } from "../methods/eventManager";
-import { createInterval, deleteIntervalsWithTag } from "../methods/intervalManager";
-
 /** 经典模式函数调用 */
-import { trap } from "./classic/trap";
-import { gameEvents, teamEliminateAndWin } from "./classic/gameEvents";
-import { gameOverCountdown } from "./classic/afterGaming";
+import { gameEvents } from "./classic/gameEvents";
 import { killStyleSettings, mapSettings, selectTeamSettings } from "../methods/bedwarsSettings";
 
 /** 夺点模式函数调用 */
@@ -24,7 +18,6 @@ import { convertKillCount, playerDiedCapture, respawnEliminatedPlayers } from ".
 export const eventManager = {
     /** 全局事件 */
     generalEvents() {
-
         /** 游戏逻辑：设置 */
         createEvent( "mapSettings", world.afterEvents.itemUse, event => mapSettings( event ), [ tags.gameLogic, tags.settings ] );
         createEvent( "killStyleSettings", world.afterEvents.itemUse, event => killStyleSettings( event ), [ tags.gameLogic, tags.settings ] );
@@ -34,17 +27,6 @@ export const eventManager = {
     classicEvents() {
         /** 游戏逻辑：游戏事件 */
         createInterval( "gameEventsMain", () => gameEvents(), [ tags.gameLogic, tags.gaming, tags.gameEvents ] );
-        createInterval( "teamEliminateAndWin", () => teamEliminateAndWin(), [ tags.gameLogic, tags.gaming, tags.gameEvents ] );
-        /** 游戏逻辑：陷阱 */
-        createInterval( "trap", () => trap(), [ tags.gameLogic, tags.gaming, tags.trap ] );
-    },
-    /** 经典模式游戏后事件 */
-    classicAfterEvents() {
-        /** 移除游戏前和游戏时事件 */
-        deleteEventsWithTag( tags.beforeGaming, tags.gaming );
-        deleteIntervalsWithTag( tags.beforeGaming, tags.gaming );
-        /** 游戏逻辑：游戏结束 */
-        createInterval( "gameOverCountdown", () => gameOverCountdown(), [ tags.gameLogic, tags.afterGaming, "gameOver" ] );
     },
     /** 夺点模式游戏时事件 */
     captureEvents( ) {

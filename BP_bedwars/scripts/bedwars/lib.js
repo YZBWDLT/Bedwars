@@ -303,6 +303,14 @@ export class PlayerUtil {
         player.onScreenDisplay.setTitle(title, { ...defaultTitleOptions, ...options, subtitle: subtitle });
     };
 
+    /** 显示换行消息，以弥补 Minecraft 原生 showMessage 方法不能换行显示消息的不足
+     * @param {minecraft.Player} player 
+     * @param {(minecraft.RawMessage | string)[]} message 显示要换行显示的消息
+     */
+    static showLineMessage(player, message) {
+        player.sendMessage(message.slice(0, -1).flatMap(msg => [msg, "§r\n"]).concat(message.slice(-1)));
+    };
+
 };
 
 /** 记分板的记分项操作方法 */

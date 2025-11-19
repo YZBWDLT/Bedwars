@@ -36,18 +36,6 @@ export function gameEvents() {
     }
 }
 
-/** 队伍淘汰和胜利的判定
- * @description 队伍淘汰判定：如果该队伍床不存在、没有玩家且先前未被淘汰，则设置为淘汰。
- * @description 队伍胜利判定：如果仅剩一个队伍存活，则该队伍获胜。
- */
-export function teamEliminateAndWin() {
-
-    /** 队伍胜利判定 */
-    if ( map().getAliveTeam().length <= 1 ) {
-        gameOver( map().getAliveTeam()[0] );
-    };
-}
-
 /** ===== 事件集 ===== */
 
 /** 触发 II 级钻石点事件

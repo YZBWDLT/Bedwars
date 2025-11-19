@@ -1935,7 +1935,7 @@ export const mapData = {
                         flagLocationTo: { x: -52, y: 78, z: 45 },
                     },
                     {
-                        teamId: ValidTeams.green,
+                        teamId: ValidTeams.yellow,
                         location: { x: -67, y: 61, z: 38 },
                         mirror: minecraft.StructureMirrorAxis.XZ,
                         loadTime: 2,

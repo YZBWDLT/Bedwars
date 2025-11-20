@@ -26,7 +26,16 @@
                 "skin_18": "textures/entity/trader/skin_18",
                 "skin_19": "textures/entity/trader/skin_19",
                 "skin_20": "textures/entity/trader/skin_20",
-                "skin_21": "textures/entity/trader/skin_21"
+                "skin_21": "textures/entity/trader/skin_21",
+                "skin_22": "textures/entity/trader/skin_22",
+                "skin_23": "textures/entity/trader/skin_23",
+                "skin_24": "textures/entity/trader/skin_24",
+                "skin_25": "textures/entity/trader/skin_25",
+                "skin_26": "textures/entity/trader/skin_26",
+                "skin_27": "textures/entity/trader/skin_27",
+                "skin_28": "textures/entity/trader/skin_28",
+                "skin_29": "textures/entity/trader/skin_29",
+                "skin_30": "textures/entity/trader/skin_30"
             },
             "geometry": {
                 "default": "geometry.humanoid_default",

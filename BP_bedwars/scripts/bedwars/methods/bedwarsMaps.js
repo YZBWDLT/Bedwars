@@ -1,14 +1,9 @@
 /** 地图类，及地图相关信息 */
 
-import { world } from "@minecraft/server";
-import { BedwarsTeam, eachTeam } from "./bedwarsTeam"
+import { eachTeam } from "./bedwarsTeam"
 import { settings } from "./bedwarsSettings";
 
-import { randomInt } from "./number";
-import { overworld, positionManager, Vector } from "./positionManager";
-import { eventManager } from "../events/eventManager";
-import { tickToSecond } from "./time";
-import { shopitems } from "./bedwarsShopitem";
+import { Vector } from "./positionManager";
 
 /** 【类】地图类，控制地图全局的运行方式 */
 export class BedwarsMap{

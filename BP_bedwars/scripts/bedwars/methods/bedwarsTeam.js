@@ -4,39 +4,11 @@
  */
 
 import { world } from "@minecraft/server";
-
 import { overworld, positionManager, Vector } from "./positionManager";
 import { map } from "./bedwarsMaps";
 
-/** @typedef {"red"|"blue"|"yellow"|"green"|"pink"|"cyan"|"white"|"gray"|"purple"|"brown"|"orange"} validTeams 所有可用的队伍 */
-
-/**
- * @typedef teamInfo 队伍信息
- * @property { Vector } bedPos 床脚所在的位置
- * @property { "None" | "Rotate90" | "Rotate180" | "Rotate270" } bedRotation 床的旋转
- * @property { Vector } spawnpointPos 重生点所在位置
- * @property { Vector } resourceSpawnerPos 资源点所在位置，应设置为对应半砖的上方1格
- * @property { Vector } chestPos 该队箱子所在位置
- */
-
-/** 【类】队伍类 */
 export class BedwarsTeam{
 
-    /** 资源点信息，包括资源点位置和各类资源生成次数、倒计时 */ spawnerInfo = {
-        /** 资源生成位置 */ spawnerPos: new Vector( 0, 0, 0 ),
-        /** 铁生成次数 */ ironSpawned: 0,
-        /** 金生成次数 */ goldSpawned: 0,
-        /** 绿宝石生成次数 */ emeraldSpawned: 0,
-        /** 铁生成倒计时 */ ironCountdown: 8,
-        /** 金生成倒计时 */ goldCountdown: 120,
-        /** 绿宝石生成倒计时 */ emeraldCountdown: 1500
-    }
-    /** 陷阱信息 */ trapInfo = {
-        /** 陷阱冷却启用状态 */ cooldownEnabled: false,
-        /** 陷阱冷却倒计时，单位：游戏刻 */ cooldown: 600,
-        /** 是否正在报警 */ isAlarming: false,
-        /** 报警次数 */ alarmedTimes: 0
-    };
     /** Capture 模式信息 */ captureInfo = {
         /** 床位置 @type {Vector[]} */ bedsPos: [],
         /** 队伍当前积分 */ score: 1500,

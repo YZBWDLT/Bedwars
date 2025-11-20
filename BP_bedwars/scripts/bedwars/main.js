@@ -68,7 +68,7 @@ class BedwarsSystem {
      * @param {BedwarsTimeline} timeline 待注册的时间线
      */
     subscribeTimeline(timeline) {
-        lib.Debug.sendMessage(`[BedwarsSystem] 已添加名为${timeline.typeId}的时间线。`);
+        // lib.Debug.sendMessage(`[BedwarsSystem] 已添加名为${timeline.typeId}的时间线。`);
         this.systemTimelines.push(timeline);
     };
 
@@ -76,7 +76,7 @@ class BedwarsSystem {
      * @param {BedwarsEvent} event 
      */
     subscribeEvent(event) {
-        lib.Debug.sendMessage(`[BedwarsSystem] 已添加名为${event.typeId}的事件。`);
+        // lib.Debug.sendMessage(`[BedwarsSystem] 已添加名为${event.typeId}的事件。`);
         this.systemEvents.push(event);
     };
 
@@ -88,10 +88,10 @@ class BedwarsSystem {
         if (index != -1) {
             minecraft.system.clearRun(this.systemTimelines[index].id);
             this.systemTimelines.splice(index, 1);
-            lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁名为${timelineTypeId}的时间线。`);
+            // lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁名为${timelineTypeId}的时间线。`);
         }
         else {
-            lib.Debug.sendMessage(`§e[BedwarsSystem] 未找到typeId为${timelineTypeId}的时间线。`);
+            // lib.Debug.sendMessage(`§e[BedwarsSystem] 未找到typeId为${timelineTypeId}的时间线。`);
         }
     };
 
@@ -103,10 +103,10 @@ class BedwarsSystem {
         if (index != -1) {
             this.systemEvents[index].eventName.unsubscribe(this.systemEvents[index].id);
             this.systemEvents.splice(index, 1);
-            lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁名为${eventTypeId}的事件。`);
+            // lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁名为${eventTypeId}的事件。`);
         }
         else {
-            lib.Debug.sendMessage(`§e[BedwarsSystem] 未找到typeId为${eventTypeId}的事件。`);
+            // lib.Debug.sendMessage(`§e[BedwarsSystem] 未找到typeId为${eventTypeId}的事件。`);
         }
 
     };
@@ -117,7 +117,7 @@ class BedwarsSystem {
             minecraft.system.clearRun(timeline.id);
         });
         this.systemTimelines = [];
-        lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁所有时间线。`);
+        // lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁所有时间线。`);
     };
 
     /** 停止所有事件 */
@@ -126,7 +126,7 @@ class BedwarsSystem {
             systemEvent.eventName.unsubscribe(systemEvent.id);
         });
         this.systemEvents = [];
-        lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁所有事件。`);
+        // lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁所有事件。`);
     };
 
     /** 获取特定 ID 的时间线
@@ -183,11 +183,11 @@ class BedwarsSettings {
         /** 重加载设置 */
         reload: {
 
-            /** 清除地图的速度，0：非常慢，1：慢，2：较慢，3：中等，4：较快，5：快，6：非常快 [debug] */
-            clearSpeed: 6,
+            /** 清除地图的速度，0：非常慢，1：慢，2：较慢，3：中等，4：较快，5：快，6：非常快 */
+            clearSpeed: 3,
 
-            /** 加载地图的速度，0：非常慢，1：慢，2：较慢，3：中等，4：较快，5：快，6：非常快 [debug] */
-            loadSpeed: 6,
+            /** 加载地图的速度，0：非常慢，1：慢，2：较慢，3：中等，4：较快，5：快，6：非常快 */
+            loadSpeed: 3,
 
         },
 
@@ -304,11 +304,14 @@ class BedwarsSettings {
     /** 杂项设置 */
     miscellaneous = {
 
-        /** 创造模式玩家允许破坏方块 */
-        creativePlayerCanBreakBlocks: false,
+        /** 创造模式的管理员允许破坏方块 */
+        adminCanBreakBlocks: false,
 
         /** 虚空玩家可扔物品 */
         playerCanThrowItemsInVoid: false,
+
+        /** 是否在游戏重启时将管理员调整为创造模式 */
+        setAdminCreativeWhenRestart: false,
 
     };
 
@@ -550,7 +553,7 @@ class BedwarsClassicMode {
 
                 /** 条件 2：如果禁止创造模式管理员玩家破坏方块，或在未禁用此设置的情况下，破坏方块的玩家不是创造模式的管理员玩家，则防止玩家破坏方块 */
                 const stopCondition2 = (() => {
-                    if (!this.system.settings.miscellaneous.creativePlayerCanBreakBlocks) return true;
+                    if (!this.system.settings.miscellaneous.adminCanBreakBlocks) return true;
                     else if (breaker.getGameMode() != "Creative") return true;
                     else if (breaker.playerPermissionLevel < 2) return true;
                     return false;
@@ -591,8 +594,14 @@ class BedwarsClassicMode {
         // 移除玩家的名字颜色
         player.nameTag = player.name;
 
-        // 如果玩家是管理员，调整为创造模式 debug
-        if (player.playerPermissionLevel >= 2) player.setGameMode(minecraft.GameMode.Creative);
+        // 调整玩家的位置和重生点
+        player.teleport({ x: 0, y: 121, z: 0 });
+        player.setSpawnPoint({ x: 0, y: 121, z: 0, dimension: minecraft.world.getDimension("overworld") });
+
+        // 如果玩家是管理员，调整为创造模式
+        if (this.system.settings.miscellaneous.setAdminCreativeWhenRestart && player.playerPermissionLevel >= 2) {
+            player.setGameMode(minecraft.GameMode.Creative);
+        };
 
     };
 
@@ -617,19 +626,6 @@ class BedwarsClassicMode {
             }, 20)
         );
     };
-
-    // /** 获取下一个事件的名称 debug */
-    // getNextEventName() {
-    //     switch (this.nextEvent.id) {
-    //         case "diamond_2": default: return "钻石生成点 II 级";
-    //         case "emerald_2": return "绿宝石生成点 II 级";
-    //         case "diamond_3": return "钻石生成点 III 级";
-    //         case "emerald_3": return "绿宝石生成点 III 级";
-    //         case "bed_destruction": return "床自毁";
-    //         case "death_match": return "绝杀模式";
-    //         case "game_over": return "游戏结束";
-    //     }
-    // }
 
     /** 对玩家显示游戏中信息板
      * @param {minecraft.Player} player 
@@ -750,13 +746,10 @@ class BedwarsClassicMode {
         lib.ScoreboardObjectiveUtil.add("health", "§c❤");
 
         // 地图大小同步
-        lib.Debug.sendMessage(`§c[BedwarsClassicMode][警告] 未同步地图大小！`)
-        // let prevX = getScore( "data", "mapSize.prevX" );
-        // let prevZ = getScore( "data", "mapSize.prevZ" );
-        // if ( prevX !== undefined ) { this.mapSize.prevX = prevX }
-        // if ( prevZ !== undefined ) { this.mapSize.prevZ = prevZ }
-        // setScore( "data", "mapSize.prevX", this.mapSize.x );
-        // setScore( "data", "mapSize.prevZ", this.mapSize.z );
+        this.map.size.prevX = lib.ScoreboardPlayerUtil.getOrSetDefault("data", "map.size.prevX", 105);
+        this.map.size.prevZ = lib.ScoreboardPlayerUtil.getOrSetDefault("data", "map.size.prevZ", 105);
+        lib.ScoreboardPlayerUtil.set("data", "map.size.prevX", this.map.size.x);
+        lib.ScoreboardPlayerUtil.set("data", "map.size.prevZ", this.map.size.z);
 
         // 加载等待区结构
         lib.StructureUtil.placeAsync("hypixel:waiting_hall", "overworld", { x: -12, y: 117, z: -12 });
@@ -817,7 +810,7 @@ class BedwarsClassicMode {
                         /** 填充起始点 @type {minecraft.Vector3} */
                         let from = { x: 0, y: this.clearingLayer, z: 0 };
                         /** 填充终止点 @type {minecraft.Vector3} */
-                        let to = { x: i * this.map.size.x, y: this.clearingLayer, z: j * this.map.size.z };
+                        let to = { x: i * this.map.size.prevX, y: this.clearingLayer, z: j * this.map.size.prevZ };
                         lib.DimensionUtil.fillBlock("overworld", from, to, "minecraft:air");
                     }
                 };
@@ -842,7 +835,7 @@ class BedwarsClassicMode {
 
     /** 恢复设置数据 */
     recoverSettings() {
-        lib.Debug.sendMessage(`§c[BedwarsClassicMode][警告] 未恢复设置数据！`);
+        // lib.Debug.sendMessage(`§c[BedwarsClassicMode][警告] 未恢复设置数据！`);
     };
 
     // ===== 生成地图状态 =====
@@ -1129,6 +1122,7 @@ class BedwarsClassicMode {
 
         // 注册事件 debug 可以考虑在物品购买后再添加物品对应事件
         this.system.subscribeEvent(this.eventPlayerLeaveGame()); // 玩家退出事件
+        this.system.subscribeEvent(this.eventPlayerJoinGame()); // 玩家进入事件
         this.system.subscribeEvent(this.eventStopPlayerBreakBlock()); // 阻止玩家破坏方块
         this.system.subscribeEvent(this.eventNewEntitySpawn()); // 实体（尤其是弹射物）生成时的事件，用于创建新的事件（比如火球出现后，检查火球是否击中）
         this.system.subscribeEvent(this.eventEntityRemove()); // 实体（尤其是弹射物）被移除时的事件，用于移除事件
@@ -1143,7 +1137,6 @@ class BedwarsClassicMode {
         this.system.subscribeEvent(this.eventPlayerDrinkPotion()); // 检查玩家喝下药水事件
         this.system.subscribeEvent(this.eventIgniteTntImmediately()); // 放置 TNT 则立刻点燃事件
         this.system.subscribeEvent(this.eventPlayerTrade()); // 玩家交易事件
-        this.system.subscribeEvent(this.eventArrowHitEntity()); // 弓箭击中事件
         this.system.subscribeEvent(this.eventMagicMilkUse()); // 使用魔法牛奶事件
         this.system.subscribeEvent(this.eventDreamDefenderUse()); // 使用梦境守护者事件，使用后生成梦境守护者
         this.system.subscribeEvent(this.eventWaterBucketUse()); // 使用水桶事件，使用后收回桶
@@ -1161,6 +1154,7 @@ class BedwarsClassicMode {
         this.system.subscribeTimeline(this.timelineRemoveItem()); // 禁止特定类型的掉落物存在
         this.system.subscribeTimeline(this.timelineSpawnTeamResource()); // 生成队伍类型资源时间线（包括铁、金、绿宝石）
         this.system.subscribeTimeline(this.timelineSpawnMapResource()); // 生成地图类型资源时间线（包括钻石、绿宝石）
+        this.system.subscribeTimeline(this.timelineGameEvent()); // 游戏事件时间线
 
     };
 
@@ -1208,6 +1202,10 @@ class BedwarsClassicMode {
                 else if (event.entity.typeId == "bedwars:bridge_egg" && !this.system.getTimeline("bridgeEggCreateBridge")) {
                     this.system.subscribeTimeline(this.timelineBridgeEggCreateBridge());
                 }
+                // 如果生成了箭，则触发对应检查事件
+                else if (event.entity.typeId == "minecraft:arrow") {
+                    if (!this.system.getEvent("arrowHitEntity")) this.system.subscribeEvent(this.eventArrowHitEntity());
+                }
             })
         );
     };
@@ -1234,6 +1232,10 @@ class BedwarsClassicMode {
                 // 如果移除了搭桥蛋，则移除对应检查事件
                 else if (event.typeId == "bedwars:bridge_egg" && lib.EntityUtil.get("bedwars:bridge_egg").length == 0) {
                     this.system.unsubscribeTimeline("bridgeEggCreateBridge");
+                }
+                // 如果移除了箭，则移除对应检查事件
+                else if (event.typeId == "minecraft:arrow" && lib.EntityUtil.get("minecraft:arrow").length == 0) {
+                    this.system.unsubscribeEvent("arrowHitEntity");
                 }
             })
         );
@@ -1290,8 +1292,6 @@ class BedwarsClassicMode {
                         lib.ScoreboardPlayerUtil.set(playerName, "destroyBedCount", playerData.destroyBedCount);
                         // 备份完毕后，销毁该对象
                         playerData = void 0;
-                        // 如果没有检查玩家重新进入的事件，创建该事件
-                        if (!this.system.getEvent("playerJoinGame")) this.system.subscribeEvent(this.eventPlayerJoinGame());
                     });
 
                 };
@@ -1300,8 +1300,7 @@ class BedwarsClassicMode {
     };
 
     /** 玩家重新进入事件，回到游戏后从玩家的记分板恢复数据
-     * @add 在有玩家退出游戏后创建
-     * @remove 在所有玩家回到游戏后销毁 debug 如果本来就没有玩家退出时有人进入怎么办？
+     * @add 在游戏开始时创建
      */
     eventPlayerJoinGame() {
         return new BedwarsEvent(
@@ -1355,13 +1354,11 @@ class BedwarsClassicMode {
                         else player.sendMessage({ translate: "message.playerRejoin.haveNoBed" });
                         // 如果没有玩家重生时间线，注册之以使玩家重生
                         if (!this.system.getTimeline("playerRespawn")) this.system.subscribeTimeline(this.timelinePlayerRespawn());
+                        // 移除备份数据记分板
+                        lib.ScoreboardObjectiveUtil.remove(playerData);
                     }
                     // 否则，设为旁观者
                     else this.map.spectatorPlayers.push(new BedwarsPlayer(this.system, { team: undefined, player: player }))
-                    // 移除备份数据记分板
-                    lib.ScoreboardObjectiveUtil.remove(playerData);
-                    // 如果不再有玩家数据记分板，移除该事件
-                    if (!lib.ScoreboardObjectiveUtil.getAll().some(obj => lib.ScoreboardPlayerUtil.getOrSetDefault(obj.id, "isPlayerData", 0) == 1)) this.system.unsubscribeEvent("playerJoinGame");
                 };
             })
         );
@@ -1371,7 +1368,7 @@ class BedwarsClassicMode {
 
     /** 检查破坏床的事件
      * @add 在游戏开始时创建
-     * @remove 在所有队伍的床都被摧毁或床自毁后销毁 debug
+     * @remove 在所有队伍的床都被摧毁或床自毁后销毁
      */
     eventPlayerBreakBed() {
         return new BedwarsEvent(
@@ -1891,7 +1888,7 @@ class BedwarsClassicMode {
                 // 对于每类资源点：
                 diamondData.info.forEach(data => {
                     // 如果资源点附近有玩家，则清除生成次数
-                    if (lib.PlayerUtil.getNearby(data.location, 2.5).length > 0) data.spawnedTimes = 0;
+                    if (lib.PlayerUtil.getNearby(data.location, 4).length > 0) data.spawnedTimes = 0;
                     // 更新倒计时显示
                     if (data.textLine3) data.textLine3.nameTag = `§e在 §c${diamondData.countdown} §e秒后产出`;
                     // 当倒计时结束后，尝试生成资源并记录次数（默认，钻石最多能生成 8 次）
@@ -1902,7 +1899,7 @@ class BedwarsClassicMode {
                 });
                 emeraldData.info.forEach(data => {
                     // 如果资源点附近有玩家，则清除生成次数
-                    if (lib.PlayerUtil.getNearby(data.location, 2.5).length > 0) data.spawnedTimes = 0;
+                    if (lib.PlayerUtil.getNearby(data.location, 4).length > 0) data.spawnedTimes = 0;
                     // 更新倒计时显示
                     if (data.textLine3) data.textLine3.nameTag = `§e在 §c${emeraldData.countdown} §e秒后产出`;
                     // 当倒计时结束后，尝试生成资源并记录次数（默认，绿宝石最多能生成 4 次）
@@ -2429,8 +2426,8 @@ class BedwarsClassicMode {
     };
 
     /** 弓箭击中事件
-     * @add 在生成箭后创建 debug
-     * @remove 在无箭时销毁 debug
+     * @add 在生成箭后创建
+     * @remove 在无箭时销毁
      */
     eventArrowHitEntity() {
         return new BedwarsEvent(
@@ -2507,7 +2504,7 @@ class BedwarsClassicMode {
                 });
             })
         );
-    }
+    };
 
     /** 禁止特定类型的掉落物存在
      * @add 在游戏开始时创建（仅限地图设定了这类物品时创建）
@@ -2520,7 +2517,87 @@ class BedwarsClassicMode {
                 this.map.removeItemEntity.forEach(itemId => lib.ItemUtil.removeItemEntity(itemId));
             })
         )
-    }
+    };
+
+    /** 游戏事件时间线 */
+    timelineGameEvent() {
+        return new BedwarsTimeline(
+            "gameEvent",
+            minecraft.system.runInterval(() => {
+                this.nextEvent.countdown--;
+                if (this.nextEvent.countdown <= 0) {
+                    switch (this.nextEvent.id) {
+                        case "diamond_2":
+                            // 更新下一个游戏事件
+                            this.nextEvent.id = "emerald_2";
+                            this.nextEvent.name = "绿宝石生成点 II 级";
+                            // 更新钻石生成点的等级
+                            this.map.diamondSpawnerInfo.level = 2;
+                            this.map.diamondSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cII`);
+                            minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier2" });
+                            break;
+                        case "emerald_2":
+                            // 更新下一个游戏事件
+                            this.nextEvent.id = "diamond_3";
+                            this.nextEvent.name = "钻石生成点 III 级";
+                            // 更新绿宝石生成点的等级
+                            this.map.emeraldSpawnerInfo.level = 2;
+                            this.map.emeraldSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cII`);
+                            minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier2" });
+                            break;
+                        case "diamond_3":
+                            // 更新下一个游戏事件
+                            this.nextEvent.id = "emerald_3";
+                            this.nextEvent.name = "绿宝石生成点 III 级";
+                            // 更新钻石生成点的等级
+                            this.map.diamondSpawnerInfo.level = 3;
+                            this.map.diamondSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cIII`);
+                            minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier3" });
+                            break;
+                        case "emerald_3":
+                            // 更新下一个游戏事件
+                            this.nextEvent.id = "bed_destruction";
+                            this.nextEvent.name = "床自毁";
+                            // 更新绿宝石生成点的等级
+                            this.map.emeraldSpawnerInfo.level = 3;
+                            this.map.emeraldSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cIII`);
+                            minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier3" });
+                            break;
+                        case "bed_destruction":
+                            // 更新下一个游戏事件
+                            this.nextEvent.id = "death_match";
+                            this.nextEvent.name = "绝杀模式";
+                            // 破坏玩家的所有床，并移除对应的检测事件
+                            this.map.teams.filter(team => team.bedIsExist).forEach(team => team.destroyBed());
+                            lib.PlayerUtil.getAll().forEach(player => {
+                                player.playSound("mob.wither.death", { location: player.location });
+                                lib.PlayerUtil.setTitle(player, { translate: "title.bedDestroyed" }, { translate: "subtitle.bedDestroyed.allTeams" });
+                                player.sendMessage({ translate: "message.bedDestroyed.allTeams" });
+                            });
+                            if (this.system.getEvent("playerBreakBed")) this.system.unsubscribeEvent("playerBreakBed");
+                            break;
+                        case "death_match":
+                            // 更新下一个游戏事件
+                            this.nextEvent.id = "game_over";
+                            this.nextEvent.name = "游戏结束";
+                            // 生成末影龙，令每个存活的队伍召唤末影龙
+                            this.map.aliveTeams.forEach(team => {
+                                lib.EntityUtil.add("minecraft:ender_dragon", this.map.spawnpoint);
+                                if (team.teamUpgrades.dragonBuff) lib.EntityUtil.add("minecraft:ender_dragon", this.map.spawnpoint);
+                            });
+                            lib.PlayerUtil.getAll().forEach(player => player.onScreenDisplay.setTitle({ translate: "title.deathMatch" }));
+                            lib.DimensionUtil.setBlock("overworld", {x: 0, y: 60, z: 0}, "minecraft:barrier")
+                            break;
+                        case "game_over": default:
+                            // 结束游戏
+                            this.map.gameOver();
+                            break;
+                    };
+                    this.nextEvent.countdown = 360;
+                };
+            }, 20)
+        );
+    };
 
     // ===== 结束状态 =====
 
@@ -2540,7 +2617,7 @@ class BedwarsClassicMode {
 
         // 施加抗性提升效果
         lib.PlayerUtil.getAll().forEach(player => player.addEffect("resistance", 210, { amplifier: 9, showParticles: false }));
-        
+
         // 在 10 秒之后，离开结束状态
         minecraft.system.runTimeout(() => this.exitGameOverState(), 200);
 
@@ -2972,7 +3049,7 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
         //
         // 花费：x 钻石
         //
-        // 你没有足够的钻石！/点击购买！/陷阱已排满！（仅陷阱）
+        // 你没有足够的钻石！/点击购买！/陷阱已排满！（仅陷阱）/已解锁（仅团队升级）
         // ----- 多个物品形式 ----
         // 物品描述
         //
@@ -3000,7 +3077,11 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
         }));
 
         lore.push("");
-        if (this.category == "trap" && this.team.traps.length >= 3) lore.push(`§r§c陷阱已排满！`);
+        // 如果是多物品团队升级（整数型）且队伍当前等级 != tier - 1时，阻止购买
+        if (this.category == "upgrade" && this.format == "itemGroup" && this.team.teamUpgrades[this.id] != this.tier - 1) lore.push(`§r§a已解锁`);
+        // 如果是单物品团队升级（布尔型）且队伍当前有此升级时，阻止购买
+        else if (this.category == "upgrade" && this.format == "item" && this.team.teamUpgrades[this.id]) lore.push(`§r§a已解锁`);
+        else if (this.category == "trap" && this.team.traps.length >= 3) lore.push(`§r§c陷阱已排满！`);
         else if (this.getResourceNeeded() > 0) lore.push(`§r§c你没有足够的${this.getResourceName()}！`);
         else lore.push(`§r§e点击购买！`);
 
@@ -3115,7 +3196,7 @@ class BedwarsTrader {
         this.location = info.location;
         this.rotation = info.rotation;
         this.type = info.type;
-        if (info.skin) this.skin = info.skin; else this.skin = lib.JSUtil.randomInt(0, 21);
+        if (info.skin) this.skin = info.skin; else this.skin = lib.JSUtil.randomInt(0, 30);
     };
 
     /** 生成商人 */
@@ -3555,8 +3636,14 @@ class BedwarsMap {
         /** x 方向半边长（地图的 x 最大值） */
         x: 105,
 
-        /** x 方向半边长（地图的 x 最大值） */
+        /** z 方向半边长（地图的 z 最大值） */
         z: 105,
+
+        /** prevX 方向半边长（上一张地图的 x 最大值） */
+        prevX: 105,
+
+        /** prevZ 方向半边长（上一张地图的 z 最大值） */
+        prevZ: 105,
 
     };
 
@@ -3774,8 +3861,8 @@ class BedwarsMap {
         // - (1) 3/3 2/2 1/2 1/2 -> 3/3 2/2 2/2 2/2 循环结束（players剩余2人）
         // - (2) 5/8 3/8 -> ... -> 5/8 4/8 -> 5/8 5/8 -> 6/8 6/8 -> ... -> 8/8 8/8 循环结束（players剩余0人）
 
-        // 如果为按照胜率排序，则重新排序随机分配的玩家列表
-        if (assignMode === 2) lib.Debug.sendMessage(`§c[BedwarsMap][警告] 未按照胜率重新排序玩家！`);
+        // 如果为按照胜率排序，则重新排序随机分配的玩家列表 debug 未按照胜率重新排序玩家
+        // if (assignMode === 2) ;
 
         // 从 0 个玩家的队伍开始分配，一直到有 minPlayerPerTeam - 1 个玩家的队伍分配完玩家为止
         for (let currentPlayerAmount = 0; currentPlayerAmount < minPlayerPerTeam; currentPlayerAmount++) {
@@ -3963,7 +4050,7 @@ class BedwarsMap {
             ];
             if (killRank[1]) message.push(`§6§l击杀数第二名§r§7 - ${killRank[1].name} - ${killRank[1].totalKillCount}`);
             if (killRank[2]) message.push(`§6§l击杀数第三名§r§7 - ${killRank[2].name} - ${killRank[2].totalKillCount}`);
-            message.push( "", { translate: "message.greenLine" }, );
+            message.push("", { translate: "message.greenLine" },);
             lib.PlayerUtil.showLineMessage(playerData.player, message);
         });
     };
@@ -4103,7 +4190,6 @@ class BedwarsTeam {
     setInvalid() {
         // 标记为无效和淘汰队伍
         this.isValid = false;
-        this.setEliminated();
         // 设置床为不存在，并且移除床
         this.destroyBed();
     };
@@ -4126,12 +4212,13 @@ class BedwarsTeam {
         lib.StructureUtil.placeAsync(`beds:${this.id}_bed`, "overworld", bedLocation, { rotation: this.bedRotation });
     };
 
-    /** 自毁床 */
+    /** 自毁床，并且在该队无玩家时淘汰该队 */
     destroyBed() {
         this.bedIsExist = false;
         const { x, y, z } = this.bedLocation;
         minecraft.world.getDimension("overworld").runCommand(`setblock ${x} ${y} ${z} air destroy`);
         lib.ItemUtil.removeItemEntity("minecraft:bed");
+        if (this.alivePlayers.length == 0) this.setEliminated();
     };
 
     // ===== 玩家 =====
@@ -4791,12 +4878,6 @@ minecraft.world.afterEvents.worldLoad.subscribe(() => {
 
 // debug
 // 1. 在完成后移除所有 lib.Debug 函数和 debug 标记
-// 2. 恢复加载速度为中等 [重加载设置]
-// 3. 添加一项新的开发者设置，当重新开始游戏后，调整为创造模式 [如果玩家是管理员，调整为创造模式]
 // 4. 在物品购买后再添加对应事件，包括物品和陷阱
-// 5. eventPlayerJoinGame 函数应该设置为游戏开始时添加
-// 6. eventPlayerBreakBed 函数在对应事件下也应销毁
-// 7. 检查玩家接近钻石点和绿宝石点不灵敏，1 秒间隔还是太长
-// 8. 更新了游戏事件后，应当把资源点的等级显示更新
+// 7. 检查玩家接近钻石点和绿宝石点不灵敏，1 秒间隔还是太长（仍需验证）
 // 9. 检查一些 unsubscribe，检查时可以用 .some
-// 10. 添加文雨的皮肤

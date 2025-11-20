@@ -14,8 +14,8 @@ export class StructureUtil {
     /** 放置结构（支持异步）
      * @param {string} structure 结构名
      * @param {"overworld" | "nether" | "the_end"} dimensionId 维度 ID
-     * @param {import("@minecraft/server").Vector3} location 位置
-     * @param {import("@minecraft/server").StructurePlaceOptions} options 加载选项
+     * @param {minecraft.Vector3} location 位置
+     * @param {minecraft.StructurePlaceOptions} options 加载选项
      */
     static placeAsync(structure, dimensionId, location, options) {
         minecraft.world.structureManager.place(structure, minecraft.world.getDimension(dimensionId), location, options);
@@ -58,8 +58,8 @@ export class DimensionUtil {
 
     /** 令两个坐标间填充方块
      * @param {"overworld" | "nether" | "the_end"} dimensionId 维度 ID
-     * @param {import("@minecraft/server").Vector3} from 起始坐标
-     * @param {import("@minecraft/server").Vector3} to 终止坐标
+     * @param {minecraft.Vector3} from 起始坐标
+     * @param {minecraft.Vector3} to 终止坐标
      * @param {string} blockId 方块 ID
      */
     static fillBlock(dimensionId, from, to, blockId) {
@@ -69,8 +69,8 @@ export class DimensionUtil {
 
     /** 令两个坐标间填充方块
      * @param {"overworld" | "nether" | "the_end"} dimensionId 维度 ID
-     * @param {import("@minecraft/server").Vector3} from 起始坐标
-     * @param {import("@minecraft/server").Vector3} to 终止坐标
+     * @param {minecraft.Vector3} from 起始坐标
+     * @param {minecraft.Vector3} to 终止坐标
      * @param {string[]} replaceBlockIds 待替换的方块 ID
      * @param {string} toBlockId 待替换的方块 ID
      */
@@ -81,7 +81,7 @@ export class DimensionUtil {
 
     /** 在某个位置放置方块
      * @param {"overworld" | "nether" | "the_end"} dimensionId 维度 ID
-     * @param {import("@minecraft/server").Vector3} location 起始坐标
+     * @param {minecraft.Vector3} location 起始坐标
      * @param {string} blockId 待替换的方块 ID
      */
     static setBlock(dimensionId, location, blockId) {
@@ -115,8 +115,8 @@ export class DimensionUtil {
 export class Vector2Util {
 
     /** 返回两个坐标是否相同
-     * @param {import("@minecraft/server").Vector2} pos1 坐标1
-     * @param {import("@minecraft/server").Vector2} pos2 坐标2
+     * @param {minecraft.Vector2} pos1 坐标1
+     * @param {minecraft.Vector2} pos2 坐标2
      */
     static isEqual(pos1, pos2) {
         return pos1.x === pos2.x && pos1.y === pos2.y;
@@ -128,47 +128,47 @@ export class Vector2Util {
 export class Vector3Util {
 
     /** 返回复制后的坐标
-     * @param {import("@minecraft/server").Vector3} vector 
-     * @returns {import("@minecraft/server").Vector3}
+     * @param {minecraft.Vector3} vector 
+     * @returns {minecraft.Vector3}
      */
     static copy(vector) {
         return { x: vector.x, y: vector.y, z: vector.z };
     };
 
     /** 将某个轴的坐标添加某个特定的值
-     * @param {import("@minecraft/server").Vector3} vector 输入的方向向量
-     * @returns {import("@minecraft/server").Vector3}
+     * @param {minecraft.Vector3} vector 输入的方向向量
+     * @returns {minecraft.Vector3}
      */
     static add(vector, xAdder = 0, yAdder = 0, zAdder = 0) {
         return { x: vector.x + xAdder, y: vector.y + yAdder, z: vector.z + zAdder };
     };
 
     /** 返回将输入坐标中心化（x + 0.5，z + 0.5）的坐标
-     * @param {import("@minecraft/server").Vector3} vector 待中心化的坐标
+     * @param {minecraft.Vector3} vector 待中心化的坐标
      */
     static center(vector) {
         return this.add(vector, 0.5, 0, 0.5);
     };
 
     /** 返回两个坐标是否相同
-     * @param {import("@minecraft/server").Vector3} pos1 坐标1
-     * @param {import("@minecraft/server").Vector3} pos2 坐标2
+     * @param {minecraft.Vector3} pos1 坐标1
+     * @param {minecraft.Vector3} pos2 坐标2
      */
     static isEqual(pos1, pos2) {
         return pos1.x === pos2.x && pos1.y === pos2.y && pos1.z === pos2.z;
     };
 
     /** 检查在多个坐标下是否存在特定的坐标
-     * @param {import("@minecraft/server").Vector3[]} positions 
-     * @param {import("@minecraft/server").Vector3} testPos 
+     * @param {minecraft.Vector3[]} positions 
+     * @param {minecraft.Vector3} testPos 
      */
     static hasPosition(positions, testPos) {
         return positions.some(position => this.isEqual(testPos, position));
     };
 
     /** 返回两个坐标之间的距离
-     * @param {import("@minecraft/server").Vector3} pos1 坐标1
-     * @param {import("@minecraft/server").Vector3} pos2 坐标2
+     * @param {minecraft.Vector3} pos1 坐标1
+     * @param {minecraft.Vector3} pos2 坐标2
      */
     static distance(pos1, pos2) {
         const { x: x1, y: y1, z: z1 } = pos1;
@@ -177,15 +177,15 @@ export class Vector3Util {
     };
 
     /** 返回向量模长
-     * @param {import("@minecraft/server").Vector3} vector3 
+     * @param {minecraft.Vector3} vector3 
      */
     static length(vector3) {
         return Math.sqrt(vector3.x ** 2 + vector3.y ** 2 + vector3.z ** 2);
     };
 
     /** 返回归一化的向量
-     * @param {import("@minecraft/server").Vector3} vector3 
-     * @returns {import("@minecraft/server").Vector3}
+     * @param {minecraft.Vector3} vector3 
+     * @returns {minecraft.Vector3}
      */
     static normalize(vector3) {
         return { x: vector3.x / this.length(vector3), y: vector3.y / this.length(vector3), z: vector3.z / this.length(vector3) };
@@ -195,27 +195,14 @@ export class Vector3Util {
 
 // ===== 玩家 & 实体 =====
 
-/** TitleOptions 类型定义
- * @typedef TitleOptions 标题可选项
- * @property {Number} fadeInDuration 淡入时间，默认 10 刻
- * @property {Number} stayDuration 持续时间，默认 70 刻
- * @property {Number} fadeOutDuration 淡出时间，默认 20 刻
- */
-
-/** 默认设置 @type {TitleOptions} */
-const defaultTitleOptions = {
-    fadeInDuration: 10,
-    stayDuration: 70,
-    fadeOutDuration: 20
-}
 
 /** 实体操作方法 */
 export class EntityUtil {
 
     /** 生成实体
      * @param {string} typeId 
-     * @param {import("@minecraft/server").Vector3} location 
-     * @param {import("@minecraft/server").SpawnEntityOptions} options 
+     * @param {minecraft.Vector3} location 
+     * @param {minecraft.SpawnEntityOptions} [options] 
      * @param {"overworld"|"nether"|"the_end"} dimensionId 待生成的维度
      */
     static add(typeId, location, options, dimensionId = "overworld") {
@@ -232,7 +219,7 @@ export class EntityUtil {
 
     /** 检查实体是否在特定位置周围
      * @param {minecraft.Entity} entity 待检查的实体
-     * @param {import("@minecraft/server").Vector3} pos 待检查的坐标
+     * @param {minecraft.Vector3} pos 待检查的坐标
      * @param {number} r 待检查的范围
      * @param {"overworld"|"nether"|"the_end"|"entity_dimension"} dimensionId 待检查的维度，指定为entity_dimension时将在实体自身维度检测
      */
@@ -278,7 +265,7 @@ export class PlayerUtil {
     };
 
     /** 获取离特定位置较接近的玩家
-     * @param {import("@minecraft/server").Vector3} pos 
+     * @param {minecraft.Vector3} pos 
      * @param {number} r 
      * @param {"overworld"|"nether"|"the_end"} [dimension] 
      */
@@ -295,12 +282,15 @@ export class PlayerUtil {
 
     /** 设置标题
      * @param {minecraft.Player} player 待展示标题的玩家
-     * @param {(string | import("@minecraft/server").RawMessage)[]} title 标题
-     * @param {(string | import("@minecraft/server").RawMessage)[]} subtitle 副标题，默认值""
-     * @param {TitleOptions} options 可选项
+     * @param {(string | minecraft.RawMessage)[]} title 标题
+     * @param {(string | minecraft.RawMessage)[]} [subtitle] 副标题，默认值""
+     * @param {minecraft.TitleDisplayOptions} [options] 可选项，请注意不要在这里写入副标题
      */
-    static setTitle(player, title, subtitle = "", options = {}) {
-        player.onScreenDisplay.setTitle(title, { ...defaultTitleOptions, ...options, subtitle: subtitle });
+    static setTitle(player, title, subtitle = "", options) {
+        const fadeInDuration = options.fadeInDuration ? options.fadeInDuration : 10;
+        const fadeOutDuration = options.fadeOutDuration ? options.fadeOutDuration : 20;
+        const stayDuration = options.stayDuration ? options.stayDuration : 70;
+        player.onScreenDisplay.setTitle(title, { fadeInDuration, fadeOutDuration, stayDuration, subtitle });
     };
 
     /** 显示换行消息，以弥补 Minecraft 原生 showMessage 方法不能换行显示消息的不足
@@ -581,7 +571,7 @@ export class ItemUtil {
     };
 
     /** 在特定位置生成物品掉落物
-     * @param {import("@minecraft/server").Vector3} location 生成位置
+     * @param {minecraft.Vector3} location 生成位置
      * @param {string} itemId 物品 ID
      * @param {ItemOptions} options 物品信息可选项
      * @param {boolean} clearVelocity 是否清除物品生成时的向量
@@ -657,7 +647,7 @@ export class ItemUtil {
         const comp = item.getComponent("minecraft:enchantable");
         // 如果无法附魔，终止运行
         if (!comp) return item;
-        const enchantmentData = { type: new minecraft.EnchantmentType(enchantment.id), level: enchantment.level};
+        const enchantmentData = { type: new minecraft.EnchantmentType(enchantment.id), level: enchantment.level };
         // 如果附魔不能添加，终止运行
         if (!comp.canAddEnchantment(enchantmentData)) return item;
         comp.addEnchantment(enchantmentData);
@@ -807,15 +797,15 @@ export class InventoryUtil {
 /**
  * @typedef dropdownButton ModalFormUI 的下拉按钮信息
  * @property {"dropdown"} type 按钮类型
- * @property {import("@minecraft/server").RawMessage|string} label 按钮功能描述
- * @property {(import("@minecraft/server").RawMessage|string)[]} options 下拉选项
+ * @property {minecraft.RawMessage|string} label 按钮功能描述
+ * @property {(minecraft.RawMessage|string)[]} options 下拉选项
  * @property {number} [defaultValue] 默认索引
  */
 
 /**
  * @typedef sliderButton ModalFormUI 的滑块按钮信息
  * @property {"slider"} type 按钮类型
- * @property {import("@minecraft/server").RawMessage|string} label 按钮功能描述
+ * @property {minecraft.RawMessage|string} label 按钮功能描述
  * @property {number} min 最小值
  * @property {number} max 最大值
  * @property {number} step 步长
@@ -825,15 +815,15 @@ export class InventoryUtil {
 /**
  * @typedef textFieldButton ModalFormUI 的文本输入按钮信息
  * @property {"textField"} type 按钮类型
- * @property {import("@minecraft/server").RawMessage|string} label 按钮功能描述
- * @property {import("@minecraft/server").RawMessage|string} placeholder 文本框内描述
+ * @property {minecraft.RawMessage|string} label 按钮功能描述
+ * @property {minecraft.RawMessage|string} placeholder 文本框内描述
  * @property {string} [defaultValue] 默认值
  */
 
 /**
  * @typedef toggleButton ModalFormUI 的开关按钮信息
  * @property {"toggle"} type 按钮类型
- * @property {import("@minecraft/server").RawMessage|string} label 按钮功能描述
+ * @property {minecraft.RawMessage|string} label 按钮功能描述
  * @property {boolean} [defaultValue] 默认值
  */
 
@@ -841,8 +831,8 @@ export class UIUtil {
 
     /** 添加一个 ActionFormUI
      * @param {actionButtons[]} buttons 按钮信息
-     * @param {string|import("@minecraft/server").RawMessage} body UI 内容
-     * @param {string|import("@minecraft/server").RawMessage} title UI 标题
+     * @param {string|minecraft.RawMessage} body UI 内容
+     * @param {string|minecraft.RawMessage} title UI 标题
      */
     addAction(buttons, body = "", title = "") {
         let actionUi = new ui.ActionFormData().body(body).title(title);
@@ -872,8 +862,8 @@ export class UIUtil {
      * @param {actionButtons[]} buttons 按钮信息
      * @param {minecraft.Player} player 向哪个玩家显示 UI
      * @param {function(ui.FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
-     * @param {string|import("@minecraft/server").RawMessage} body UI 内容
-     * @param {string|import("@minecraft/server").RawMessage} title UI 标题
+     * @param {string|minecraft.RawMessage} body UI 内容
+     * @param {string|minecraft.RawMessage} title UI 标题
      */
     addThenShowAction(buttons, player, canceledFn, body = "", title = "") {
         let actionUi = this.addAction(buttons, body, title);
@@ -882,8 +872,8 @@ export class UIUtil {
 
     /** 添加一个 MessageFormUI
      * @param {messageButtons[]} buttons 按钮信息（注：buttons 内应有两个按钮信息）
-     * @param {string|import("@minecraft/server").RawMessage} body UI 内容
-     * @param {string|import("@minecraft/server").RawMessage} title UI 标题
+     * @param {string|minecraft.RawMessage} body UI 内容
+     * @param {string|minecraft.RawMessage} title UI 标题
      */
     addMessage(buttons, body = "", title = "") {
         let messageUi = new ui.MessageFormData().body(body).title(title);
@@ -905,8 +895,8 @@ export class UIUtil {
      * @param {messageButtons[]} buttons 按钮信息（注：buttons 内应有两个按钮信息）
      * @param {minecraft.Player} player 向哪个玩家显示 UI
      * @param {function(ui.FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
-     * @param {string|import("@minecraft/server").RawMessage} body UI 内容
-     * @param {string|import("@minecraft/server").RawMessage} title UI 标题
+     * @param {string|minecraft.RawMessage} body UI 内容
+     * @param {string|minecraft.RawMessage} title UI 标题
      */
     addThenShowMessage(buttons, player, canceledFn, body = "", title = "") {
         let messageUi = this.addMessage(buttons, body, title);
@@ -915,8 +905,8 @@ export class UIUtil {
 
     /** 添加一个 ModalFormUI
      * @param {(dropdownButton|sliderButton|textFieldButton|toggleButton)[]} buttons 
-     * @param {string|import("@minecraft/server").RawMessage} title UI 标题
-     * @param {string|import("@minecraft/server").RawMessage} submit 提交按钮内容
+     * @param {string|minecraft.RawMessage} title UI 标题
+     * @param {string|minecraft.RawMessage} submit 提交按钮内容
      */
     addModal(buttons, title = "", submit = "提交") {
         let modalUi = new ui.ModalFormData().title(title).submitButton(submit);
@@ -952,8 +942,8 @@ export class UIUtil {
      * @param {minecraft.Player} player 向哪个玩家显示 UI
      * @param {function(ui.FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
      * @param {function((string|number|boolean)[]): void} submittedFn 若 UI 操作被选择执行的函数（参数 1：按钮返回值）
-     * @param {string|import("@minecraft/server").RawMessage} title UI 标题
-     * @param {string|import("@minecraft/server").RawMessage} submit 提交按钮内容
+     * @param {string|minecraft.RawMessage} title UI 标题
+     * @param {string|minecraft.RawMessage} submit 提交按钮内容
      */
     addThenShowModal(buttons, player, canceledFn, submittedFn, title = "", submit = "提交") {
         let modalUi = this.addModal(buttons, title, submit);

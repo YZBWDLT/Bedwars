@@ -287,10 +287,10 @@ export class PlayerUtil {
      * @param {minecraft.TitleDisplayOptions} [options] 可选项，请注意不要在这里写入副标题
      */
     static setTitle(player, title, subtitle = "", options) {
-        const fadeInDuration = options.fadeInDuration ? options.fadeInDuration : 10;
-        const fadeOutDuration = options.fadeOutDuration ? options.fadeOutDuration : 20;
-        const stayDuration = options.stayDuration ? options.stayDuration : 70;
-        player.onScreenDisplay.setTitle(title, { fadeInDuration, fadeOutDuration, stayDuration, subtitle });
+        const fadeInDuration = options?.fadeInDuration ?? 10;
+        const fadeOutDuration = options?.fadeOutDuration ?? 20;
+        const stayDuration = options?.stayDuration ?? 70;
+        player.onScreenDisplay.setTitle(title, { fadeInDuration: fadeInDuration, fadeOutDuration: fadeOutDuration, stayDuration: stayDuration, subtitle: subtitle });
     };
 
     /** 显示换行消息，以弥补 Minecraft 原生 showMessage 方法不能换行显示消息的不足
@@ -652,6 +652,16 @@ export class ItemUtil {
         if (!comp.canAddEnchantment(enchantmentData)) return item;
         comp.addEnchantment(enchantmentData);
         return item;
+    };
+
+    /** 获取物品的附魔信息
+     * @param {minecraft.ItemStack} item 
+     */
+    static getEnchantment(item) {
+        const comp = item.getComponent("minecraft:enchantable");
+        // 如果无法附魔，终止运行
+        if (!comp) return [];
+        else return comp.getEnchantments().flatMap(enchantment => /** @type {EnchantmentInfo} */({ id: enchantment.type.id, level: enchantment.level }));
     };
 
 };

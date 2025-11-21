@@ -1329,12 +1329,12 @@ export const mapData = {
                 traders: [
                     {
                         type: "item",
-                        location: { x: -5, y: 68, z: 80.5 },
+                        location: { x: -5, y: 68, z: 79.5 },
                         rotation: 180,
                     },
                     {
                         type: "upgrade",
-                        location: { x: 6, y: 68, z: 80.5 },
+                        location: { x: 6, y: 68, z: 79.5 },
                         rotation: 0,
                     },
 
@@ -1362,12 +1362,12 @@ export const mapData = {
 
                     {
                         type: "item",
-                        location: { x: 80.5, y: 68, z: 3 },
+                        location: { x: 79.5, y: 68, z: 3 },
                         rotation: 90,
                     },
                     {
                         type: "upgrade",
-                        location: { x: 80.5, y: 68, z: -8 },
+                        location: { x: 79.5, y: 68, z: -8 },
                         rotation: 270,
                     },
 
@@ -1926,7 +1926,7 @@ export const mapData = {
                         flagLocationFrom: { x: 49, y: 82, z: 56 },
                         flagLocationTo: { x: 52, y: 78, z: 45 },
                     },
-                    {
+                    { // debug 加载时未正确更改颜色
                         teamId: ValidTeams.green,
                         location: { x: -67, y: 61, z: -64 },
                         mirror: minecraft.StructureMirrorAxis.Z,

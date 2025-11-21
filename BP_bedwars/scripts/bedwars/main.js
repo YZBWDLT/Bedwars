@@ -68,7 +68,7 @@ class BedwarsSystem {
      * @param {BedwarsTimeline} timeline 待注册的时间线
      */
     subscribeTimeline(timeline) {
-        // lib.Debug.sendMessage(`[BedwarsSystem] 已添加名为${timeline.typeId}的时间线。`);
+        lib.Debug.sendMessage(`[BedwarsSystem] 已添加名为${timeline.typeId}的时间线。`);
         this.systemTimelines.push(timeline);
     };
 
@@ -76,7 +76,7 @@ class BedwarsSystem {
      * @param {BedwarsEvent} event 
      */
     subscribeEvent(event) {
-        // lib.Debug.sendMessage(`[BedwarsSystem] 已添加名为${event.typeId}的事件。`);
+        lib.Debug.sendMessage(`[BedwarsSystem] 已添加名为${event.typeId}的事件。`);
         this.systemEvents.push(event);
     };
 
@@ -88,10 +88,10 @@ class BedwarsSystem {
         if (index != -1) {
             minecraft.system.clearRun(this.systemTimelines[index].id);
             this.systemTimelines.splice(index, 1);
-            // lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁名为${timelineTypeId}的时间线。`);
+            lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁名为${timelineTypeId}的时间线。`);
         }
         else {
-            // lib.Debug.sendMessage(`§e[BedwarsSystem] 未找到typeId为${timelineTypeId}的时间线。`);
+            lib.Debug.sendMessage(`§e[BedwarsSystem] 未找到typeId为${timelineTypeId}的时间线。`);
         }
     };
 
@@ -103,10 +103,10 @@ class BedwarsSystem {
         if (index != -1) {
             this.systemEvents[index].eventName.unsubscribe(this.systemEvents[index].id);
             this.systemEvents.splice(index, 1);
-            // lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁名为${eventTypeId}的事件。`);
+            lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁名为${eventTypeId}的事件。`);
         }
         else {
-            // lib.Debug.sendMessage(`§e[BedwarsSystem] 未找到typeId为${eventTypeId}的事件。`);
+            lib.Debug.sendMessage(`§e[BedwarsSystem] 未找到typeId为${eventTypeId}的事件。`);
         }
 
     };
@@ -117,7 +117,7 @@ class BedwarsSystem {
             minecraft.system.clearRun(timeline.id);
         });
         this.systemTimelines = [];
-        // lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁所有时间线。`);
+        lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁所有时间线。`);
     };
 
     /** 停止所有事件 */
@@ -126,7 +126,7 @@ class BedwarsSystem {
             systemEvent.eventName.unsubscribe(systemEvent.id);
         });
         this.systemEvents = [];
-        // lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁所有事件。`);
+        lib.Debug.sendMessage(`[BedwarsSystem] 清除完毕！已销毁所有事件。`);
     };
 
     /** 获取特定 ID 的时间线
@@ -512,8 +512,8 @@ class BedwarsClassicMode {
             "beforeGaming",
             minecraft.system.runInterval(() => {
                 lib.PlayerUtil.getAll().forEach(player => {
-                    // 如果不是管理员玩家，则设置为冒险模式，并在超出限制区域时拉回来
-                    if (player.playerPermissionLevel < 2) {
+                    // 如果不是管理员玩家，或者未启用【在游戏重启时将管理员调整为创造模式】设置，则设置为冒险模式，并在超出限制区域时拉回来
+                    if (!this.system.settings.miscellaneous.setAdminCreativeWhenRestart || player.playerPermissionLevel < 2) {
                         player.setGameMode("Adventure");
                         if (!lib.EntityUtil.isInVolume(player, new minecraft.BlockVolume({ x: -12, y: 119, z: -12 }, { x: 12, y: 129, z: 12 }))) player.teleport({ x: 0, y: 121, z: 0 });
                     }
@@ -1008,8 +1008,6 @@ class BedwarsClassicMode {
         return new BedwarsTimeline(
             "gameStartCountdown",
             minecraft.system.runInterval(() => {
-                // 倒计时
-                this.gameStartCountdown--;
                 // 同步右侧快捷栏
                 lib.PlayerUtil.getAll().forEach(player => this.beforeGamingInfoboard(player));
                 // 提醒玩家还有多长时间开始游戏
@@ -1036,6 +1034,8 @@ class BedwarsClassicMode {
                 else if (this.gameStartCountdown <= 0) {
                     this.exitWaitingState();
                 }
+                // 倒计时
+                this.gameStartCountdown--;
             }, 20)
         );
     };
@@ -1260,10 +1260,10 @@ class BedwarsClassicMode {
                         "undefined": 0,
                         red: 1,
                         blue: 2,
-                        yellow: 3,
-                        green: 4,
-                        white: 5,
-                        cyan: 6,
+                        green: 3,
+                        yellow: 4,
+                        cyan: 5,
+                        white: 6,
                         pink: 7,
                         gray: 8,
                         orange: 9,
@@ -1318,10 +1318,10 @@ class BedwarsClassicMode {
                     const teamCode = {
                         1: "red",
                         2: "blue",
-                        3: "yellow",
-                        4: "green",
-                        5: "white",
-                        6: "cyan",
+                        3: "green",
+                        4: "yellow",
+                        5: "cyan",
+                        6: "white",
                         7: "pink",
                         8: "gray",
                         9: "orange",
@@ -1583,7 +1583,7 @@ class BedwarsClassicMode {
                 if (!this.system.getTimeline("playerRespawn")) this.system.subscribeTimeline(this.timelinePlayerRespawn());
                 if (!this.system.getTimeline("playerInDeathState")) this.system.subscribeTimeline(this.timelinePlayerInDeathState());
 
-            }, { entities: this.map.teams.flatMap(team => team.alivePlayers.flatMap(alivePlayer => alivePlayer.player)) })
+            }, { entityTypes: ["minecraft:player"] })
         );
     };
 
@@ -1614,7 +1614,7 @@ class BedwarsClassicMode {
                     if (!this.system.getTimeline("playerAttackedTimer")) this.system.subscribeTimeline(this.timelinePlayerAttackedTimer());
                 }
 
-            }, { entities: this.map.teams.flatMap(team => team.alivePlayers.flatMap(alivePlayer => alivePlayer.player)) })
+            }, { entityTypes: ["minecraft:player"] })
         );
     };
 
@@ -1948,6 +1948,12 @@ class BedwarsClassicMode {
             minecraft.system.runInterval(() => {
                 this.map.tradingTraders.forEach(tradingTrader => {
 
+                    // 如果正在交易的商人无效时，或与玩家交互时退出游戏，移除之并立刻终止代码
+                    if (!tradingTrader.player.isValid || !tradingTrader.trader.isValid) {
+                        this.map.removeTrader(tradingTrader.trader);
+                        return;
+                    };
+
                     // 检查玩家是否拿走了物品
                     tradingTrader.itemChangeTest();
 
@@ -1985,15 +1991,17 @@ class BedwarsClassicMode {
             "trap",
             minecraft.system.runInterval(() => {
                 const trappedTeams = this.map.teams.filter(team => team.traps.length > 0);
-                trappedTeams.forEach(trappedTeam => {
-                    const invaderData = this.map.teams
-                        // 非本队玩家
-                        .filter(invaderTeam => invaderTeam.id != trappedTeam.id)
-                        .flatMap(invaderTeam => invaderTeam.alivePlayers)
-                        // 在床 10 格附近且未喝牛奶
-                        .filter(invader => lib.EntityUtil.isNearby(invader.player, trappedTeam.bedLocation, 10) && invader.magicMilkCountdown == 0)[0];
-                    if (invaderData && !trappedTeam.isWaitingTrapCooldown) trappedTeam.triggerTrap(invaderData);
-                });
+                trappedTeams
+                    .filter(trappedTeams => !trappedTeams.isWaitingTrapCooldown)
+                    .forEach(trappedTeam => {
+                        const invaderData = this.map.teams
+                            // 非本队玩家
+                            .filter(invaderTeam => invaderTeam.id != trappedTeam.id)
+                            .flatMap(invaderTeam => invaderTeam.alivePlayers)
+                            // 在床 10 格附近且未喝牛奶
+                            .filter(invader => lib.EntityUtil.isNearby(invader.player, trappedTeam.bedLocation, 10) && invader.magicMilkCountdown == 0)[0];
+                        if (invaderData) trappedTeam.triggerTrap(invaderData);
+                    });
                 if (trappedTeams.length == 0) this.system.unsubscribeTimeline("trap");
             }, 20)
         );
@@ -2586,7 +2594,7 @@ class BedwarsClassicMode {
                                 if (team.teamUpgrades.dragonBuff) lib.EntityUtil.add("minecraft:ender_dragon", this.map.spawnpoint);
                             });
                             lib.PlayerUtil.getAll().forEach(player => player.onScreenDisplay.setTitle({ translate: "title.deathMatch" }));
-                            lib.DimensionUtil.setBlock("overworld", {x: 0, y: 60, z: 0}, "minecraft:barrier")
+                            lib.DimensionUtil.setBlock("overworld", { x: 0, y: 60, z: 0 }, "minecraft:barrier")
                             break;
                         case "game_over": default:
                             // 结束游戏
@@ -3975,6 +3983,8 @@ class BedwarsMap {
         );
     };
 
+    // ===== 商人信息操作 =====
+
     /** 添加商人
      * @param {data.TraderInfo} traderInfo 
      */
@@ -4251,19 +4261,29 @@ class BedwarsTeam {
     /** 对队伍内的玩家的物品添加锋利附魔 */
     applySharpness() {
         if (this.teamUpgrades.sharpenedSwords) this.alivePlayers.forEach(alivePlayer => {
-            const sharpnessItems = [
+            const swords = [
                 "bedwars:wooden_sword",
                 "bedwars:stone_sword",
                 "bedwars:iron_sword",
                 "bedwars:diamond_sword",
+            ];
+            const axes = [
                 "bedwars:wooden_axe",
                 "bedwars:stone_axe",
                 "bedwars:iron_axe",
                 "bedwars:diamond_axe"
             ];
+            // 对于剑，添加锋利附魔
             lib.InventoryUtil.getValidItems(alivePlayer.player)
-                .filter(item => sharpnessItems.includes(item.item.typeId))
+                .filter(item => swords.includes(item.item.typeId))
                 .forEach(item => lib.ItemUtil.replaceInventoryItem(alivePlayer.player, item.item.typeId, item.slot, { enchantments: [{ id: "sharpness", level: 1 }] }));
+            // 对于斧头，保留原有附魔的基础上添加附魔
+            lib.InventoryUtil.getValidItems(alivePlayer.player)
+                .filter(item => axes.includes(item.item.typeId))
+                .forEach(item => {
+                    const currentEnchantments = lib.ItemUtil.getEnchantment(item.item);
+                    lib.ItemUtil.replaceInventoryItem(alivePlayer.player, item.item.typeId, item.slot, { enchantments: [...currentEnchantments, { id: "sharpness", level: 1 }] })
+                });
         });
     };
 
@@ -4869,9 +4889,6 @@ class BedwarsPlayer {
 
 minecraft.world.afterEvents.worldLoad.subscribe(() => {
     let bedwarsSystem = new BedwarsSystem();
-    bedwarsSystem.settings.beforeGaming.waiting.minPlayerCount = 1;
-    bedwarsSystem.settings.beforeGaming.waiting.gameStartWaitingTime = 1;
-    bedwarsSystem.settings.gaming.invalidTeam.enableTest = false;
 });
 
 // ===== 待办事项 =====

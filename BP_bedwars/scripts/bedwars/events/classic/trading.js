@@ -13,12 +13,12 @@ import { map } from "../../methods/bedwarsMaps";
 
 /** 交易功能 */
 export function trading() {
-    
+
     // ===== 禁止玩家进入商人区域 =====
-    if ( !map().playerCouldIntoShop ) {
-        eachAlivePlayer( player => {
-            player.runCommand( `function maps/${map().id}/player_into_shop` )
-        } );
+    if (!map().playerCouldIntoShop) {
+        eachAlivePlayer(player => {
+            player.runCommand(`function maps/${map().id}/player_into_shop`)
+        });
     }
 
 }

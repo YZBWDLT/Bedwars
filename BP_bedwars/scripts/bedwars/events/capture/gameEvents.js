@@ -24,24 +24,24 @@ import { gameOver } from "../classic/afterGaming";
 export function gameEventsCapture() {
 
     /** ===== 常规游戏事件 ===== */
-    if ( map().gameEvent.nextEventCountdown > 0 ) {
+    if (map().gameEvent.nextEventCountdown > 0) {
         map().gameEvent.nextEventCountdown--;
     }
     else {
         /** 按照当前的游戏流程选择性地触发事件 */
-        if ( map().gameEvent.currentId === 0 ) { diamondTier2( 4800 ); }
-        else if ( map().gameEvent.currentId === 1 ) { emeraldTier2( 4800 ); }
-        else if ( map().gameEvent.currentId === 2 ) { diamondTier3( 4800 ); }
-        else { emeraldTier3( 99999 ); }
+        if (map().gameEvent.currentId === 0) { diamondTier2(4800); }
+        else if (map().gameEvent.currentId === 1) { emeraldTier2(4800); }
+        else if (map().gameEvent.currentId === 2) { diamondTier3(4800); }
+        else { emeraldTier3(99999); }
     }
 
     /** ===== 减分判定 ===== */
-    eachTeam( team => {
-        if ( system.currentTick % 20 === 0 ) {
+    eachTeam(team => {
+        if (system.currentTick % 20 === 0) {
             let otherBed = team.getOtherTeamBed(); // 获取其他队伍床的数目
             team.captureInfo.score -= otherBed; // 减分（每秒执行一次）
         }
-    } )
+    })
 }
 
 /** 夺点模式队伍淘汰和胜利的判定
@@ -53,30 +53,32 @@ export function gameEventsCapture() {
 export function teamEliminateAndWinCapture() {
     /** ===== 平局判定 ===== */
     let teamScoreData = [];
-    eachTeam( team => teamScoreData.push( team.captureInfo.score ) );
-    if ( teamScoreData.every( score => score <= 0 ) ) {
-        gameOver( );
+    eachTeam(team => teamScoreData.push(team.captureInfo.score));
+    if (teamScoreData.every(score => score <= 0)) {
+        gameOver();
         return; // 终止判定，直接定为平局
     }
     /** ===== 淘汰判定 ===== */
-    eachTeam( team => { if ( !team.isEliminated ) {
-        if ( team.captureInfo.score <= 0 ) {
-            team.getTeamMember().forEach( player => { setPlayerGamemode( player, "spectator" ) } );
-            team.setTeamEliminated();
+    eachTeam(team => {
+        if (!team.isEliminated) {
+            if (team.captureInfo.score <= 0) {
+                team.getTeamMember().forEach(player => { setPlayerGamemode(player, "spectator") });
+                team.setTeamEliminated();
+            }
+            else if (team.captureInfo.bedsPos.length === 0 && team.getAliveTeamMember().length === 0) {
+                team.setTeamEliminated();
+            }
         }
-        else if ( team.captureInfo.bedsPos.length === 0 && team.getAliveTeamMember().length === 0 ) {
-            team.setTeamEliminated();
-        }
-    } } );
+    });
     /** ===== 获胜判定 ===== */
-    if ( map().getAliveTeam().length <= 1 ) {
-        gameOver( map().getAliveTeam()[0] );
+    if (map().getAliveTeam().length <= 1) {
+        gameOver(map().getAliveTeam()[0]);
     };
 }
 
 /** 默认提供末影龙增益 */
 export function supplyDragonBuff() {
-    eachTeam( team => {
-        if ( !team.teamUpgrade.dragonBuff ) { team.teamUpgrade.dragonBuff = true; }
-    } )
+    eachTeam(team => {
+        if (!team.teamUpgrade.dragonBuff) { team.teamUpgrade.dragonBuff = true; }
+    })
 }

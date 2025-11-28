@@ -517,7 +517,7 @@ export class ScoreboardPlayerUtil {
 export class ItemUtil {
 
     /** 按照给定条件生成 ItemStacks
-     * @param {String} itemId 物品 ID
+     * @param {string} itemId 物品 ID
      * @param {ItemOptions} options 物品信息可选项
      */
     static getItemStacks(itemId, options = {}) {
@@ -791,180 +791,327 @@ export class InventoryUtil {
 
 // ===== UI =====
 
-/**
- * @typedef actionButtons ActionFormUI 的按钮信息
- * @property {string} text 按钮文本描述
- * @property {string} [iconPath] 按钮图标路径（路径应当从资源包的textures/文件夹开始且不带后缀）
- * @property {function(): void} [function] 选择该按钮后执行的函数
+/** ActionUIData
+ * @typedef ActionUIData
+ * @property {"action"} type 表示在这里使用 ActionForm
+ * @property {string | minecraft.RawMessage} [title] 定义使用何种标题
+ * @property {string | minecraft.RawMessage} [body] 定义 UI 内部的文字简介信息
+ * @property {(FormHeaderComponent | FormLabelComponent | FormDividerComponent | FormButtonComponent)[]} [components] 表示使用何种内容
+ * @property {OnCanceledOptions} [onCanceled] 玩家取消设置
+ * @property {ActionUIData | ModalUIData | MessageUIData} [parentForm] 定义父界面（备注：通常来说该参数无需额外定义，在启动子界面时会自动注册父界面）
  */
 
-/**
- * @typedef messageButtons MessageFormUI 的按钮信息
- * @property {string} text 按钮文本描述
- * @property {function(): void} [function] 选择该按钮后执行的函数
+/** MessageUIData
+ * @typedef MessageUIData
+ * @property {"message"} type 表示在这里使用 MessageForm
+ * @property {string | minecraft.RawMessage} [title] 定义使用何种标题
+ * @property {string | minecraft.RawMessage} [body] 定义 UI 内部的文字简介信息
+ * @property {FormButtonComponent} button1 第一个按钮
+ * @property {FormButtonComponent} button2 第二个按钮
+ * @property {ActionUIData | ModalUIData | MessageUIData} [parentForm] 定义父界面（备注：通常来说该参数无需额外定义，在启动子界面时会自动注册父界面）
  */
 
-/**
- * @typedef dropdownButton ModalFormUI 的下拉按钮信息
- * @property {"dropdown"} type 按钮类型
- * @property {minecraft.RawMessage|string} label 按钮功能描述
- * @property {(minecraft.RawMessage|string)[]} options 下拉选项
- * @property {number} [defaultValue] 默认索引
+/** ModalUIData
+ * @typedef ModalUIData
+ * @property {"modal"} type 表示在这里使用 ModalForm
+ * @property {string | minecraft.RawMessage} [title] 定义使用何种标题
+ * @property {string | minecraft.RawMessage} [submitButton] 定义使用何种提交按钮提示
+ * @property {(FormHeaderComponent | FormLabelComponent | FormDividerComponent | FormDropdownComponent | FormSliderComponent | FormTextFieldComponent | FormToggleComponent)[]} [components] 表示使用何种内容
+ * @property {OnCanceledOptions} [onCanceled] 玩家取消设置
+ * @property {OnSubmittedOptions} [onSubmitted] 玩家提交设置
+ * @property {ActionUIData | ModalUIData | MessageUIData} [parentForm] 定义父界面（备注：通常来说该参数无需额外定义，在启动子界面时会自动注册父界面）
  */
 
-/**
- * @typedef sliderButton ModalFormUI 的滑块按钮信息
- * @property {"slider"} type 按钮类型
- * @property {minecraft.RawMessage|string} label 按钮功能描述
- * @property {number} min 最小值
- * @property {number} max 最大值
- * @property {number} step 步长
- * @property {number} [defaultValue] 默认值
+/** FormHeaderComponent
+ * @typedef FormHeaderComponent
+ * @property {"header"} type 表示该组件采用大字标题
+ * @property {string | minecraft.RawMessage} text 标题将采用的内容
  */
 
-/**
- * @typedef textFieldButton ModalFormUI 的文本输入按钮信息
- * @property {"textField"} type 按钮类型
- * @property {minecraft.RawMessage|string} label 按钮功能描述
- * @property {minecraft.RawMessage|string} placeholder 文本框内描述
- * @property {string} [defaultValue] 默认值
+/** FormLabelComponent
+ * @typedef FormLabelComponent
+ * @property {"label"} type 表示该组件采用文字标注
+ * @property {string | minecraft.RawMessage} text 文字标注将采用的内容
  */
 
-/**
- * @typedef toggleButton ModalFormUI 的开关按钮信息
- * @property {"toggle"} type 按钮类型
- * @property {minecraft.RawMessage|string} label 按钮功能描述
- * @property {boolean} [defaultValue] 默认值
+/** FormDividerComponent
+ * @typedef FormDividerComponent
+ * @property {"divider"} type 表示该组件采用分割线
+ */
+
+/** FormButtonComponent
+ * @typedef FormButtonComponent
+ * @property {"button"} type 表示该组件采用按钮
+ * @property {string | minecraft.RawMessage} text 按钮将显示的内容
+ * @property {string} [icon] 按钮采用的图标（仅限 action 类 UI 可用），例如"textures/items/apple"
+ * @property {OnSelectedOptions} [onSelected] 选中该选项后的设置
+ */
+
+/** FormDropdownComponent
+ * @typedef FormDropdownComponent
+ * @property {"dropdown"} type 表示该组件采用下拉栏
+ * @property {string | minecraft.RawMessage} text 按钮将显示的内容
+ * @property {(minecraft.RawMessage | string)[]} items 下拉栏全部可用选项
+ * @property {number} [default] 下拉栏采用的默认值
+ * @property {string | minecraft.RawMessage} [tipText] 旁侧提示显示的内容
+ */
+
+/** FormSliderComponent
+ * @typedef FormSliderComponent
+ * @property {"slider"} type 表示该组件采用滑块
+ * @property {string | minecraft.RawMessage} text 按钮将显示的内容
+ * @property {number} min 滑块的最小值
+ * @property {number} max 滑块的最大值
+ * @property {number} [step] 每次滑动时的步长
+ * @property {number} [default] 下拉栏采用的默认值
+ * @property {string | minecraft.RawMessage} [tipText] 旁侧提示显示的内容
+ */
+
+/** FormTextFieldComponent
+ * @typedef FormTextFieldComponent
+ * @property {"textField"} type 表示该组件采用文本输入框
+ * @property {string | minecraft.RawMessage} text 按钮将显示的内容
+ * @property {minecraft.RawMessage | string} placeholderText 定义文本输入框的背景字
+ * @property {string} [default] 下拉栏采用的默认值
+ * @property {string | minecraft.RawMessage} [tipText] 旁侧提示显示的内容
+ */
+
+/** FormToggleComponent
+ * @typedef FormToggleComponent
+ * @property {"toggle"} type 表示该组件采用开关
+ * @property {string | minecraft.RawMessage} text 按钮将显示的内容
+ * @property {boolean} [default] 下拉栏采用的默认值
+ * @property {string | minecraft.RawMessage} [tipText] 旁侧提示显示的内容
+ */
+
+/** OnSelectedOptions
+ * @typedef OnSelectedOptions
+ * @property {ActionUIData | ModalUIData | MessageUIData} [childForm] 定义子界面，并在打开子界面后自动为子界面注册父界面
+ * @property {boolean} [openChildForm] 是否在选择该选项后打开子界面，但在不存在子界面时会直接跳过
+ * @property {boolean} [openParentForm] 是否在关闭该页面后打开父界面，但在不存在父界面时会直接跳过
+ * @property {(selection: number, thisForm: ActionUIData | MessageUIData) => void} [callback] 选择后执行的函数，注：若需打开一个静态界面（即无论如何均显示同一个内容的界面），建议使用 childForm 和 openChildForm
+ */
+
+/** OnCanceledOptions
+ * @typedef OnCanceledOptions
+ * @property {boolean} [openParentForm] 是否在关闭该页面后打开父界面，但在不存在父界面时会直接跳过
+ * @property {(reason: ui.FormCancelationReason, thisForm: ActionUIData | ModalUIData) => void} [callback] 取消后执行的函数
+ */
+
+/** OnSubmittedOptions
+ * @typedef OnSubmittedOptions
+ * @property {ActionUIData | ModalUIData | MessageUIData} [childForm] 定义子界面，并在打开子界面后自动为子界面注册父界面
+ * @property {boolean} [openChildForm] 是否在选择该选项后打开子界面，但在不存在子界面时会直接跳过
+ * @property {boolean} [openParentForm] 是否在关闭该页面后打开父界面，但在不存在父界面时会直接跳过
+ * @property {(result: (string | number | boolean | undefined)[], thisForm: ModalUIData) => void} [callback] 提交表单后执行的函数，注：若需打开一个静态界面（即无论如何均显示同一个内容的界面），建议使用 childForm 和 openChildForm
  */
 
 export class UIUtil {
 
-    /** 添加一个 ActionFormUI
-     * @param {actionButtons[]} buttons 按钮信息
-     * @param {string|minecraft.RawMessage} body UI 内容
-     * @param {string|minecraft.RawMessage} title UI 标题
+    /** 添加一个 ActionFormUI，并决定是否显示
+     * @param {ActionUIData} formData 输入的表单信息
+     * @param {minecraft.Player} [showPlayer] 决定是否立刻对玩家显示，并追踪玩家选择，若不指定则不显示
      */
-    addAction(buttons, body = "", title = "") {
-        let actionUi = new ui.ActionFormData().body(body).title(title);
-        buttons.forEach(button => { actionUi.button(button.text, button.iconPath); })
-        return actionUi;
-    };
+    static createAction(formData, showPlayer) {
 
-    /** 展示一个 ActionFormUI，返回是否成功显示了 UI
-     * @param {ui.ActionFormData} actionUi 待显示的 UI
-     * @param {minecraft.Player} player 向哪个玩家显示 UI
-     * @param {function(ui.FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
-     * @param {function(number): void} selectedFn 若 UI 操作被选择执行的函数（参数 1：按钮索引）
-     */
-    showAction(actionUi, player, canceledFn, selectedFn) {
-        let executed = true;
-        actionUi
-            .show(player)
-            .then(response => {
-                if (response.canceled) { canceledFn(response.cancelationReason); }
-                else { selectedFn(response.selection); }
-            })
-            .catch(() => { executed = false; });
-        return executed;
-    };
+        // 表单创建
+        const form = new ui.ActionFormData();
+        if (formData.title) form.title(formData.title);
+        if (formData.body) form.body(formData.body);
+        if (formData.components) formData.components.forEach(component => {
+            switch (component.type) {
+                case "header": form.header(component.text); break;
+                case "label": form.label(component.text); break;
+                case "divider": form.divider(); break;
+                case "button": form.button(component.text, component.icon); break;
+                default: break;
+            }
+        });
 
-    /** 添加并立即展示一个 ActionFormUI，返回是否成功显示了 UI
-     * @param {actionButtons[]} buttons 按钮信息
-     * @param {minecraft.Player} player 向哪个玩家显示 UI
-     * @param {function(ui.FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
-     * @param {string|minecraft.RawMessage} body UI 内容
-     * @param {string|minecraft.RawMessage} title UI 标题
-     */
-    addThenShowAction(buttons, player, canceledFn, body = "", title = "") {
-        let actionUi = this.addAction(buttons, body, title);
-        return this.showAction(actionUi, player, canceledFn, selectedIndex => { buttons[selectedIndex]?.function; });
+        // 显示设置
+        if (showPlayer) {
+            // 筛选出所有的 button 组件
+            const buttons = formData.components?.filter(component => component.type === "button") ?? [];
+            form.show(showPlayer).then(
+                response => {
+                    const { selection, canceled, cancelationReason } = response;
+                    const parentForm = formData.parentForm;
+                    // 玩家选择后执行的内容
+                    if (selection !== undefined && buttons[selection].onSelected) {
+                        const { childForm, openChildForm, openParentForm, callback } = buttons[selection].onSelected;
+                        // 如果设置为显示子界面，则立即显示子界面，同时为子界面注册一个父界面
+                        if (openChildForm && childForm) {
+                            childForm.parentForm = formData;
+                            this.createAutomatically(childForm, showPlayer);
+                        }
+                        // 如果设置为显示父界面，则立即显示父界面
+                        else if (openParentForm && parentForm) this.createAutomatically(parentForm, showPlayer);
+                        // 执行自定义函数
+                        if (callback) callback(selection, formData);
+                    }
+                    // 玩家关闭后执行的内容
+                    else if (canceled && cancelationReason === ui.FormCancelationReason.UserClosed && formData.onCanceled) {
+                        const { openParentForm, callback } = formData.onCanceled;
+                        // 立即显示父界面
+                        if (openParentForm && parentForm) this.createAutomatically(parentForm, showPlayer);
+                        // 执行自定义函数
+                        if (callback) callback(cancelationReason, formData);
+                    };
+                },
+            );
+        };
+
+        // 返回值
+        return form;
+
     };
 
     /** 添加一个 MessageFormUI
-     * @param {messageButtons[]} buttons 按钮信息（注：buttons 内应有两个按钮信息）
-     * @param {string|minecraft.RawMessage} body UI 内容
-     * @param {string|minecraft.RawMessage} title UI 标题
+     * @param {MessageUIData} formData 输入的表单信息
+     * @param {minecraft.Player} [showPlayer] 决定是否立刻对玩家显示，并追踪玩家选择，若不指定则不显示
      */
-    addMessage(buttons, body = "", title = "") {
-        let messageUi = new ui.MessageFormData().body(body).title(title);
-        messageUi.button1(buttons[0].text).button2(buttons[1].text);
-        return messageUi;
-    };
+    static createMessage(formData, showPlayer) {
 
-    /** 展示一个 MessageFormUI，返回是否成功显示了 UI
-     * @param {ui.MessageFormData} messageUi 待显示的 UI
-     * @param {minecraft.Player} player 向哪个玩家显示 UI
-     * @param {function(ui.FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
-     * @param {function(number): void} selectedFn 若 UI 操作被选择执行的函数（参数 1：按钮索引）
-     */
-    showMessage(messageUi, player, canceledFn, selectedFn) {
-        this.showAction(messageUi, player, canceledFn, selectedFn);
-    };
+        // 表单创建
+        const form = new ui.MessageFormData();
+        if (formData.title) form.title(formData.title);
+        if (formData.body) form.body(formData.body);
+        form.button1(formData.button1);
+        form.button2(formData.button2);
 
-    /** 添加并立即展示一个 MessageFormUI，返回是否成功显示了 UI
-     * @param {messageButtons[]} buttons 按钮信息（注：buttons 内应有两个按钮信息）
-     * @param {minecraft.Player} player 向哪个玩家显示 UI
-     * @param {function(ui.FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
-     * @param {string|minecraft.RawMessage} body UI 内容
-     * @param {string|minecraft.RawMessage} title UI 标题
-     */
-    addThenShowMessage(buttons, player, canceledFn, body = "", title = "") {
-        let messageUi = this.addMessage(buttons, body, title);
-        return this.showMessage(messageUi, player, canceledFn, selectedIndex => { buttons[selectedIndex]?.function; });
+        // 显示设置
+        if (showPlayer) {
+            // 筛选出所有的 button 组件
+            const buttons = [formData.button1, formData.button2];
+            form.show(showPlayer).then(
+                response => {
+                    const { selection } = response;
+                    const parentForm = formData.parentForm;
+                    // 玩家选择后执行的内容
+                    if (selection !== undefined && buttons[selection].onSelected) {
+                        const { childForm, openChildForm, openParentForm, callback } = buttons[selection].onSelected;
+                        // 如果设置为显示子界面，则立即显示子界面，同时为子界面注册一个父界面
+                        if (openChildForm && childForm) {
+                            childForm.parentForm = formData;
+                            this.createAutomatically(childForm, showPlayer);
+                        }
+                        // 如果设置为显示父界面，则立即显示父界面
+                        else if (openParentForm && parentForm) this.createAutomatically(parentForm, showPlayer);
+                        // 执行自定义函数
+                        if (callback) callback(selection, formData);
+                    };
+                },
+            );
+        };
+
+        // 返回值
+        return form;
+
     };
 
     /** 添加一个 ModalFormUI
-     * @param {(dropdownButton|sliderButton|textFieldButton|toggleButton)[]} buttons 
-     * @param {string|minecraft.RawMessage} title UI 标题
-     * @param {string|minecraft.RawMessage} submit 提交按钮内容
+     * @param {ModalUIData} formData 输入的表单信息
+     * @param {minecraft.Player} [showPlayer] 决定是否立刻对玩家显示，并追踪玩家选择，若不指定则不显示
      */
-    addModal(buttons, title = "", submit = "提交") {
-        let modalUi = new ui.ModalFormData().title(title).submitButton(submit);
-        buttons.forEach(button => {
-            if (button.type === "dropdown") { modalUi.dropdown(button.label, button.options, button.defaultValue); }
-            else if (button.type === "slider") { modalUi.slider(button.label, button.min, button.max, button.step, button.defaultValue); }
-            else if (button.type === "textField") { modalUi.textField(button.label, button.placeholder, button.defaultValue); }
-            else if (button.type === "toggle") { modalUi.toggle(button.label, button.defaultValue); }
+    static createModal(formData, showPlayer) {
+
+        // 表单创建
+        const form = new ui.ModalFormData();
+        if (formData.title) form.title(formData.title);
+        if (formData.submitButton) form.submitButton(formData.submitButton);
+        if (formData.components) formData.components.forEach(component => {
+            switch (component.type) {
+                case "header": form.header(component.text); break;
+                case "label": form.label(component.text); break;
+                case "divider": form.divider(); break;
+                case "dropdown": form.dropdown(component.text, component.items, { defaultValueIndex: component.default, tooltip: component.tipText }); break;
+                case "slider": form.slider(component.text, component.min, component.max, { defaultValue: component.default, tooltip: component.tipText, valueStep: component.step }); break;
+                case "textField": form.textField(component.text, component.placeholderText, { defaultValue: `${component.default}`, tooltip: component.tipText }); break;
+                case "toggle": form.toggle(component.text, { defaultValue: component.default, tooltip: component.tipText }); break;
+                default: break;
+            }
         });
-        return modalUi;
+
+        // 显示设置
+        if (showPlayer) {
+            form.show(showPlayer).then(
+                response => {
+                    const { formValues, canceled, cancelationReason } = response;
+                    const parentForm = formData.parentForm;
+                    // 玩家选择后执行的内容
+                    if (formValues !== undefined && formData.onSubmitted) {
+                        const { childForm, openChildForm, openParentForm, callback } = formData.onSubmitted;
+                        // 如果设置为显示子界面，则立即显示子界面，同时为子界面注册一个父界面
+                        if (openChildForm && childForm) {
+                            childForm.parentForm = formData;
+                            this.createAutomatically(childForm, showPlayer);
+                        }
+                        // 如果设置为显示父界面，则立即显示父界面
+                        else if (openParentForm && parentForm) this.createAutomatically(parentForm, showPlayer);
+                        // 执行自定义函数
+                        if (callback) callback(formValues, formData);
+                    }
+                    // 玩家关闭后执行的内容
+                    else if (canceled && cancelationReason === ui.FormCancelationReason.UserClosed && formData.onCanceled) {
+                        const { openParentForm, callback } = formData.onCanceled;
+                        // 立即显示父界面
+                        if (openParentForm && parentForm) this.createAutomatically(parentForm, showPlayer);
+                        // 执行自定义函数
+                        if (callback) callback(cancelationReason, formData);
+                    };
+                },
+            );
+        };
+
+        // 返回值
+        return form;
+
     };
 
-    /** 展示一个 ModalFormUI，返回是否成功显示了 UI
-     * @param {ui.ModalFormData} modalUi 待显示的 UI
-     * @param {minecraft.Player} player 向哪个玩家显示 UI
-     * @param {function(ui.FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
-     * @param {function((string|number|boolean)[]): void} submittedFn 若 UI 操作被选择执行的函数（参数 1：按钮返回值）
+    /** 按照 formData 所给信息自动创建表单
+     * @param {ActionUIData | MessageUIData | ModalUIData} formData 
+     * @param {minecraft.Player} showPlayer 
      */
-    showModal(modalUi, player, canceledFn, submittedFn) {
-        let executed = true;
-        modalUi
-            .show(player)
-            .then(response => {
-                if (response.canceled) { canceledFn(response.cancelationReason); }
-                else { submittedFn(response.formValues); }
-            })
-            .catch(() => { executed = false; });
-        return executed;
+    static createAutomatically(formData, showPlayer) {
+        switch (formData.type) {
+            case "action": return this.createAction(formData, showPlayer);
+            case "message": return this.createMessage(formData, showPlayer);
+            case "modal": return this.createModal(formData, showPlayer);
+        };
     };
 
-    /** 添加并立即展示一个 ModalFormUI，返回是否成功显示了 UI
-     * @param {(dropdownButton|sliderButton|textFieldButton|toggleButton)[]} buttons 
-     * @param {minecraft.Player} player 向哪个玩家显示 UI
-     * @param {function(ui.FormCancelationReason): void} canceledFn 若 UI 操作被取消执行的函数（参数 1：取消原因）
-     * @param {function((string|number|boolean)[]): void} submittedFn 若 UI 操作被选择执行的函数（参数 1：按钮返回值）
-     * @param {string|minecraft.RawMessage} title UI 标题
-     * @param {string|minecraft.RawMessage} submit 提交按钮内容
-     */
-    addThenShowModal(buttons, player, canceledFn, submittedFn, title = "", submit = "提交") {
-        let modalUi = this.addModal(buttons, title, submit);
-        return this.showModal(modalUi, player, canceledFn, submittedData => { submittedFn(submittedData) })
-    };
-
-    /** 关闭所有 UI（目前暂无法使用）
+    /** 关闭所有 UI
      * @param {minecraft.Player} player 
      */
-    close(player) {
+    static close(player) {
+        ui.uiManager.closeAllForms(player);
+    };
 
+    /** 重加载一个 ActionFormUI
+     * @param {ActionUIData} formData 输入的表单信息
+     * @param {minecraft.Player} showPlayer 立刻停止显示何玩家的 UI，并对该玩家显示
+     */
+    static reloadAction(formData, showPlayer) {
+        this.close(showPlayer);
+        this.createAction(formData, showPlayer);
+    };
+
+    /** 重加载一个 MessageFormUI
+     * @param {MessageUIData} formData 输入的表单信息
+     * @param {minecraft.Player} showPlayer 立刻停止显示何玩家的 UI，并对该玩家显示
+     */
+    static reloadMessage(formData, showPlayer) {
+        this.close(showPlayer);
+        this.createMessage(formData, showPlayer);
+    };
+
+    /** 重加载一个 ModalFormUI
+     * @param {ModalUIData} formData 输入的表单信息
+     * @param {minecraft.Player} showPlayer 立刻停止显示何玩家的 UI，并对该玩家显示
+     */
+    static reloadModal(formData, showPlayer) {
+        this.close(showPlayer);
+        this.createModal(formData, showPlayer);
     };
 
 };
@@ -1004,8 +1151,23 @@ export class JSUtil {
         return Math.max(min, Math.min(value, max));
     };
 
+    /** 限定一个浮点数的位数
+     * @param {number} num 待限定的浮点数
+     * @param {number} digits 限定位数，必须在[0, 20]范围内
+     * @returns 
+     */
+    static limitDecimal(num, digits) {
+        if (typeof num !== 'number') {
+            throw new TypeError('The first argument must be a number.');
+        }
+        if (typeof digits !== 'number' || digits < 0 || digits > 20) {
+            throw new RangeError('Digits must be between 0 and 20.');
+        }
+        return parseFloat(num.toFixed(digits));
+    };
+
     /** 将数字转换为罗马数字的字符串
-     * @param {Number} num 待转换数字
+     * @param {number} num 待转换数字
      */
     static intToRoman(num) {
         if (num <= 0) { return ""; }
@@ -1122,7 +1284,7 @@ export class JSUtil {
     };
 
     /** 将单位为秒的时间转换为以分钟和秒钟为单位的时间
-     * @param {Number} secondTime 秒数时间
+     * @param {number} secondTime 秒数时间
      */
     static secondToMinute(secondTime) {
         /** @type {TimeInfo} */

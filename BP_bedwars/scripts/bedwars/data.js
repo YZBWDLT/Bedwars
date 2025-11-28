@@ -106,7 +106,7 @@ import * as minecraft from "@minecraft/server";
  * @typedef BedwarsPlayerInfo
  * @property {BedwarsTeam | undefined} team 该玩家所属的队伍，若为 undefined 则为旁观模式
  * @property {minecraft.Player} player 该玩家信息所对应的玩家
- * @property {KillStyle} [KillStyle] 该玩家所采用的击杀信息
+ * @property {string} [killStyle] 该玩家所采用的击杀信息
  */
 
 // BedwarsItemShopitemInfo 定义物品类商店物品信息，包含诸多附属 type 定义
@@ -265,22 +265,6 @@ export const ResourceType = {
     gold: "gold",
     diamond: "diamond",
     emerald: "emerald",
-};
-
-/** 所有可用的击杀样式
- * @enum {string}
- */
-export const KillStyle = {
-    default: "default",
-    flame: "flame",
-    west: "west",
-    glory: "glory",
-    pirate: "pirate",
-    love: "love",
-    christmas: "christmas",
-    meme: "meme",
-    pack: "pack",
-    newThreeKingdom: "newThreeKingdom"
 };
 
 /** 所有团队升级
@@ -4992,3 +4976,86 @@ export const trapInformationData = {
         name: "挖掘疲劳陷阱",
     },
 };
+
+// ===== 击杀样式数据 =====
+
+/**
+ * @typedef killStyleData
+ * @property {string} id 击杀样式的 ID
+ * @property {string} name 击杀样式的名称
+ * @property {number} numberId 击杀样式对应的数字 ID，用于记分板中
+ */
+
+/** 击杀样式信息 */
+export const killStyle = {
+
+    /** @type {killStyleData} */
+    default: {
+        id: "default",
+        name: "默认",
+        numberId: 0,
+    },
+    /** @type {killStyleData} */
+    flame: {
+        id: "flame",
+        name: "火焰",
+        numberId: 1,
+    },
+    /** @type {killStyleData} */
+    west: {
+        id: "west",
+        name: "西部",
+        numberId: 2,
+    },
+    /** @type {killStyleData} */
+    glory: {
+        id: "glory",
+        name: "光荣",
+        numberId: 3,
+    },
+    /** @type {killStyleData} */
+    pirate: {
+        id: "pirate",
+        name: "海盗",
+        numberId: 4,
+    },
+    /** @type {killStyleData} */
+    love: {
+        id: "love",
+        name: "爱情",
+        numberId: 5,
+    },
+    /** @type {killStyleData} */
+    christmas: {
+        id: "christmas",
+        name: "圣诞老人工坊",
+        numberId: 6,
+    },
+    /** @type {killStyleData} */
+    meme: {
+        id: "meme",
+        name: "表情包",
+        numberId: 7,
+    },
+    /** @type {killStyleData} */
+    pack: {
+        id: "pack",
+        name: "打包",
+        numberId: 8,
+    },
+    /** @type {killStyleData} */
+    newThreeKingdom: {
+        id: "newThreeKingdom",
+        name: "新三国（原创）",
+        numberId: 9,
+    },
+};
+
+/** 通过玩家的记分板数值获取击杀样式 ID
+ * @param {minecraft.Player} player 
+ */
+export function getKillStyleByNumberId(player) {
+    const killStyleNumberId = lib.ScoreboardPlayerUtil.getOrSetDefault("killStyle", player, 0);
+    const killStyleId = new Map(Object.values(killStyle).map(k => [k.numberId, k.id])).get(killStyleNumberId) ?? "default";
+    return killStyleId;
+}

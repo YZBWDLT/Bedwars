@@ -1,78 +1,13 @@
 /** 所有设置 */
 
 import { ItemUseAfterEvent, Player, system, world } from "@minecraft/server"
-import { createAndShowActionUi, createAndShowMessageUi, createAndShowModalUi } from "./uiManager"
+import { createAndShowActionUi } from "./uiManager"
 import { warnPlayer } from "./bedwarsPlayer"
 import { map } from "./bedwarsMaps"
 import { getParticipantWithScore, getQuitPlayers, getScore, getScoreboard, getScores, resetScore, setScore } from "./scoreboardManager"
 import { getPlayerAmount } from "./playerManager"
 import { countSameNumbers } from "./number"
 import { uiManager } from "@minecraft/server-ui"
-
-// ===== 地图设置 =====
-
-/** 备份设置到data记分板上 */
-export function settingsBackup() {
-    /** 递归遍历对象，并为每个属性调用 setScore
-     * @remark 代码生成自Deepseek
-     * @param {object} obj - 要遍历的对象
-     * @param {string} path - 当前属性的路径（用于生成 setScore 的第二个参数）
-     */
-    function applySettings(obj, path = "") {
-        for (const key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                // 构建当前属性的路径
-                const currentPath = path ? `${path}.${key}` : key;
-                // 如果当前属性是对象，递归遍历
-                if (typeof obj[key] === "object" && !Array.isArray(obj[key])) {
-                    applySettings(obj[key], currentPath);
-                }
-                // 如果当前属性是基本类型（整数、布尔值），调用 setScore
-                else {
-                    setScore("data", `settings.${currentPath}`, obj[key]);
-                }
-            }
-        }
-    }
-    applySettings(settings);
-}
-
-/** 恢复设置到data记分板上 */
-export function settingsRecover() {
-    /**
-     * 递归遍历对象，并为每个属性调用 getScore
-     * @remark 代码生成自Deepseek
-     * @param {object} obj - 要遍历的对象（settings 或 defaultSettings）
-     * @param {string} path - 当前属性的路径（用于生成 getScore 的第二个参数）
-     * @param {object} defaultObj - 默认设置对象（defaultSettings）
-     */
-    function applySettings(obj, path = "", defaultObj) {
-        for (const key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                const currentPath = path ? `${path}.${key}` : key; // 构建当前属性的路径
-                if (typeof obj[key] === "object" && !Array.isArray(obj[key])) {
-                    // 如果当前属性是对象，递归遍历
-                    applySettings(obj[key], currentPath, defaultObj[key]);
-                } else {
-                    // 获取 getScore 的结果
-                    const scoreValue = getScore("data", `settings.${currentPath}`, defaultObj[key]);
-
-                    // 如果默认值是布尔值，则将结果转换为布尔值
-                    if (typeof defaultObj[key] === "boolean") {
-                        obj[key] = Boolean(scoreValue); // 或者使用 !!scoreValue
-                    } else {
-                        // 否则，直接使用 getScore 的结果
-                        obj[key] = scoreValue;
-
-                    }
-                }
-            }
-        }
-    }
-
-    // 调用函数，遍历 settings 对象
-    applySettings(settings, "", defaultSettings);
-}
 
 // ===== 游玩设置 =====
 
@@ -252,59 +187,8 @@ function actionSettings(player, titleText, buttonInfo, lastPage, bodyText = "") 
     createAndShowActionUi(
         player,
         buttonInfo,
-        () => { lastPage(); settingsBackup(); },
+        () => { lastPage(); },
         bodyText,
         titleText
     )
-}
-
-/** 显示Modal类型的设置
- * @param {Player} player 显示 UI 的玩家
- * @param {string} titleText 标题名称
- * @param {import("./uiManager").modalUiButtonInfo[]} buttonInfo 所有的选项信息
- * @param {function()} defaultSettings 默认设置执行的函数
- * @param {function((number | string | boolean)[])} selectedSettings 用户选择的设置执行的函数
- * @param {function()} lastPage 上一页的函数
- * @param {boolean} enableDefaultSettings 是否启用默认设置？
- */
-function modalSettings(player, titleText, buttonInfo, defaultSettings, selectedSettings, lastPage, enableDefaultSettings = true) {
-    if (enableDefaultSettings) {
-        createAndShowModalUi(
-            player,
-            [
-                ...buttonInfo,
-                { type: "toggle", label: `恢复默认设置\n§7恢复上面的设置为原始的默认设置。`, defaultValue: false },
-            ], // 在所有设置里面默认加一个恢复默认设置
-            result => {
-                if (result[result.length - 1]) {
-                    defaultSettings();
-                } // 如果最后一个开关选择为了true，那么恢复默认设置
-                else {
-                    selectedSettings(result);
-                } // 否则，使用用户选择的设置执行的函数
-                lastPage(); settingsBackup();
-            },
-            () => { lastPage(); settingsBackup(); },
-            titleText, "确认"
-        )
-    }
-    else {
-        createAndShowModalUi(
-            player,
-            buttonInfo,
-            result => { selectedSettings(result); },
-            () => { lastPage(); settingsBackup(); },
-            titleText, "确认"
-        )
-    }
-}
-
-/** 显示Message类型的设置
- * @param {Player} player 显示 UI 的玩家
- * @param {string} titleText 标题名称
- * @param {import("./uiManager").actionUiButtonInfo} buttonInfo 所有的按钮信息，必须创建 2 个有效的信息。iconPath在此处无效。
- * @param {string} bodyText UI 中的文字描述
- */
-function messageSettings(player, titleText, buttonInfo, bodyText = "") {
-    createAndShowMessageUi(player, buttonInfo, bodyText, titleText)
 }

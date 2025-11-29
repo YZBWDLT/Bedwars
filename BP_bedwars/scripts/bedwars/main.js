@@ -44,6 +44,7 @@ class BedwarsSystem {
 
     constructor() {
         this.settings = new BedwarsSettings();
+        BedwarsSettings.recover(this);
         this.resetMap();
     };
 
@@ -348,6 +349,9 @@ class BedwarsSettings {
         /** 虚空玩家可扔物品 */
         playerCanThrowItemsInVoid: false,
 
+        /** 是否备份和恢复设置 */
+        backupAndRecoverSettings: true
+
     };
 
     /** 开发者设置 */
@@ -366,6 +370,969 @@ class BedwarsSettings {
     };
 
     constructor() {
+
+    };
+
+    /** 备份设置
+     * @param {BedwarsSystem} system 
+     * @description 该函数将 system.settings 的设置保存到世界动态属性上，保存方法为 "bedwars:settings.[设置1].[设置2]..." = value
+     */
+    static backup(system) {
+        // 如果禁用了备份与恢复设置，记录备份设置已被禁用并直接终止
+        if (!system.settings.miscellaneous.backupAndRecoverSettings) {
+            minecraft.world.setDynamicProperty("bedwars:settings.miscellaneous.backupAndRecoverSettings", false);
+            return;
+        }
+        function applySettings(object, currentPath) {
+            // 对输入的对象判断类型
+            Object.keys(object).forEach(key => {
+                const value = object[key]
+                // 如果不是对象（基本类型），则保存 currentPath.key = value
+                if (typeof value !== "object") {
+                    minecraft.world.setDynamicProperty(`${currentPath}.${key}`, value);
+                }
+                // 否则，继续遍历下去
+                else {
+                    applySettings(value, `${currentPath}.${key}`);
+                };
+            });
+        };
+        applySettings(system.settings, "bedwars:settings");
+    };
+
+    /** 恢复设置
+     * @param {BedwarsSystem} system 
+     * @description 该函数将世界动态属性上保存的 "settings.[设置1].[设置2]..." = value 还原到 system.settings 去
+     */
+    static recover(system) {
+        // 如果备份与恢复设置选项被关闭，则直接终止
+        if (minecraft.world.getDynamicProperty("bedwars:settings.miscellaneous.backupAndRecoverSettings") === false) {
+            system.settings.miscellaneous.backupAndRecoverSettings = false;
+            return;
+        }
+        // 如果无法找到备份与恢复设置选项，则尝试备份一次并终止
+        if (minecraft.world.getDynamicProperty("bedwars:settings.miscellaneous.backupAndRecoverSettings") === undefined) {
+            this.backup(system);
+            return;
+        }
+        // 查找开头为 settings 的设置项
+        minecraft.world.getDynamicPropertyIds()
+            .filter(settingsId => settingsId.split(".")[0] == "bedwars:settings")
+            .forEach(settingsId => {
+                // 如果该设置值未定义，则直接终止
+                const value = minecraft.world.getDynamicProperty(settingsId);
+                if (value === undefined) return;
+                const path = settingsId.split(".");
+                // 逐项遍历
+                path.slice(1).reduce((current, key, index) => {
+                    // 在遍历过程中，如果当前设置项遇到了 undefined 则直接终止
+                    if (current[key] === undefined) return;
+                    // 遍历到最后一项时，将对应设置项设置成原来保存的值
+                    if (index == path.slice(1).length - 1) current[key] = value;
+                    return current[key];
+                }, system.settings);
+            });
+    }
+
+    /** 对玩家显示系统设置 UI
+     * @param {minecraft.Player} player
+     * @param {BedwarsSystem} system 
+     */
+    static showSystemSettingsUI(player, system) {
+
+        const settings = system.settings;
+
+        /** 游戏前设置 - 地图重置设置
+         * @param {minecraft.Player} player
+         * @param {lib.ActionUIData} parentForm
+         */
+        const reloadSettings = (player, parentForm) => {
+            const getCurrentClearSpeed = (() => {
+                switch (settings.beforeGaming.reload.clearSpeed) {
+                    case 0: return "非常慢";
+                    case 1: return "较慢";
+                    case 2: return "慢";
+                    case 3: return "中等";
+                    case 4: return "较快";
+                    case 5: return "快";
+                    case 6: default: return "非常快";
+                }
+            })();
+            const getCurrentLoadSpeed = (() => {
+                switch (settings.beforeGaming.reload.loadSpeed) {
+                    case 0: return "非常慢";
+                    case 1: return "较慢";
+                    case 2: return "慢";
+                    case 3: return "中等";
+                    case 4: return "较快";
+                    case 5: return "快";
+                    case 6: default: return "非常快";
+                };
+            })();
+            lib.UIUtil.createModal(
+                {
+                    type: "modal",
+                    parentForm: parentForm,
+                    submitButton: "确认",
+                    components: [
+                        { type: "header", text: "地图重置设置" },
+                        { type: "label", text: "控制地图的清空速度和加载速度。" },
+                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                        { type: "divider", },
+                        { type: "dropdown", text: "地图清除速度", tipText: `重置地图时清除地图的速度。§c注意！速度越快对性能的负担越大。如果您的设备性能低，请选择较慢的速度。§f当前值：§a${getCurrentClearSpeed}`, items: ["非常慢", "慢", "较慢", "中等", "较快", "快", "非常快"], default: settings.beforeGaming.reload.clearSpeed },
+                        { type: "dropdown", text: "地图加载速度", tipText: `重置地图时加载地图的速度。§c注意！速度越快对性能的负担越大。如果您的设备性能低，请选择较慢的速度。§f当前值：§a${getCurrentLoadSpeed}`, items: ["非常慢", "慢", "较慢", "中等", "较快", "快", "非常快"], default: settings.beforeGaming.reload.loadSpeed },
+                        { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
+                    ],
+                    onSubmitted: {
+                        openParentForm: true,
+                        callback: (values) => {
+                            // 若启用默认设置，则设置为默认设置
+                            if (values[values.length - 1]) settings.beforeGaming.reload = new BedwarsSettings().beforeGaming.reload;
+                            // 否则，应用这些设置
+                            else {
+                                settings.beforeGaming.reload.clearSpeed = values[4];
+                                settings.beforeGaming.reload.loadSpeed = values[5];
+                                // 若当前正在清除地图中，重新注册时间线
+                                if (system.gameStage == 0) {
+                                    system.unsubscribeTimeline("clearMap");
+                                    system.mode.timelineClearMap();
+                                }
+                                // 若当前正在加载地图中，提示玩家在下次生效
+                                if (system.gameStage == 1) {
+                                    player.sendMessage("地图加载速度的设置将在加载下一个结构时生效，信息板的预计加载时间可能会显示异常")
+                                }
+                            };
+                            // 备份设置
+                            this.backup(system);
+                        },
+                    },
+                    onCanceled: {
+                        openParentForm: true,
+                    }
+                },
+                player
+            );
+        };
+
+        /** 游戏前设置 - 等待设置
+         * @param {minecraft.Player} player
+         * @param {lib.ActionUIData} parentForm
+         */
+        const waitingSettings = (player, parentForm) => {
+            lib.UIUtil.createModal(
+                {
+                    type: "modal",
+                    parentForm: parentForm,
+                    submitButton: "确认",
+                    components: [
+                        { type: "header", text: "等待设置" },
+                        { type: "label", text: "控制游戏允许的最小人数、最大人数和等待所需的时间。" },
+                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                        { type: "divider", },
+                        { type: "slider", text: "玩家人数下限", tipText: `至少需要多少玩家才可开始游戏。当前值：§a${settings.beforeGaming.waiting.minPlayerCount}`, min: 2, max: 16, step: 1, default: settings.beforeGaming.waiting.minPlayerCount },
+                        { type: "slider", text: "玩家人数上限", tipText: `本局至多多少玩家能够参与游戏。当前值：§a${settings.beforeGaming.waiting.maxPlayerCount}`, min: 8, max: 80, step: 8, default: settings.beforeGaming.waiting.maxPlayerCount },
+                        { type: "slider", text: "开始游戏的等待时间", tipText: `玩家达到规定数目后，多久后开始游戏。单位：秒。当前值：§a${settings.beforeGaming.waiting.gameStartWaitingTime}`, min: 5, max: 180, step: 5, default: settings.beforeGaming.waiting.gameStartWaitingTime },
+                        { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
+                    ],
+                    onSubmitted: {
+                        openParentForm: true,
+                        callback: (values) => {
+                            // 若启用默认设置，则设置为默认设置
+                            if (values[values.length - 1]) settings.beforeGaming.waiting = new BedwarsSettings().beforeGaming.waiting;
+                            // 否则，应用这些设置
+                            else {
+                                settings.beforeGaming.waiting.minPlayerCount = values[4];
+                                settings.beforeGaming.waiting.maxPlayerCount = values[5];
+                                settings.beforeGaming.waiting.gameStartWaitingTime = values[6];
+                                system.mode.gameStartCountdown = values[6];
+                                system.mode.functionWaiting();
+                            };
+                            // 备份设置
+                            this.backup(system);
+                        },
+                    },
+                    onCanceled: {
+                        openParentForm: true,
+                    }
+                },
+                player
+            );
+        };
+
+        /** 游戏前设置 - 组队设置
+         * @param {minecraft.Player} player
+         * @param {lib.ActionUIData} parentForm
+         */
+        const assignTeamSettings = (player, parentForm) => {
+            const modeName = (() => {
+                switch (settings.beforeGaming.teamAssign.mode) {
+                    case 0: return "标准组队";
+                    case 1: return "随机组队";
+                    case 2: default: return "胜率组队";
+                }
+            })();
+            lib.UIUtil.createModal(
+                {
+                    type: "modal",
+                    parentForm: parentForm,
+                    submitButton: "确认",
+                    components: [
+                        { type: "header", text: "组队设置" },
+                        { type: "label", text: "控制开始游戏时系统如何组队，以及是否允许玩家自己选择队伍。" },
+                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                        { type: "divider", },
+                        { type: "dropdown", text: "组队模式", tipText: `如何为各个队伍分配玩家。§c目前未实装胜率组队的功能。§f当前值：§a${modeName}`, items: ["标准组队（随机平均分队，排列靠前的队伍人多）", "随机组队（随机平均分队，何队人多不定）", "胜率组队（按照胜率平均分队）"], default: settings.beforeGaming.teamAssign.mode },
+                        { type: "toggle", text: "开始前组队", tipText: `游戏将在开始前就随机组队，而非开始后随机组队。§c暂时未实装此功能。§f当前值：§a${settings.beforeGaming.teamAssign.assignBeforeGaming}`, default: settings.beforeGaming.teamAssign.assignBeforeGaming },
+                        { type: "toggle", text: "玩家自主选队", tipText: `玩家是否能够自主选择队伍。未选择队伍的玩家按照组队模式的方法分配队伍。当前值：§a${settings.beforeGaming.teamAssign.playerSelectEnabled}`, default: settings.beforeGaming.teamAssign.playerSelectEnabled },
+                        { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
+                    ],
+                    onSubmitted: {
+                        openParentForm: true,
+                        callback: (values) => {
+                            // 若启用默认设置，则设置为默认设置
+                            if (values[values.length - 1]) settings.beforeGaming.teamAssign = new BedwarsSettings().beforeGaming.teamAssign;
+                            // 否则，应用这些设置
+                            else {
+                                settings.beforeGaming.teamAssign.mode = values[4];
+                                settings.beforeGaming.teamAssign.assignBeforeGaming = values[5];
+                                settings.beforeGaming.teamAssign.playerSelectEnabled = values[6];
+                                if (settings.beforeGaming.teamAssign.playerSelectEnabled) lib.ItemUtil.removeItem(player, "bedwars:select_team")
+                            };
+                            // 备份设置
+                            this.backup(system);
+                        },
+                    },
+                    onCanceled: {
+                        openParentForm: true,
+                    }
+                },
+                player
+            );
+        };
+
+        /** 游戏内设置 - 资源上限设置
+         * @param {minecraft.Player} player
+         * @param {lib.ActionUIData} parentForm
+         */
+        const resourceLimitSettings = (player, parentForm) => {
+            lib.UIUtil.createModal(
+                {
+                    type: "modal",
+                    parentForm: parentForm,
+                    submitButton: "确认",
+                    components: [
+                        { type: "header", text: "资源上限设置" },
+                        { type: "label", text: "控制各类资源在没有玩家在附近时的最大生成数量。" },
+                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                        { type: "divider", },
+                        { type: "slider", text: "铁锭", tipText: `当前值：§a${settings.gaming.resourceLimit.iron}`, min: 8, max: 400, step: 8, default: settings.gaming.resourceLimit.iron },
+                        { type: "slider", text: "金锭", tipText: `当前值：§a${settings.gaming.resourceLimit.gold}`, min: 1, max: 50, step: 1, default: settings.gaming.resourceLimit.gold },
+                        { type: "slider", text: "钻石", tipText: `当前值：§a${settings.gaming.resourceLimit.diamond}`, min: 1, max: 50, step: 1, default: settings.gaming.resourceLimit.diamond },
+                        { type: "slider", text: "绿宝石", tipText: `当前值：§a${settings.gaming.resourceLimit.emerald}`, min: 1, max: 50, step: 1, default: settings.gaming.resourceLimit.emerald },
+                        { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
+                    ],
+                    onSubmitted: {
+                        openParentForm: true,
+                        callback: (values) => {
+                            // 若启用默认设置，则设置为默认设置
+                            if (values[values.length - 1]) settings.gaming.resourceLimit = new BedwarsSettings().gaming.resourceLimit;
+                            // 否则，应用这些设置
+                            else {
+                                settings.gaming.resourceLimit.iron = values[4];
+                                settings.gaming.resourceLimit.gold = values[5];
+                                settings.gaming.resourceLimit.diamond = values[6];
+                                settings.gaming.resourceLimit.emerald = values[7];
+                            };
+                            // 备份设置
+                            this.backup(system);
+                        },
+                    },
+                    onCanceled: {
+                        openParentForm: true,
+                    }
+                },
+                player
+            );
+        };
+
+        /** 游戏内设置 - 资源上限设置
+         * @param {minecraft.Player} player
+         * @param {lib.ActionUIData} parentForm
+         */
+        const resourceIntervalSettings = (player, parentForm) => {
+            lib.UIUtil.createModal(
+                {
+                    type: "modal",
+                    parentForm: parentForm,
+                    submitButton: "确认",
+                    components: [
+                        { type: "header", text: "资源生成间隔设置" },
+                        { type: "label", text: "控制各类资源的生成间隔。" },
+                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                        { type: "divider", },
+                        { type: "slider", text: "铁锭（x0.05秒）", tipText: `在标准模式没有任何加成时，平均每个铁锭所需要的生成时间，单位：*0.05秒。当前值：§a${settings.gaming.resourceInterval.iron}`, min: 2, max: 40, step: 2, default: settings.gaming.resourceInterval.iron },
+                        { type: "label", text: "§7在不同地图下，一次可能生成多个铁，总时长会成倍延长，但平均生成铁的时间不变。\n例如，该值设置为10时，则平均每10*0.05=0.5秒生成1个铁。", },
+                        { type: "slider", text: "金锭（x0.05秒）", tipText: `在标准模式没有任何加成时，每个金锭所需要的生成时间，单位：*0.05秒。当前值：§a${settings.gaming.resourceInterval.gold}`, min: 20, max: 300, step: 5, default: settings.gaming.resourceInterval.gold },
+                        { type: "slider", text: "钻石（秒）", tipText: `在标准模式没有任何加成时，每个钻石所需要的生成时间，单位：秒。当前值：§a${settings.gaming.resourceInterval.diamond - 10}`, min: 25, max: 60, step: 5, default: settings.gaming.resourceInterval.diamond - 10 }, // debug 这里-10是因为原始数值是0级的数值，但是实际上最低等级是1级，下文同理
+                        { type: "slider", text: "绿宝石（秒）", tipText: `在标准模式没有任何加成时，每个绿宝石所需要的生成时间，单位：秒。当前值：§a${settings.gaming.resourceInterval.emerald - 10}`, min: 30, max: 90, step: 5, default: settings.gaming.resourceInterval.emerald - 10 },
+                        { type: "slider", text: "单挑模式生成速度倍率（x0.1）", tipText: `在单挑模式下相比于非单挑模式的生成速率，只影响铁锭和金锭的生成，单位：*0.1。当前值：§a${settings.gaming.resourceInterval.soloSpeedMultiplier * 10}`, min: 1, max: 20, step: 1, default: settings.gaming.resourceInterval.soloSpeedMultiplier * 10 },
+                        { type: "label", text: "§7例如，该值设置为6时，则铁锭和金锭的生成速度只有非单挑模式下的0.1*6*100%%=60%%。", },
+                        { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
+                    ],
+                    onSubmitted: {
+                        openParentForm: true,
+                        callback: (values) => {
+                            // 若启用默认设置，则设置为默认设置
+                            if (values[values.length - 1]) settings.gaming.resourceInterval = new BedwarsSettings().gaming.resourceInterval;
+                            // 否则，应用这些设置
+                            else {
+                                settings.gaming.resourceInterval.iron = values[4];
+                                settings.gaming.resourceInterval.gold = values[6];
+                                settings.gaming.resourceInterval.diamond = values[7] + 10;
+                                settings.gaming.resourceInterval.emerald = values[8] + 10;
+                                settings.gaming.resourceInterval.soloSpeedMultiplier = lib.JSUtil.limitDecimal(values[9] / 10, 1);
+                            };
+                            // 备份设置
+                            this.backup(system);
+                        },
+                    },
+                    onCanceled: {
+                        openParentForm: true,
+                    }
+                },
+                player
+            );
+        };
+
+        /** 游戏内设置 - 重生时间设置
+         * @param {minecraft.Player} player
+         * @param {lib.ActionUIData} parentForm
+         */
+        const respawnTimeSettings = (player, parentForm) => {
+            lib.UIUtil.createModal(
+                {
+                    type: "modal",
+                    parentForm: parentForm,
+                    submitButton: "确认",
+                    components: [
+                        { type: "header", text: "重生时间设置" },
+                        { type: "label", text: "控制普通玩家和重新进入游戏的玩家的重生时间。" },
+                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                        { type: "divider", },
+                        { type: "slider", text: "普通玩家", tipText: `当玩家死亡后，需要多长时间重生。单位：秒。当前值：§a${settings.gaming.respawnTime.normalPlayers - 1}`, min: 0, max: 30, step: 1, default: settings.gaming.respawnTime.normalPlayers - 1 }, // 这里，比预期的时间（例如 5 秒）要 +1 秒，防止玩家一开始看到 4 秒倒计时，不完整
+                        { type: "slider", text: "退出重进玩家", tipText: `当玩家退出重进后，需要多长时间重生。单位：秒。当前值：§a${settings.gaming.respawnTime.rejoinedPlayers - 1}`, min: 0, max: 30, step: 1, default: settings.gaming.respawnTime.rejoinedPlayers - 1 },
+                        { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
+                    ],
+                    onSubmitted: {
+                        openParentForm: true,
+                        callback: (values) => {
+                            // 若启用默认设置，则设置为默认设置
+                            if (values[values.length - 1]) settings.gaming.respawnTime = new BedwarsSettings().gaming.respawnTime;
+                            // 否则，应用这些设置
+                            else {
+                                settings.gaming.respawnTime.normalPlayers = values[4] + 1;
+                                settings.gaming.respawnTime.rejoinedPlayers = values[5] + 1;
+                            };
+                            // 备份设置
+                            this.backup(system);
+                        },
+                    },
+                    onCanceled: {
+                        openParentForm: true,
+                    }
+                },
+                player
+            );
+        };
+
+        /** 游戏内设置 - 击杀样式设置
+         * @param {minecraft.Player} player
+         * @param {lib.ActionUIData} parentForm
+         */
+        const killStyleSettings = (player, parentForm) => {
+            lib.UIUtil.createModal(
+                {
+                    type: "modal",
+                    parentForm: parentForm,
+                    submitButton: "确认",
+                    components: [
+                        { type: "header", text: "击杀样式设置" },
+                        { type: "label", text: "控制玩家在击杀玩家和破坏床后的设置。" },
+                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                        { type: "divider", },
+                        { type: "toggle", text: "启用击杀样式", tipText: `启用后，在击杀玩家、破坏床后能够使用不同的击杀样式。玩家能够在开始游戏前获得一个物品以调整自己的击杀样式。当前值：§a${settings.gaming.killStyle.isEnabled}`, default: settings.gaming.killStyle.isEnabled, },
+                        { type: "toggle", text: "随机击杀样式", tipText: `启用后，每局将为所有玩家随机分配击杀样式。启用后，玩家不再能在开始游戏前设置自己的击杀样式。当前值：§a${settings.gaming.killStyle.randomKillStyle}`, default: settings.gaming.killStyle.randomKillStyle, },
+                        { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
+                    ],
+                    onSubmitted: {
+                        openParentForm: true,
+                        callback: (values) => {
+                            // 若启用默认设置，则设置为默认设置
+                            if (values[values.length - 1]) settings.gaming.killStyle = new BedwarsSettings().gaming.killStyle;
+                            // 否则，应用这些设置
+                            else {
+                                settings.gaming.killStyle.isEnabled = values[4];
+                                settings.gaming.killStyle.randomKillStyle = values[5];
+                                // 如果玩家关闭了击杀样式，或启用了随机击杀样式，则移除玩家的物品
+                                if (!settings.gaming.killStyle.isEnabled || settings.gaming.killStyle.randomKillStyle) lib.ItemUtil.removeItem(player, "bedwars:kill_style");
+                            };
+                            // 备份设置
+                            this.backup(system);
+                        },
+                    },
+                    onCanceled: {
+                        openParentForm: true,
+                    }
+                },
+                player
+            );
+        };
+
+        /** 游戏内设置 - 无效队伍设置
+         * @param {minecraft.Player} player
+         * @param {lib.ActionUIData} parentForm
+         */
+        const invalidTeamSettings = (player, parentForm) => {
+            lib.UIUtil.createModal(
+                {
+                    type: "modal",
+                    parentForm: parentForm,
+                    submitButton: "确认",
+                    components: [
+                        { type: "header", text: "无效队伍设置" },
+                        { type: "label", text: "控制一开始未分配到玩家的队伍如何运行。" },
+                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                        { type: "divider", },
+                        { type: "toggle", text: "无效队伍检测", tipText: `启用后，若在开始游戏后队伍未分配到玩家，则淘汰该队伍并设置为无效队伍。当前值：§a${settings.gaming.invalidTeam.enableTest}`, default: settings.gaming.invalidTeam.enableTest, },
+                        { type: "toggle", text: "无效队伍生成资源", tipText: `启用后，若该队伍为无效队伍，是否在该队伍岛屿生成资源。当前值：§a${settings.gaming.invalidTeam.spawnResources}`, default: settings.gaming.invalidTeam.spawnResources, },
+                        { type: "toggle", text: "无效队伍生成商人", tipText: `启用后，若该队伍为无效队伍，是否在该队伍岛屿生成商人。§c目前未实装功能。§f当前值：§a${settings.gaming.invalidTeam.spawnTraders}`, default: settings.gaming.invalidTeam.spawnTraders, },
+                        { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
+                    ],
+                    onSubmitted: {
+                        openParentForm: true,
+                        callback: (values) => {
+                            // 若启用默认设置，则设置为默认设置
+                            if (values[values.length - 1]) settings.gaming.invalidTeam = new BedwarsSettings().gaming.invalidTeam;
+                            // 否则，应用这些设置
+                            else {
+                                settings.gaming.invalidTeam.enableTest = values[4];
+                                settings.gaming.invalidTeam.spawnResources = values[5];
+                                settings.gaming.invalidTeam.spawnTraders = values[6];
+                            };
+                            // 备份设置
+                            this.backup(system);
+                        },
+                    },
+                    onCanceled: {
+                        openParentForm: true,
+                    }
+                },
+                player
+            );
+        };
+
+        /** 地图启用设置
+         * @param {minecraft.Player} player
+         * @param {lib.ActionUIData} parentForm
+         */
+        const mapEnabledSettings = (player, parentForm) => {
+            lib.UIUtil.createModal(
+                {
+                    type: "modal",
+                    parentForm: parentForm,
+                    submitButton: "确认",
+                    components: [
+                        { type: "header", text: "地图启用设置" },
+                        { type: "label", text: "控制系统启用何种模式的地图。" },
+                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                        { type: "divider", },
+                        { type: "toggle", text: "启用经典2队模式地图", tipText: `当前值：§a${settings.mapEnabled.classicTwoTeamsEnabled}`, default: settings.mapEnabled.classicTwoTeamsEnabled },
+                        { type: "toggle", text: "启用经典4队模式地图", tipText: `当前值：§a${settings.mapEnabled.classicFourTeamsEnabled}`, default: settings.mapEnabled.classicFourTeamsEnabled },
+                        { type: "toggle", text: "启用经典8队模式地图", tipText: `当前值：§a${settings.mapEnabled.classicEightTeamsEnabled}`, default: settings.mapEnabled.classicEightTeamsEnabled },
+                        { type: "toggle", text: "启用夺点2队模式地图", tipText: `当前值：§a${settings.mapEnabled.captureTwoTeamsEnabled}`, default: settings.mapEnabled.captureTwoTeamsEnabled },
+                        { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
+                    ],
+                    onSubmitted: {
+                        openParentForm: true,
+                        callback: (values) => {
+                            // 若启用默认设置，则设置为默认设置
+                            if (values[values.length - 1]) settings.mapEnabled = new BedwarsSettings().mapEnabled;
+                            // 否则，应用这些设置
+                            else {
+                                if (values.filter(value => typeof value === "boolean").every(value => value === false)) {
+                                    system.warnPlayer(player, { translate: "message.settings.warning.allModesDisabled" });
+                                    return;
+                                };
+                                settings.mapEnabled.classicTwoTeamsEnabled = values[4];
+                                settings.mapEnabled.classicFourTeamsEnabled = values[5];
+                                settings.mapEnabled.classicEightTeamsEnabled = values[6];
+                                settings.mapEnabled.captureTwoTeamsEnabled = values[7];
+                            };
+                            // 备份设置
+                            this.backup(system);
+                        },
+                    },
+                    onCanceled: {
+                        openParentForm: true,
+                    }
+                },
+                player
+            );
+        };
+
+        /** 生成地图
+         * @param {minecraft.Player} player
+         * @param {lib.ActionUIData} parentForm
+         */
+        const regenerateMapSettings = (player, parentForm) => {
+
+            // 默认：允许随机生成地图
+            /** @type {(lib.FormLabelComponent | lib.FormButtonComponent)[]} */
+            const components = [
+                {
+                    type: "button",
+                    text: "随机生成地图",
+                    onSelected: {
+                        callback: () => {
+                            if (system.gameStage == 1) system.warnPlayer(player, { translate: "message.settings.warning.regenerateMapWhenLoading" })
+                            else {
+                                const map = system.resetMap();
+                                lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.name}§7（随机生成）`));
+                            };
+                        },
+                    }
+                },
+                { type: "label", text: "§7在已启用的地图中随机生成一张地图。" },
+            ];
+
+            // 两队经典模式启用时，添加两队经典模式的按钮选项
+            if (settings.mapEnabled.classicTwoTeamsEnabled) {
+                const twoTeamsMaps = Object.values(data.mapData.classic.TwoTeams);
+                const twoTeamsMapNames = twoTeamsMaps.map(mapData => mapData.name);
+                components.push(
+                    {
+                        type: "button",
+                        text: "生成 2 队经典地图",
+                        onSelected: {
+                            openChildForm: true,
+                            childForm: {
+                                type: "modal",
+                                components: [
+                                    { type: "header", text: "生成 2 队经典地图", },
+                                    { type: "label", text: "立刻生成一张 2 队经典模式的地图。", },
+                                    { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                                    { type: "divider", },
+                                    { type: "dropdown", text: "地图", items: twoTeamsMapNames, default: 0 }
+                                ],
+                                onCanceled: {
+                                    openParentForm: true,
+                                },
+                                onSubmitted: {
+                                    callback: (result) => {
+                                        const map = system.resetMap(twoTeamsMaps[result[4]]);
+                                        lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.name}`));
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    { type: "label", text: "§7在所有 2 队经典模式的地图中选择一张生成。" },
+                );
+            };
+
+            // 四队经典模式启用时，添加四队经典模式的按钮选项
+            if (settings.mapEnabled.classicFourTeamsEnabled) {
+                const fourTeamsMaps = Object.values(data.mapData.classic.FourTeams);
+                const fourTeamsMapNames = fourTeamsMaps.map(mapData => mapData.name);
+                components.push(
+                    {
+                        type: "button",
+                        text: "生成 4 队经典地图",
+                        onSelected: {
+                            openChildForm: true,
+                            childForm: {
+                                type: "modal",
+                                components: [
+                                    { type: "header", text: "生成 4 队经典地图", },
+                                    { type: "label", text: "立刻生成一张 4 队经典模式的地图。", },
+                                    { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                                    { type: "divider", },
+                                    { type: "dropdown", text: "地图", items: fourTeamsMapNames, default: 0 }
+                                ],
+                                onCanceled: {
+                                    openParentForm: true,
+                                },
+                                onSubmitted: {
+                                    callback: (result) => {
+                                        const map = system.resetMap(fourTeamsMaps[result[4]]);
+                                        lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.name}`));
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    { type: "label", text: "§7在所有 4 队经典模式的地图中选择一张生成。" },
+                );
+            };
+
+            // 八队经典模式启用时，添加八队经典模式的按钮选项
+            if (settings.mapEnabled.classicEightTeamsEnabled) {
+                const eightTeamsMaps = Object.values(data.mapData.classic.EightTeams);
+                const eightTeamsMapNames = eightTeamsMaps.map(mapData => mapData.name);
+                components.push(
+                    {
+                        type: "button",
+                        text: "生成 8 队经典地图",
+                        onSelected: {
+                            openChildForm: true,
+                            childForm: {
+                                type: "modal",
+                                components: [
+                                    { type: "header", text: "生成 8 队经典地图", },
+                                    { type: "label", text: "立刻生成一张 8 队经典模式的地图。", },
+                                    { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                                    { type: "divider", },
+                                    { type: "dropdown", text: "地图", items: eightTeamsMapNames, default: 0 }
+                                ],
+                                onCanceled: {
+                                    openParentForm: true,
+                                },
+                                onSubmitted: {
+                                    callback: (result) => {
+                                        const map = system.resetMap(eightTeamsMaps[result[4]]);
+                                        lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.name}`));
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    { type: "label", text: "§7在所有 8 队经典模式的地图中选择一张生成。" },
+                );
+            }
+
+            lib.UIUtil.createAction(
+                {
+                    type: "action",
+                    parentForm: parentForm,
+                    components: [
+                        { type: "header", text: "生成地图", },
+                        { type: "label", text: "立刻生成一张确定的、或随机的新地图。", },
+                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                        { type: "divider", },
+                        ...components,
+                    ],
+                    onCanceled: {
+                        openParentForm: true,
+                    }
+                },
+                player
+            );
+        };
+
+        /** 杂项设置
+         * @param {minecraft.Player} player
+         * @param {lib.ActionUIData} parentForm
+         */
+        const miscellaneousSettings = (player, parentForm) => {
+            lib.UIUtil.createModal(
+                {
+                    type: "modal",
+                    parentForm: parentForm,
+                    submitButton: "确认",
+                    components: [
+                        { type: "header", text: "杂项设置" },
+                        { type: "label", text: "控制一些杂项设置。" },
+                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                        { type: "divider", },
+                        { type: "toggle", text: "破坏原版方块", tipText: `创造模式的管理员玩家能否破坏原版方块。当前值：§a${settings.miscellaneous.adminCanBreakBlocks}`, default: settings.miscellaneous.adminCanBreakBlocks },
+                        { type: "toggle", text: "虚空可扔物品", tipText: `在虚空中掉落的玩家是否允许扔出物品。当前值：§a${settings.miscellaneous.playerCanThrowItemsInVoid}`, default: settings.miscellaneous.playerCanThrowItemsInVoid },
+                        { type: "toggle", text: "备份与恢复设置", tipText: `在每次应用设置时备份，并在地图重新加载或/reload后自动恢复上一次的设置。当前值：§a${settings.miscellaneous.backupAndRecoverSettings}`, default: settings.miscellaneous.backupAndRecoverSettings },
+                        { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
+                    ],
+                    onSubmitted: {
+                        openParentForm: true,
+                        callback: (values) => {
+                            // 若启用默认设置，则设置为默认设置
+                            if (values[values.length - 1]) settings.miscellaneous = new BedwarsSettings().miscellaneous;
+                            // 否则，应用这些设置
+                            else {
+                                settings.miscellaneous.adminCanBreakBlocks = values[4];
+                                settings.miscellaneous.playerCanThrowItemsInVoid = values[5];
+                                settings.miscellaneous.backupAndRecoverSettings = values[6];
+                            };
+                            // 备份设置
+                            this.backup(system);
+                        },
+                    },
+                    onCanceled: {
+                        openParentForm: true,
+                    }
+                },
+                player
+            );
+        };
+
+        /** 开发者设置
+         * @param {minecraft.Player} player
+         * @param {lib.ActionUIData} parentForm
+         */
+        const developerSettings = (player, parentForm) => {
+            lib.UIUtil.createModal(
+                {
+                    type: "modal",
+                    parentForm: parentForm,
+                    submitButton: "确认",
+                    components: [
+                        { type: "header", text: "开发者设置" },
+                        { type: "label", text: "快速设置一些开发者内容。当心！它们可能会很危险！" },
+                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                        { type: "divider", },
+                        { type: "toggle", text: "开启调试模式", tipText: `启用调试模式，这将包括：单人模式、最快的地图清除和加载速度、关闭无效队伍检测等。§c如果你不清楚这在做什么，请勿开启！§f当前值：§a${settings.developer.debugMode}`, default: settings.developer.debugMode },
+                    ],
+                    onSubmitted: {
+                        openParentForm: true,
+                        callback: (values) => {
+                            settings.developer.debugMode = values[4];
+                            if (values[4] === true) {
+                                settings.beforeGaming.waiting.minPlayerCount = 1;
+                                settings.beforeGaming.reload.clearSpeed = 6;
+                                settings.beforeGaming.reload.loadSpeed = 6;
+                                settings.gaming.invalidTeam.enableTest = false;
+                                settings.beforeGaming.waiting.gameStartWaitingTime = 0;
+                            }
+                            // 若当前正在清除地图中，重新注册时间线
+                            if (system.gameStage == 0) {
+                                system.unsubscribeTimeline("clearMap");
+                                system.mode.timelineClearMap();
+                            }
+                            system.mode.functionWaiting();
+                            // 备份设置
+                            this.backup(system);
+                        },
+                    },
+                    onCanceled: {
+                        openParentForm: true,
+                    }
+                },
+                player
+            );
+        };
+
+        lib.UIUtil.createAction(
+            {
+                type: "action",
+                components: [
+                    { type: "header", text: "系统设置", },
+                    { type: "label", text: "欢迎来到设置！你可以在这里设置这个附加包的方方面面，例如立刻生成一张特定地图、更改资源生成上限等。来试试吧！>wO", },
+                    { type: "label", text: "§7· 更改完成后，请点击窗口下面的「确认」按钮，按右上角的「x」会使您返回上一页而不作任何更改。", },
+                    { type: "label", text: "§7· 如果您需要调整回默认设置，您可以打开默认设置的开关，然后确认。", },
+                    { type: "label", text: "§7· 设置物品仅限管理员可获取。请确保将您信任的玩家设置为管理员。", },
+                    { type: "divider", },
+                    { // 游戏前设置
+                        type: "button",
+                        text: "游戏前设置...",
+                        icon: "textures/items/clock_item",
+                        onSelected: {
+                            childForm: {
+                                type: "action",
+                                components: [
+                                    { type: "header", text: "游戏前设置", },
+                                    { type: "label", text: "控制游戏开始前的运行逻辑。", },
+                                    { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                                    { type: "divider", },
+                                    { type: "button", text: "地图重置设置...", icon: "textures/ui/world_glyph_color", onSelected: { callback: (selection, thisForm) => reloadSettings(player, thisForm), }, },
+                                    { type: "label", text: "§7控制地图的清空速度和加载速度。", },
+                                    { type: "button", text: "等待设置...", icon: "textures/items/clock_item", onSelected: { callback: (selection, thisForm) => waitingSettings(player, thisForm), }, },
+                                    { type: "label", text: "§7控制游戏允许的最小人数、最大人数和等待所需的时间。", },
+                                    { type: "button", text: "组队设置...", icon: "textures/ui/multiplayer_glyph_color", onSelected: { callback: (selection, thisForm) => assignTeamSettings(player, thisForm), } },
+                                    { type: "label", text: "§7控制开始游戏时系统如何组队，以及是否允许玩家自己选择队伍。", },
+                                ],
+                                onCanceled: { openParentForm: true, }
+                            },
+                            openChildForm: true,
+                        }
+                    },
+                    { type: "label", text: "§7控制游戏开始前的运行逻辑，包括地图重置、等待、组队设置。", },
+                    { // 游戏内设置
+                        type: "button",
+                        text: "游戏内设置...",
+                        icon: "textures/items/bed_red",
+                        onSelected: {
+                            childForm: {
+                                type: "action",
+                                components: [
+                                    { type: "header", text: "游戏内设置", },
+                                    { type: "label", text: "控制游戏开始后的运行逻辑。", },
+                                    { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                                    { type: "divider", },
+                                    { type: "button", text: "资源上限设置...", icon: "textures/items/iron_ingot", onSelected: { callback: (selection, thisForm) => resourceLimitSettings(player, thisForm) } },
+                                    { type: "label", text: "§7控制各类资源在没有玩家在附近时的最大生成数量。" },
+                                    { type: "button", text: "资源生成间隔设置...", icon: "textures/items/gold_ingot", onSelected: { callback: (selection, thisForm) => resourceIntervalSettings(player, thisForm) } },
+                                    { type: "label", text: "§7控制各类资源的生成间隔。" },
+                                    { type: "button", text: "重生时间设置...", icon: "textures/items/clock_item", onSelected: { callback: (selection, thisForm) => respawnTimeSettings(player, thisForm) } },
+                                    { type: "label", text: "§7控制普通玩家和重新进入游戏的玩家的重生时间。" },
+                                    { type: "button", text: "击杀样式设置...", icon: "textures/items/iron_sword", onSelected: { callback: (selection, thisForm) => killStyleSettings(player, thisForm) } },
+                                    { type: "label", text: "§7控制玩家在击杀玩家和破坏床后的设置。" },
+                                    { type: "button", text: "无效队伍设置...", icon: "textures/blocks/barrier", onSelected: { callback: (selection, thisForm) => invalidTeamSettings(player, thisForm) } },
+                                    { type: "label", text: "§7控制一开始未分配到玩家的队伍如何运行。" },
+                                ],
+                                onCanceled: { openParentForm: true, }
+                            },
+                            openChildForm: true,
+                        }
+                    },
+                    { type: "label", text: "§7控制游戏开始后的运行逻辑，包括资源生成、资源生成间隔、重生时间、击杀样式、无效队伍相关设置。", },
+                    { // 地图启用设置
+                        type: "button",
+                        text: "地图启用设置...",
+                        icon: "textures/items/map_filled",
+                        onSelected: {
+                            callback: (selection, thisForm) => mapEnabledSettings(player, thisForm),
+                        }
+                    },
+                    { type: "label", text: "§7控制系统启用何种模式的地图。", },
+                    { // 生成地图
+                        type: "button",
+                        text: "生成地图",
+                        icon: "textures/items/map_empty",
+                        onSelected: {
+                            callback: (selection, thisForm) => regenerateMapSettings(player, thisForm),
+                        },
+                    },
+                    { type: "label", text: "§7立刻生成一张确定的、或随机的新地图。", },
+                    { // 杂项设置
+                        type: "button",
+                        text: "杂项设置...",
+                        icon: "textures/items/diamond_pickaxe",
+                        onSelected: {
+                            callback: (selection, thisForm) => miscellaneousSettings(player, thisForm),
+                        },
+                    },
+                    { type: "label", text: "§7控制一些杂项设置。", },
+                    { // 关于
+                        type: "button", text: "关于...", icon: "textures/items/spyglass",
+                        onSelected: {
+                            childForm: {
+                                type: "action",
+                                components: [
+                                    { type: "header", text: "关于", },
+                                    { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                                    { type: "divider" },
+                                    { type: "label", text: "§l作者" },
+                                    { type: "label", text: "一只卑微的量筒" },
+                                    { type: "divider" },
+                                    { type: "label", text: "§l出品" },
+                                    { type: "label", text: "极筑工坊" },
+                                    { type: "divider" },
+                                    { type: "label", text: "§l版本" },
+                                    { type: "label", text: `${system.version}` },
+                                    { type: "divider" },
+                                    { type: "label", text: "§l测试员（1.0版本）" },
+                                    { type: "label", text: "巴豆、星辰、龙龙、烟雨、小飞侠、文雨、火卫三、鸽子、月、硫化银、鱼周、白洲梓、lanos、Dull、小意、辉金、十三酱、小面包、鱼、虾皮、小鼠、蒙德人、祉语、帕、吴鸡哥、星空、基岩、沫尘、创哲宇、牢土、玖、小鸟、书豪、擺给、千里、han、条形马、laolu、墨、怡柔、star、闲鱼" },
+                                    { type: "divider" },
+                                    { type: "label", text: `§l特别鸣谢` },
+                                    { type: "label", text: `祉语（感谢提供服务器！）` },
+                                    { type: "label", text: `辉金（为我们提供了远古的测试素材！）` },
+                                    { type: "label", text: `还有正在玩游戏的你 —— ${player.name}，感谢你的游玩！` },
+                                ],
+                                onCanceled: { openParentForm: true, },
+                            },
+                            openChildForm: true,
+                        }
+                    },
+                    { type: "label", text: "§7查看关于我们的信息。", },
+                    { // 开发者设置
+                        type: "button",
+                        text: "开发者设置...",
+                        icon: "textures/items/map_settings",
+                        onSelected: {
+                            callback: (selection, thisForm) => developerSettings(player, thisForm),
+                        }
+                    },
+                    { type: "label", text: "§7快速设置一些开发者内容。当心！它们可能会很危险！", },
+                ],
+            },
+            player
+        );
+
+    };
+
+    /** 对玩家显示击杀样式设置 UI
+     * @param {minecraft.Player} player 
+     */
+    static showKillStyleSettingsUI(player) {
+
+        // 初始化 killStyle 记分板，如果没有则创建一个
+        lib.ScoreboardObjectiveUtil.get("killStyle") ?? lib.ScoreboardObjectiveUtil.add("killStyle", "击杀样式");
+
+        const killStyles = Object.values(data.killStyle);
+        const killStyleNames = killStyles.map(k => k.name);
+
+        /** 预览页面
+         * @param {minecraft.Player} player 
+         * @param {lib.ModalUIData} parentForm 
+         * @param {number} selection 
+         */
+        const previewPage = (player, parentForm, selection) => {
+            const killStyleId = killStyles[selection].id;
+            const killStyleName = killStyles[selection].name;
+            lib.UIUtil.createAction(
+                {
+                    type: "action",
+                    parentForm: parentForm,
+                    components: [
+                        { type: "header", text: `${killStyleName} 效果预览` },
+                        { type: "divider" },
+                        { type: "label", text: { translate: `message.kill.beKilled.${killStyleId}`, with: ["§c玩家", `§9${player.name}`] }, },
+                        { type: "label", text: { translate: `message.kill.beKilledVoid.${killStyleId}`, with: ["§c玩家", `§9${player.name}`] }, },
+                        { type: "label", text: { translate: `message.kill.beShot.${killStyleId}`, with: ["§c玩家", `§9${player.name}`] }, },
+                        { type: "label", text: { translate: `message.kill.beKilledFall.${killStyleId}`, with: ["§c玩家", `§9${player.name}`] }, },
+                        { type: "label", text: { translate: `message.kill.beKilledGolem.${killStyleId}`, with: ["§c玩家", `§9${player.name}`] }, },
+                        { type: "label", text: { translate: `message.bedDestroyed.${killStyleId}`, with: ["§c红队", `§9${player.name}`] }, },
+                        { // 确认
+                            type: "button",
+                            text: "确认",
+                            icon: "textures/ui/confirm",
+                            onSelected: {
+                                callback: () => {
+                                    player.sendMessage({ translate: "message.killStyle.success", with: [killStyleName] });
+                                    player.playSound("note.pling", { pitch: 2, location: player.location });
+                                    lib.ScoreboardPlayerUtil.set("killStyle", player, selection);
+                                },
+                            }
+                        },
+                        { // 取消
+                            type: "button",
+                            text: "取消",
+                            icon: "textures/ui/cancel",
+                            onSelected: { openParentForm: true }
+                        },
+
+                    ],
+                    onCanceled: { openParentForm: true },
+                },
+                player
+            )
+        };
+
+        lib.UIUtil.createModal(
+            {
+                type: "modal",
+                components: [
+                    { type: "header", text: "击杀样式设置" },
+                    { type: "label", text: "选择一个你喜欢的击杀样式吧！" },
+                    { type: "label", text: "当你击杀玩家或破坏床时，都会显示一条独特的击杀信息！" },
+                    { type: "label", text: "选择完之后点击「确定」，可以预览这些击杀信息。" },
+                    { type: "divider" },
+                    { type: "dropdown", text: "击杀样式", items: killStyleNames, default: 0 },
+                    { type: "label", text: `当前使用的样式：${killStyles[lib.ScoreboardPlayerUtil.getOrSetDefault("killStyle", player, 0)].name}` },
+                ],
+                onSubmitted: {
+                    callback: (values, thisForm) => previewPage(player, thisForm, values[5]),
+                }
+            },
+            player
+        );
 
     };
 
@@ -701,890 +1668,14 @@ class BedwarsClassicMode {
     /** 设置事件 */
     eventSettings() {
 
-        const settings = this.system.settings;
-
-        /** 系统设置主页面
-         * @param {minecraft.Player} player
-         */
-        const systemSettings = (player) => {
-
-            /** 游戏前设置 - 地图重置设置
-             * @param {minecraft.Player} player
-             * @param {lib.ActionUIData} parentForm
-             */
-            const reloadSettings = (player, parentForm) => {
-                const getCurrentClearSpeed = (() => {
-                    switch (settings.beforeGaming.reload.clearSpeed) {
-                        case 0: return "非常慢";
-                        case 1: return "较慢";
-                        case 2: return "慢";
-                        case 3: return "中等";
-                        case 4: return "较快";
-                        case 5: return "快";
-                        case 6: default: return "非常快";
-                    }
-                })();
-                const getCurrentLoadSpeed = (() => {
-                    switch (settings.beforeGaming.reload.loadSpeed) {
-                        case 0: return "非常慢";
-                        case 1: return "较慢";
-                        case 2: return "慢";
-                        case 3: return "中等";
-                        case 4: return "较快";
-                        case 5: return "快";
-                        case 6: default: return "非常快";
-                    };
-                })();
-                lib.UIUtil.createModal(
-                    {
-                        type: "modal",
-                        parentForm: parentForm,
-                        submitButton: "确认",
-                        components: [
-                            { type: "header", text: "地图重置设置" },
-                            { type: "label", text: "控制地图的清空速度和加载速度。" },
-                            { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                            { type: "divider", },
-                            { type: "dropdown", text: "地图清除速度", tipText: `重置地图时清除地图的速度。§c注意！速度越快对性能的负担越大。如果您的设备性能低，请选择较慢的速度。§f当前值：§a${getCurrentClearSpeed}`, items: ["非常慢", "慢", "较慢", "中等", "较快", "快", "非常快"], default: settings.beforeGaming.reload.clearSpeed },
-                            { type: "dropdown", text: "地图加载速度", tipText: `重置地图时加载地图的速度。§c注意！速度越快对性能的负担越大。如果您的设备性能低，请选择较慢的速度。§f当前值：§a${getCurrentLoadSpeed}`, items: ["非常慢", "慢", "较慢", "中等", "较快", "快", "非常快"], default: settings.beforeGaming.reload.loadSpeed },
-                            { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
-                        ],
-                        onSubmitted: {
-                            openParentForm: true,
-                            callback: (values) => {
-                                // 若启用默认设置，则设置为默认设置
-                                if (values[values.length - 1]) settings.beforeGaming.reload = new BedwarsSettings().beforeGaming.reload;
-                                // 否则，应用这些设置
-                                else {
-                                    settings.beforeGaming.reload.clearSpeed = values[4];
-                                    settings.beforeGaming.reload.loadSpeed = values[5];
-                                    // 若当前正在清除地图中，重新注册时间线
-                                    if (this.system.gameStage == 0) {
-                                        this.system.unsubscribeTimeline("clearMap");
-                                        this.timelineClearMap();
-                                    }
-                                    // 若当前正在加载地图中，提示玩家在下次生效
-                                    if (this.system.gameStage == 1) {
-                                        player.sendMessage("地图加载速度的设置将在加载下一个结构时生效，信息板的预计加载时间可能会显示异常")
-                                    }
-                                };
-                            },
-                        },
-                        onCanceled: {
-                            openParentForm: true,
-                        }
-                    },
-                    player
-                );
-            };
-
-            /** 游戏前设置 - 等待设置
-             * @param {minecraft.Player} player
-             * @param {lib.ActionUIData} parentForm
-             */
-            const waitingSettings = (player, parentForm) => {
-                lib.UIUtil.createModal(
-                    {
-                        type: "modal",
-                        parentForm: parentForm,
-                        submitButton: "确认",
-                        components: [
-                            { type: "header", text: "等待设置" },
-                            { type: "label", text: "控制游戏允许的最小人数、最大人数和等待所需的时间。" },
-                            { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                            { type: "divider", },
-                            { type: "slider", text: "玩家人数下限", tipText: `至少需要多少玩家才可开始游戏。当前值：§a${settings.beforeGaming.waiting.minPlayerCount}`, min: 2, max: 16, step: 1, default: settings.beforeGaming.waiting.minPlayerCount },
-                            { type: "slider", text: "玩家人数上限", tipText: `本局至多多少玩家能够参与游戏。当前值：§a${settings.beforeGaming.waiting.maxPlayerCount}`, min: 8, max: 80, step: 8, default: settings.beforeGaming.waiting.maxPlayerCount },
-                            { type: "slider", text: "开始游戏的等待时间", tipText: `玩家达到规定数目后，多久后开始游戏。单位：秒。当前值：§a${settings.beforeGaming.waiting.gameStartWaitingTime}`, min: 5, max: 180, step: 5, default: settings.beforeGaming.waiting.gameStartWaitingTime },
-                            { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
-                        ],
-                        onSubmitted: {
-                            openParentForm: true,
-                            callback: (values) => {
-                                // 若启用默认设置，则设置为默认设置
-                                if (values[values.length - 1]) settings.beforeGaming.waiting = new BedwarsSettings().beforeGaming.waiting;
-                                // 否则，应用这些设置
-                                else {
-                                    settings.beforeGaming.waiting.minPlayerCount = values[4];
-                                    settings.beforeGaming.waiting.maxPlayerCount = values[5];
-                                    settings.beforeGaming.waiting.gameStartWaitingTime = values[6];
-                                    this.gameStartCountdown = values[6];
-                                    this.functionWaiting();
-                                };
-                            },
-                        },
-                        onCanceled: {
-                            openParentForm: true,
-                        }
-                    },
-                    player
-                );
-            };
-
-            /** 游戏前设置 - 组队设置
-             * @param {minecraft.Player} player
-             * @param {lib.ActionUIData} parentForm
-             */
-            const assignTeamSettings = (player, parentForm) => {
-                const modeName = (() => {
-                    switch (settings.beforeGaming.teamAssign.mode) {
-                        case 0: return "标准组队";
-                        case 1: return "随机组队";
-                        case 2: default: return "胜率组队";
-                    }
-                })();
-                lib.UIUtil.createModal(
-                    {
-                        type: "modal",
-                        parentForm: parentForm,
-                        submitButton: "确认",
-                        components: [
-                            { type: "header", text: "组队设置" },
-                            { type: "label", text: "控制开始游戏时系统如何组队，以及是否允许玩家自己选择队伍。" },
-                            { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                            { type: "divider", },
-                            { type: "dropdown", text: "组队模式", tipText: `如何为各个队伍分配玩家。§c目前未实装胜率组队的功能。§f当前值：§a${modeName}`, items: ["标准组队（随机平均分队，排列靠前的队伍人多）", "随机组队（随机平均分队，何队人多不定）", "胜率组队（按照胜率平均分队）"], default: settings.beforeGaming.teamAssign.mode },
-                            { type: "toggle", text: "开始前组队", tipText: `游戏将在开始前就随机组队，而非开始后随机组队。§c暂时未实装此功能。§f当前值：§a${settings.beforeGaming.teamAssign.assignBeforeGaming}`, default: settings.beforeGaming.teamAssign.assignBeforeGaming },
-                            { type: "toggle", text: "玩家自主选队", tipText: `玩家是否能够自主选择队伍。未选择队伍的玩家按照组队模式的方法分配队伍。当前值：§a${settings.beforeGaming.teamAssign.playerSelectEnabled}`, default: settings.beforeGaming.teamAssign.playerSelectEnabled },
-                            { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
-                        ],
-                        onSubmitted: {
-                            openParentForm: true,
-                            callback: (values) => {
-                                // 若启用默认设置，则设置为默认设置
-                                if (values[values.length - 1]) settings.beforeGaming.teamAssign = new BedwarsSettings().beforeGaming.teamAssign;
-                                // 否则，应用这些设置
-                                else {
-                                    settings.beforeGaming.teamAssign.mode = values[4];
-                                    settings.beforeGaming.teamAssign.assignBeforeGaming = values[5];
-                                    settings.beforeGaming.teamAssign.playerSelectEnabled = values[6];
-                                    if (settings.beforeGaming.teamAssign.playerSelectEnabled) lib.ItemUtil.removeItem(player, "bedwars:select_team")
-                                };
-                            },
-                        },
-                        onCanceled: {
-                            openParentForm: true,
-                        }
-                    },
-                    player
-                );
-            };
-
-            /** 游戏内设置 - 资源上限设置
-             * @param {minecraft.Player} player
-             * @param {lib.ActionUIData} parentForm
-             */
-            const resourceLimitSettings = (player, parentForm) => {
-                lib.UIUtil.createModal(
-                    {
-                        type: "modal",
-                        parentForm: parentForm,
-                        submitButton: "确认",
-                        components: [
-                            { type: "header", text: "资源上限设置" },
-                            { type: "label", text: "控制各类资源在没有玩家在附近时的最大生成数量。" },
-                            { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                            { type: "divider", },
-                            { type: "slider", text: "铁锭", tipText: `当前值：§a${settings.gaming.resourceLimit.iron}`, min: 8, max: 400, step: 8, default: settings.gaming.resourceLimit.iron },
-                            { type: "slider", text: "金锭", tipText: `当前值：§a${settings.gaming.resourceLimit.gold}`, min: 1, max: 50, step: 1, default: settings.gaming.resourceLimit.gold },
-                            { type: "slider", text: "钻石", tipText: `当前值：§a${settings.gaming.resourceLimit.diamond}`, min: 1, max: 50, step: 1, default: settings.gaming.resourceLimit.diamond },
-                            { type: "slider", text: "绿宝石", tipText: `当前值：§a${settings.gaming.resourceLimit.emerald}`, min: 1, max: 50, step: 1, default: settings.gaming.resourceLimit.emerald },
-                            { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
-                        ],
-                        onSubmitted: {
-                            openParentForm: true,
-                            callback: (values) => {
-                                // 若启用默认设置，则设置为默认设置
-                                if (values[values.length - 1]) settings.gaming.resourceLimit = new BedwarsSettings().gaming.resourceLimit;
-                                // 否则，应用这些设置
-                                else {
-                                    settings.gaming.resourceLimit.iron = values[4];
-                                    settings.gaming.resourceLimit.gold = values[5];
-                                    settings.gaming.resourceLimit.diamond = values[6];
-                                    settings.gaming.resourceLimit.emerald = values[7];
-                                };
-                            },
-                        },
-                        onCanceled: {
-                            openParentForm: true,
-                        }
-                    },
-                    player
-                );
-            };
-
-            /** 游戏内设置 - 资源上限设置
-             * @param {minecraft.Player} player
-             * @param {lib.ActionUIData} parentForm
-             */
-            const resourceIntervalSettings = (player, parentForm) => {
-                lib.UIUtil.createModal(
-                    {
-                        type: "modal",
-                        parentForm: parentForm,
-                        submitButton: "确认",
-                        components: [
-                            { type: "header", text: "资源生成间隔设置" },
-                            { type: "label", text: "控制各类资源的生成间隔。" },
-                            { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                            { type: "divider", },
-                            { type: "slider", text: "铁锭（x0.05秒）", tipText: `在标准模式没有任何加成时，平均每个铁锭所需要的生成时间，单位：*0.05秒。当前值：§a${settings.gaming.resourceInterval.iron}`, min: 2, max: 40, step: 2, default: settings.gaming.resourceInterval.iron },
-                            { type: "label", text: "§7在不同地图下，一次可能生成多个铁，总时长会成倍延长，但平均生成铁的时间不变。\n例如，该值设置为10时，则平均每10*0.05=0.5秒生成1个铁。", },
-                            { type: "slider", text: "金锭（x0.05秒）", tipText: `在标准模式没有任何加成时，每个金锭所需要的生成时间，单位：*0.05秒。当前值：§a${settings.gaming.resourceInterval.gold}`, min: 20, max: 300, step: 5, default: settings.gaming.resourceInterval.gold },
-                            { type: "slider", text: "钻石（秒）", tipText: `在标准模式没有任何加成时，每个钻石所需要的生成时间，单位：秒。当前值：§a${settings.gaming.resourceInterval.diamond - 10}`, min: 25, max: 60, step: 5, default: settings.gaming.resourceInterval.diamond - 10 }, // debug 这里-10是因为原始数值是0级的数值，但是实际上最低等级是1级，下文同理
-                            { type: "slider", text: "绿宝石（秒）", tipText: `在标准模式没有任何加成时，每个绿宝石所需要的生成时间，单位：秒。当前值：§a${settings.gaming.resourceInterval.emerald - 10}`, min: 30, max: 90, step: 5, default: settings.gaming.resourceInterval.emerald - 10 },
-                            { type: "slider", text: "单挑模式生成速度倍率（x0.1）", tipText: `在单挑模式下相比于非单挑模式的生成速率，只影响铁锭和金锭的生成，单位：*0.1。当前值：§a${settings.gaming.resourceInterval.soloSpeedMultiplier * 10}`, min: 1, max: 20, step: 1, default: settings.gaming.resourceInterval.soloSpeedMultiplier * 10 },
-                            { type: "label", text: "§7例如，该值设置为6时，则铁锭和金锭的生成速度只有非单挑模式下的0.1*6*100%%=60%%。", },
-                            { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
-                        ],
-                        onSubmitted: {
-                            openParentForm: true,
-                            callback: (values) => {
-                                // 若启用默认设置，则设置为默认设置
-                                if (values[values.length - 1]) settings.gaming.resourceInterval = new BedwarsSettings().gaming.resourceInterval;
-                                // 否则，应用这些设置
-                                else {
-                                    settings.gaming.resourceInterval.iron = values[4];
-                                    settings.gaming.resourceInterval.gold = values[6];
-                                    settings.gaming.resourceInterval.diamond = values[7] + 10;
-                                    settings.gaming.resourceInterval.emerald = values[8] + 10;
-                                    settings.gaming.resourceInterval.soloSpeedMultiplier = lib.JSUtil.limitDecimal(values[9] / 10, 1);
-                                };
-                            },
-                        },
-                        onCanceled: {
-                            openParentForm: true,
-                        }
-                    },
-                    player
-                );
-            };
-
-            /** 游戏内设置 - 重生时间设置
-             * @param {minecraft.Player} player
-             * @param {lib.ActionUIData} parentForm
-             */
-            const respawnTimeSettings = (player, parentForm) => {
-                lib.UIUtil.createModal(
-                    {
-                        type: "modal",
-                        parentForm: parentForm,
-                        submitButton: "确认",
-                        components: [
-                            { type: "header", text: "重生时间设置" },
-                            { type: "label", text: "控制普通玩家和重新进入游戏的玩家的重生时间。" },
-                            { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                            { type: "divider", },
-                            { type: "slider", text: "普通玩家", tipText: `当玩家死亡后，需要多长时间重生。单位：秒。当前值：§a${settings.gaming.respawnTime.normalPlayers - 1}`, min: 0, max: 30, step: 1, default: settings.gaming.respawnTime.normalPlayers - 1 }, // 这里，比预期的时间（例如 5 秒）要 +1 秒，防止玩家一开始看到 4 秒倒计时，不完整
-                            { type: "slider", text: "退出重进玩家", tipText: `当玩家退出重进后，需要多长时间重生。单位：秒。当前值：§a${settings.gaming.respawnTime.rejoinedPlayers - 1}`, min: 0, max: 30, step: 1, default: settings.gaming.respawnTime.rejoinedPlayers - 1 },
-                            { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
-                        ],
-                        onSubmitted: {
-                            openParentForm: true,
-                            callback: (values) => {
-                                // 若启用默认设置，则设置为默认设置
-                                if (values[values.length - 1]) settings.gaming.respawnTime = new BedwarsSettings().gaming.respawnTime;
-                                // 否则，应用这些设置
-                                else {
-                                    settings.gaming.respawnTime.normalPlayers = values[4] + 1;
-                                    settings.gaming.respawnTime.rejoinedPlayers = values[5] + 1;
-                                };
-                            },
-                        },
-                        onCanceled: {
-                            openParentForm: true,
-                        }
-                    },
-                    player
-                );
-            };
-
-            /** 游戏内设置 - 击杀样式设置
-             * @param {minecraft.Player} player
-             * @param {lib.ActionUIData} parentForm
-             */
-            const killStyleSettings = (player, parentForm) => {
-                lib.UIUtil.createModal(
-                    {
-                        type: "modal",
-                        parentForm: parentForm,
-                        submitButton: "确认",
-                        components: [
-                            { type: "header", text: "击杀样式设置" },
-                            { type: "label", text: "控制玩家在击杀玩家和破坏床后的设置。" },
-                            { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                            { type: "divider", },
-                            { type: "toggle", text: "启用击杀样式", tipText: `启用后，在击杀玩家、破坏床后能够使用不同的击杀样式。玩家能够在开始游戏前获得一个物品以调整自己的击杀样式。当前值：§a${settings.gaming.killStyle.isEnabled}`, default: settings.gaming.killStyle.isEnabled, },
-                            { type: "toggle", text: "随机击杀样式", tipText: `启用后，每局将为所有玩家随机分配击杀样式。启用后，玩家不再能在开始游戏前设置自己的击杀样式。当前值：§a${settings.gaming.killStyle.randomKillStyle}`, default: settings.gaming.killStyle.randomKillStyle, },
-                            { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
-                        ],
-                        onSubmitted: {
-                            openParentForm: true,
-                            callback: (values) => {
-                                // 若启用默认设置，则设置为默认设置
-                                if (values[values.length - 1]) settings.gaming.killStyle = new BedwarsSettings().gaming.killStyle;
-                                // 否则，应用这些设置
-                                else {
-                                    settings.gaming.killStyle.isEnabled = values[4];
-                                    settings.gaming.killStyle.randomKillStyle = values[5];
-                                    // 如果玩家关闭了击杀样式，或启用了随机击杀样式，则移除玩家的物品
-                                    if (!settings.gaming.killStyle.isEnabled || settings.gaming.killStyle.randomKillStyle) lib.ItemUtil.removeItem(player, "bedwars:kill_style");
-                                };
-                            },
-                        },
-                        onCanceled: {
-                            openParentForm: true,
-                        }
-                    },
-                    player
-                );
-            };
-
-            /** 游戏内设置 - 无效队伍设置
-             * @param {minecraft.Player} player
-             * @param {lib.ActionUIData} parentForm
-             */
-            const invalidTeamSettings = (player, parentForm) => {
-                lib.UIUtil.createModal(
-                    {
-                        type: "modal",
-                        parentForm: parentForm,
-                        submitButton: "确认",
-                        components: [
-                            { type: "header", text: "无效队伍设置" },
-                            { type: "label", text: "控制一开始未分配到玩家的队伍如何运行。" },
-                            { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                            { type: "divider", },
-                            { type: "toggle", text: "无效队伍检测", tipText: `启用后，若在开始游戏后队伍未分配到玩家，则淘汰该队伍并设置为无效队伍。当前值：§a${settings.gaming.invalidTeam.enableTest}`, default: settings.gaming.invalidTeam.enableTest, },
-                            { type: "toggle", text: "无效队伍生成资源", tipText: `启用后，若该队伍为无效队伍，是否在该队伍岛屿生成资源。当前值：§a${settings.gaming.invalidTeam.spawnResources}`, default: settings.gaming.invalidTeam.spawnResources, },
-                            { type: "toggle", text: "无效队伍生成商人", tipText: `启用后，若该队伍为无效队伍，是否在该队伍岛屿生成商人。§c目前未实装功能。§f当前值：§a${settings.gaming.invalidTeam.spawnTraders}`, default: settings.gaming.invalidTeam.spawnTraders, },
-                            { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
-                        ],
-                        onSubmitted: {
-                            openParentForm: true,
-                            callback: (values) => {
-                                // 若启用默认设置，则设置为默认设置
-                                if (values[values.length - 1]) settings.gaming.invalidTeam = new BedwarsSettings().gaming.invalidTeam;
-                                // 否则，应用这些设置
-                                else {
-                                    settings.gaming.invalidTeam.enableTest = values[4];
-                                    settings.gaming.invalidTeam.spawnResources = values[5];
-                                    settings.gaming.invalidTeam.spawnTraders = values[6];
-                                };
-                            },
-                        },
-                        onCanceled: {
-                            openParentForm: true,
-                        }
-                    },
-                    player
-                );
-            };
-
-            /** 地图启用设置
-             * @param {minecraft.Player} player
-             * @param {lib.ActionUIData} parentForm
-             */
-            const mapEnabledSettings = (player, parentForm) => {
-                lib.UIUtil.createModal(
-                    {
-                        type: "modal",
-                        parentForm: parentForm,
-                        submitButton: "确认",
-                        components: [
-                            { type: "header", text: "地图启用设置" },
-                            { type: "label", text: "控制系统启用何种模式的地图。" },
-                            { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                            { type: "divider", },
-                            { type: "toggle", text: "启用经典2队模式地图", tipText: `当前值：§a${settings.mapEnabled.classicTwoTeamsEnabled}`, default: settings.mapEnabled.classicTwoTeamsEnabled },
-                            { type: "toggle", text: "启用经典4队模式地图", tipText: `当前值：§a${settings.mapEnabled.classicFourTeamsEnabled}`, default: settings.mapEnabled.classicFourTeamsEnabled },
-                            { type: "toggle", text: "启用经典8队模式地图", tipText: `当前值：§a${settings.mapEnabled.classicEightTeamsEnabled}`, default: settings.mapEnabled.classicEightTeamsEnabled },
-                            { type: "toggle", text: "启用夺点2队模式地图", tipText: `当前值：§a${settings.mapEnabled.captureTwoTeamsEnabled}`, default: settings.mapEnabled.captureTwoTeamsEnabled },
-                            { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
-                        ],
-                        onSubmitted: {
-                            openParentForm: true,
-                            callback: (values) => {
-                                // 若启用默认设置，则设置为默认设置
-                                if (values[values.length - 1]) settings.mapEnabled = new BedwarsSettings().mapEnabled;
-                                // 否则，应用这些设置
-                                else {
-                                    if (values.filter(value => typeof value === "boolean").every(value => value === false)) {
-                                        this.system.warnPlayer(player, { translate: "message.settings.warning.allModesDisabled" });
-                                        return;
-                                    };
-                                    settings.mapEnabled.classicTwoTeamsEnabled = values[4];
-                                    settings.mapEnabled.classicFourTeamsEnabled = values[5];
-                                    settings.mapEnabled.classicEightTeamsEnabled = values[6];
-                                    settings.mapEnabled.captureTwoTeamsEnabled = values[7];
-                                };
-                            },
-                        },
-                        onCanceled: {
-                            openParentForm: true,
-                        }
-                    },
-                    player
-                );
-            };
-
-            /** 生成地图
-             * @param {minecraft.Player} player
-             * @param {lib.ActionUIData} parentForm
-             */
-            const regenerateMapSettings = (player, parentForm) => {
-
-                // 默认：允许随机生成地图
-                /** @type {(lib.FormLabelComponent | lib.FormButtonComponent)[]} */
-                const components = [
-                    {
-                        type: "button",
-                        text: "随机生成地图",
-                        onSelected: {
-                            callback: () => {
-                                if (this.system.gameStage == 1) this.system.warnPlayer(player, { translate: "message.settings.warning.regenerateMapWhenLoading" })
-                                else {
-                                    const map = this.system.resetMap();
-                                    lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.name}§7（随机生成）`));
-                                };
-                            },
-                        }
-                    },
-                    { type: "label", text: "§7在已启用的地图中随机生成一张地图。" },
-                ];
-
-                // 两队经典模式启用时，添加两队经典模式的按钮选项
-                if (settings.mapEnabled.classicTwoTeamsEnabled) {
-                    const twoTeamsMaps = Object.values(data.mapData.classic.TwoTeams);
-                    const twoTeamsMapNames = twoTeamsMaps.map(mapData => mapData.name);
-                    components.push(
-                        {
-                            type: "button",
-                            text: "生成 2 队经典地图",
-                            onSelected: {
-                                openChildForm: true,
-                                childForm: {
-                                    type: "modal",
-                                    components: [
-                                        { type: "header", text: "生成 2 队经典地图", },
-                                        { type: "label", text: "立刻生成一张 2 队经典模式的地图。", },
-                                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                                        { type: "divider", },
-                                        { type: "dropdown", text: "地图", items: twoTeamsMapNames, default: 0 }
-                                    ],
-                                    onCanceled: {
-                                        openParentForm: true,
-                                    },
-                                    onSubmitted: {
-                                        callback: (result) => {
-                                            const map = this.system.resetMap(twoTeamsMaps[result[4]]);
-                                            lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.name}`));
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                        { type: "label", text: "§7在所有 2 队经典模式的地图中选择一张生成。" },
-                    );
-                };
-
-                // 四队经典模式启用时，添加四队经典模式的按钮选项
-                if (settings.mapEnabled.classicFourTeamsEnabled) {
-                    const fourTeamsMaps = Object.values(data.mapData.classic.FourTeams);
-                    const fourTeamsMapNames = fourTeamsMaps.map(mapData => mapData.name);
-                    components.push(
-                        {
-                            type: "button",
-                            text: "生成 4 队经典地图",
-                            onSelected: {
-                                openChildForm: true,
-                                childForm: {
-                                    type: "modal",
-                                    components: [
-                                        { type: "header", text: "生成 4 队经典地图", },
-                                        { type: "label", text: "立刻生成一张 4 队经典模式的地图。", },
-                                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                                        { type: "divider", },
-                                        { type: "dropdown", text: "地图", items: fourTeamsMapNames, default: 0 }
-                                    ],
-                                    onCanceled: {
-                                        openParentForm: true,
-                                    },
-                                    onSubmitted: {
-                                        callback: (result) => {
-                                            const map = this.system.resetMap(fourTeamsMaps[result[4]]);
-                                            lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.name}`));
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                        { type: "label", text: "§7在所有 4 队经典模式的地图中选择一张生成。" },
-                    );
-                };
-
-                // 八队经典模式启用时，添加八队经典模式的按钮选项
-                if (settings.mapEnabled.classicEightTeamsEnabled) {
-                    const eightTeamsMaps = Object.values(data.mapData.classic.EightTeams);
-                    const eightTeamsMapNames = eightTeamsMaps.map(mapData => mapData.name);
-                    components.push(
-                        {
-                            type: "button",
-                            text: "生成 8 队经典地图",
-                            onSelected: {
-                                openChildForm: true,
-                                childForm: {
-                                    type: "modal",
-                                    components: [
-                                        { type: "header", text: "生成 8 队经典地图", },
-                                        { type: "label", text: "立刻生成一张 8 队经典模式的地图。", },
-                                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                                        { type: "divider", },
-                                        { type: "dropdown", text: "地图", items: eightTeamsMapNames, default: 0 }
-                                    ],
-                                    onCanceled: {
-                                        openParentForm: true,
-                                    },
-                                    onSubmitted: {
-                                        callback: (result) => {
-                                            const map = this.system.resetMap(eightTeamsMaps[result[4]]);
-                                            lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.name}`));
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                        { type: "label", text: "§7在所有 8 队经典模式的地图中选择一张生成。" },
-                    );
-                }
-
-                lib.UIUtil.createAction(
-                    {
-                        type: "action",
-                        parentForm: parentForm,
-                        components: [
-                            { type: "header", text: "生成地图", },
-                            { type: "label", text: "立刻生成一张确定的、或随机的新地图。", },
-                            { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                            { type: "divider", },
-                            ...components,
-                        ],
-                        onCanceled: {
-                            openParentForm: true,
-                        }
-                    },
-                    player
-                );
-            };
-
-            /** 杂项设置
-             * @param {minecraft.Player} player
-             * @param {lib.ActionUIData} parentForm
-             */
-            const miscellaneousSettings = (player, parentForm) => {
-                lib.UIUtil.createModal(
-                    {
-                        type: "modal",
-                        parentForm: parentForm,
-                        submitButton: "确认",
-                        components: [
-                            { type: "header", text: "杂项设置" },
-                            { type: "label", text: "控制一些杂项设置。" },
-                            { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                            { type: "divider", },
-                            { type: "toggle", text: "破坏原版方块", tipText: `创造模式的管理员玩家能否破坏原版方块。当前值：§a${settings.miscellaneous.adminCanBreakBlocks}`, default: settings.miscellaneous.adminCanBreakBlocks },
-                            { type: "toggle", text: "虚空可扔物品", tipText: `在虚空中掉落的玩家是否允许扔出物品。当前值：§a${settings.miscellaneous.playerCanThrowItemsInVoid}`, default: settings.miscellaneous.playerCanThrowItemsInVoid },
-                            { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
-                        ],
-                        onSubmitted: {
-                            openParentForm: true,
-                            callback: (values) => {
-                                // 若启用默认设置，则设置为默认设置
-                                if (values[values.length - 1]) settings.miscellaneous = new BedwarsSettings().miscellaneous;
-                                // 否则，应用这些设置
-                                else {
-                                    settings.miscellaneous.adminCanBreakBlocks = values[4];
-                                    settings.miscellaneous.playerCanThrowItemsInVoid = values[5];
-                                };
-                            },
-                        },
-                        onCanceled: {
-                            openParentForm: true,
-                        }
-                    },
-                    player
-                );
-            };
-
-            /** 开发者设置
-             * @param {minecraft.Player} player
-             * @param {lib.ActionUIData} parentForm
-             */
-            const developerSettings = (player, parentForm) => {
-                lib.UIUtil.createModal(
-                    {
-                        type: "modal",
-                        parentForm: parentForm,
-                        submitButton: "确认",
-                        components: [
-                            { type: "header", text: "开发者设置" },
-                            { type: "label", text: "快速设置一些开发者内容。当心！它们可能会很危险！" },
-                            { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                            { type: "divider", },
-                            { type: "toggle", text: "开启调试模式", tipText: `启用调试模式，这将包括：单人模式、最快的地图清除和加载速度、关闭无效队伍检测等。§c如果你不清楚这在做什么，请勿开启！§f当前值：§a${settings.developer.debugMode}`, default: settings.developer.debugMode },
-                        ],
-                        onSubmitted: {
-                            openParentForm: true,
-                            callback: (values) => {
-                                settings.developer.debugMode = values[4];
-                                if (values[4] === true) {
-                                    settings.beforeGaming.waiting.minPlayerCount = 1;
-                                    settings.beforeGaming.reload.clearSpeed = 6;
-                                    settings.beforeGaming.reload.loadSpeed = 6;
-                                    settings.gaming.invalidTeam.enableTest = false;
-                                    settings.beforeGaming.waiting.gameStartWaitingTime = 0;
-                                }
-                                // 若当前正在清除地图中，重新注册时间线
-                                if (this.system.gameStage == 0) {
-                                    this.system.unsubscribeTimeline("clearMap");
-                                    this.timelineClearMap();
-                                }
-                                this.functionWaiting();
-                            },
-                        },
-                        onCanceled: {
-                            openParentForm: true,
-                        }
-                    },
-                    player
-                );
-            };
-
-            lib.UIUtil.createAction(
-                {
-                    type: "action",
-                    components: [
-                        { type: "header", text: "系统设置", },
-                        { type: "label", text: "欢迎来到设置！你可以在这里设置这个附加包的方方面面，例如立刻生成一张特定地图、更改资源生成上限等。来试试吧！>wO", },
-                        { type: "label", text: "§7· 更改完成后，请点击窗口下面的「确认」按钮，按右上角的「x」会使您返回上一页而不作任何更改。", },
-                        { type: "label", text: "§7· 如果您需要调整回默认设置，您可以打开默认设置的开关，然后确认。", },
-                        { type: "label", text: "§7· 设置物品仅限管理员可获取。请确保将您信任的玩家设置为管理员。", },
-                        { type: "divider", },
-                        { // 游戏前设置
-                            type: "button",
-                            text: "游戏前设置...",
-                            icon: "textures/items/clock_item",
-                            onSelected: {
-                                childForm: {
-                                    type: "action",
-                                    components: [
-                                        { type: "header", text: "游戏前设置", },
-                                        { type: "label", text: "控制游戏开始前的运行逻辑。", },
-                                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                                        { type: "divider", },
-                                        { type: "button", text: "地图重置设置...", icon: "textures/ui/world_glyph_color", onSelected: { callback: (selection, thisForm) => reloadSettings(player, thisForm), }, },
-                                        { type: "label", text: "§7控制地图的清空速度和加载速度。", },
-                                        { type: "button", text: "等待设置...", icon: "textures/items/clock_item", onSelected: { callback: (selection, thisForm) => waitingSettings(player, thisForm), }, },
-                                        { type: "label", text: "§7控制游戏允许的最小人数、最大人数和等待所需的时间。", },
-                                        { type: "button", text: "组队设置...", icon: "textures/ui/multiplayer_glyph_color", onSelected: { callback: (selection, thisForm) => assignTeamSettings(player, thisForm), } },
-                                        { type: "label", text: "§7控制开始游戏时系统如何组队，以及是否允许玩家自己选择队伍。", },
-                                    ],
-                                    onCanceled: { openParentForm: true, }
-                                },
-                                openChildForm: true,
-                            }
-                        },
-                        { type: "label", text: "§7控制游戏开始前的运行逻辑，包括地图重置、等待、组队设置。", },
-                        { // 游戏内设置
-                            type: "button",
-                            text: "游戏内设置...",
-                            icon: "textures/items/bed_red",
-                            onSelected: {
-                                childForm: {
-                                    type: "action",
-                                    components: [
-                                        { type: "header", text: "游戏内设置", },
-                                        { type: "label", text: "控制游戏开始后的运行逻辑。", },
-                                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                                        { type: "divider", },
-                                        { type: "button", text: "资源上限设置...", icon: "textures/items/iron_ingot", onSelected: { callback: (selection, thisForm) => resourceLimitSettings(player, thisForm) } },
-                                        { type: "label", text: "§7控制各类资源在没有玩家在附近时的最大生成数量。" },
-                                        { type: "button", text: "资源生成间隔设置...", icon: "textures/items/gold_ingot", onSelected: { callback: (selection, thisForm) => resourceIntervalSettings(player, thisForm) } },
-                                        { type: "label", text: "§7控制各类资源的生成间隔。" },
-                                        { type: "button", text: "重生时间设置...", icon: "textures/items/clock_item", onSelected: { callback: (selection, thisForm) => respawnTimeSettings(player, thisForm) } },
-                                        { type: "label", text: "§7控制普通玩家和重新进入游戏的玩家的重生时间。" },
-                                        { type: "button", text: "击杀样式设置...", icon: "textures/items/iron_sword", onSelected: { callback: (selection, thisForm) => killStyleSettings(player, thisForm) } },
-                                        { type: "label", text: "§7控制玩家在击杀玩家和破坏床后的设置。" },
-                                        { type: "button", text: "无效队伍设置...", icon: "textures/blocks/barrier", onSelected: { callback: (selection, thisForm) => invalidTeamSettings(player, thisForm) } },
-                                        { type: "label", text: "§7控制一开始未分配到玩家的队伍如何运行。" },
-                                    ],
-                                    onCanceled: { openParentForm: true, }
-                                },
-                                openChildForm: true,
-                            }
-                        },
-                        { type: "label", text: "§7控制游戏开始后的运行逻辑，包括资源生成、资源生成间隔、重生时间、击杀样式、无效队伍相关设置。", },
-                        { // 地图启用设置
-                            type: "button",
-                            text: "地图启用设置...",
-                            icon: "textures/items/map_filled",
-                            onSelected: {
-                                callback: (selection, thisForm) => mapEnabledSettings(player, thisForm),
-                            }
-                        },
-                        { type: "label", text: "§7控制系统启用何种模式的地图。", },
-                        { // 生成地图
-                            type: "button",
-                            text: "生成地图",
-                            icon: "textures/items/map_empty",
-                            onSelected: {
-                                callback: (selection, thisForm) => regenerateMapSettings(player, thisForm),
-                            },
-                        },
-                        { type: "label", text: "§7立刻生成一张确定的、或随机的新地图。", },
-                        { // 杂项设置
-                            type: "button",
-                            text: "杂项设置...",
-                            icon: "textures/items/diamond_pickaxe",
-                            onSelected: {
-                                callback: (selection, thisForm) => miscellaneousSettings(player, thisForm),
-                            },
-                        },
-                        { type: "label", text: "§7控制一些杂项设置。", },
-                        { // 关于
-                            type: "button", text: "关于...", icon: "textures/items/spyglass",
-                            onSelected: {
-                                childForm: {
-                                    type: "action",
-                                    components: [
-                                        { type: "header", text: "关于", },
-                                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                                        { type: "divider" },
-                                        { type: "label", text: "§l作者" },
-                                        { type: "label", text: "一只卑微的量筒" },
-                                        { type: "divider" },
-                                        { type: "label", text: "§l出品" },
-                                        { type: "label", text: "极筑工坊" },
-                                        { type: "divider" },
-                                        { type: "label", text: "§l版本" },
-                                        { type: "label", text: `${this.system.version}` },
-                                        { type: "divider" },
-                                        { type: "label", text: "§l测试员（1.0版本）" },
-                                        { type: "label", text: "巴豆、星辰、龙龙、烟雨、小飞侠、文雨、火卫三、鸽子、月、硫化银、鱼周、白洲梓、lanos、Dull、小意、辉金、十三酱、小面包、鱼、虾皮、小鼠、蒙德人、祉语、帕、吴鸡哥、星空、基岩、沫尘、创哲宇、牢土、玖、小鸟、书豪、擺给、千里、han、条形马、laolu、墨、怡柔、star、闲鱼" },
-                                        { type: "divider" },
-                                        { type: "label", text: `§l特别鸣谢` },
-                                        { type: "label", text: `祉语（感谢提供服务器！）` },
-                                        { type: "label", text: `辉金（为我们提供了远古的测试素材！）` },
-                                        { type: "label", text: `还有正在玩游戏的你 —— ${player.name}，感谢你的游玩！` },
-                                    ],
-                                    onCanceled: { openParentForm: true, },
-                                },
-                                openChildForm: true,
-                            }
-                        },
-                        { type: "label", text: "§7查看关于我们的信息。", },
-                        { // 开发者设置
-                            type: "button",
-                            text: "开发者设置...",
-                            icon: "textures/items/map_settings",
-                            onSelected: {
-                                callback: (selection, thisForm) => developerSettings(player, thisForm),
-                            }
-                        },
-                        { type: "label", text: "§7快速设置一些开发者内容。当心！它们可能会很危险！", },
-                    ],
-                },
-                player
-            );
-
-        };
-
-        /** 击杀样式设置主页面
-         * @param {minecraft.Player} player
-         */
-        const killStyleSettings = (player) => {
-
-            const killStyles = Object.values(data.killStyle);
-            const killStyleNames = killStyles.map(k => k.name);
-
-            /** 预览页面
-             * @param {minecraft.Player} player 
-             * @param {lib.ModalUIData} parentForm 
-             * @param {number} selection 
-             */
-            const previewPage = (player, parentForm, selection) => {
-                const killStyleId = killStyles[selection].id;
-                const killStyleName = killStyles[selection].name;
-                lib.UIUtil.createAction(
-                    {
-                        type: "action",
-                        parentForm: parentForm,
-                        components: [
-                            { type: "header", text: `${killStyleName} 效果预览` },
-                            { type: "divider" },
-                            { type: "label", text: { translate: `message.kill.beKilled.${killStyleId}`, with: ["§c玩家", `§9${player.name}`] }, },
-                            { type: "label", text: { translate: `message.kill.beKilledVoid.${killStyleId}`, with: ["§c玩家", `§9${player.name}`] }, },
-                            { type: "label", text: { translate: `message.kill.beShot.${killStyleId}`, with: ["§c玩家", `§9${player.name}`] }, },
-                            { type: "label", text: { translate: `message.kill.beKilledFall.${killStyleId}`, with: ["§c玩家", `§9${player.name}`] }, },
-                            { type: "label", text: { translate: `message.kill.beKilledGolem.${killStyleId}`, with: ["§c玩家", `§9${player.name}`] }, },
-                            { type: "label", text: { translate: `message.bedDestroyed.${killStyleId}`, with: ["§c红队", `§9${player.name}`] }, },
-                            { // 确认
-                                type: "button",
-                                text: "确认",
-                                icon: "textures/ui/confirm",
-                                onSelected: {
-                                    callback: () => {
-                                        player.sendMessage({ translate: "message.killStyle.success", with: [killStyleName] });
-                                        player.playSound("note.pling", { pitch: 2, location: player.location });
-                                        lib.ScoreboardPlayerUtil.set("killStyle", player, selection);
-                                    },
-                                }
-                            },
-                            { // 取消
-                                type: "button",
-                                text: "取消",
-                                icon: "textures/ui/cancel",
-                                onSelected: { openParentForm: true }
-                            },
-
-                        ],
-                        onCanceled: { openParentForm: true },
-                    },
-                    player
-                )
-            };
-
-            lib.UIUtil.createModal(
-                {
-                    type: "modal",
-                    components: [
-                        { type: "header", text: "击杀样式设置" },
-                        { type: "label", text: "选择一个你喜欢的击杀样式吧！" },
-                        { type: "label", text: "当你击杀玩家或破坏床时，都会显示一条独特的击杀信息！" },
-                        { type: "label", text: "选择完之后点击「确定」，可以预览这些击杀信息。" },
-                        { type: "divider" },
-                        { type: "dropdown", text: "击杀样式", items: killStyleNames, default: 0 },
-                        { type: "label", text: `当前使用的样式：${killStyles[lib.ScoreboardPlayerUtil.getOrSetDefault("killStyle", player, 0)].name}` },
-                    ],
-                    onSubmitted: {
-                        callback: (values, thisForm) => previewPage(player, thisForm, values[5]),
-                    }
-                },
-                player
-            );
-        };
-
         this.system.subscribeEvent({
             typeId: "settings",
             event: {
                 type: minecraft.world.afterEvents.itemUse,
                 /** @type {function(minecraft.ItemUseAfterEvent): void} */
                 callback: event => {
-                    if (event.itemStack.typeId === "bedwars:map_settings") systemSettings(event.source);
-                    if (event.itemStack.typeId === "bedwars:kill_style") {
-                        lib.ScoreboardObjectiveUtil.get("killStyle") ?? lib.ScoreboardObjectiveUtil.add("killStyle", "击杀样式");
-                        killStyleSettings(event.source);
-                    }
+                    if (event.itemStack.typeId === "bedwars:map_settings") BedwarsSettings.showSystemSettingsUI(event.source, this.system);
+                    if (event.itemStack.typeId === "bedwars:kill_style") BedwarsSettings.showKillStyleSettingsUI(event.source);
                 },
             },
         });

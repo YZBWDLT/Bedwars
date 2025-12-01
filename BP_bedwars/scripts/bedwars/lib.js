@@ -228,8 +228,7 @@ export class EntityUtil {
         else return minecraft.world.getDimension(dimensionId).getEntities({ location: pos, maxDistance: r }).some(nearbyEntity => nearbyEntity.id === entity.id);
     };
 
-    /**
-     * 检查实体是否在特定长方体区域内
+    /** 检查实体是否在特定长方体区域内
      * @param {minecraft.Entity} entity 待检查的实体
      * @param {minecraft.BlockVolume} volume 方块区域
      * @param {"overworld"|"nether"|"the_end"|"entity_dimension"} dimensionId 待检查的维度，指定为entity_dimension时将在实体自身维度检测
@@ -309,6 +308,7 @@ export class ScoreboardObjectiveUtil {
     /** 添加一个新的记分项，并返回该记分项
      * @param {string} id 记分项 ID
      * @param {string} [displayName] 记分项显示名称
+     * @returns {minecraft.ScoreboardObjective}
      */
     static add(id, displayName) {
         try {

@@ -7,7 +7,7 @@
             "is_summonable": true,
             "is_experimental": false,
             "properties": {
-                "bedwars:trader_skin": { "client_sync": true, "type": "int", "range": [0, 21], "default": 0 },
+                "bedwars:trader_skin": { "client_sync": true, "type": "int", "range": [0, 30], "default": 0 },
                 "bedwars:trader_geometry": { "client_sync": true, "type": "enum", "values": ["default", "slim"], "default": "default" },
                 "bedwars:trader_type": { "type": "enum", "values": ["item", "upgrade"], "default": "item" }
             }

@@ -31,6 +31,7 @@ import * as minecraft from "@minecraft/server";
  * @property {number} [healPoolRadius] 治愈池半径
  * @property {boolean} [isSolo] 是否为单挑模式（通常意义上是 8 队模式），单挑模式会影响资源的生成速度和物资售价
  * @property {string[]} [removeItemEntity] 地图将移除物品掉落物的类型
+ * @property {boolean} [playerCouldIntoShop] 玩家是否能够进入商店，若设置为 false 则在玩家接近商人后将玩家传送出去
  */
 
 // TraderInfo 定义商人的位置、朝向、类型和其他基本信息
@@ -41,6 +42,7 @@ import * as minecraft from "@minecraft/server";
  * @property {number} rotation 商人旋转角度，为 0°~360°
  * @property {"item" | "upgrade"} type 商人信息
  * @property {number} [skin] 皮肤 ID
+ * @property {minecraft.Vector3} [teleportNearbyPlayerLocation] 当玩家过于接近商人后，将玩家传送到何处
  */
 
 // TeamIslandInfo 定义队伍岛屿的归属、加载时间等信息
@@ -1971,45 +1973,53 @@ export const mapData = {
                     {
                         type: "item",
                         location: { x: 58, y: 71, z: -45 },
-                        rotation: 180
+                        rotation: 180,
+                        teleportNearbyPlayerLocation: { x: 58, y: 71, z: -48 }
                     },
                     {
                         type: "upgrade",
                         location: { x: 55, y: 71, z: -54 },
-                        rotation: 270
+                        rotation: 270,
+                        teleportNearbyPlayerLocation: { x: 58, y: 71, z: -54 }
                     },
 
                     {
                         type: "item",
                         location: { x: 58, y: 71, z: 45 },
-                        rotation: 0
+                        rotation: 0,
+                        teleportNearbyPlayerLocation: { x: 58, y: 71, z: 48 }
                     },
                     {
                         type: "upgrade",
                         location: { x: 55, y: 71, z: 54 },
-                        rotation: 270
+                        rotation: 270,
+                        teleportNearbyPlayerLocation: { x: 58, y: 71, z: 54 }
                     },
 
                     {
                         type: "item",
                         location: { x: -58, y: 71, z: 45 },
-                        rotation: 0
+                        rotation: 0,
+                        teleportNearbyPlayerLocation: { x: -58, y: 71, z: 48 }
                     },
                     {
                         type: "upgrade",
                         location: { x: -55, y: 71, z: 54 },
-                        rotation: 90
+                        rotation: 90,
+                        teleportNearbyPlayerLocation: { x: -58, y: 71, z: 54 }
                     },
 
                     {
                         type: "item",
                         location: { x: -58, y: 71, z: -45 },
-                        rotation: 180
+                        rotation: 180,
+                        teleportNearbyPlayerLocation: { x: -58, y: 71, z: -48 }
                     },
                     {
                         type: "upgrade",
                         location: { x: -55, y: 71, z: -54 },
-                        rotation: 90
+                        rotation: 90,
+                        teleportNearbyPlayerLocation: { x: -58, y: 71, z: -54 }
                     },
                 ],
                 diamondSpawnerLocation: [
@@ -2025,7 +2035,7 @@ export const mapData = {
                 heightLimitMax: 95,
                 heightLimitMin: 64,
                 healPoolRadius: 21,
-                // playerCouldIntoShop = false; // 禁止玩家进入商店区域 debug
+                playerCouldIntoShop: false,
             },
 
         },
@@ -4979,7 +4989,7 @@ export const trapInformationData = {
 
 // ===== 击杀样式数据 =====
 
-/**
+/** killStyleData
  * @typedef killStyleData
  * @property {string} id 击杀样式的 ID
  * @property {string} name 击杀样式的名称

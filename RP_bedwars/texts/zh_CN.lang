@@ -464,10 +464,10 @@ message.settings.warning.regenerateMapWhenLoading=§c你不能在加载结构时
 message.settings.warning.allModesDisabled=§c你不能将所有模式全部禁用！
 message.killStyle.success=§a你选择了§6%s§a击杀样式
 message.killStyle.scoreboardLost=§c无法使用此设置，因为关键的记分项killStyle已丢失
-message.selectTeam.success=§a你选择了%s队
+message.selectTeam.success=§a你选择了§6%s队
 message.selectTeam.successClearTeam=§a你选择了随机分队，已移除所选的队伍信息
 message.selectTeam.scoreboardLost=§c无法使用此设置，因为关键的记分项selectTeam已丢失
-message.selectTeam.teamIsFull=%s队§c已满！你不能选择这个队伍！
+message.selectTeam.teamIsFull=§6%s队§c已满！你不能选择这个队伍！
 
 ### --- 商店物品消息 ---
 message.bedwars:shopitem_wool=羊毛

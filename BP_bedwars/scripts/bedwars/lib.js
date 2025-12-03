@@ -1273,14 +1273,18 @@ export class JSUtil {
     static timeToString(time, mode = "ShowMinutesAndSeconds") {
 
         /** 时间值 */
-        const { minute, second, tick } = time;
+        let { minute, second, tick } = time;
+        let negative = minute < 0 ? `-` : ``;
+        if (minute) minute = Math.abs(minute);
+        if (second) second = Math.abs(second);
+        if (tick) tick = Math.abs(tick);
 
         /** 秒数字符串，如果为 < 10 的数则显示为 0x（例如 15:03 而非 15:3） */
         const secondString = second < 10 ? `0${second}` : `${second}`;
 
-        if (mode === "ShowAll") return `${minute}:${secondString}.${tick * 5}`;
-        else if (mode === "ShowSecondsAndMilliseconds") return `${secondString}.${tick * 5}`;
-        else return `${minute}:${secondString}`;
+        if (mode === "ShowAll") return `${negative}${minute}:${secondString}.${tick * 5}`;
+        else if (mode === "ShowSecondsAndMilliseconds") return `${negative}${secondString}.${tick * 5}`;
+        else return `${negative}${minute}:${secondString}`;
     };
 
     /** 将单位为游戏刻的时间转换为以秒为单位的时间

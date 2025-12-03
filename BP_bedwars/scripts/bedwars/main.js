@@ -2180,6 +2180,8 @@ class BedwarsClassicMode {
 
         // 注册事件
         this.eventSettings(); // 世界设置事件
+
+        this.entryWaitingStateForOtherMode();
     };
 
     /** 离开等待状态，仅在退出此状态时执行一次 */
@@ -2191,6 +2193,9 @@ class BedwarsClassicMode {
         // 注册下一状态的事件和时间线
         this.entryGamingState();
     };
+
+    /** 其他模式在游戏开始后执行的函数 @abstract */
+    entryWaitingStateForOtherMode() { };
 
     /** 玩家等待状态功能，并且调用此函数时将进行一次检测
      * @param {boolean} showMessage 是否在玩家不足时提醒玩家人数不足
@@ -3989,7 +3994,19 @@ class BedwarsCaptureMode extends BedwarsClassicMode {
     };
 
     /** @override */
+    entryWaitingStateForOtherMode() {
+        this.map.teams.forEach(team => {
+            lib.DimensionUtil.setBlock("overworld", team.bedLocation, "minecraft:air");
+            team.placeBedCapture();
+        });
+    }
+
+    /** @override */
     entryGamingStateForOtherMode() {
+        // 重新注册商店物品
+        this.itemShopitemData = Object.values(data.itemShopitemData).filter(data => data.description.captureModeEnabled != false);
+        this.upgradeShopitemData = Object.values(data.upgradeShopitemData).filter(data => data.description.captureModeEnabled != false);
+        // 玩家放置床事件
         this.eventPlayerPlaceBed();
     };
 
@@ -4127,7 +4144,9 @@ class BedwarsCaptureMode extends BedwarsClassicMode {
         if (this.nextEvent.id) infoboardTexts.push(
             `§f${this.nextEvent.name} - §a${lib.JSUtil.timeToString(lib.JSUtil.secondToMinute(this.nextEvent.countdown))}`,
         );
-        infoboardTexts.push(`${dominantTeamData.id ? `${dominantTeam.getTeamName()}队胜利` : "游戏结束"} - §a${lib.JSUtil.timeToString(lib.JSUtil.secondToMinute(dominantTeamData.countdown))}`);
+        if (dominantTeamData.countdown !== Infinity) infoboardTexts.push(
+            `${dominantTeamData.id ? `${dominantTeam.getTeamName()}队胜利` : "游戏结束"} - §a${lib.JSUtil.timeToString(lib.JSUtil.secondToMinute(dominantTeamData.countdown))}`
+        );
         infoboardTexts.push("");
 
         // 添加队伍信息（备注：目前仅对两队情况有所支持）
@@ -4237,8 +4256,8 @@ class BedwarsCaptureMode extends BedwarsClassicMode {
                             };
                         });
                         // 如果有队伍减到 0 分，则结束游戏
-                        if (scoreData.some(data => data.score === 0)) {
-                            const eliminatedTeams = scoreData.filter(data => data.score === 0).map(data => data.team);
+                        if (scoreData.some(data => data.score <= 0)) {
+                            const eliminatedTeams = scoreData.filter(data => data.score <= 0).map(data => data.team);
                             if (eliminatedTeams.length == this.map.teamCount) this.map.gameOver(); // 如果所有队伍均扣到 0 分，则平局结束游戏
                             else eliminatedTeams.forEach(team => {
                                 team.setEliminated();
@@ -5689,7 +5708,7 @@ class BedwarsMap {
 
     // ===== 夺点模式方法 =====
 
-    /** 获取夺点模式的优势方，并返回优势方要结束游戏的时间
+    /** 获取夺点模式的优势方，以及返回劣势方要结束游戏的时间
      * @captureModeOnly 该方法仅夺点模式可用，其他情况请勿使用
      * @returns {{id: string | undefined, countdown: number}}
      */
@@ -5698,26 +5717,29 @@ class BedwarsMap {
         // 获取各个队伍如果要结束游戏需要多长时间
         // 时间更短的队伍则被视作“优势方”
         const teamData = this.teams.map(team => {
-
             /** 其他队伍拥有的床数 */
             const otherBedAmount = this.getBedCount(team.id).other;
-
             return {
-
-                /** 队伍 ID */
                 id: team.id,
-
-                /** 游戏结束倒计时，单位：秒 */
                 countdown: Math.ceil(team.captureModeData.score / otherBedAmount),
-
             };
-
         });
 
-        // 返回倒计时最小值的那个队伍数据，但如果有多个队伍都是最小值，则队伍变为void 0
-        const minCountdown = teamData.reduce((min, curr) => Math.min(min, curr.countdown), teamData[0].countdown);
-        const minItems = teamData.filter(item => item.countdown === minCountdown);
-        return minItems.length > 1 ? { id: void 0, countdown: minCountdown } : minItems[0];
+        // 尝试返回优势方和结束游戏时间
+        // 1. 如果有多个队伍都是最小值，则队伍改为 void 0 输出
+        const countdown = teamData.map(data => data.countdown);
+        const minCountdown = Math.min(...countdown);
+        const minCountdownTeamData = teamData.filter(data => data.countdown === minCountdown);
+        if (minCountdownTeamData.length > 1) return { id: void 0, countdown: minCountdown };
+        // 2. 返回倒计时最小值的倒计时和倒计时最大值的队伍 ID
+        const maxCountdown = Math.max(...countdown);
+        const maxCountdownTeamData = teamData.find(data => data.countdown === maxCountdown);
+        return {
+            /** 优势方队伍 ID */
+            id: maxCountdownTeamData.id,
+            /** 游戏结束倒计时，单位：秒（可以为 Infinity） */
+            countdown: minCountdown
+        };
 
     };
 
@@ -5944,10 +5966,10 @@ class BedwarsTeam {
      */
     placeBedCapture() {
         this.system.mode.map.validBeds
-            .filter(validBed => validBed.team.id == this.id)
+            .filter(validBed => validBed.team?.id == this.id)
             .forEach(validBed => {
                 // 若没有床，则放置一张床
-                if (lib.DimensionUtil.getBlock(validBed.location)?.typeId == "minecraft:bed") lib.StructureUtil.placeAsync(`beds:${this.id}_bed`, "overworld", validBed.location, { rotation: this.bedRotation });
+                if (lib.DimensionUtil.getBlock("overworld", validBed.location)?.typeId != "minecraft:bed") lib.StructureUtil.placeAsync(`beds:${this.id}_bed`, "overworld", validBed.location, { rotation: this.bedRotation });
             });
     };
 
@@ -6364,7 +6386,7 @@ class BedwarsPlayer {
         this.player.setGameMode("Spectator");
         this.resetAttackedInfo();
         this.magicMilkCountdown = 0;
-        if (this.system.mode.type == "capture" && this.isEliminated) player.sendMessage({ translate: "message.respawnTipWhenHaveBed" }); // 如果玩家在夺点模式已被淘汰，则提醒玩家重新获得一张床即可复活
+        if (this.system.mode.type == "capture" && this.isEliminated) this.player.sendMessage({ translate: "message.respawnTipWhenHaveBed" }); // 如果玩家在夺点模式已被淘汰，则提醒玩家重新获得一张床即可复活
 
     };
 

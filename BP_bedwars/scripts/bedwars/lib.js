@@ -1160,6 +1160,13 @@ export class JSUtil {
         return Math.max(min, Math.min(value, max));
     };
 
+    /** 计算数字数组的和
+     * @param {number[]} values 输入的数字数组
+     */
+    static sum(values) {
+        return Array.isArray(values) ? values.reduce((acc, curr) => acc + curr, 0) : 0;
+    }
+
     /** 限定一个浮点数的位数
      * @param {number} num 待限定的浮点数
      * @param {number} digits 限定位数，必须在[0, 20]范围内

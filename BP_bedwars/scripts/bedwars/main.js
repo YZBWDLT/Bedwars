@@ -66,10 +66,10 @@ class BedwarsSystem {
         if (this.settings.mapEnabled.captureTwoTeamsEnabled) maps = maps.concat(Object.values(data.mapData.capture.TwoTeams));
 
         let map = mapData ?? maps[lib.JSUtil.randomInt(0, maps.length - 1)];
-        if (map.mode == "classic") {
+        if (map.description.mode == "classic") {
             this.mode = new BedwarsClassicMode(this, new BedwarsMap(this, map));
         }
-        else if (map.mode == "capture") {
+        else if (map.description.mode == "capture") {
             this.mode = new BedwarsCaptureMode(this, new BedwarsMap(this, map))
         };
 
@@ -95,7 +95,7 @@ class BedwarsSystem {
     subscribeTimeline(timeline) {
         // 如果有重复的 ID，阻止添加
         if (this.systemTimelines[timeline.typeId] !== undefined) {
-            lib.Debug.sendMessage(`§e/ 添加失败，检查到和${timeline.typeId}重复的时间线`);
+            // lib.Debug.sendMessage(`§e/ 添加失败，检查到和${timeline.typeId}重复的时间线`);
         }
         // 否则，注册一个 runInterval 并添加时间线数据
         else {
@@ -104,7 +104,7 @@ class BedwarsSystem {
             this.systemTimelines[timeline.typeId] = intervals.flatMap(interval => {
                 return minecraft.system.runInterval(interval.callback, interval.tickInterval);
             });
-            lib.Debug.sendMessage(`§a+ 已添加时间线${timeline.typeId}${intervals.length > 1 ? `(+${intervals.length})` : ""}`);
+            // lib.Debug.sendMessage(`§a+ 已添加时间线${timeline.typeId}${intervals.length > 1 ? `(+${intervals.length})` : ""}`);
         };
     };
 
@@ -127,7 +127,7 @@ class BedwarsSystem {
     subscribeEvent(event) {
         // 如果有重复的 ID，阻止添加
         if (this.systemEvents[event.typeId] !== undefined) {
-            lib.Debug.sendMessage(`§e/ 添加失败，检查到和${event.typeId}重复的事件`);
+            // lib.Debug.sendMessage(`§e/ 添加失败，检查到和${event.typeId}重复的事件`);
         }
         // 否则，订阅该事件并添加事件数据
         else {
@@ -138,7 +138,7 @@ class BedwarsSystem {
                 else e.type.subscribe(e.callback);
             });
             this.systemEvents[event.typeId] = events;
-            lib.Debug.sendMessage(`§a+ 已添加事件${event.typeId}${events.length > 1 ? `(+${events.length})` : ""}`);
+            // lib.Debug.sendMessage(`§a+ 已添加事件${event.typeId}${events.length > 1 ? `(+${events.length})` : ""}`);
         };
     };
 
@@ -148,12 +148,12 @@ class BedwarsSystem {
     unsubscribeTimeline(timelineTypeId) {
         let ids = this.systemTimelines[timelineTypeId];
         if (!ids) {
-            lib.Debug.sendMessage(`§e/ 移除失败，未找到时间线${timelineTypeId}`);
+            // lib.Debug.sendMessage(`§e/ 移除失败，未找到时间线${timelineTypeId}`);
         }
         else {
             ids.forEach(id => minecraft.system.clearRun(id));
             delete this.systemTimelines[timelineTypeId];
-            lib.Debug.sendMessage(`§c- 已销毁时间线${timelineTypeId}`);
+            // lib.Debug.sendMessage(`§c- 已销毁时间线${timelineTypeId}`);
         };
     };
 
@@ -163,12 +163,12 @@ class BedwarsSystem {
     unsubscribeEvent(eventTypeId) {
         let events = this.systemEvents[eventTypeId];
         if (!events) {
-            lib.Debug.sendMessage(`§e/ 移除失败，未找到事件${eventTypeId}`);
+            // lib.Debug.sendMessage(`§e/ 移除失败，未找到事件${eventTypeId}`);
         }
         else {
             events.forEach(e => e.type.unsubscribe(e.callback));
             delete this.systemEvents[eventTypeId];
-            lib.Debug.sendMessage(`§c- 已销毁事件${eventTypeId}`);
+            // lib.Debug.sendMessage(`§c- 已销毁事件${eventTypeId}`);
         };
     };
 
@@ -178,7 +178,7 @@ class BedwarsSystem {
             minecraft.system.clearRun(id);
         });
         this.systemTimelines = {};
-        lib.Debug.sendMessage(`§c- 已销毁所有时间线`);
+        // lib.Debug.sendMessage(`§c- 已销毁所有时间线`);
     };
 
     /** 停止所有事件 */
@@ -187,7 +187,7 @@ class BedwarsSystem {
             e.type.unsubscribe(e.callback);
         });
         this.systemEvents = {};
-        lib.Debug.sendMessage(`§c- 已销毁所有事件`);
+        // lib.Debug.sendMessage(`§c- 已销毁所有事件`);
     };
 
     // ===== 常用方法 =====
@@ -901,7 +901,7 @@ class BedwarsSettings {
                             if (system.gameStage == 1) system.warnPlayer(player, { translate: "message.settings.warning.regenerateMapWhenLoading" })
                             else {
                                 const map = system.resetMap();
-                                lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.name}§7（随机生成）`));
+                                lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.description.name}§7（随机生成）`));
                             };
                         },
                     }
@@ -912,7 +912,7 @@ class BedwarsSettings {
             // 两队经典模式启用时，添加两队经典模式的按钮选项
             if (settings.mapEnabled.classicTwoTeamsEnabled) {
                 const twoTeamsMaps = Object.values(data.mapData.classic.TwoTeams);
-                const twoTeamsMapNames = twoTeamsMaps.map(mapData => mapData.name);
+                const twoTeamsMapNames = twoTeamsMaps.map(mapData => mapData.description.name);
                 components.push(
                     {
                         type: "button",
@@ -934,7 +934,7 @@ class BedwarsSettings {
                                 onSubmitted: {
                                     callback: (result) => {
                                         const map = system.resetMap(twoTeamsMaps[result[4]]);
-                                        lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.name}`));
+                                        lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.description.name}`));
                                     },
                                 },
                             },
@@ -947,7 +947,7 @@ class BedwarsSettings {
             // 四队经典模式启用时，添加四队经典模式的按钮选项
             if (settings.mapEnabled.classicFourTeamsEnabled) {
                 const fourTeamsMaps = Object.values(data.mapData.classic.FourTeams);
-                const fourTeamsMapNames = fourTeamsMaps.map(mapData => mapData.name);
+                const fourTeamsMapNames = fourTeamsMaps.map(mapData => mapData.description.name);
                 components.push(
                     {
                         type: "button",
@@ -969,7 +969,7 @@ class BedwarsSettings {
                                 onSubmitted: {
                                     callback: (result) => {
                                         const map = system.resetMap(fourTeamsMaps[result[4]]);
-                                        lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.name}`));
+                                        lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.description.name}`));
                                     },
                                 },
                             },
@@ -982,7 +982,7 @@ class BedwarsSettings {
             // 八队经典模式启用时，添加八队经典模式的按钮选项
             if (settings.mapEnabled.classicEightTeamsEnabled) {
                 const eightTeamsMaps = Object.values(data.mapData.classic.EightTeams);
-                const eightTeamsMapNames = eightTeamsMaps.map(mapData => mapData.name);
+                const eightTeamsMapNames = eightTeamsMaps.map(mapData => mapData.description.name);
                 components.push(
                     {
                         type: "button",
@@ -1004,7 +1004,7 @@ class BedwarsSettings {
                                 onSubmitted: {
                                     callback: (result) => {
                                         const map = system.resetMap(eightTeamsMaps[result[4]]);
-                                        lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.name}`));
+                                        lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.description.name}`));
                                     },
                                 },
                             },
@@ -1017,7 +1017,7 @@ class BedwarsSettings {
             // 两队夺点模式启用时，添加两队夺点模式的按钮选项
             if (settings.mapEnabled.captureTwoTeamsEnabled) {
                 const maps = Object.values(data.mapData.capture.TwoTeams);
-                const mapNames = maps.map(mapData => mapData.name);
+                const mapNames = maps.map(mapData => mapData.description.name);
                 components.push(
                     {
                         type: "button",
@@ -1039,7 +1039,7 @@ class BedwarsSettings {
                                 onSubmitted: {
                                     callback: (result) => {
                                         const map = system.resetMap(maps[result[4]]);
-                                        lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.name}`));
+                                        lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.description.name}`));
                                     },
                                 },
                             },
@@ -2115,7 +2115,9 @@ class BedwarsClassicMode {
 
             // 加载普通岛屿
             for (const island of this.map.islands) {
-                await lib.StructureUtil.placeAsync(`${this.map.id}:${island.structureName}`, "overworld", island.location, { animationMode: "Layers", animationSeconds: island.loadTime / this.map.getStructureLoadSpeed(), rotation: island.rotation, mirror: island.mirror });
+                for (const islandData of island.islandData) {
+                    await lib.StructureUtil.placeAsync(`${this.map.id}:${island.id}`, "overworld", islandData.location, { animationMode: minecraft.StructureAnimationMode.Layers, animationSeconds: island.loadTime / this.map.getStructureLoadSpeed(), rotation: islandData.rotation, mirror: islandData.mirror});
+                }
             }
 
             // 加载床
@@ -4807,12 +4809,12 @@ class BedwarsTrader {
     /** 当玩家过于接近商人后，将玩家传送到何处 @type {minecraft.Vector3 | undefined} */
     teleportNearbyPlayerLocation;
 
-    /** 原始数据 @type {data.TraderInfo} */
+    /** 原始数据 @type {data.TraderData} */
     info;
 
     /**
      * @param {BedwarsSystem} system
-     * @param {data.TraderInfo} info
+     * @param {data.TraderData} info
      */
     constructor(system, info) {
         this.system = system;
@@ -4870,8 +4872,8 @@ class BedwarsTrader {
         playerInfo.lockAllItems();
 
         // 重新召唤 NPC
-        const newTraderInfo = this.system.mode.map.addTrader({ ...this.info, skin: this.skin });
-        const newTrader = newTraderInfo.spawn();
+        const newTraderData = this.system.mode.map.addTrader({ ...this.info, skin: this.skin });
+        const newTrader = newTraderData.spawn();
         newTrader.setRotation(this.trader.getRotation());
 
         // 设置 NPC 的物品
@@ -4936,7 +4938,7 @@ class BedwarsItemTrader extends BedwarsTrader {
 
     /**
      * @param {BedwarsSystem} system
-     * @param {data.TraderInfo} info
+     * @param {data.TraderData} info
      */
     constructor(system, info) {
         super(system, info);
@@ -5050,7 +5052,7 @@ class BedwarsUpgradeTrader extends BedwarsTrader {
 
     /**
      * @param {BedwarsSystem} system
-     * @param {data.TraderInfo} info
+     * @param {data.TraderData} info
      */
     constructor(system, info) {
         super(system, info);
@@ -5245,10 +5247,20 @@ class BedwarsMap {
     /** 正在进行交易的商人信息 @type {(BedwarsItemTrader | BedwarsUpgradeTrader)[]} */
     tradingTraders = [];
 
-    /** 队伍岛屿信息 @type {data.TeamIslandInfo[]} */
+    /** debug
+     * @typedef TeamIslandInfo
+     * @property {data.ValidTeams} teamId 队伍 ID，决定生成何种颜色的羊毛
+     * @property {minecraft.Vector3} location 岛屿结构加载位置
+     * @property {number} loadTime 加载结构所需时间，单位：秒
+     * @property {minecraft.Vector3} [flagLocationFrom] 旗帜位置起始点
+     * @property {minecraft.Vector3} [flagLocationTo] 旗帜位置终止点
+     * @property {minecraft.StructureMirrorAxis} [mirror] 岛屿是否镜像加载
+     * @property {minecraft.StructureRotation} [rotation] 岛屿是否镜像加载
+     */
+    /** 队伍岛屿信息 @type {TeamIslandInfo[]} */
     teamIslands = [];
 
-    /** 其他岛屿信息 @type {data.IslandInfo[]} */
+    /** 其他岛屿信息 @type {data.BedwarsIslandComponent[]} */
     islands = [];
 
     /** 最高高度限制，在高于此高度的位置放置方块会阻止 */
@@ -5320,41 +5332,72 @@ class BedwarsMap {
      */
     constructor(system, info) {
         this.system = system;
-        this.id = info.id;
-        this.name = info.name;
-        this.mode = info.mode;
-        info.teams.forEach(team => this.addTeam(team));
-        this.teamIslands = info.teamIslands;
-        this.islands = info.islands;
-        info.traders.forEach(traderData => this.addTrader(traderData));
-        info.diamondSpawnerLocation.forEach(location => this.addDiamondSpawner(location));
-        info.emeraldSpawnerLocation.forEach(location => this.addEmeraldSpawner(location));
-        if (info.ironSpawnTimes) this.ironSpawnTimes = info.ironSpawnTimes;
-        if (info.distributeResource !== undefined) this.distributeResource = info.distributeResource;
-        if (info.clearVelocity !== undefined) this.clearVelocity = info.clearVelocity;
-        if (info.healPoolRadius) this.healPoolRadius = info.healPoolRadius;
-        if (info.isSolo) this.isSolo = info.isSolo;
-        if (info.playerCouldIntoShop !== undefined) this.playerCouldIntoShop = info.playerCouldIntoShop;
-        if (info.components?.capture) {
-            this.validBeds = info.components.capture.validBeds.map(validBedData => {
-                const team = this.teams.find(t => t.id == validBedData.teamId)
-                return {
-                    location: validBedData.location,
-                    team: team,
-                }
-            });
-            this.teams.forEach(team => team.captureModeData.score = info.components.capture.score);
-        };
 
-        // 高度限制
-        if (info.heightLimitMax) this.heightLimitMax = info.heightLimitMax;
-        if (info.heightLimitMin) this.heightLimitMin = info.heightLimitMin;
+        // ===== 描述解析 =====
+
+        const description = info.description;
+        this.id = description.id;
+        this.name = description.name;
+        this.mode = description.mode;
+        this.isSolo = description.isSolo ?? false;
+
+        // ===== 组件解析 =====
+
+        // 资源组件
+        const resourceComponent = info.components.resource;
+        resourceComponent.diamondSpawnerLocation.forEach(location => this.addDiamondSpawner(location));
+        resourceComponent.emeraldSpawnerLocation.forEach(location => this.addEmeraldSpawner(location));
+        this.clearVelocity = resourceComponent.clearVelocity ?? true;
+        this.ironSpawnTimes = resourceComponent.ironSpawnTimes ?? 5;
+        this.distributeResource = resourceComponent.distributeResource ?? true;
+
+        // 队伍组件，添加队伍、商人、队伍岛屿信息等
+        const teamComponent = info.components.team;
+        teamComponent.teamData.forEach(data => {
+            this.addTeam(data);
+            data.trader.forEach(t => this.addTrader(t));
+        });
+        this.teamIslands = teamComponent.teamData.map(data => {
+            return {
+                teamId: data.id,
+                location: data.island.location,
+                mirror: data.island.mirror,
+                rotation: data.island.rotation,
+                loadTime: teamComponent.islandLoadTime,
+                flagLocationFrom: data.flagLocation?.from,
+                flagLocationTo: data.flagLocation?.to,
+            };
+        });
+        this.playerCouldIntoShop = teamComponent.playerCouldIntoShop ?? true;
+        this.healPoolRadius = teamComponent.healPoolRadius ?? 20;
+
+        // 非队伍岛屿组件
+        const islandComponent = info.components.island;
+        this.islands = islandComponent;
+
+        // 大小组件
+        const sizeComponent = info.components.size;
+        this.size.x = sizeComponent?.sizeX ?? 105;
+        this.size.z = sizeComponent?.sizeZ ?? 105;
+        this.heightLimitMax = sizeComponent?.heightLimitMax ?? 110;
+        this.heightLimitMin = sizeComponent?.heightLimitMin ?? 50;
         this.spawnpoint = { x: 0, y: this.heightLimitMax + 7, z: 0 };
 
-        // 将要移除的物品掉落物
-        if (info.removeItemEntity) this.removeItemEntity.push(...info.removeItemEntity);
+        // 移除物品组件
+        if (info.components.removeItemEntity) this.removeItemEntity.push(...info.components.removeItemEntity);
 
-        // 注册安全区位置
+        // 夺点模式组件
+        const captureComponent = info.components.capture
+        if (captureComponent) {
+            this.validBeds = captureComponent.validBeds.map(validBedData => {
+                const team = this.teams.find(t => t.id == validBedData.teamId)
+                return { location: validBedData.location, team: team, }
+            });
+            this.teams.forEach(team => team.captureModeData.score = captureComponent.score);
+        };
+
+        // ===== 注册安全区位置 =====
+
         this.safeAreaLocation.spawnpoint = this.teams.flatMap(team => team.spawnpointLocation);
         this.safeAreaLocation.trader = this.traders.flatMap(trader => trader.location);
         this.safeAreaLocation.teamResource = this.teams.flatMap(team => team.resourceLocation);
@@ -5363,7 +5406,7 @@ class BedwarsMap {
     };
 
     /** 为地图添加队伍
-     * @param {data.BedwarsTeamInfo} teamInfo 
+     * @param {data.TeamData} teamInfo 
      */
     addTeam(teamInfo) {
         let team = new BedwarsTeam(this.system, this, teamInfo);
@@ -5413,7 +5456,10 @@ class BedwarsMap {
 
     /** 获取地图结构加载完成需要的时间 */
     getStructureLoadTime() {
-        return Math.ceil(this.teamIslands.reduce((sum, info) => sum + info.loadTime / this.getStructureLoadSpeed(), 0) + this.islands.reduce((sum, info) => sum + info.loadTime / this.getStructureLoadSpeed(), 0));
+        const teamIslandLoadTime = this.teamIslands[0].loadTime * this.teamIslands.length;
+        const islandLoadTime = lib.JSUtil.sum(this.islands.map(data => data.loadTime * data.islandData.length));
+        const realLoadTime = (teamIslandLoadTime + islandLoadTime) / this.getStructureLoadSpeed();
+        return Math.ceil(realLoadTime);
     };
 
     /** 获取结构加载速度 */
@@ -5627,22 +5673,22 @@ class BedwarsMap {
     // ===== 商人信息操作 =====
 
     /** 添加商人
-     * @param {data.TraderInfo} traderInfo 
+     * @param {data.TraderData} traderData 
      */
-    addTrader(traderInfo) {
-        const traderData = (() => {
-            if (traderInfo.type == "item") return new BedwarsItemTrader(this.system, traderInfo);
-            else return new BedwarsUpgradeTrader(this.system, traderInfo);
+    addTrader(traderData) {
+        const traderDataObject = (() => {
+            if (traderData.type == "item") return new BedwarsItemTrader(this.system, traderData);
+            else return new BedwarsUpgradeTrader(this.system, traderData);
         })()
-        this.traders.push(traderData);
-        return traderData;
+        this.traders.push(traderDataObject);
+        return traderDataObject;
     };
 
     /** 添加交易中的商人
-     * @param {BedwarsItemTrader} traderInfo
+     * @param {BedwarsItemTrader} traderData
      */
-    addTradingTrader(traderInfo) {
-        this.tradingTraders.push(traderInfo);
+    addTradingTrader(traderData) {
+        this.tradingTraders.push(traderData);
     };
 
     /** 从商人 ID 获取起床战争商人信息
@@ -5808,8 +5854,8 @@ class BedwarsTeam {
     /** 床的位置 @type {minecraft.Vector3} */
     bedLocation = { x: 0, y: 0, z: 0 };
 
-    /** 床的旋转 @type {"None"|"Rotate90"|"Rotate180"|"Rotate270"} */
-    bedRotation = "None";
+    /** 床的旋转 @type {minecraft.StructureRotation} */
+    bedRotation = minecraft.StructureRotation.None;
 
     /** 资源点的位置，若为分散式生成资源应选取中心点 @type {minecraft.Vector3} */
     resourceLocation = { x: 0, y: 0, z: 0 };
@@ -5908,17 +5954,13 @@ class BedwarsTeam {
 
     };
 
-    /** 
-     * @param {BedwarsSystem} system 
-     * @param {BedwarsMap} map
-     * @param {data.BedwarsTeamInfo} info
-     */
+    /** @param {BedwarsSystem} system @param {BedwarsMap} map @param {data.TeamData} info */
     constructor(system, map, info) {
         this.system = system;
         this.map = map;
         this.id = info.id;
-        this.bedLocation = info.bedLocation;
-        if (info.bedRotation) this.bedRotation = info.bedRotation;
+        this.bedLocation = info.bed.location;
+        this.bedRotation = info.bed.rotation ?? minecraft.StructureRotation.None;
         this.resourceLocation = lib.Vector3Util.center(info.resourceLocation);
         this.spawnpointLocation = lib.Vector3Util.center(info.spawnpointLocation);
         this.chestLocation = info.chestLocation;
@@ -6638,7 +6680,7 @@ minecraft.world.afterEvents.worldLoad.subscribe(() => {
 // ===== 待办事项 =====
 
 // debug
-// 1. 在完成后移除所有 lib.Debug 函数和 debug 标记
+// 1. 在完成后移除所有 // lib.Debug 函数和 debug 标记
 // 4. 在物品购买后再添加对应事件，包括物品和陷阱
 // 7. 检查玩家接近钻石点和绿宝石点不灵敏，1 秒间隔还是太长（仍需验证）
 // 9. 检查一些 unsubscribe，检查时可以用 .some

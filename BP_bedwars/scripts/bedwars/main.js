@@ -63,10 +63,14 @@ class BedwarsSystem {
         if (this.settings.mapEnabled.classicTwoTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.TwoTeams));
         if (this.settings.mapEnabled.classicFourTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.FourTeams));
         if (this.settings.mapEnabled.classicEightTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.EightTeams));
+        if (this.settings.mapEnabled.captureTwoTeamsEnabled) maps = maps.concat(Object.values(data.mapData.capture.TwoTeams));
 
         let map = mapData ?? maps[lib.JSUtil.randomInt(0, maps.length - 1)];
         if (map.mode == "classic") {
             this.mode = new BedwarsClassicMode(this, new BedwarsMap(this, map));
+        }
+        else if (map.mode == "capture") {
+            this.mode = new BedwarsCaptureMode(this, new BedwarsMap(this, map))
         };
 
         return map;
@@ -1010,6 +1014,41 @@ class BedwarsSettings {
                 );
             }
 
+            // 两队夺点模式启用时，添加两队夺点模式的按钮选项
+            if (settings.mapEnabled.captureTwoTeamsEnabled) {
+                const maps = Object.values(data.mapData.capture.TwoTeams);
+                const mapNames = maps.map(mapData => mapData.name);
+                components.push(
+                    {
+                        type: "button",
+                        text: "生成 2 队夺点地图",
+                        onSelected: {
+                            openChildForm: true,
+                            childForm: {
+                                type: "modal",
+                                components: [
+                                    { type: "header", text: "生成 2 队夺点地图", },
+                                    { type: "label", text: "立刻生成一张 2 队夺点模式的地图。", },
+                                    { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                                    { type: "divider", },
+                                    { type: "dropdown", text: "地图", items: mapNames, default: 0 }
+                                ],
+                                onCanceled: {
+                                    openParentForm: true,
+                                },
+                                onSubmitted: {
+                                    callback: (result) => {
+                                        const map = system.resetMap(maps[result[4]]);
+                                        lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.name}`));
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    { type: "label", text: "§7在所有 2 队夺点模式的地图中选择一张生成。" },
+                );
+            }
+
             lib.UIUtil.createAction(
                 {
                     type: "action",
@@ -1628,7 +1667,11 @@ class BedwarsClassicMode {
 
     };
 
-    // ===== 通用事件与时间线 =====
+    // ====================
+    //
+    // 通用事件与时间线
+    //
+    // ====================
 
     /** 全局通用时间线与事件，包括添加饱和药效、禁止破坏方块
      * @add 全局生效，在进入一个新阶段后就尝试添加
@@ -1838,10 +1881,10 @@ class BedwarsClassicMode {
         if (!playerInfo) return;
 
         /** 玩家所在的队伍 */
-        let playerTeam = playerInfo.team;
+        const playerTeam = playerInfo.team;
 
         /** 信息板文本 */
-        let infoboardTexts = [
+        const infoboardTexts = [
             "§l§e       起床战争§r       ",
             `§8${this.map.teamCount}队${this.name}模式 ${this.system.gameId}`,
             "",
@@ -1870,7 +1913,7 @@ class BedwarsClassicMode {
         );
 
         // 如果玩家是旁观玩家，则显示旁观信息
-        if (!playerInfo.team) infoboardTexts.push(
+        if (!playerTeam) infoboardTexts.push(
             "§f您当前为旁观者",
             ""
         );
@@ -1900,7 +1943,11 @@ class BedwarsClassicMode {
 
     };
 
-    // ===== 清空地图状态 =====
+    // ====================
+    //
+    // 清空地图状态
+    //
+    // ====================
 
     /** 进入清空地图状态，仅在进入此状态时执行一次 */
     entryClearMapState() {
@@ -2033,7 +2080,11 @@ class BedwarsClassicMode {
         };
     };
 
-    // ===== 生成地图状态 =====
+    // ====================
+    //
+    // 生成地图状态
+    //
+    // ====================
 
     /** 进入生成地图状态，仅在进入此状态时执行一次 */
     entryGenerateMapState() {
@@ -2111,7 +2162,11 @@ class BedwarsClassicMode {
         this.entryWaitingState();
     };
 
-    // ===== 等待状态 =====
+    // ====================
+    //
+    // 等待状态
+    //
+    // ====================
 
     /** 进入等待状态，仅在进入此状态时执行一次 */
     entryWaitingState() {
@@ -2212,7 +2267,11 @@ class BedwarsClassicMode {
         timelineController();
     };
 
-    // ===== 游戏状态 =====
+    // ====================
+    //
+    // 游戏状态
+    //
+    // ====================
 
     /** 进入游戏状态，仅在进入此状态时执行一次 */
     entryGamingState() {
@@ -2310,6 +2369,8 @@ class BedwarsClassicMode {
         this.timelineGameEvent(); // 游戏事件时间线
         if (this.map.playerCouldIntoShop === false) this.timelineStopPlayerIntoShop(); // 阻止玩家进入商店的时间线
 
+        this.entryGamingStateForOtherMode();
+
     };
 
     /** 离开游戏状态，仅在退出此状态时执行一次
@@ -2326,6 +2387,9 @@ class BedwarsClassicMode {
         // 移除所有的末影龙
         lib.EntityUtil.get("minecraft:ender_dragon").forEach(dragon => dragon.kill());
     };
+
+    /** 其他模式在游戏开始后执行的函数 @abstract */
+    entryGamingStateForOtherMode() { };
 
     // 游戏主体逻辑
 
@@ -2496,48 +2560,38 @@ class BedwarsClassicMode {
                 type: minecraft.world.afterEvents.playerBreakBlock,
                 /** @type {function(minecraft.PlayerBreakBlockAfterEvent): void} */
                 callback: event => {
-
+                    // 清除掉落物
+                    lib.ItemUtil.removeItemEntity("minecraft:bed");
+                    // 检查哪队的床被破坏了，如果没有队伍则直接终止运行
+                    const team = this.map.teams.find(team => team.bedIsExist && lib.DimensionUtil.getBlock("overworld", team.bedLocation).typeId == "minecraft:air");
+                    if (!team) return;
                     // 获取破坏者及其起床战争信息
                     const breaker = event.player;
                     const breakerData = this.map.getBedwarsPlayer(breaker);
-
-                    // 检查哪队的床被破坏了
-                    const team = this.map.teams.find(team => team.bedIsExist && minecraft.world.getDimension("overworld").getBlock(team.bedLocation).typeId == "minecraft:air");
-
-                    // 清除掉落物
-                    lib.ItemUtil.removeItemEntity("minecraft:bed");
-
-                    // 如果是杂床（不是队伍的床）则直接跳过
-                    if (!team) null;
-                    // 如果是杂玩家、旁观玩家，则还原床，警告无权限破坏床
-                    else if (!breakerData || !breakerData.team) {
+                    // 在玩家破坏床后，按照以下几种情况讨论：
+                    // 1. 如果是杂玩家、旁观玩家，则还原床，警告无权限破坏床
+                    if (!breakerData || !breakerData.team) {
                         this.system.warnPlayer(breaker, { translate: "message.invalidPlayer.breakingBed" });
                         team.placeBed();
+                        return;
                     }
-                    // 如果是自家玩家，则还原床，警告不能破坏自家床
-                    else if (breakerData.team.id == team.id) {
+                    // 2. 如果是自家玩家，则还原床，警告不能破坏自家床
+                    if (breakerData.team.id == team.id) {
                         this.system.warnPlayer(breaker, { translate: "message.selfTeamPlayer.breakingBed" });
                         team.placeBed();
+                        return;
                     }
-                    // 否则，床被破坏
-                    else {
-
-                        // 更新床的状态
-                        team.bedIsExist = false;
-
-                        // 如果该队伍在破坏床后已经没有存活玩家，则直接淘汰
-                        if (team.alivePlayers.length == 0) team.setEliminated();
-
-                        // 为破坏者添加床破坏数
-                        breakerData.destroyBedCount++;
-
-                        // 播报床被破坏
-                        this.map.informBedDestroyed(team, breakerData);
-
-                        // 如果所有队伍的床都被摧毁，销毁事件
-                        if (!this.map.teams.some(otherTeam => otherTeam.bedIsExist)) this.system.unsubscribeEvent("playerBreakBed");
-
-                    };
+                    // 3. 否则，为别队玩家破坏了床，认定床被破坏：
+                    // (1) 更新床的状态
+                    team.bedIsExist = false;
+                    // (2) 为破坏者添加床破坏数
+                    breakerData.destroyBedCount++;
+                    // (3) 播报床被破坏
+                    this.map.informBedDestroyed(team, breakerData);
+                    // (4) 如果该队伍在破坏床后已经没有存活玩家，则直接淘汰
+                    if (team.alivePlayers.length == 0) team.setEliminated();
+                    // (5) 如果所有队伍的床都被摧毁，销毁事件
+                    if (!this.map.teams.some(t => t.bedIsExist)) this.system.unsubscribeEvent("playerBreakBed");
                 },
                 /** @type {minecraft.BlockEventOptions} */
                 options: {
@@ -3847,7 +3901,11 @@ class BedwarsClassicMode {
         });
     };
 
-    // ===== 结束状态 =====
+    // ====================
+    //
+    // 结束状态
+    //
+    // ====================
 
     /** 进入结束状态，仅在进入此状态时执行一次 */
     entryGameOverState() {
@@ -3905,8 +3963,293 @@ class BedwarsCaptureMode extends BedwarsClassicMode {
     /** 系统类型 */
     type = "capture";
 
-    constructor() {
-        super();
+    /** 模式名称 */
+    name = "夺点";
+
+    /** 下一个事件 */
+    nextEvent = {
+
+        /** 下一个事件的 ID @type {"diamond_2"|"emerald_2"|"diamond_3"|"emerald_3"|undefined} */
+        id: "diamond_2",
+
+        /** 下一个事件的倒计时，单位：秒 */
+        countdown: 240,
+
+        /** 下一个事件的名称 @type {"钻石生成点 II 级"|"绿宝石生成点 II 级"|"钻石生成点 III 级"|"绿宝石生成点 III 级"|undefined} */
+        name: "钻石生成点 II 级",
+
+    };
+
+    /**
+     * @param {BedwarsSystem} system 
+     * @param {BedwarsMap} map 
+     */
+    constructor(system, map) {
+        super(system, map);
+    };
+
+    /** @override */
+    entryGamingStateForOtherMode() {
+        this.eventPlayerPlaceBed();
+    };
+
+    /** 玩家放置床
+     * @add 在游戏开始时添加
+     */
+    eventPlayerPlaceBed() {
+        this.system.subscribeEvent({
+            typeId: "playerPlaceBed",
+            event: {
+                type: minecraft.world.afterEvents.playerInteractWithBlock,
+                /** @type {function(minecraft.PlayerInteractWithBlockAfterEvent): void} */
+                callback: event => {
+                    // 检查玩家是否有起床战争信息（并且必须有合适的队伍），如果没有则直接终止程序
+                    const player = event.player;
+                    const playerData = this.map.getBedwarsPlayer(player);
+                    if (!playerData) return;
+                    if (!playerData.team) return;
+                    const team = playerData.team;
+                    // 检查是否使用了床，如果没有则直接终止程序
+                    const validBedIds = ["bedwars:red_bed", "bedwars:blue_bed"];
+                    if (!validBedIds.includes(event.beforeItemStack.typeId)) return;
+                    // 检查使用床的点位（必须是未经占用的点位），如果找不到则直接终止程序（不过一般情况下都能找到）
+                    const placeLocation = lib.DimensionUtil.getPlaceLocation(event.block, event.blockFace);
+                    const bedData = this.map.validBeds
+                        .filter(validBed => !validBed.team)
+                        .find(validBed => lib.Vector3Util.distance(validBed.location, placeLocation) <= 2);
+                    if (!bedData) return;
+                    // 找到床后：
+                    // 1. 将该床标记为该队伍的床
+                    bedData.team = team;
+                    // 2. 替换附近羊毛、染色硬化粘土、防爆玻璃的颜色为自己队伍的颜色
+                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), ["minecraft:white_wool"], `minecraft:${team.id}_wool`);
+                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), ["bedwars:white_wool"], `bedwars:${team.id}_wool`);
+                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), ["bedwars:white_stained_hardened_clay"], `bedwars:${team.id}_stained_hardened_clay`);
+                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), ["bedwars:white_blast_proof_glass"], `bedwars:${team.id}_blast_proof_glass`);
+                    // 3. 重新放置一张床
+                    team.placeBedCapture();
+                    // 4. 通报其他队伍，该队伍获得了一张床，以及当前床的总数
+                    const bedCount = this.map.getBedCount(team.id).this;
+                    minecraft.world.sendMessage({ translate: "message.capture.bedCaptured", with: { rawtext: [{ translate: `team.${team.id}` }, { text: `${bedCount}` }] } });
+                    // 5. 如果该队伍在获得床后是该队伍的唯一一张床，则尝试重生该队伍的全体成员
+                    if (bedCount == 1) {
+                        minecraft.world.sendMessage({ translate: `message.respawn.newBed` });
+                        team.alivePlayers = team.players;
+                        team.bedIsExist = true;
+                        team.players.filter(p => p.isEliminated).forEach(p => {
+                            p.respawnTime = this.system.settings.gaming.respawnTime.normalPlayers;
+                            p.isEliminated = false;
+                        });
+                        this.timelinePlayerRespawn();
+                    };
+                },
+            }
+        });
+    };
+
+    /** @override */
+    eventPlayerBreakBed() {
+        this.system.subscribeEvent({
+            typeId: "playerBreakBed",
+            event: {
+                type: minecraft.world.afterEvents.playerBreakBlock,
+                /** @type {function(minecraft.PlayerBreakBlockAfterEvent): void} */
+                callback: event => {
+                    // 清除掉落物
+                    lib.ItemUtil.removeItemEntity("minecraft:bed");
+                    // 检查哪队的床被破坏了，如果没有队伍则直接终止运行
+                    const breakLocation = event.block.location;
+                    const bedData = this.map.validBeds.find(validBed => lib.Vector3Util.distance(validBed.location, breakLocation) <= 2);
+                    if (!bedData.team) return;
+                    const team = bedData.team;
+                    // 获取破坏者及其起床战争信息
+                    const breaker = event.player;
+                    const breakerData = this.map.getBedwarsPlayer(breaker);
+                    // 在玩家破坏床后，按照以下几种情况讨论：
+                    // 1. 如果是杂玩家、旁观玩家，则还原床，警告无权限破坏床
+                    if (!breakerData || !breakerData.team) {
+                        this.system.warnPlayer(breaker, { translate: "message.invalidPlayer.breakingBed" });
+                        team.placeBedCapture();
+                        return;
+                    }
+                    // 2. 如果是自家玩家，则还原床，警告不能破坏自家床
+                    if (breakerData.team.id == team.id) {
+                        this.system.warnPlayer(breaker, { translate: "message.selfTeamPlayer.breakingBed" });
+                        team.placeBedCapture();
+                        return;
+                    }
+                    // 3. 否则，为别队玩家破坏了床，认定床被破坏：
+                    // (1) 更新床的状态
+                    bedData.team = void 0;
+                    // (2) 替换附近羊毛、染色硬化粘土、防爆玻璃的颜色为自己队伍的颜色
+                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), [`minecraft:${team.id}_wool`], "minecraft:white_wool");
+                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), [`bedwars:${team.id}_wool`], "bedwars:white_wool");
+                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), [`bedwars:${team.id}_stained_hardened_clay`], "bedwars:white_stained_hardened_clay");
+                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), [`bedwars:${team.id}_blast_proof_glass`], "bedwars:white_blast_proof_glass");
+                    // (3) 播报该队伍没有床
+                    const bedCount = this.map.getBedCount(team.id).this;
+                    minecraft.world.sendMessage({ translate: "message.capture.bedDestroyed", with: { rawtext: [{ translate: `team.${team.id}` }, { text: `${bedCount}` }] } });
+                    // (4) 如果床的数量为 0 则认定没有床
+                    if (bedCount == 0) {
+                        team.bedIsExist = false;
+                        this.map.informBedDestroyedCapture(team);
+                    }
+                    // (5) 如果该队伍在破坏床后已经没有存活玩家，则直接淘汰
+                    if (team.alivePlayers.length == 0) team.setEliminated();
+                },
+                /** @type {minecraft.BlockEventOptions} */
+                options: {
+                    blockTypes: ["minecraft:bed"],
+                },
+            },
+        });
+    };
+
+    /** @override @param {minecraft.Player} player @param {BedwarsPlayer} playerInfo */
+    gamingInfoboard(player, playerInfo) {
+
+        // 如果玩家没有起床战争信息，直接跳过之
+        if (!playerInfo) return;
+
+        /** 玩家所在的队伍 */
+        const playerTeam = playerInfo.team;
+
+        /** 信息板文本 */
+        const infoboardTexts = [
+            "§l§e       起床战争§r       ",
+            `§8${this.map.teamCount}队${this.name}模式 ${this.system.gameId}`,
+            "",
+        ];
+
+        // 添加事件信息
+        const dominantTeamData = this.map.getDominantTeam();
+        const dominantTeam = this.map.teams.find(team => team.id == dominantTeamData.id);
+        if (this.nextEvent.id) infoboardTexts.push(
+            `§f${this.nextEvent.name} - §a${lib.JSUtil.timeToString(lib.JSUtil.secondToMinute(this.nextEvent.countdown))}`,
+        );
+        infoboardTexts.push(`${dominantTeamData.id ? `${dominantTeam.getTeamName()}队胜利` : "游戏结束"} - §a${lib.JSUtil.timeToString(lib.JSUtil.secondToMinute(dominantTeamData.countdown))}`);
+        infoboardTexts.push("");
+
+        // 添加队伍信息（备注：目前仅对两队情况有所支持）
+        const team1 = this.map.teams[0];
+        const team2 = this.map.teams[1];
+        const bedAmountIndicator = (() => {
+            let result = ``;
+            const team1BedAmount = this.map.getBedCount(team1.id).this;
+            const team2BedAmount = this.map.getBedCount(team2.id).this;
+            const emptyBedAmount = 5 - team1BedAmount - team2BedAmount;
+            for (let i = 0; i < team1BedAmount; i++) result += `${team1.getTeamColor()}⬢`;
+            for (let i = 0; i < emptyBedAmount; i++) result += `§f⬡`;
+            for (let i = 0; i < team2BedAmount; i++) result += `${team2.getTeamColor()}⬢`;
+            return result;
+        })();
+        infoboardTexts.push(`${team1.getTeamNameWithColor()} ${bedAmountIndicator} ${team2.getTeamNameWithColor()}`);
+        infoboardTexts.push("");
+        this.map.teams.forEach(team => {
+            const playerInTeam = playerTeam?.id == team.id ? "§7（你）" : "";
+            const teamState = (() => {
+                if (this.map.getBedCount(team.id).this > 0) return "§a✔";
+                else if (team.alivePlayers.length > 0) return `§a${team.alivePlayers.length}`;
+                else return "§c✘";
+            })();
+            infoboardTexts.push(`${team.getTeamNameWithColor()} §f${team.getTeamName()}队： ${teamState} §f${team.captureModeData.score} §7-${this.map.getBedCount(team.id).other}§r ${playerInTeam}`)
+        });
+        infoboardTexts.push("");
+
+        // 添加击杀数信息或旁观者信息
+        if (playerTeam) infoboardTexts.push(`§f击杀数： §a${playerInfo.killCount}`)
+        else infoboardTexts.push("§f您当前为旁观者");
+        infoboardTexts.push("")
+
+        // 添加作者信息
+        infoboardTexts.push("§e一只卑微的量筒");
+
+        player.onScreenDisplay.setActionBar(infoboardTexts.join("§r\n"));
+
+    };
+
+    /** @override */
+    timelineGameEvent() {
+        this.system.subscribeTimeline({
+            typeId: "gameEvent",
+            interval: [
+                // 常规游戏事件
+                {
+                    callback: () => {
+                        this.nextEvent.countdown--;
+                        if (this.nextEvent.countdown <= 0) {
+                            switch (this.nextEvent.id) {
+                                case "diamond_2":
+                                    // 更新下一个游戏事件
+                                    this.nextEvent.id = "emerald_2";
+                                    this.nextEvent.name = "绿宝石生成点 II 级";
+                                    // 更新钻石生成点的等级
+                                    this.map.diamondSpawnerInfo.level = 2;
+                                    this.map.diamondSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cII`);
+                                    minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier2" });
+                                    break;
+                                case "emerald_2":
+                                    // 更新下一个游戏事件
+                                    this.nextEvent.id = "diamond_3";
+                                    this.nextEvent.name = "钻石生成点 III 级";
+                                    // 更新绿宝石生成点的等级
+                                    this.map.emeraldSpawnerInfo.level = 2;
+                                    this.map.emeraldSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cII`);
+                                    minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier2" });
+                                    break;
+                                case "diamond_3":
+                                    // 更新下一个游戏事件
+                                    this.nextEvent.id = "emerald_3";
+                                    this.nextEvent.name = "绿宝石生成点 III 级";
+                                    // 更新钻石生成点的等级
+                                    this.map.diamondSpawnerInfo.level = 3;
+                                    this.map.diamondSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cIII`);
+                                    minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier3" });
+                                    break;
+                                case "emerald_3":
+                                    // 更新下一个游戏事件
+                                    this.nextEvent.id = undefined;
+                                    this.nextEvent.name = undefined;
+                                    // 更新绿宝石生成点的等级
+                                    this.map.emeraldSpawnerInfo.level = 3;
+                                    this.map.emeraldSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cIII`);
+                                    minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier3" });
+                                    break;
+                                default: break;
+                            };
+                            this.nextEvent.countdown = 240;
+                        };
+                    },
+                    tickInterval: 20
+                },
+                // 每秒对队伍扣分
+                {
+                    callback: () => {
+                        const scoreData = this.map.teams.map(team => {
+                            const otherTeamBedCount = this.map.getBedCount(team.id).other;
+                            team.captureModeData.score -= otherTeamBedCount;
+                            return {
+                                /** 该队伍 */
+                                team: team,
+
+                                /** 该队伍还剩余的分数，若剩余 0 分则终止游戏 */
+                                score: team.captureModeData.score,
+                            };
+                        });
+                        // 如果有队伍减到 0 分，则结束游戏
+                        if (scoreData.some(data => data.score === 0)) {
+                            const eliminatedTeams = scoreData.filter(data => data.score === 0).map(data => data.team);
+                            if (eliminatedTeams.length == this.map.teamCount) this.map.gameOver(); // 如果所有队伍均扣到 0 分，则平局结束游戏
+                            else eliminatedTeams.forEach(team => {
+                                team.setEliminated();
+                                team.players.forEach(playerData => playerData.player.setGameMode(minecraft.GameMode.Spectator));
+                            }); // 否则，触发淘汰程序，并将所有该队成员设置为旁观模式
+                        }
+                    },
+                    tickInterval: 20,
+                }
+            ]
+        });
     };
 
 };
@@ -4521,7 +4864,7 @@ class BedwarsTrader {
     teleportNearbyPlayer() {
         lib.PlayerUtil.getNearby(this.location, 1).forEach(player => {
             this.system.warnPlayer(player, { translate: "message.areaNotAllowed" });
-            if (this.teleportNearbyPlayerLocation) player.teleport(lib.Vector3Util.center(this.teleportNearbyPlayerLocation), {facingLocation: this.location});
+            if (this.teleportNearbyPlayerLocation) player.teleport(lib.Vector3Util.center(this.teleportNearbyPlayerLocation), { facingLocation: this.location });
         });
     };
 
@@ -4944,6 +5287,14 @@ class BedwarsMap {
     /** 玩家是否能够进入商店 */
     playerCouldIntoShop = true;
 
+    /** ValidBedData 有效床
+     * @typedef ValidBedData
+     * @property {minecraft.Vector3} location 床的位置
+     * @property {BedwarsTeam} [team] 该床归何队伍所有
+     */
+    /** 所有床的有效点位 @type {ValidBedData[]} */
+    validBeds = [];
+
     /**
      * @param {BedwarsSystem} system 系统信息
      * @param {data.BedwarsMapInfo} info 地图信息
@@ -4965,6 +5316,16 @@ class BedwarsMap {
         if (info.healPoolRadius) this.healPoolRadius = info.healPoolRadius;
         if (info.isSolo) this.isSolo = info.isSolo;
         if (info.playerCouldIntoShop !== undefined) this.playerCouldIntoShop = info.playerCouldIntoShop;
+        if (info.components?.capture) {
+            this.validBeds = info.components.capture.validBeds.map(validBedData => {
+                const team = this.teams.find(t => t.id == validBedData.teamId)
+                return {
+                    location: validBedData.location,
+                    team: team,
+                }
+            });
+            this.teams.forEach(team => team.captureModeData.score = info.components.capture.score);
+        };
 
         // 高度限制
         if (info.heightLimitMax) this.heightLimitMax = info.heightLimitMax;
@@ -5326,6 +5687,84 @@ class BedwarsMap {
         });
     };
 
+    // ===== 夺点模式方法 =====
+
+    /** 获取夺点模式的优势方，并返回优势方要结束游戏的时间
+     * @captureModeOnly 该方法仅夺点模式可用，其他情况请勿使用
+     * @returns {{id: string | undefined, countdown: number}}
+     */
+    getDominantTeam() {
+
+        // 获取各个队伍如果要结束游戏需要多长时间
+        // 时间更短的队伍则被视作“优势方”
+        const teamData = this.teams.map(team => {
+
+            /** 其他队伍拥有的床数 */
+            const otherBedAmount = this.getBedCount(team.id).other;
+
+            return {
+
+                /** 队伍 ID */
+                id: team.id,
+
+                /** 游戏结束倒计时，单位：秒 */
+                countdown: Math.ceil(team.captureModeData.score / otherBedAmount),
+
+            };
+
+        });
+
+        // 返回倒计时最小值的那个队伍数据，但如果有多个队伍都是最小值，则队伍变为void 0
+        const minCountdown = teamData.reduce((min, curr) => Math.min(min, curr.countdown), teamData[0].countdown);
+        const minItems = teamData.filter(item => item.countdown === minCountdown);
+        return minItems.length > 1 ? { id: void 0, countdown: minCountdown } : minItems[0];
+
+    };
+
+    /** 获取特定队伍和其他队伍的床数
+     * @captureModeOnly 该方法仅夺点模式可用，其他情况请勿使用
+     * @param {string} teamId 
+     */
+    getBedCount(teamId) {
+        const thisTeamBedCount = this.validBeds.filter(validBed => validBed.team?.id == teamId).length;
+        const otherTeamBedCount = this.validBeds.filter(validBed => validBed.team?.id !== void 0 && validBed.team.id != teamId).length;
+        return {
+            /** 本队的床数 */
+            this: thisTeamBedCount,
+            /** 别队的床数 */
+            other: otherTeamBedCount,
+        };
+    };
+
+    /** 当队伍的全部床被破坏后，播报床被破坏
+     * @captureModeOnly 该方法仅夺点模式可用，其他情况请勿使用
+     * @param {BedwarsTeam} team 被破坏床的队伍
+     */
+    informBedDestroyedCapture(team) {
+
+        // 对于被破坏床的队伍
+        team.players
+            .forEach(playerData => {
+                const player = playerData.player;
+                lib.PlayerUtil.setTitle(player, { translate: "title.capture.allBedDestroyed", with: { rawtext: [{ translate: `team.${team.id}` }] } }, { translate: "subtitle.capture.allBedDestroyed.self" });
+                player.playSound("mob.wither.death");
+                player.sendMessage({ translate: "message.capture.allBedDestroyed.self" });
+            });
+
+        // 对于其他队伍和旁观玩家
+        this.teams
+            .filter(otherTeam => otherTeam.id != team.id)
+            .flatMap(otherTeam => otherTeam.players)
+            .concat(this.spectatorPlayers)
+            .forEach(playerData => {
+                const player = playerData.player;
+                lib.PlayerUtil.setTitle(player, { translate: "title.capture.allBedDestroyed", with: { rawtext: [{ translate: `team.${team.id}` }] } }, { translate: "subtitle.capture.allBedDestroyed.other" });
+                player.playSound("mob.enderdragon.growl", { location: lib.Vector3Util.add(player.location, 0, 12, 0) }); // 末影龙的麦很炸，所以提高 12 格
+                player.sendMessage({ translate: "message.capture.allBedDestroyed.other" });
+            });
+
+    };
+
 };
 
 // ===== 队伍 =====
@@ -5439,6 +5878,14 @@ class BedwarsTeam {
     /** 是否正在等待陷阱冷却，在陷阱冷却期不能触发陷阱 */
     isWaitingTrapCooldown = false;
 
+    /** 夺点模式数据 */
+    captureModeData = {
+
+        /** 分数 */
+        score: 1500,
+
+    };
+
     /** 
      * @param {BedwarsSystem} system 
      * @param {BedwarsMap} map
@@ -5490,6 +5937,18 @@ class BedwarsTeam {
         minecraft.world.getDimension("overworld").runCommand(`setblock ${x} ${y} ${z} air destroy`);
         lib.ItemUtil.removeItemEntity("minecraft:bed");
         if (this.alivePlayers.length == 0) this.setEliminated();
+    };
+
+    /** 放置该队伍拥有的全部的床
+     * @captureModeOnly 该方法仅夺点模式可用，其他情况请勿使用
+     */
+    placeBedCapture() {
+        this.system.mode.map.validBeds
+            .filter(validBed => validBed.team.id == this.id)
+            .forEach(validBed => {
+                // 若没有床，则放置一张床
+                if (lib.DimensionUtil.getBlock(validBed.location)?.typeId == "minecraft:bed") lib.StructureUtil.placeAsync(`beds:${this.id}_bed`, "overworld", validBed.location, { rotation: this.bedRotation });
+            });
     };
 
     // ===== 玩家 =====
@@ -5850,7 +6309,7 @@ class BedwarsPlayer {
          */
         const defaultDeath = (type = "died") => {
             minecraft.world.sendMessage([{ translate: `message.kill.${type}`, with: [this.player.nameTag] }, { translate: isFinalKill }]);
-        }
+        };
 
         /** 被其他玩家击杀样式，同时给予击杀者奖励
          * @param {"beKilled"|"beKilledVoid"|"beShot"|"beKilledFall"|"beKilledGolem"} type 触发的消息样式
@@ -5862,10 +6321,8 @@ class BedwarsPlayer {
             killerData.getBonus(this);
         };
 
-        // 当该玩家已被淘汰时
-        if (this.isEliminated) null;
         // 当玩家被其他玩家当场击杀时
-        else if (killer && killer.typeId == "minecraft:player") {
+        if (killer && killer.typeId == "minecraft:player") {
 
             // 获取击杀者的起床战争信息
             const killerData = this.system.mode.map.getBedwarsPlayer(killer);
@@ -5907,6 +6364,7 @@ class BedwarsPlayer {
         this.player.setGameMode("Spectator");
         this.resetAttackedInfo();
         this.magicMilkCountdown = 0;
+        if (this.system.mode.type == "capture" && this.isEliminated) player.sendMessage({ translate: "message.respawnTipWhenHaveBed" }); // 如果玩家在夺点模式已被淘汰，则提醒玩家重新获得一张床即可复活
 
     };
 
@@ -6007,6 +6465,7 @@ class BedwarsPlayer {
 
         // 记录击杀数
         if (killedPlayerInfo.team.bedIsExist) this.killCount++;
+        else if (this.system.mode.type == "capture") this.killCount++; // 如果是夺点模式则不增加最终击杀数
         else this.finalKillCount++;
 
         // 击杀奖励

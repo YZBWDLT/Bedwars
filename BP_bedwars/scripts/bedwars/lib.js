@@ -56,6 +56,15 @@ export class StructureUtil {
 /** 维度操作方法 */
 export class DimensionUtil {
 
+    /** 获取某个位置的方块
+     * @remarks 注：若获取到空气时，并不返回 undefined
+     * @param {"overworld" | "nether" | "the_end"} dimensionId 维度 ID
+     * @param {minecraft.Vector3} location 坐标
+     */
+    static getBlock(dimensionId, location) {
+        return minecraft.world.getDimension(dimensionId).getBlock(location);
+    };
+
     /** 令两个坐标间填充方块
      * @param {"overworld" | "nether" | "the_end"} dimensionId 维度 ID
      * @param {minecraft.Vector3} from 起始坐标
@@ -90,7 +99,7 @@ export class DimensionUtil {
     };
 
     /** 获取和方块交互后，实际放置的方块位置
-     * @description 专门适用于interactWithBlock前事件
+     * @description 专门适用于interactWithBlock前事件和后事件
      * @param {minecraft.Block} interactedBlock 
      * @param {minecraft.Direction} interactedBlockFace 
      */

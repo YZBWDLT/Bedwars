@@ -32,6 +32,24 @@ import * as minecraft from "@minecraft/server";
  * @property {boolean} [isSolo] 是否为单挑模式（通常意义上是 8 队模式），单挑模式会影响资源的生成速度和物资售价
  * @property {string[]} [removeItemEntity] 地图将移除物品掉落物的类型
  * @property {boolean} [playerCouldIntoShop] 玩家是否能够进入商店，若设置为 false 则在玩家接近商人后将玩家传送出去
+ * @property {BedwarsModeComponent} [components] 游戏使用的组件
+ */
+
+/** BedwarsModeComponent 游戏模式使用的组件
+ * @typedef BedwarsModeComponent
+ * @property {BedwarsCaptureModeComponent} [capture] （游戏使用夺点模式后必须使用，仅夺点模式可用）规定夺点模式的有效床点位等
+ */
+
+/** BedwarsCaptureModeComponent 夺点模式组件
+ * @typedef BedwarsCaptureModeComponent
+ * @property {ValidBedData[]} validBeds 所有床的有效点位
+ * @property {number} score 开始游戏时，每队的分数
+ */
+
+/** ValidBedData 有效床
+ * @typedef ValidBedData
+ * @property {minecraft.Vector3} location 床的位置
+ * @property {ValidTeams} [teamId] 该床归何队伍所有
  */
 
 // TraderInfo 定义商人的位置、朝向、类型和其他基本信息
@@ -54,7 +72,6 @@ import * as minecraft from "@minecraft/server";
  * @property {number} loadTime 加载结构所需时间，单位：秒
  * @property {minecraft.Vector3} [flagLocationFrom] 旗帜位置起始点
  * @property {minecraft.Vector3} [flagLocationTo] 旗帜位置终止点
- * @property {boolean} [disableFlag] 是否禁止本地图的旗帜
  * @property {minecraft.StructureMirrorAxis} [mirror] 岛屿是否镜像加载
  * @property {minecraft.StructureRotation} [rotation] 岛屿是否镜像加载
  */
@@ -4065,7 +4082,120 @@ export const mapData = {
     capture: {
         TwoTeams: {
 
-            // picnic: {}
+            /** 地图：野餐 @type {BedwarsMapInfo} */
+            picnic: {
+                id: "picnic_capture",
+                name: "野餐",
+                mode: "capture",
+                teams: [
+                    {
+                        id: ValidTeams.red,
+                        bedLocation: { x: 0, y: 64, z: -63 },
+                        bedRotation: minecraft.StructureRotation.Rotate270,
+                        resourceLocation: { x: 0, y: 63, z: -78 },
+                        spawnpointLocation: { x: 0, y: 63, z: -74 },
+                        chestLocation: { x: 3, y: 63, z: -73 },
+                    },
+                    {
+                        id: ValidTeams.blue,
+                        bedLocation: { x: 0, y: 64, z: 61 },
+                        bedRotation: minecraft.StructureRotation.Rotate90,
+                        resourceLocation: { x: 0, y: 63, z: 77 },
+                        spawnpointLocation: { x: 0, y: 63, z: 73 },
+                        chestLocation: { x: -3, y: 63, z: 72 },
+                    }
+                ],
+                teamIslands: [
+                    {
+                        teamId: ValidTeams.red,
+                        location: { x: -12, y: 54, z: -82 },
+                        loadTime: 4,
+                        flagLocationFrom: { x: -5, y: 63, z: -59 },
+                        flagLocationTo: { x: 13, y: 80, z: -72 }
+                    },
+                    {
+                        teamId: ValidTeams.blue,
+                        location: { x: -16, y: 54, z: 33 },
+                        rotation: "Rotate180",
+                        loadTime: 4,
+                        flagLocationFrom: { x: 5, y: 63, z: 58 },
+                        flagLocationTo: { x: -13, y: 80, z: 71 },
+                    }
+                ],
+                islands: [
+                    {
+                        structureName: "side_island",
+                        location: { x: 38, y: 57, z: -5 },
+                        loadTime: 1,
+                    },
+                    {
+                        structureName: "side_island",
+                        location: { x: -63, y: 57, z: -23 },
+                        rotation: "Rotate180",
+                        loadTime: 1,
+                    },
+                    {
+                        structureName: "diamond_island",
+                        location: { x: 29, y: 58, z: -44 },
+                        loadTime: 1,
+                    },
+                    {
+                        structureName: "diamond_island",
+                        location: { x: 29, y: 58, z: 31 },
+                        mirror: "X",
+                        loadTime: 1,
+                    },
+                    {
+                        structureName: "diamond_island",
+                        location: { x: -48, y: 58, z: -49 },
+                        mirror: "Z",
+                        loadTime: 1
+                    },
+                    {
+                        structureName: "diamond_island",
+                        location: { x: -48, y: 58, z: 26 },
+                        mirror: "XZ",
+                        loadTime: 1
+                    },
+                    {
+                        structureName: "center_island",
+                        location: { x: -21, y: 48, z: -22 },
+                        loadTime: 10
+                    },
+                ],
+                traders: [
+                    { location: { x: 6, y: 63, z: -75.5 }, rotation: 90, type: "item" },
+                    { location: { x: -6, y: 63, z: 74.5 }, rotation: 270, type: "item" },
+                    { location: { x: -6, y: 63, z: -75.5 }, rotation: 270, type: "upgrade" },
+                    { location: { x: 6, y: 63, z: 74.5 }, rotation: 90, type: "upgrade" },
+                ],
+                diamondSpawnerLocation: [
+                    { x: -36, y: 65, z: -38},
+                    { x: 36, y: 65, z: -33},
+                    { x: 36, y: 65, z: 37},
+                    { x: -36, y: 65, z: 32},
+                ],
+                emeraldSpawnerLocation: [
+                    { x: -7, y: 69, z: -11},
+                    { x: 8, y: 69, z: 12},
+                ],
+                heightLimitMax: 89,
+                heightLimitMin: 59,
+                healPoolRadius: 19,
+                distributeResource: false,
+                components: {
+                    capture: {
+                        validBeds: [
+                            { location: { x: 0, y: 64, z: -63 }, teamId: ValidTeams.red, },
+                            { location: { x: 0, y: 64, z: 61 }, teamId: ValidTeams.blue, },
+                            { location: { x: 48, y: 64, z: 10 }, },
+                            { location: { x: 0, y: 64, z: -1 }, },
+                            { location: { x: -48, y: 64, z: -11 }, },
+                        ],
+                        score: 1500,
+                    }
+                }
+            }
 
         }
     },

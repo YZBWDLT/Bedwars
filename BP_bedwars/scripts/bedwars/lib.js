@@ -226,15 +226,25 @@ export class EntityUtil {
         return minecraft.world.getDimension(dimensionId).getEntities({ type: typeId });
     };
 
+    /** 获取附近的实体
+     * @param {string} typeId 待获取的实体
+     * @param {minecraft.Vector3} location 待检查的坐标
+     * @param {number} distance 待检查的范围
+     * @param {"overworld"|"nether"|"the_end"} dimensionId 待检查的维度
+     */
+    static getNearby(typeId, location, distance, dimensionId = "overworld") {
+        return minecraft.world.getDimension(dimensionId).getEntities({ type: typeId, location: location, maxDistance: distance });
+    };
+
     /** 检查实体是否在特定位置周围
      * @param {minecraft.Entity} entity 待检查的实体
-     * @param {minecraft.Vector3} pos 待检查的坐标
-     * @param {number} r 待检查的范围
+     * @param {minecraft.Vector3} location 待检查的坐标
+     * @param {number} distance 待检查的范围
      * @param {"overworld"|"nether"|"the_end"|"entity_dimension"} dimensionId 待检查的维度，指定为entity_dimension时将在实体自身维度检测
      */
-    static isNearby(entity, pos, r, dimensionId = "entity_dimension") {
-        if (dimensionId === "entity_dimension") return entity.dimension.getEntities({ location: pos, maxDistance: r }).some(nearbyEntity => nearbyEntity.id === entity.id);
-        else return minecraft.world.getDimension(dimensionId).getEntities({ location: pos, maxDistance: r }).some(nearbyEntity => nearbyEntity.id === entity.id);
+    static isNearby(entity, location, distance, dimensionId = "entity_dimension") {
+        if (dimensionId === "entity_dimension") return entity.dimension.getEntities({ location: location, maxDistance: distance }).some(nearbyEntity => nearbyEntity.id === entity.id);
+        else return minecraft.world.getDimension(dimensionId).getEntities({ location: location, maxDistance: distance }).some(nearbyEntity => nearbyEntity.id === entity.id);
     };
 
     /** 检查实体是否在特定长方体区域内

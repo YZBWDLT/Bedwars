@@ -898,11 +898,12 @@ class BedwarsSettings {
                     text: "随机生成地图",
                     onSelected: {
                         callback: () => {
-                            if (system.gameStage == 1) BedwarsSystem.warnPlayer(player, { translate: "message.settings.warning.regenerateMapWhenLoading" })
-                            else {
-                                const map = system.resetMap();
-                                lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.description.name}§7（随机生成）`));
-                            };
+                            if (system.gameStage == 1) {
+                                BedwarsSystem.warnPlayer(player, { translate: "message.settings.warning.regenerateMapWhenLoading" });
+                                return;
+                            }
+                            const map = system.resetMap();
+                            lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.description.name}§7（随机生成）`));
                         },
                     }
                 },
@@ -933,6 +934,10 @@ class BedwarsSettings {
                                 },
                                 onSubmitted: {
                                     callback: (result) => {
+                                        if (system.gameStage == 1) {
+                                            BedwarsSystem.warnPlayer(player, { translate: "message.settings.warning.regenerateMapWhenLoading" });
+                                            return;
+                                        }
                                         const map = system.resetMap(twoTeamsMaps[result[4]]);
                                         lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.description.name}`));
                                     },
@@ -968,6 +973,10 @@ class BedwarsSettings {
                                 },
                                 onSubmitted: {
                                     callback: (result) => {
+                                        if (system.gameStage == 1) {
+                                            BedwarsSystem.warnPlayer(player, { translate: "message.settings.warning.regenerateMapWhenLoading" });
+                                            return;
+                                        }
                                         const map = system.resetMap(fourTeamsMaps[result[4]]);
                                         lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.description.name}`));
                                     },
@@ -1003,6 +1012,10 @@ class BedwarsSettings {
                                 },
                                 onSubmitted: {
                                     callback: (result) => {
+                                        if (system.gameStage == 1) {
+                                            BedwarsSystem.warnPlayer(player, { translate: "message.settings.warning.regenerateMapWhenLoading" });
+                                            return;
+                                        }
                                         const map = system.resetMap(eightTeamsMaps[result[4]]);
                                         lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.description.name}`));
                                     },
@@ -1038,6 +1051,10 @@ class BedwarsSettings {
                                 },
                                 onSubmitted: {
                                     callback: (result) => {
+                                        if (system.gameStage == 1) {
+                                            BedwarsSystem.warnPlayer(player, { translate: "message.settings.warning.regenerateMapWhenLoading" });
+                                            return;
+                                        }
                                         const map = system.resetMap(maps[result[4]]);
                                         lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.description.name}`));
                                     },
@@ -2555,7 +2572,7 @@ class BedwarsClassicMode {
                             lib.ScoreboardPlayerUtil.set(playerName, "destroyBedCount", playerData.destroyBedCount);
                         });
                         // 2. 在队伍中移除该队员
-                        playerData.team.removePlayer(playerName);
+                        team.removePlayer(playerName);
                     },
                 },
                 // 重新进入检测，回到游戏后从玩家的记分板恢复数据
@@ -3375,6 +3392,7 @@ class BedwarsClassicMode {
                     const alivePlayers = this.map.aliveTeams.flatMap(aliveTeam => aliveTeam.alivePlayers)
                     alivePlayers.forEach(alivePlayer => {
                         const player = alivePlayer.player;
+                        if (!player.isValid) return;
                         const { x, y, z } = player.location;
                         // 如果，玩家脚下全是空气，并且正在掉落中，则锁定物品
                         if (!player.dimension.getTopmostBlock({ x, z }, y) && player.isFalling) {
@@ -6094,6 +6112,9 @@ class BedwarsTeam {
     removePlayer(playerName) {
         this.players = this.players.filter(player => player.player.name != playerName);
         this.alivePlayers = this.alivePlayers.filter(player => player.player.name != playerName);
+        // 如果移除的是最后一名队员，并且已经没有床，则直接淘汰此队伍
+        // 这里，因为调用removePlayer的事件是世界前事件，所以这里延迟一刻执行
+        if (this.alivePlayers.length == 0 && !this.bedIsExist) minecraft.system.run(() => this.setEliminated());
     };
 
     /** 传送玩家到重生点

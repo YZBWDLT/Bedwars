@@ -2628,7 +2628,7 @@ class BedwarsClassicMode {
                     // 清除掉落物
                     lib.ItemUtil.removeItemEntity("minecraft:bed");
                     // 检查哪队的床被破坏了，如果没有队伍则直接终止运行
-                    const team = this.map.teams.find(team => team.bedIsExist && lib.DimensionUtil.getBlock("overworld", team.bedLocation).typeId == "minecraft:air");
+                    const team = this.map.teams.find(team => team.bedIsExist && lib.DimensionUtil.getBlock("overworld", team.bedLocation).typeId != "minecraft:bed");
                     if (!team) return;
                     // 获取破坏者及其起床战争信息
                     const breaker = event.player;
@@ -4957,7 +4957,7 @@ class BedwarsTrader {
      */
     itemChangeTest() { };
 
-}
+};
 
 /** 起床战争物品类商人，包括地图内商人的各种基本信息和方法，可通过 BedwarsMap 类获取 */
 class BedwarsItemTrader extends BedwarsTrader {

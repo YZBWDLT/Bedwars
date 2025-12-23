@@ -12,3 +12,5 @@ diagnostic.disable.molang.variable.undefined=true
 diagnostic.disable.molang.function.deprecated=true
 diagnostic.disable.molang.identifier.invalid=true
 diagnostic.disable.molang.array.undefined=true
+
+diagnostic.disable.behaviorpack.trading.missing=true

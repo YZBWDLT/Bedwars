@@ -261,10 +261,11 @@ export class EntityUtil {
     };
 
     /** 移除其他除玩家之外的实体
+     * @param {minecraft.EntityQueryOptions} [options] 要移除的实体满足的条件，若不填写则选定全部玩家之外的实体
      * @param {"overworld"|"nether"|"the_end"} dimensionId 维度 ID
      */
-    static removeAll(dimensionId = "overworld") {
-        minecraft.world.getDimension(dimensionId).getEntities().filter(entity => entity.typeId != "minecraft:player").forEach(entity => entity.remove());
+    static removeAll(options, dimensionId = "overworld") {
+        minecraft.world.getDimension(dimensionId).getEntities(options).filter(entity => entity.typeId != "minecraft:player").forEach(entity => entity.remove());
     };
 
 };

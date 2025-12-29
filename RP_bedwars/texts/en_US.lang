@@ -216,9 +216,21 @@ tile.bedwars:category_utility.name=§aUtility
 item.bedwars:category_rotating_items=§aRotating Items
 
 #### Settings Items
-item.bedwars:select_team=Select Team
 item.bedwars:kill_style=Kill Style
 item.bedwars:map_settings=Map Settings
+
+#### Select Team Items
+item.bedwars:select_team_red=§l§cSelect Team Red
+item.bedwars:select_team_blue=§l§9Select Team Blue
+item.bedwars:select_team_green=§l§aSelect Team Green
+item.bedwars:select_team_yellow=§l§eSelect Team Yellow
+item.bedwars:select_team_white=§l§fSelect Team White
+item.bedwars:select_team_pink=§l§dSelect Team Pink
+item.bedwars:select_team_gray=§l§7Select Team Gray
+item.bedwars:select_team_cyan=§l§3Select Team Cyan
+item.bedwars:select_team_orange=§l§6Select Team Orange
+item.bedwars:select_team_purple=§l§5Select Team Purple
+item.bedwars:select_team_brown=§l§nSelect Team Brown
 
 ## ===== Team Names =====
 team.red=§cR
@@ -467,7 +479,8 @@ message.killStyle.scoreboardLost=§cYou can't use this setting because the key s
 message.selectTeam.success=§aYou chose Team %s
 message.selectTeam.successClearTeam=§aYou chose Assign Team Randomly, cleared your selection
 message.selectTeam.scoreboardLost=§cYou can't use this setting because the key scoreboard object "selectTeam" has been lost
-message.selectTeam.teamIsFull=§c Team %s §cis full! You can't choose this team!
+message.selectTeam.teamIsFull=§cTeam %s §cis full! You can't choose this team!
+message.selectTeam.sameTeam=§cYou can not choose team that you have chosen!
 
 ### --- Shopitems ---
 message.bedwars:shopitem_wool=Wool

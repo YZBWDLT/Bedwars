@@ -194,10 +194,19 @@ class BedwarsSystem {
 
     /** 警告玩家并播放音效
      * @param {minecraft.Player} player
-     * @param {string | minecraft.RawMessage | (string | minecraft.RawMessage)[]} message
+     * @param {string | minecraft.RawMessage | (string | minecraft.RawMessage)[]} message 通常使用红色（§c）文本
      */
     static warnPlayer(player, message) {
         player.playSound("mob.shulker.teleport", { pitch: 0.5, location: player.location });
+        player.sendMessage(message);
+    };
+
+    /** 通知玩家并播放音效
+     * @param {minecraft.Player} player
+     * @param {string | minecraft.RawMessage | (string | minecraft.RawMessage)[]} message 通常使用绿色普通（§a）和橙色重点（§c）文本
+     */
+    static informPlayer(player, message) {
+        player.playSound("note.pling", { pitch: 2, location: player.location });
         player.sendMessage(message);
     };
 
@@ -600,7 +609,11 @@ class BedwarsSettings {
                                 settings.beforeGaming.teamAssign.mode = values[4];
                                 settings.beforeGaming.teamAssign.assignBeforeGaming = values[5];
                                 settings.beforeGaming.teamAssign.playerSelectEnabled = values[6];
-                                if (!settings.beforeGaming.teamAssign.playerSelectEnabled) lib.ItemUtil.removeItem(player, "bedwars:select_team")
+                                if (settings.beforeGaming.teamAssign.playerSelectEnabled) system.mode.timelineSelectTeam();
+                                else if (system.gameStage <= 2) {
+                                    system.unsubscribeTimeline("selectTeam");
+                                    lib.EntityUtil.getNearby("bedwars:trader", { x: 4, y: 120, z: 0 }, 3).forEach(npc => npc.remove());
+                                }
                             };
                             // 备份设置
                             this.backup(system);
@@ -1424,8 +1437,7 @@ class BedwarsSettings {
                             icon: "textures/ui/confirm",
                             onSelected: {
                                 callback: () => {
-                                    player.sendMessage({ translate: "message.killStyle.success", with: [killStyleName] });
-                                    player.playSound("note.pling", { pitch: 2, location: player.location });
+                                    BedwarsSystem.informPlayer(player, { translate: "message.killStyle.success", with: [killStyleName] })
                                     lib.ScoreboardPlayerUtil.set("killStyle", player, selection);
                                 },
                             }
@@ -1462,185 +1474,6 @@ class BedwarsSettings {
             },
             player
         );
-
-    };
-
-    /** 对玩家显示选择队伍设置 UI
-     * @param {minecraft.Player} player
-     * @param {BedwarsSystem} system 
-     */
-    static showSelectTeamSettingsUI(player, system) {
-
-        /** 该地图的所有队伍 */
-        const teams = system.mode.map.teams;
-
-        /** 该地图的队伍数 */
-        const teamCount = teams.length; // 队伍数
-
-        /** 全部玩家数 */
-        const playerCount = lib.PlayerUtil.getAmount();
-
-        /** 设置的最大允许玩家人数 */
-        const maxPlayerSettings = system.settings.beforeGaming.waiting.maxPlayerCount;
-
-        /** 游戏内的总玩家人数
-         * 
-         * 如果玩家人数大于设置的最大允许玩家人数，则使用设置值，否则使用玩家值
-         */
-        const maxPlayerCountInGame = playerCount > maxPlayerSettings ? maxPlayerSettings : playerCount;
-
-        /** 每队允许的最少玩家数 */
-        const minPlayerPerTeam = Math.floor(maxPlayerCountInGame / teamCount);
-
-        /** 每队允许的最多玩家数 */
-        const maxPlayerPerTeam = Math.ceil(maxPlayerCountInGame / teamCount);
-
-        /** 有多少队伍能够拥有最多玩家
-         * 
-         * 如果所有队伍都允许拥有最大玩家数目，则返回队伍数
-         */
-        const teamCountCouldHaveMaxPlayer = maxPlayerCountInGame % teamCount || teamCount;
-
-        /** 拥有最大玩家数的队伍数 */
-        const teamCountHaveMaxPlayer = (() => {
-            return Object
-                .entries(system.mode.selectTeamBeforeGame)
-                .filter(([teamId, players]) => players.length === maxPlayerPerTeam)
-                .length;
-        })();
-
-        /** 可选的队伍信息 */
-        const teamData = system.mode.map.teams.map(team => {
-
-            /** @type {minecraft.Player[]} */
-            const currentPlayers = system.mode.selectTeamBeforeGame[team.id];
-            const maxPlayerCount =
-                (
-                    teamCountHaveMaxPlayer == teamCountCouldHaveMaxPlayer
-                    && currentPlayers.length != maxPlayerPerTeam
-                )
-                    ? minPlayerPerTeam
-                    : maxPlayerPerTeam;
-
-            return {
-
-                /** 队伍信息 */
-                team: team,
-
-                /** 队伍 ID */
-                id: team.id,
-
-                /** 当前选择该队伍的玩家 @type {minecraft.Player[]} */
-                currentPlayers: currentPlayers,
-
-                /** 该队伍可分配的最大值
-                 * 
-                 * 正常情况下应当为每队可分配的玩家的最大值 maxPlayerPerTeam，
-                 * 但如果满足以下两个条件，则该队允许的最大玩家数量则为 minPlayerPerTeam：
-                 * 1. 有teamCountHaveMaxPlayer个队伍分配到了最大玩家数量maxPlayerPerTeam；
-                 * 2. 该队伍自身并没有达到最大玩家数量maxPlayerPerTeam
-                 */
-                maxPlayerCount: maxPlayerCount,
-
-                /** 队伍名称（例："§l§c红队§r"） */
-                teamName: team.id == "gray" ? `§l§8灰队§r` : `§l${team.getTeamNameWithColor()}队§r`,
-
-                /** 队伍是否已满 */
-                isFull: currentPlayers.length == maxPlayerCount,
-
-            };
-        });
-
-        // 为玩家添加正选择队伍的标签并显示 UI
-        player.addTag("selectingTeam");
-        lib.PlayerUtil.getAll()
-            .filter(showPlayer => showPlayer.hasTag("selectingTeam"))
-            .forEach(showPlayer => {
-
-                /** 选择队伍的全部按钮 @type {lib.FormButtonComponent[]} */
-                const selectTeamButtons = [];
-
-                /** 该玩家当前选择的队伍信息 */
-                const selectedTeamData = teamData.find(data => data.currentPlayers.some(currentPlayer => currentPlayer.id == showPlayer.id));
-
-                teamData.forEach(thisTeamData => {
-                    selectTeamButtons.push({
-                        type: "button",
-                        text: `${thisTeamData.teamName} §0(${thisTeamData.currentPlayers.length}/${thisTeamData.maxPlayerCount})§r${thisTeamData.isFull ? " §c(队伍已满！)" : ""}`,
-                        icon: `textures/items/bed_${thisTeamData.id == "green" ? "lime" : thisTeamData.id}`,
-                        onSelected: {
-                            callback: () => {
-                                // 如果将要选择的队伍已满，则还在满足任意一项条件时则阻止选择队伍
-                                // （例：如果此时为3/3 3/3 2/2 2/2的全满状态，此时一个3人队伍中的一名玩家选择了一个2人的队伍，则此时也允许选队）
-                                // 1. 如果玩家此时仍未选队；
-                                // 2. 玩家已经选择的队伍也是满员状态，并且玩家已经选择的队伍的人数要小于等于将要选择的队伍（例如已选2人队伍时，换3人队伍是不允许的）
-                                if (
-                                    thisTeamData.isFull && (
-                                        !selectedTeamData
-                                        || (selectedTeamData.isFull && selectedTeamData.maxPlayerCount <= thisTeamData.maxPlayerCount)
-                                    )
-                                ) {
-                                    BedwarsSystem.warnPlayer(showPlayer, { translate: "message.selectTeam.teamIsFull", with: [thisTeamData.team.getTeamName()] });
-                                    this.showSelectTeamSettingsUI(showPlayer, system);
-                                }
-                                // 否则，选择队伍，并更新其他人的 UI
-                                else {
-                                    // 移除原来的选择信息，并更新新的选择信息
-                                    if (selectedTeamData) system.mode.selectTeamBeforeGame[selectedTeamData.id] = system.mode.selectTeamBeforeGame[selectedTeamData.id].filter(player => player.id != showPlayer.id);
-                                    system.mode.selectTeamBeforeGame[thisTeamData.id].push(showPlayer);
-                                    // 提醒玩家选择了队伍
-                                    showPlayer.sendMessage({ translate: "message.selectTeam.success", with: [thisTeamData.team.getTeamName()] });
-                                    showPlayer.playSound("note.pling", { pitch: 2, location: showPlayer.location });
-                                    // 移除自身的队伍，并更新其他人的 UI
-                                    showPlayer.removeTag("selectingTeam");
-                                    lib.PlayerUtil.getAll()
-                                        .filter(player => player.hasTag("selectingTeam"))
-                                        .forEach(showPlayerLeft => {
-                                            lib.UIUtil.close(showPlayerLeft);
-                                            this.showSelectTeamSettingsUI(showPlayerLeft, system)
-                                        });
-                                };
-                            },
-                        }
-                    })
-                });
-                lib.UIUtil.createAction({
-                    type: "action",
-                    components: [
-                        { type: "header", text: "选择队伍" },
-                        { type: "label", text: `当前已选择：${selectedTeamData?.team ? `§l${selectedTeamData.team.getTeamNameWithColor()}队` : `§l§7还未选择`}§r§f。` },
-                        { type: "divider" },
-                        ...selectTeamButtons,
-                        {
-                            type: "button",
-                            text: "随机分队",
-                            icon: "textures/blocks/barrier",
-                            onSelected: {
-                                callback: () => {
-                                    // 移除原来的选择信息
-                                    if (selectedTeamData) system.mode.selectTeamBeforeGame[selectedTeamData.id] = system.mode.selectTeamBeforeGame[selectedTeamData.id].filter(player => player.id != showPlayer.id);
-
-                                    // 提醒玩家移除了队伍
-                                    showPlayer.sendMessage({ translate: "message.selectTeam.successClearTeam" });
-                                    showPlayer.playSound("note.pling", { pitch: 2, location: showPlayer.location });
-
-                                    // 移除自身的队伍，并更新其他人的 UI
-                                    showPlayer.removeTag("selectingTeam");
-                                    lib.PlayerUtil.getAll()
-                                        .filter(player => player.hasTag("selectingTeam"))
-                                        .forEach(showPlayerLeft => {
-                                            lib.UIUtil.close(showPlayerLeft);
-                                            this.showSelectTeamSettingsUI(showPlayerLeft, system)
-                                        });
-                                },
-                            }
-                        }
-                    ],
-                    onCanceled: {
-                        callback: () => showPlayer.removeTag("selectingTeam"),
-                    }
-                }, showPlayer);
-            });
 
     };
 
@@ -1883,7 +1716,6 @@ class BedwarsClassicMode {
                         // 如果是管理员玩家，则在没有设置物品时给予一个设置物品
                         if (player.playerPermissionLevel >= 2 && !lib.InventoryUtil.hasItem(player, "bedwars:map_settings")) lib.ItemUtil.giveItem(player, "bedwars:map_settings", { itemLock: "inventory" });
                         // 如果启用了自主选队和击杀样式（但未启用随机击杀样式），则在玩家没有对应物品时给予物品
-                        if (!lib.InventoryUtil.hasItem(player, "bedwars:select_team") && this.system.settings.beforeGaming.teamAssign.playerSelectEnabled) lib.ItemUtil.giveItem(player, "bedwars:select_team", { itemLock: "inventory" });
                         if (!lib.InventoryUtil.hasItem(player, "bedwars:kill_style") && this.system.settings.gaming.killStyle.isEnabled && !this.system.settings.gaming.killStyle.randomKillStyle) lib.ItemUtil.giveItem(player, "bedwars:kill_style", { itemLock: "inventory" });
                     });
                 },
@@ -1898,6 +1730,215 @@ class BedwarsClassicMode {
                 callback: (event) => {
                     // 玩家进入时，初始化玩家
                     this.initPlayer(event.player);
+                    lib.EntityUtil.getNearby("bedwars:trader", { x: 4, y: 120, z: 0 }, 2).forEach(npc => lib.InventoryUtil.getInventory(npc).container.clearAll());
+                },
+            },
+        });
+        this.system.subscribeEvent({
+            typeId: "resetSelectTeamWhenPlayerLeave",
+            event: {
+                type: minecraft.world.beforeEvents.playerLeave,
+                /** @type {function(minecraft.PlayerLeaveBeforeEvent): void} */
+                callback: (event) => {
+                    // 移除玩家的选队信息
+                    Object.keys(this.selectTeamBeforeGame).forEach(key => {
+                        this.selectTeamBeforeGame[key] = this.selectTeamBeforeGame[key].filter(currentPlayer => currentPlayer.id != event.player.id);
+                    });
+                    // 重新设置 NPC 的物品
+                    minecraft.system.run(() => lib.EntityUtil.getNearby("bedwars:trader", { x: 4, y: 120, z: 0 }, 2).forEach(npc => lib.InventoryUtil.getInventory(npc).container.clearAll()));
+                },
+            },
+        });
+        if (this.system.settings.beforeGaming.teamAssign.playerSelectEnabled) this.timelineSelectTeam();
+    };
+
+    /** 选择队伍时间线 */
+    timelineSelectTeam() {
+        if (this.system.gameStage >= 3) return;
+        this.system.subscribeTimeline({
+            typeId: "selectTeam",
+            interval: {
+                callback: () => {
+                    // 检查 (4, 120, 0) 位置是否有选队 NPC，如果没有则创建之
+
+                    /** NPC 位置 @type {minecraft.Vector3} */
+                    const location = { x: 4, y: 120, z: 0 };
+
+                    /** NPC @type {minecraft.Entity} */
+                    let npc;
+                    try {
+                        // 可能会因为初加载而报错，所以检查到报错直接终止程序
+                        npc = lib.EntityUtil.getNearby("bedwars:trader", location, 1)[0] ?? lib.EntityUtil.add("bedwars:trader", lib.Vector3Util.center(location), { spawnEvent: `skin_${lib.JSUtil.randomInt(0, 30)}` });
+                    } catch { return; }
+                    npc.nameTag = "§b选择队伍";
+
+                    // 判断该队最大玩家数需要用到的变量
+
+                    /** 队伍数 */
+                    const teamCount = this.map.teams.length;
+                    /** 全部玩家数 */
+                    const playerCount = lib.PlayerUtil.getAmount();
+                    /** 设置的最大允许玩家人数 */
+                    const maxPlayerSettings = this.system.settings.beforeGaming.waiting.maxPlayerCount;
+                    /** 游戏内的总玩家人数，如果玩家人数大于设置的最大允许玩家人数，则使用设置值，否则使用玩家值 */
+                    const maxPlayerCountInGame = playerCount > maxPlayerSettings ? maxPlayerSettings : playerCount;
+                    /** 每队允许的最少玩家数 */
+                    const minPlayerPerTeam = Math.floor(maxPlayerCountInGame / teamCount);
+                    /** 每队允许的最多玩家数 */
+                    const maxPlayerPerTeam = Math.ceil(maxPlayerCountInGame / teamCount);
+                    /** 有多少队伍能够拥有最多玩家，如果所有队伍都允许拥有最大玩家数目，则返回队伍数 */
+                    const teamCountCouldHaveMaxPlayer = maxPlayerCountInGame % teamCount || teamCount;
+                    /** 拥有最大玩家数的队伍数 */
+                    const teamCountHaveMaxPlayer = (() => {
+                        return Object
+                            .entries(this.system.mode.selectTeamBeforeGame)
+                            .filter(([teamId, players]) => players.length === maxPlayerPerTeam)
+                            .length;
+                    })();
+
+                    // 选队 NPC 的设置物品方法和检查物品方法
+
+                    /**
+                     * @typedef TeamData
+                     * @property {string} icon 物品 icon
+                     * @property {minecraft.Player[]} players 当前选择了该队伍的玩家
+                     * @property {number} playerAmount 选择了该队伍的人数
+                     * @property {BedwarsTeam} team 物品所对应的队伍
+                     * @property {number} maxPlayerAmount 该队伍的最大人数
+                     * @property {boolean} isFull 该队伍是否已满
+                     */
+                    /** NPC 的物品信息，由此决定在 NPC 物品栏对应位置放置何种物品，并同时存储正选择的队伍信息 @type {TeamData[]} */
+                    const npcItems = this.map.teams.map(team => {
+                        /** 当前选择了该队伍的玩家 @type {minecraft.Player[]} */
+                        const players = this.selectTeamBeforeGame[team.id];
+                        /** 本队允许的最大玩家数 */
+                        const maxPlayerAmount = (teamCountHaveMaxPlayer == teamCountCouldHaveMaxPlayer && players.length != maxPlayerPerTeam) ? minPlayerPerTeam : maxPlayerPerTeam;
+
+                        return {
+                            icon: `bedwars:select_team_${team.id}`,
+                            players: players,
+                            playerAmount: players.length,
+                            team: team,
+                            maxPlayerAmount: maxPlayerAmount,
+                            isFull: players.length >= maxPlayerAmount,
+                        };
+                    });
+
+                    /** 重新设置 NPC 的物品 */
+                    const setItem = () => {
+                        // 清除物品
+                        lib.InventoryUtil.getInventory(npc).container.clearAll();
+                        // 设置物品
+                        npcItems.forEach((npcItem, index) => {
+                            const lore = [
+                                `§r`,
+                                `§r§7将此物品放入物品栏以选择${npcItem.team.getTeamNameWithColor()}队§7。`,
+                                `§r`,
+                            ];
+                            // §r§7当前选择该队伍的玩家: §a(当前人数/最大人数)
+                            lore.push(`§r§7当前选择该队伍的玩家: §a(${npcItem.playerAmount}/${npcItem.maxPlayerAmount})`)
+                            // §r§7- (颜色)(玩家名) | §r§7无玩家
+                            if (npcItem.playerAmount == 0) lore.push(`§r§7无玩家`);
+                            else npcItem.players.forEach(player => lore.push(`§r§7- ${npcItem.team.getTeamColor()}${player.name}`));
+                            lib.ItemUtil.replaceInventoryItem(npc, npcItem.icon, index, { amount: npcItem.playerAmount || 1, lore: lore })
+                        });
+                        lib.ItemUtil.replaceInventoryItem(npc, "minecraft:barrier", npcItems.length, { amount: 1, lore: [`§r`, `§r§7将此物品放入物品栏以选择随机队伍。`], name: "§r§l随机分配队伍" })
+                    };
+
+                    /** 检查 NPC 对应位置的物品是否被拿走 */
+                    const itemChangeTest = () => {
+                        /** 检测逻辑
+                         * @param {string} icon 
+                         * @param {number} iconCount 
+                         * @param {number} index 
+                         * @param {TeamData} [teamData] 设置为 undefined 时则尝试设置为随机分队
+                         */
+                        const itemTest = (icon, iconCount, index, teamData) => {
+                            // 如果物品完全匹配，则终止判断
+                            if (lib.InventoryUtil.slotIsItem(npc, index, icon, iconCount)) return;
+                            // 否则，有玩家更改了此物品，进行操作：
+                            // 1. 如果玩家拥有此物品，则对此玩家进行检查
+                            lib.PlayerUtil.getNearby(location, 6)
+                                .filter(player => lib.InventoryUtil.hasItem(player, icon))
+                                .forEach(player => {
+                                    lib.ItemUtil.removeItem(player, icon);
+                                    playerSelectTeamTest(player, teamData);
+                                });
+                            // 2. 移除物品掉落物
+                            lib.ItemUtil.removeItemEntity(icon);
+                            // 3. 重新设置物品（延迟一刻执行）
+                            minecraft.system.run(() => setItem());
+                        };
+                        npcItems.forEach((npcItem, index) => itemTest(npcItem.icon, npcItem.playerAmount || 1, index, npcItem));
+                        itemTest("minecraft:barrier", 1, npcItems.length, void 0);
+                    };
+
+                    // 玩家选队逻辑
+
+                    /** 玩家选择队伍
+                     * @param {minecraft.Player} player
+                     * @param {TeamData | undefined} thisTeamData 该玩家将要选择的队伍信息
+                     */
+                    const playerSelectTeamTest = (player, thisTeamData) => {
+
+                        /** 该玩家当前选择的队伍信息 */
+                        const selectedTeamData = npcItems.find(data => data.players.some(currentPlayer => currentPlayer.id == player.id));
+
+                        /** 移除当前玩家的队伍 */
+                        const removeTeam = () => {
+                            if (selectedTeamData) Object.keys(this.selectTeamBeforeGame).forEach(key => {
+                                this.selectTeamBeforeGame[key] = this.selectTeamBeforeGame[key].filter(currentPlayer => currentPlayer.id != player.id);
+                            });
+                        };
+
+                        // 如果要选择的队伍为随机分队，则移除队伍，重新设置物品并终止程序
+                        if (!thisTeamData) {
+                            removeTeam();
+                            BedwarsSystem.informPlayer(player, { translate: "message.selectTeam.successClearTeam" });
+                            return;
+                        };
+
+                        // 如果要选择的队伍为自己已选择过的队伍，阻止选择队伍并终止程序
+                        if (thisTeamData.team.id == selectedTeamData?.team?.id) {
+                            BedwarsSystem.warnPlayer(player, { translate: "message.selectTeam.sameTeam" });
+                            return;
+                        }
+
+                        // 如果要选择的队伍已满，则继续判断……
+                        if (thisTeamData.isFull) {
+                            // 如果玩家此时仍未选队，阻止其选择已满队伍并终止程序
+                            // 例：未选队的玩家选择3/3 3/3 2/2 1/2，其只能选择 1/2 的队伍
+                            if (!selectedTeamData) {
+                                BedwarsSystem.warnPlayer(player, { translate: "message.selectTeam.teamIsFull", with: [thisTeamData.team.getTeamName()] });
+                                return;
+                            };
+                            // 如果玩家已选择的队伍未满，阻止其选择已满队伍并终止程序
+                            // 例：
+                            // - 选择1/2的玩家选择3/3 3/3 2/2 1/2，其不能选择任何一个队伍
+                            // - 选择2/3的玩家选择3/3 2/3 2/3 1/3，其不能选择 3/3 的队伍
+                            if (!selectedTeamData.isFull) {
+                                BedwarsSystem.warnPlayer(player, { translate: "message.selectTeam.teamIsFull", with: [thisTeamData.team.getTeamName()] });
+                                return;
+                            };
+                            // 如果玩家已经选择的队伍的人数要小于等于将要选择的队伍，阻止其选择队伍并终止程序
+                            // 例：
+                            // - 选择3/3的玩家选择3/3 3/3 2/2 1/2，其可以选择 2/2 和 1/2 的队伍
+                            // - 选择2/2的玩家选择3/3 3/3 2/2 1/2，其只能选择 1/2 的队伍，不能选择 3/3 -> 已选择的队伍最大人数(2)小于将要选择的队伍最大人数(3)
+                            if (selectedTeamData.maxPlayerAmount <= thisTeamData.maxPlayerAmount) {
+                                BedwarsSystem.warnPlayer(player, { translate: "message.selectTeam.teamIsFull", with: [thisTeamData.team.getTeamName()] });
+                                return;
+                            };
+                        };
+
+                        // 为玩家选择队伍
+                        removeTeam();
+                        this.selectTeamBeforeGame[thisTeamData.team.id].push(player);
+                        BedwarsSystem.informPlayer(player, { translate: "message.selectTeam.success", with: [thisTeamData.team.getTeamName()] });
+
+                    };
+
+                    itemChangeTest();
+
                 },
             },
         });
@@ -2015,7 +2056,6 @@ class BedwarsClassicMode {
                 callback: event => {
                     if (event.itemStack.typeId === "bedwars:map_settings") BedwarsSettings.showSystemSettingsUI(event.source, this.system);
                     if (event.itemStack.typeId === "bedwars:kill_style") BedwarsSettings.showKillStyleSettingsUI(event.source);
-                    if (event.itemStack.typeId === "bedwars:select_team") BedwarsSettings.showSelectTeamSettingsUI(event.source, this.system);
                 },
             },
         });
@@ -2202,8 +2242,8 @@ class BedwarsClassicMode {
             // 加载床
             this.map.teams.forEach(team => team.placeBed());
 
-            // 移除其他实体
-            lib.EntityUtil.removeAll();
+            // 移除其他实体（但不移除选择队伍的 NPC）
+            lib.EntityUtil.removeAll({ location: { x: 4, y: 120, z: 0 }, minDistance: 2 });
 
             // 加载完毕后，离开此状态
             this.exitGenerateMapState();
@@ -2255,9 +2295,7 @@ class BedwarsClassicMode {
         // 注册综合功能
         this.functionGeneral();
         this.functionWaiting(false);
-
-        // 注册时间线
-        this.functionBeforeGaming(); // 游戏前时间线
+        this.functionBeforeGaming();
 
         // 注册事件
         this.eventSettings(); // 世界设置事件
@@ -3661,6 +3699,8 @@ class BedwarsClassicMode {
                 const attackablePlayerData = this.map.getBedwarsPlayer(attackablePlayer);
                 // 如果不是起床战争玩家，不选为目标
                 if (!attackablePlayerData) return false;
+                // 如果是旁观模式玩家，不选为目标
+                if (attackablePlayer.getGameMode() == minecraft.GameMode.Spectator) return false;
                 // 如果同队，不选为目标
                 else if (attackablePlayerData.team.id == team.id) return false;
                 // 其他情况，选为目标
@@ -3764,6 +3804,8 @@ class BedwarsClassicMode {
                             const attackablePlayerData = this.map.getBedwarsPlayer(attackablePlayer);
                             // 如果不是起床战争玩家，不选为目标
                             if (!attackablePlayerData) return false;
+                            // 如果是旁观模式玩家，不选为目标
+                            if (attackablePlayer.getGameMode() == minecraft.GameMode.Spectator) return false;
                             // 如果同队，不选为目标
                             else if (attackablePlayerData.team.id == team.id) return false;
                             // 其他情况，选为目标
@@ -4092,6 +4134,8 @@ class BedwarsCaptureMode extends BedwarsClassicMode {
                 type: minecraft.world.afterEvents.playerInteractWithBlock,
                 /** @type {function(minecraft.PlayerInteractWithBlockAfterEvent): void} */
                 callback: event => {
+                    // 检查玩家交互时是否手持物品，如果没有物品则直接终止程序
+                    if (!event.beforeItemStack) return;
                     // 检查玩家是否有起床战争信息（并且必须有合适的队伍），如果没有则直接终止程序
                     const player = event.player;
                     const playerData = this.map.getBedwarsPlayer(player);
@@ -4632,8 +4676,7 @@ class BedwarsItemShopitem extends BedwarsShopitem {
         // 其他情况则允许购买，清除资源并提示玩家已购买
         else {
             lib.ItemUtil.removeItem(player, this.getResourceTypeId(), -1, this.resourceAmount);
-            player.playSound("note.pling", { pitch: 2, location: player.location });
-            player.sendMessage({ translate: `message.purchaseItemsSuccessfully`, with: { rawtext: [{ translate: `message.bedwars:shopitem_${this.id}` }] } });
+            BedwarsSystem.informPlayer(player, { translate: `message.purchaseItemsSuccessfully`, with: { rawtext: [{ translate: `message.bedwars:shopitem_${this.id}` }] } });
             this.purchaseSuccess();
             return this.id;
         }
@@ -4803,8 +4846,7 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
         // 其他情况则允许购买，清除资源并提示玩家已购买
         else {
             lib.ItemUtil.removeItem(player, this.getResourceTypeId(), -1, this.resourceAmount);
-            player.playSound("note.pling", { pitch: 2, location: player.location });
-            this.team.players.forEach(playerData => playerData.player.sendMessage({ translate: `message.purchaseTeamUpgradeSuccessfully`, with: { rawtext: [{ text: `${player.name}` }, { translate: `message.${this.shopitemId}` }] } }))
+            this.team.players.forEach(playerData => BedwarsSystem.informPlayer(playerData.player, { translate: `message.purchaseTeamUpgradeSuccessfully`, with: { rawtext: [{ text: `${player.name}` }, { translate: `message.${this.shopitemId}` }] } }));
             this.purchaseSuccess();
             return this.id;
         }
@@ -4918,11 +4960,26 @@ class BedwarsTrader {
      */
     interacted(player, playerInfo) {
 
+        const trader = this.trader;
+
         // 检查该玩家上一个交易的商人，并立刻移除
         this.system.mode.map.removeTrader(playerInfo.tradeInfo.trader);
 
+        // 检查该商人是否已经被交互过，如果已经被交互过（例如同时交互）则立刻移除并终止代码运行
+        if (this.isTrading) {
+            this.system.mode.map.removeTrader(trader);
+            BedwarsSystem.warnPlayer(this.player, "§c有其他玩家打开了你正在使用的商店UI，请重新选择商人交易！");
+            BedwarsSystem.warnPlayer(player, "§c你不能打开其他玩家正在使用的商店UI，请重新选择商人交易！");
+            return;
+        };
+
+        // 检查该商人是否是一个无效的商人，如果在交互之时就已经无效则立刻移除并终止代码运行
+        if (!trader.isValid) {
+            this.system.mode.map.removeTrader(trader);
+            return;
+        }
+
         // 隐藏商人
-        const trader = this.trader;
         trader.teleport(lib.Vector3Util.add(trader.location, 0, -2, 0));
         trader.nameTag = "";
         trader.addEffect("invisibility", 20000000, { showParticles: true });
@@ -4942,15 +4999,9 @@ class BedwarsTrader {
         playerInfo.lockAllItems();
 
         // 重新召唤 NPC
-        // 实测，若两名或多名玩家同时与商人交互，会导致生成多个商人的情况
-        // 因此这段代码只有检查到在上方无商人时执行
-        // debug 触发机理是，在两人都和同一名商人做交易后，打开的是同一个商人的 UI，与此同时下面的代码会被执行两次
-        // 目前的解决方法是治标不治本，需要一个更好的解决方法
-        if (lib.EntityUtil.getNearby("bedwars:trader", this.location, 0.5).length == 0) {
-            const newTraderData = this.system.mode.map.addTrader({ ...this.info, skin: this.skin });
-            const newTrader = newTraderData.spawn();
-            newTrader.setRotation(this.trader.getRotation());
-        };
+        const newTraderData = this.system.mode.map.addTrader({ ...this.info, skin: this.skin });
+        const newTrader = newTraderData.spawn();
+        newTrader.setRotation(this.trader.getRotation());
 
         // 设置 NPC 的物品
         this.setShopitem();
@@ -5090,9 +5141,10 @@ class BedwarsItemTrader extends BedwarsTrader {
             if (!lib.InventoryUtil.slotIsItem(this.trader, index, data.icon)) {
                 this.playerInfo.tradeInfo.category = data.category;
                 lib.ItemUtil.removeItem(this.player, data.icon);
+                lib.ItemUtil.removeItemEntity(data.icon);
                 this.setShopitem();
             };
-        })
+        });
 
         // 检查对应分类的对应槽位的物品是否为该物品，如果不是则尝试清除并购买该物品
         this.getUsingCategory().forEach((item, index) => {
@@ -6058,7 +6110,7 @@ class BedwarsTeam {
     /** 标记为已被淘汰 */
     setEliminated() {
         this.isEliminated = true;
-        this.map.aliveTeams.splice(this.map.aliveTeams.findIndex(aliveTeam => aliveTeam.id == this.id), 1);
+        this.map.aliveTeams = this.map.aliveTeams.filter(aliveTeam => aliveTeam.id != this.id);
         minecraft.world.sendMessage(["\n", { translate: "message.teamEliminated", with: [`${this.getTeamNameWithColor()}`] }, "\n "]);
         if (this.map.aliveTeams.length == 1) this.map.gameOver(this.map.aliveTeams[0]);
     };

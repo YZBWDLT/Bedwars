@@ -117,10 +117,17 @@
 
         "bedwars_red_bed": { "textures": "textures/items/bed_red" },
         "bedwars_blue_bed": { "textures": "textures/items/bed_blue" },
+        "bedwars_green_bed": { "textures": "textures/items/bed_lime" },
+        "bedwars_yellow_bed": { "textures": "textures/items/bed_yellow" },
         "bedwars_white_bed": { "textures": "textures/items/bed_white" },
+        "bedwars_pink_bed": { "textures": "textures/items/bed_pink" },
+        "bedwars_gray_bed": { "textures": "textures/items/bed_gray" },
+        "bedwars_cyan_bed": { "textures": "textures/items/bed_cyan" },
+        "bedwars_purple_bed": { "textures": "textures/items/bed_purple" },
+        "bedwars_orange_bed": { "textures": "textures/items/bed_orange" },
+        "bedwars_brown_bed": { "textures": "textures/items/bed_brown" },
 
         "bedwars_map_settings": { "textures": "textures/items/map_settings" },
-        "bedwars_select_team": { "textures": "textures/items/bed_red" },
         "bedwars_kill_style": { "textures": "textures/items/diamond_sword" }
     }
 }

@@ -1391,8 +1391,8 @@ export const mapData = {
                                 resourceLocation: { x: -62, y: 71, z: 50 },
                                 spawnpointLocation: { x: -58, y: 71, z: 49 },
                                 chestLocation: { x: -55, y: 71, z: 47 },
-                                island: { location: { x: -67, y: 61, z: -64 }, mirror: minecraft.StructureMirrorAxis.Z, },
-                                flagLocation: { from: { x: -49, y: 82, z: 56 }, to: { x: -52, y: 78, z: 45 }, }, // debug 加载时未正确更改颜色
+                                island: { location: { x: -67, y: 61, z: 38 }, mirror: minecraft.StructureMirrorAxis.XZ, },
+                                flagLocation: { from: { x: -49, y: 82, z: 56 }, to: { x: -52, y: 78, z: 45 }, },
                                 trader: [
                                     { type: "item", location: { x: -58, y: 71, z: 45 }, rotation: 0, teleportNearbyPlayerLocation: { x: -58, y: 71, z: 48 } },
                                     { type: "upgrade", location: { x: -55, y: 71, z: 54 }, rotation: 90, teleportNearbyPlayerLocation: { x: -58, y: 71, z: 54 } },
@@ -1404,7 +1404,7 @@ export const mapData = {
                                 resourceLocation: { x: -62, y: 71, z: -50 },
                                 spawnpointLocation: { x: -58, y: 71, z: -49 },
                                 chestLocation: { x: -55, y: 71, z: -47 },
-                                island: { location: { x: -67, y: 61, z: 38 }, mirror: minecraft.StructureMirrorAxis.XZ, },
+                                island: { location: { x: -67, y: 61, z: -64 }, mirror: minecraft.StructureMirrorAxis.Z, },
                                 flagLocation: { from: { x: -49, y: 82, z: -56 }, to: { x: -52, y: 78, z: -45 }, },
                                 trader: [
                                     { type: "item", location: { x: -58, y: 71, z: -45 }, rotation: 180, teleportNearbyPlayerLocation: { x: -58, y: 71, z: -48 } },

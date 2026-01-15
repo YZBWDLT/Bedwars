@@ -422,7 +422,10 @@ class BedwarsSettings {
         playerCanThrowItemsInVoid: false,
 
         /** 是否备份和恢复设置 */
-        backupAndRecoverSettings: true
+        backupAndRecoverSettings: true,
+
+        /** 恢复饱食度间隔，单位：秒 */
+        saturationInterval: 3
 
     };
 
@@ -1077,6 +1080,7 @@ class BedwarsSettings {
                         { type: "toggle", text: "破坏原版方块", tipText: `创造模式的管理员玩家能否破坏原版方块。当前值：§a${settings.miscellaneous.adminCanBreakBlocks}`, default: settings.miscellaneous.adminCanBreakBlocks },
                         { type: "toggle", text: "虚空可扔物品", tipText: `在虚空中掉落的玩家是否允许扔出物品。当前值：§a${settings.miscellaneous.playerCanThrowItemsInVoid}`, default: settings.miscellaneous.playerCanThrowItemsInVoid },
                         { type: "toggle", text: "备份与恢复设置", tipText: `在每次应用设置时备份，并在地图重新加载或/reload后自动恢复上一次的设置。当前值：§a${settings.miscellaneous.backupAndRecoverSettings}`, default: settings.miscellaneous.backupAndRecoverSettings },
+                        { type: "slider", text: "恢复饥饿值间隔", tipText: `每隔多久尝试恢复一次饥饿值。单位：秒。当前值：§a${settings.miscellaneous.saturationInterval}`, min: 1, max: 10, step: 1, default: settings.miscellaneous.saturationInterval },
                         { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
                     ],
                     onSubmitted: {
@@ -1089,10 +1093,14 @@ class BedwarsSettings {
                                 settings.miscellaneous.adminCanBreakBlocks = values[4];
                                 settings.miscellaneous.playerCanThrowItemsInVoid = values[5];
                                 settings.miscellaneous.backupAndRecoverSettings = values[6];
-                                // 如果启用了虚空可扔物品，则添加时间线，否则移除之
-                                if (settings.miscellaneous.playerCanThrowItemsInVoid) system.mode.timelineStopPlayerThrowItemInVoid();
-                                else system.unsubscribeTimeline("stopPlayerThrowItemInVoid");
+                                settings.miscellaneous.saturationInterval = values[7];
                             };
+                            // 如果启用了虚空可扔物品，则添加时间线，否则移除之
+                            if (settings.miscellaneous.playerCanThrowItemsInVoid) system.mode.timelineStopPlayerThrowItemInVoid();
+                            else system.unsubscribeTimeline("stopPlayerThrowItemInVoid");
+                            // 重新添加一次回复饥饿值时间线
+                            system.unsubscribeTimeline("general");
+                            system.mode.functionGeneral();
                             // 备份设置
                             this.backup(system);
                         },
@@ -1561,7 +1569,7 @@ class BedwarsMode {
                 callback: () => {
                     lib.PlayerUtil.getAll().forEach(player => player.addEffect("saturation", 1, { amplifier: 19, showParticles: false }));
                 },
-                tickInterval: 200,
+                tickInterval: 20 * this.system.settings.miscellaneous.saturationInterval,
             },
         });
         // 阻止玩家破坏方块
@@ -2452,6 +2460,20 @@ class BedwarsMode {
         this.timelineSpawnResource(); // 生成队伍类型资源时间线（包括铁、金、绿宝石）
         this.timelineGameEvent(); // 游戏事件时间线
         if (this.map.playerCouldIntoShop === false) this.timelineStopPlayerIntoShop(); // 阻止玩家进入商店的时间线
+        // 重新设置重生点
+        this.system.subscribeTimeline({
+            typeId: "resetSpawnpoint",
+            interval: [
+                {
+                    callback: () => {
+                        lib.PlayerUtil.getAll().forEach(player => {
+                            player.setSpawnPoint({ dimension: minecraft.world.getDimension("overworld"), ...this.map.spawnpoint, });
+                        });
+                    },
+                    tickInterval: 60,
+                }
+            ]
+        });
 
         // 游戏阶段后事件
         this.afterEntryGamingState();
@@ -7035,7 +7057,6 @@ class BedwarsExperienceMode extends BedwarsClassicMode {
 
     // debug
     // 为实现经验模式，在资源生成方面和商人交易方面有以下问题需要解决：
-    // - 实现令资源有一定程度的加速生成。应注意做到中岛生成资源的效率要高于队伍岛。
     // - 有待讨论：是否实现部分商品的不可持续？比如钻石盔甲是否要在死亡后撤回？
 
     /** 转化玩家经验 */

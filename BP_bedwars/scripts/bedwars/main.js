@@ -18,7 +18,7 @@ import * as data from "./data";
 /** 起床战争系统，在进入游戏后创立一个系统并进行初始化 */
 class BedwarsSystem {
 
-    /** 地图模式信息 @type {BedwarsClassicMode|BedwarsCaptureMode} */
+    /** 地图模式信息 @type {BedwarsMode} */
     mode;
 
     /** 系统时间线 @type {{[typeId: string]: number[]}} */
@@ -28,7 +28,7 @@ class BedwarsSystem {
     systemEvents = {};
 
     /** 系统版本 */
-    version = "Alpha 1.1_02";
+    version = "Alpha 1.1_03";
 
     /** 游戏 ID */
     gameId = lib.JSUtil.randomInt(1000, 9999);
@@ -48,29 +48,39 @@ class BedwarsSystem {
         this.resetMap();
     };
 
+    // ===== 系统内方法 =====
+
     /** 重置地图，重新选择一张地图并创建模式
      * @param {data.BedwarsMapInfo} [mapData] 指定要生成的地图，若不指定则随机生成
      */
     resetMap(mapData) {
 
-        /** 地图信息 @type {data.BedwarsMapInfo[]} */
-        let maps = [];
-
         // 移除当前所有的事件和时间线
         this.unsubscribeAllEvents();
         this.unsubscribeAllTimelines();
 
-        if (this.settings.mapEnabled.classicTwoTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.TwoTeams));
-        if (this.settings.mapEnabled.classicFourTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.FourTeams));
-        if (this.settings.mapEnabled.classicEightTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.EightTeams));
-        if (this.settings.mapEnabled.captureTwoTeamsEnabled) maps = maps.concat(Object.values(data.mapData.capture.TwoTeams));
+        /** 地图信息 @type {data.BedwarsMapInfo[]} */
+        let maps = [];
 
+        // 导入地图
+        if (this.settings.mapEnabled.classicTwoTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.twoTeams));
+        if (this.settings.mapEnabled.classicFourTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.fourTeams));
+        if (this.settings.mapEnabled.classicEightTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.eightTeams));
+        if (this.settings.mapEnabled.experienceTwoTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.twoTeams).map(map => data.classicToExperience(map)));
+        if (this.settings.mapEnabled.experienceFourTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.fourTeams).map(map => data.classicToExperience(map)));
+        if (this.settings.mapEnabled.experienceEightTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.eightTeams).map(map => data.classicToExperience(map)));
+        if (this.settings.mapEnabled.captureTwoTeamsEnabled) maps = maps.concat(Object.values(data.mapData.capture.twoTeams));
+
+        // 在所有已启用地图中选择地图
         let map = mapData ?? maps[lib.JSUtil.randomInt(0, maps.length - 1)];
         if (map.description.mode == "classic") {
-            this.mode = new BedwarsClassicMode(this, new BedwarsMap(this, map));
+            this.mode = new BedwarsClassicMode(this, new BedwarsClassicMap(this, map));
         }
         else if (map.description.mode == "capture") {
-            this.mode = new BedwarsCaptureMode(this, new BedwarsMap(this, map))
+            this.mode = new BedwarsCaptureMode(this, new BedwarsCaptureMap(this, map));
+        }
+        else if (map.description.mode == "experience") {
+            this.mode = new BedwarsExperienceMode(this, new BedwarsExperienceMap(this, map));
         };
 
         return map;
@@ -190,6 +200,13 @@ class BedwarsSystem {
         // lib.Debug.sendMessage(`§c- 已销毁所有事件`);
     };
 
+    /** 进入下一个阶段，并且撤销所有时间线和事件 */
+    entryNextStage() {
+        this.unsubscribeAllTimelines();
+        this.unsubscribeAllEvents();
+        this.gameStage++;
+    };
+
     // ===== 常用方法 =====
 
     /** 警告玩家并播放音效
@@ -261,40 +278,73 @@ class BedwarsSettings {
     /** 游戏内设置 */
     gaming = {
 
-        /** 生成上限 */
-        resourceLimit: {
+        /** 资源 */
+        resource: {
+
+            // ===== 生成上限 =====
 
             /** 铁生成上限 */
-            iron: 72,
+            ironLimit: 72,
 
             /** 金生成上限 */
-            gold: 7,
+            goldLimit: 7,
 
             /** 钻石生成上限 */
-            diamond: 8,
+            diamondLimit: 8,
 
             /** 绿宝石生成上限 */
-            emerald: 4
+            emeraldLimit: 4,
 
-        },
-
-        /** 生成间隔（单位：游戏刻） */
-        resourceInterval: {
+            // ===== 生成间隔 =====
 
             /** 平均每个铁的基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔*每次生成的铁锭数/(1+速度加成)） */
-            iron: 6,
+            ironInterval: 6,
 
             /** 金基准生成间隔，单位：游戏刻。实际生成间隔为（基准间隔/(1+速度加成) */
-            gold: 75,
+            goldInterval: 75,
 
             /** 钻石基准生成间隔，单位：秒。实际生成间隔为（基准间隔-10*等级） */
-            diamond: 40,
+            diamondInterval: 40,
 
             /** 绿宝石基准生成间隔，单位：秒。实际生成间隔为（基准间隔-10*等级） */
-            emerald: 75,
+            emeraldInterval: 75,
 
-            /** 单挑模式下，在单位时间内的生成数量乘数，将影响铁锭和金锭的生成速度 */
-            soloSpeedMultiplier: 0.6
+            // ===== 经验模式资源价值 =====
+
+            /** 1 个铁价值多少经验 */
+            ironValue: 1,
+
+            /** 1 个金锭价值多少经验 */
+            goldValue: 10,
+
+            /** 1 个绿宝石价值多少经验 */
+            emeraldValue: 100,
+
+            /** 1 个铁在商店中需要花费的经验 */
+            ironPrice: 1,
+
+            /** 1 个金锭在商店中需要花费的经验 */
+            goldPrice: 10,
+
+            /** 1 个绿宝石在商店中需要花费的经验 */
+            emeraldPrice: 100,
+
+            // ===== 其他设置 =====
+
+            /** 单挑模式下生成资源的速度，影响铁锭和金锭 */
+            soloSpeedMultiplier: 0.6,
+
+            /** 经验模式下生成绿宝石的速度 */
+            experienceEmeraldSpeedMultiplier: 4,
+
+            /** 经验模式下生成队伍岛资源的速度 */
+            experienceTeamResourceSpeedMultiplier: 0.5,
+
+            /** 队伍资源生成点共享资源 */
+            allowSharedTeamResourceGenerator: true,
+
+            /** 经验模式损失资源，损失的资源将给予击杀者，0：不损失，1：损失一半，2：完全损失 @type {0|1|2} */
+            loseLevelTier: 1
 
         },
 
@@ -350,6 +400,15 @@ class BedwarsSettings {
 
         /** 是否启用夺点两队模式 */
         captureTwoTeamsEnabled: true,
+
+        /** 是否启用经验两队模式 */
+        experienceTwoTeamsEnabled: true,
+
+        /** 是否启用经验四队模式 */
+        experienceFourTeamsEnabled: true,
+
+        /** 是否启用经验八队模式 */
+        experienceEightTeamsEnabled: true,
 
     };
 
@@ -439,7 +498,7 @@ class BedwarsSettings {
                 // 逐项遍历
                 path.slice(1).reduce((current, key, index) => {
                     // 在遍历过程中，如果当前设置项遇到了 undefined 则直接终止
-                    if (current[key] === undefined) return;
+                    try { if (current[key] === undefined) return; } catch { return; }
                     // 遍历到最后一项时，将对应设置项设置成原来保存的值
                     if (index == path.slice(1).length - 1) current[key] = value;
                     return current[key];
@@ -627,87 +686,87 @@ class BedwarsSettings {
             );
         };
 
-        /** 游戏内设置 - 资源上限设置
+        /** 游戏内设置 - 资源设置
          * @param {minecraft.Player} player
          * @param {lib.ActionUIData} parentForm
          */
-        const resourceLimitSettings = (player, parentForm) => {
+        const resourceSettings = (player, parentForm) => {
             lib.UIUtil.createModal(
                 {
                     type: "modal",
                     parentForm: parentForm,
                     submitButton: "确认",
                     components: [
-                        { type: "header", text: "资源上限设置" },
-                        { type: "label", text: "控制各类资源在没有玩家在附近时的最大生成数量。" },
+                        { type: "header", text: "资源设置" },
+                        { type: "label", text: "控制各类资源在游戏内的表现。" },
                         { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                        { type: "divider", },
-                        { type: "slider", text: "铁锭", tipText: `当前值：§a${settings.gaming.resourceLimit.iron}`, min: 8, max: 400, step: 8, default: settings.gaming.resourceLimit.iron },
-                        { type: "slider", text: "金锭", tipText: `当前值：§a${settings.gaming.resourceLimit.gold}`, min: 1, max: 50, step: 1, default: settings.gaming.resourceLimit.gold },
-                        { type: "slider", text: "钻石", tipText: `当前值：§a${settings.gaming.resourceLimit.diamond}`, min: 1, max: 50, step: 1, default: settings.gaming.resourceLimit.diamond },
-                        { type: "slider", text: "绿宝石", tipText: `当前值：§a${settings.gaming.resourceLimit.emerald}`, min: 1, max: 50, step: 1, default: settings.gaming.resourceLimit.emerald },
-                        { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
-                    ],
-                    onSubmitted: {
-                        openParentForm: true,
-                        callback: (values) => {
-                            // 若启用默认设置，则设置为默认设置
-                            if (values[values.length - 1]) settings.gaming.resourceLimit = new BedwarsSettings().gaming.resourceLimit;
-                            // 否则，应用这些设置
-                            else {
-                                settings.gaming.resourceLimit.iron = values[4];
-                                settings.gaming.resourceLimit.gold = values[5];
-                                settings.gaming.resourceLimit.diamond = values[6];
-                                settings.gaming.resourceLimit.emerald = values[7];
-                            };
-                            // 备份设置
-                            this.backup(system);
-                        },
-                    },
-                    onCanceled: {
-                        openParentForm: true,
-                    }
-                },
-                player
-            );
-        };
-
-        /** 游戏内设置 - 资源上限设置
-         * @param {minecraft.Player} player
-         * @param {lib.ActionUIData} parentForm
-         */
-        const resourceIntervalSettings = (player, parentForm) => {
-            lib.UIUtil.createModal(
-                {
-                    type: "modal",
-                    parentForm: parentForm,
-                    submitButton: "确认",
-                    components: [
-                        { type: "header", text: "资源生成间隔设置" },
-                        { type: "label", text: "控制各类资源的生成间隔。" },
-                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                        { type: "divider", },
-                        { type: "slider", text: "铁锭（x0.05秒）", tipText: `在标准模式没有任何加成时，平均每个铁锭所需要的生成时间，单位：*0.05秒。当前值：§a${settings.gaming.resourceInterval.iron}`, min: 2, max: 40, step: 2, default: settings.gaming.resourceInterval.iron },
+                        { type: "divider", }, // 3
+                        { type: "label", text: "§l资源设置" }, // 4
+                        { type: "slider", text: "铁锭上限", tipText: `当前值：§a${settings.gaming.resource.ironLimit}`, min: 8, max: 400, step: 8, default: settings.gaming.resource.ironLimit },
+                        { type: "slider", text: "金锭上限", tipText: `当前值：§a${settings.gaming.resource.goldLimit}`, min: 1, max: 50, step: 1, default: settings.gaming.resource.goldLimit },
+                        { type: "slider", text: "钻石上限", tipText: `当前值：§a${settings.gaming.resource.diamondLimit}`, min: 1, max: 50, step: 1, default: settings.gaming.resource.diamondLimit },
+                        { type: "slider", text: "绿宝石上限", tipText: `当前值：§a${settings.gaming.resource.emeraldLimit}`, min: 1, max: 50, step: 1, default: settings.gaming.resource.emeraldLimit },
+                        { type: "divider", }, // 9
+                        { type: "label", text: "§l资源生成间隔设置" }, // 10
+                        { type: "slider", text: "铁锭间隔（x0.05秒）", tipText: `在标准模式没有任何加成时，平均每个铁锭所需要的生成时间，单位：*0.05秒。当前值：§a${settings.gaming.resource.ironInterval}`, min: 2, max: 40, step: 2, default: settings.gaming.resource.ironInterval },
                         { type: "label", text: "§7在不同地图下，一次可能生成多个铁，总时长会成倍延长，但平均生成铁的时间不变。\n例如，该值设置为10时，则平均每10*0.05=0.5秒生成1个铁。", },
-                        { type: "slider", text: "金锭（x0.05秒）", tipText: `在标准模式没有任何加成时，每个金锭所需要的生成时间，单位：*0.05秒。当前值：§a${settings.gaming.resourceInterval.gold}`, min: 20, max: 300, step: 5, default: settings.gaming.resourceInterval.gold },
-                        { type: "slider", text: "钻石（秒）", tipText: `在标准模式没有任何加成时，每个钻石所需要的生成时间，单位：秒。当前值：§a${settings.gaming.resourceInterval.diamond - 10}`, min: 25, max: 60, step: 5, default: settings.gaming.resourceInterval.diamond - 10 }, // debug 这里-10是因为原始数值是0级的数值，但是实际上最低等级是1级，下文同理
-                        { type: "slider", text: "绿宝石（秒）", tipText: `在标准模式没有任何加成时，每个绿宝石所需要的生成时间，单位：秒。当前值：§a${settings.gaming.resourceInterval.emerald - 10}`, min: 30, max: 90, step: 5, default: settings.gaming.resourceInterval.emerald - 10 },
-                        { type: "slider", text: "单挑模式生成速度倍率（x0.1）", tipText: `在单挑模式下相比于非单挑模式的生成速率，只影响铁锭和金锭的生成，单位：*0.1。当前值：§a${settings.gaming.resourceInterval.soloSpeedMultiplier * 10}`, min: 1, max: 20, step: 1, default: settings.gaming.resourceInterval.soloSpeedMultiplier * 10 },
+                        { type: "slider", text: "金锭间隔（x0.05秒）", tipText: `在标准模式没有任何加成时，每个金锭所需要的生成时间，单位：*0.05秒。当前值：§a${settings.gaming.resource.goldInterval}`, min: 20, max: 300, step: 5, default: settings.gaming.resource.goldInterval },
+                        { type: "slider", text: "钻石间隔（秒）", tipText: `在标准模式没有任何加成时，每个钻石所需要的生成时间，单位：秒。当前值：§a${settings.gaming.resource.diamondInterval - 10}`, min: 25, max: 60, step: 5, default: settings.gaming.resource.diamondInterval - 10 }, // debug 这里-10是因为原始数值是0级的数值，但是实际上最低等级是1级，下文同理
+                        { type: "slider", text: "绿宝石间隔（秒）", tipText: `在标准模式没有任何加成时，每个绿宝石所需要的生成时间，单位：秒。当前值：§a${settings.gaming.resource.emeraldInterval - 10}`, min: 30, max: 90, step: 5, default: settings.gaming.resource.emeraldInterval - 10 },
+                        { type: "divider", }, // 16
+                        { type: "label", text: "§l经验模式资源价值设置" }, // 17
+                        { type: "slider", text: "铁锭价值", tipText: `在经验模式下，获得1个铁锭得到的经验。当前值：§a${settings.gaming.resource.ironValue}`, min: 1, max: 10, step: 1, default: settings.gaming.resource.ironValue },
+                        { type: "slider", text: "金锭价值", tipText: `在经验模式下，获得1个金锭得到的经验。当前值：§a${settings.gaming.resource.goldValue}`, min: 5, max: 50, step: 5, default: settings.gaming.resource.goldValue },
+                        { type: "slider", text: "绿宝石价值", tipText: `在经验模式下，获得1个绿宝石得到的经验。当前值：§a${settings.gaming.resource.emeraldValue}`, min: 50, max: 500, step: 50, default: settings.gaming.resource.emeraldValue },
+                        { type: "slider", text: "铁锭价格", tipText: `在经验模式下，在经典模式下花费1个铁锭需对应花费的经验。当前值：§a${settings.gaming.resource.ironPrice}`, min: 1, max: 10, step: 1, default: settings.gaming.resource.ironPrice },
+                        { type: "slider", text: "金锭价格", tipText: `在经验模式下，在经典模式下花费1个金锭需对应花费的经验。当前值：§a${settings.gaming.resource.goldPrice}`, min: 5, max: 50, step: 5, default: settings.gaming.resource.goldPrice },
+                        { type: "slider", text: "绿宝石价格", tipText: `在经验模式下，在经典模式下花费1个绿宝石需对应花费的经验。当前值：§a${settings.gaming.resource.emeraldPrice}`, min: 50, max: 500, step: 50, default: settings.gaming.resource.emeraldPrice },
+                        { type: "divider", }, // 24
+                        { type: "label", text: "§l资源生成速度设置" }, // 25
+                        { type: "slider", text: "单挑模式生成速度倍率（x0.1）", tipText: `在单挑模式下相比于非单挑模式的生成速率，只影响铁锭和金锭的生成，单位：*0.1。当前值：§a${settings.gaming.resource.soloSpeedMultiplier * 10}`, min: 1, max: 20, step: 1, default: settings.gaming.resource.soloSpeedMultiplier * 10 },
                         { type: "label", text: "§7例如，该值设置为6时，则铁锭和金锭的生成速度只有非单挑模式下的0.1*6*100%%=60%%。", },
+                        { type: "slider", text: "经验模式生成队伍岛资源速度倍率（x0.1）", tipText: `在经验模式下相比于经典模式的生成速率，只影响铁锭和金锭的生成，单位：*0.1。当前值：§a${settings.gaming.resource.experienceTeamResourceSpeedMultiplier * 10}`, min: 1, max: 20, step: 1, default: settings.gaming.resource.experienceTeamResourceSpeedMultiplier * 10 },
+                        { type: "slider", text: "经验模式生成绿宝石速度倍率（x0.1）", tipText: `在经验模式下相比于经典模式的生成速率，只影响绿宝石的生成，单位：*0.1。当前值：§a${settings.gaming.resource.experienceEmeraldSpeedMultiplier * 10}`, min: 5, max: 100, step: 5, default: settings.gaming.resource.experienceEmeraldSpeedMultiplier * 10 },
+                        { type: "divider", }, // 30
+                        { type: "label", text: "§l其他设置" }, // 31
+                        { type: "toggle", text: "队伍资源生成点共享资源", tipText: `若启用，则在队伍资源生成点的所有玩家都能获得资源，否则所有玩家需相互抢夺资源。§c目前未实装。§r当前值：§a${settings.gaming.resource.allowSharedTeamResourceGenerator}`, default: settings.gaming.resource.allowSharedTeamResourceGenerator },
+                        { type: "dropdown", text: "经验模式损失资源", tipText: `在经验模式下，玩家死亡后损失多少经验，损失的经验将给予击杀者。当前值：§a${settings.gaming.resource.loseLevelTier}`, items: ["不损失经验", "损失一半经验", "损失全部经验"], default: settings.gaming.resource.loseLevelTier },
                         { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
                     ],
                     onSubmitted: {
                         openParentForm: true,
                         callback: (values) => {
                             // 若启用默认设置，则设置为默认设置
-                            if (values[values.length - 1]) settings.gaming.resourceInterval = new BedwarsSettings().gaming.resourceInterval;
+                            if (values[values.length - 1]) settings.gaming.resource = new BedwarsSettings().gaming.resource;
                             // 否则，应用这些设置
                             else {
-                                settings.gaming.resourceInterval.iron = values[4];
-                                settings.gaming.resourceInterval.gold = values[6];
-                                settings.gaming.resourceInterval.diamond = values[7] + 10;
-                                settings.gaming.resourceInterval.emerald = values[8] + 10;
-                                settings.gaming.resourceInterval.soloSpeedMultiplier = lib.JSUtil.limitDecimal(values[9] / 10, 1);
+                                settings.gaming.resource.ironLimit = values[5];
+                                settings.gaming.resource.goldLimit = values[6];
+                                settings.gaming.resource.diamondLimit = values[7];
+                                settings.gaming.resource.emeraldLimit = values[8];
+                                settings.gaming.resource.ironInterval = values[11];
+                                settings.gaming.resource.goldInterval = values[13];
+                                settings.gaming.resource.diamondInterval = values[14] + 10;
+                                settings.gaming.resource.emeraldInterval = values[15] + 10;
+                                settings.gaming.resource.ironValue = values[18];
+                                settings.gaming.resource.goldValue = values[19];
+                                settings.gaming.resource.emeraldValue = values[20];
+                                settings.gaming.resource.ironPrice = values[21];
+                                settings.gaming.resource.goldPrice = values[22];
+                                settings.gaming.resource.emeraldPrice = values[23];
+                                settings.gaming.resource.soloSpeedMultiplier = lib.JSUtil.limitDecimal(values[26] / 10, 1);
+                                settings.gaming.resource.experienceTeamResourceSpeedMultiplier = lib.JSUtil.limitDecimal(values[28] / 10, 1);
+                                settings.gaming.resource.experienceEmeraldSpeedMultiplier = lib.JSUtil.limitDecimal(values[29] / 10, 1);
+                                settings.gaming.resource.allowSharedTeamResourceGenerator = values[32];
+                                settings.gaming.resource.loseLevelTier = values[33];
+                            };
+                            // 重新应用此设置
+                            const map = system.mode.map;
+                            map.teamResourceSpawnSpeed = 1;
+                            if (map.isSolo) map.teamResourceSpawnSpeed *= settings.gaming.resource.soloSpeedMultiplier;
+                            if (map.mode == "experience") {
+                                map.teamResourceSpawnSpeed *= settings.gaming.resource.experienceTeamResourceSpeedMultiplier;
+                                map.emeraldSpawnSpeed *= settings.gaming.resource.experienceEmeraldSpeedMultiplier;
                             };
                             // 备份设置
                             this.backup(system);
@@ -866,6 +925,9 @@ class BedwarsSettings {
                         { type: "toggle", text: "启用经典2队模式地图", tipText: `当前值：§a${settings.mapEnabled.classicTwoTeamsEnabled}`, default: settings.mapEnabled.classicTwoTeamsEnabled },
                         { type: "toggle", text: "启用经典4队模式地图", tipText: `当前值：§a${settings.mapEnabled.classicFourTeamsEnabled}`, default: settings.mapEnabled.classicFourTeamsEnabled },
                         { type: "toggle", text: "启用经典8队模式地图", tipText: `当前值：§a${settings.mapEnabled.classicEightTeamsEnabled}`, default: settings.mapEnabled.classicEightTeamsEnabled },
+                        { type: "toggle", text: "启用经验2队模式地图", tipText: `当前值：§a${settings.mapEnabled.experienceTwoTeamsEnabled}`, default: settings.mapEnabled.experienceTwoTeamsEnabled },
+                        { type: "toggle", text: "启用经验4队模式地图", tipText: `当前值：§a${settings.mapEnabled.experienceFourTeamsEnabled}`, default: settings.mapEnabled.experienceFourTeamsEnabled },
+                        { type: "toggle", text: "启用经验8队模式地图", tipText: `当前值：§a${settings.mapEnabled.experienceEightTeamsEnabled}`, default: settings.mapEnabled.experienceEightTeamsEnabled },
                         { type: "toggle", text: "启用夺点2队模式地图", tipText: `当前值：§a${settings.mapEnabled.captureTwoTeamsEnabled}`, default: settings.mapEnabled.captureTwoTeamsEnabled },
                         { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
                     ],
@@ -883,7 +945,10 @@ class BedwarsSettings {
                                 settings.mapEnabled.classicTwoTeamsEnabled = values[4];
                                 settings.mapEnabled.classicFourTeamsEnabled = values[5];
                                 settings.mapEnabled.classicEightTeamsEnabled = values[6];
-                                settings.mapEnabled.captureTwoTeamsEnabled = values[7];
+                                settings.mapEnabled.experienceTwoTeamsEnabled = values[7];
+                                settings.mapEnabled.experienceFourTeamsEnabled = values[8];
+                                settings.mapEnabled.experienceEightTeamsEnabled = values[9];
+                                settings.mapEnabled.captureTwoTeamsEnabled = values[10];
                             };
                             // 备份设置
                             this.backup(system);
@@ -916,145 +981,30 @@ class BedwarsSettings {
                                 return;
                             }
                             const map = system.resetMap();
-                            lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.description.name}§7（随机生成）`));
+                            lib.PlayerUtil.broadcast(`即将生成地图 ${map.description.name}§7（随机生成）`);
                         },
                     }
                 },
                 { type: "label", text: "§7在已启用的地图中随机生成一张地图。" },
             ];
 
-            // 两队经典模式启用时，添加两队经典模式的按钮选项
-            if (settings.mapEnabled.classicTwoTeamsEnabled) {
-                const twoTeamsMaps = Object.values(data.mapData.classic.TwoTeams);
-                const twoTeamsMapNames = twoTeamsMaps.map(mapData => mapData.description.name);
-                components.push(
-                    {
-                        type: "button",
-                        text: "生成 2 队经典地图",
-                        onSelected: {
-                            openChildForm: true,
-                            childForm: {
-                                type: "modal",
-                                components: [
-                                    { type: "header", text: "生成 2 队经典地图", },
-                                    { type: "label", text: "立刻生成一张 2 队经典模式的地图。", },
-                                    { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                                    { type: "divider", },
-                                    { type: "dropdown", text: "地图", items: twoTeamsMapNames, default: 0 }
-                                ],
-                                onCanceled: {
-                                    openParentForm: true,
-                                },
-                                onSubmitted: {
-                                    callback: (result) => {
-                                        if (system.gameStage == 1) {
-                                            BedwarsSystem.warnPlayer(player, { translate: "message.settings.warning.regenerateMapWhenLoading" });
-                                            return;
-                                        }
-                                        const map = system.resetMap(twoTeamsMaps[result[4]]);
-                                        lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.description.name}`));
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    { type: "label", text: "§7在所有 2 队经典模式的地图中选择一张生成。" },
-                );
-            };
-
-            // 四队经典模式启用时，添加四队经典模式的按钮选项
-            if (settings.mapEnabled.classicFourTeamsEnabled) {
-                const fourTeamsMaps = Object.values(data.mapData.classic.FourTeams);
-                const fourTeamsMapNames = fourTeamsMaps.map(mapData => mapData.description.name);
-                components.push(
-                    {
-                        type: "button",
-                        text: "生成 4 队经典地图",
-                        onSelected: {
-                            openChildForm: true,
-                            childForm: {
-                                type: "modal",
-                                components: [
-                                    { type: "header", text: "生成 4 队经典地图", },
-                                    { type: "label", text: "立刻生成一张 4 队经典模式的地图。", },
-                                    { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                                    { type: "divider", },
-                                    { type: "dropdown", text: "地图", items: fourTeamsMapNames, default: 0 }
-                                ],
-                                onCanceled: {
-                                    openParentForm: true,
-                                },
-                                onSubmitted: {
-                                    callback: (result) => {
-                                        if (system.gameStage == 1) {
-                                            BedwarsSystem.warnPlayer(player, { translate: "message.settings.warning.regenerateMapWhenLoading" });
-                                            return;
-                                        }
-                                        const map = system.resetMap(fourTeamsMaps[result[4]]);
-                                        lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.description.name}`));
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    { type: "label", text: "§7在所有 4 队经典模式的地图中选择一张生成。" },
-                );
-            };
-
-            // 八队经典模式启用时，添加八队经典模式的按钮选项
-            if (settings.mapEnabled.classicEightTeamsEnabled) {
-                const eightTeamsMaps = Object.values(data.mapData.classic.EightTeams);
-                const eightTeamsMapNames = eightTeamsMaps.map(mapData => mapData.description.name);
-                components.push(
-                    {
-                        type: "button",
-                        text: "生成 8 队经典地图",
-                        onSelected: {
-                            openChildForm: true,
-                            childForm: {
-                                type: "modal",
-                                components: [
-                                    { type: "header", text: "生成 8 队经典地图", },
-                                    { type: "label", text: "立刻生成一张 8 队经典模式的地图。", },
-                                    { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                                    { type: "divider", },
-                                    { type: "dropdown", text: "地图", items: eightTeamsMapNames, default: 0 }
-                                ],
-                                onCanceled: {
-                                    openParentForm: true,
-                                },
-                                onSubmitted: {
-                                    callback: (result) => {
-                                        if (system.gameStage == 1) {
-                                            BedwarsSystem.warnPlayer(player, { translate: "message.settings.warning.regenerateMapWhenLoading" });
-                                            return;
-                                        }
-                                        const map = system.resetMap(eightTeamsMaps[result[4]]);
-                                        lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.description.name}`));
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    { type: "label", text: "§7在所有 8 队经典模式的地图中选择一张生成。" },
-                );
-            }
-
-            // 两队夺点模式启用时，添加两队夺点模式的按钮选项
-            if (settings.mapEnabled.captureTwoTeamsEnabled) {
-                const maps = Object.values(data.mapData.capture.TwoTeams);
+            /** 添加 UI 按钮
+             * @param {data.BedwarsMapInfo[]} maps 地图列表
+             * @param {string} modeName 模式名称，例如“2 队经典”
+             */
+            const newButton = (maps, modeName) => {
                 const mapNames = maps.map(mapData => mapData.description.name);
                 components.push(
                     {
                         type: "button",
-                        text: "生成 2 队夺点地图",
+                        text: `生成 ${modeName}地图`,
                         onSelected: {
                             openChildForm: true,
                             childForm: {
                                 type: "modal",
                                 components: [
-                                    { type: "header", text: "生成 2 队夺点地图", },
-                                    { type: "label", text: "立刻生成一张 2 队夺点模式的地图。", },
+                                    { type: "header", text: `生成 ${modeName}地图`, },
+                                    { type: "label", text: `立刻生成一张 ${modeName}模式的地图。`, },
                                     { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
                                     { type: "divider", },
                                     { type: "dropdown", text: "地图", items: mapNames, default: 0 }
@@ -1064,21 +1014,32 @@ class BedwarsSettings {
                                 },
                                 onSubmitted: {
                                     callback: (result) => {
+                                        // 若处于加载地图阶段，阻止之
                                         if (system.gameStage == 1) {
                                             BedwarsSystem.warnPlayer(player, { translate: "message.settings.warning.regenerateMapWhenLoading" });
                                             return;
-                                        }
+                                        };
                                         const map = system.resetMap(maps[result[4]]);
-                                        lib.PlayerUtil.getAll().forEach(player => player.sendMessage(`即将生成地图 ${map.description.name}`));
+                                        lib.PlayerUtil.broadcast(`即将生成地图 ${map.description.name}（${modeName}）`);
                                     },
                                 },
                             },
                         },
                     },
-                    { type: "label", text: "§7在所有 2 队夺点模式的地图中选择一张生成。" },
+                    { type: "label", text: `§7在所有 ${modeName}模式的地图中选择一张生成。` },
                 );
-            }
+            };
 
+            // 当对应模式启用时，添加对应模式的按钮选项
+            if (settings.mapEnabled.classicTwoTeamsEnabled) newButton(Object.values(data.mapData.classic.twoTeams), "2 队经典");
+            if (settings.mapEnabled.classicFourTeamsEnabled) newButton(Object.values(data.mapData.classic.fourTeams), "4 队经典");
+            if (settings.mapEnabled.classicEightTeamsEnabled) newButton(Object.values(data.mapData.classic.eightTeams), "8 队经典");
+            if (settings.mapEnabled.experienceTwoTeamsEnabled) newButton(Object.values(data.mapData.classic.twoTeams).map(map => data.classicToExperience(map)), "2 队经验");
+            if (settings.mapEnabled.experienceFourTeamsEnabled) newButton(Object.values(data.mapData.classic.fourTeams).map(map => data.classicToExperience(map)), "4 队经验");
+            if (settings.mapEnabled.experienceEightTeamsEnabled) newButton(Object.values(data.mapData.classic.eightTeams).map(map => data.classicToExperience(map)), "8 队经验");
+            if (settings.mapEnabled.captureTwoTeamsEnabled) newButton(Object.values(data.mapData.capture.twoTeams), "2 队夺点");
+
+            // 显示 UI
             lib.UIUtil.createAction(
                 {
                     type: "action",
@@ -1237,10 +1198,8 @@ class BedwarsSettings {
                                     { type: "label", text: "控制游戏开始后的运行逻辑。", },
                                     { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
                                     { type: "divider", },
-                                    { type: "button", text: "资源上限设置...", icon: "textures/items/iron_ingot", onSelected: { callback: (selection, thisForm) => resourceLimitSettings(player, thisForm) } },
-                                    { type: "label", text: "§7控制各类资源在没有玩家在附近时的最大生成数量。" },
-                                    { type: "button", text: "资源生成间隔设置...", icon: "textures/items/gold_ingot", onSelected: { callback: (selection, thisForm) => resourceIntervalSettings(player, thisForm) } },
-                                    { type: "label", text: "§7控制各类资源的生成间隔。" },
+                                    { type: "button", text: "资源设置...", icon: "textures/items/iron_ingot", onSelected: { callback: (selection, thisForm) => resourceSettings(player, thisForm) } },
+                                    { type: "label", text: "§7控制各类资源在游戏内的表现。" },
                                     { type: "button", text: "重生时间设置...", icon: "textures/items/clock_item", onSelected: { callback: (selection, thisForm) => respawnTimeSettings(player, thisForm) } },
                                     { type: "label", text: "§7控制普通玩家和重新进入游戏的玩家的重生时间。" },
                                     { type: "button", text: "击杀样式设置...", icon: "textures/items/iron_sword", onSelected: { callback: (selection, thisForm) => killStyleSettings(player, thisForm) } },
@@ -1313,7 +1272,7 @@ class BedwarsSettings {
                         }
                     },
                     { type: "label", text: "§7查看关于我们的信息。", },
-                    {
+                    { // 更新日志
                         type: "button", text: "更新日志...", icon: "textures/items/book_writable",
                         onSelected: {
                             childForm: {
@@ -1479,24 +1438,28 @@ class BedwarsSettings {
 
 };
 
-// ===== 模式 =====
-// 模式负责运行最基础的代码逻辑。
-// 例如，游戏前、游戏时都使用什么逻辑，都通过模式调用 Minecraft 的接口（world 的前事件、后事件和 system.runInterval 等）
-// 来执行，并对系统传入 Minecraft 传回的参数，方便后续管理。
-// 模式内部有几个特殊方法：entry...State(){} 和 exit...State() {}，它们在阶段变更时执行。一共有 5 个阶段。
-// 此外，timeline...()的方法为时间线方法，event...()方法为事件方法，function...()方法则是两者兼备。可以调用它们以自行注册时间线或事件。
-// 一切其他模式都是基于 BedwarsClassicMode（经典模式）的模式构建的。
-// 【优化指南】在不必要的情况下，为性能考虑，模式内的代码会传入较高延迟的 system.runInterval，并且在符合特定条件时会销毁。
-// 例如蠹虫生成后，蠹虫存活倒计时才开始计时，并在蠹虫全部消失后销毁时间线。事件也是类似的道理，在不需要时应销毁。
+// ===== 基础类 =====
 
-/** 经典模式起床战争的相关函数和方法 */
-class BedwarsClassicMode {
+/** 起床战争模式
+ * 
+ * 起床战争模式负责运行最基础的代码逻辑。
+ * - 例如，游戏前、游戏时都使用什么逻辑，都通过模式调用 Minecraft 的接口（world 的前事件、后事件和 system.runInterval 等）来执行，
+ *   并对系统传入 Minecraft 传回的参数，方便后续管理。
+ * - 模式内部有几个特殊方法：entry...State() {}，它们在阶段变更时执行。一共有 5 个阶段。
+ *   其他模式可以使用beforeEntry...State() {} 和 afterEntry...State() {}，以在进入此阶段前后执行代码；
+ * - 此外，timeline...()的方法为时间线方法，event...()方法为事件方法，function...()方法则是两者兼备。
+ *   可以调用它们以自行注册时间线或事件。
+ * - 一切其他模式都是基于本类而构建的（包括经典模式）。
+ * - 【优化指南】在不必要的情况下，为性能考虑，模式内的代码会传入较高延迟的 system.runInterval，并且在符合特定条件时会销毁。
+ *   例如蠹虫生成后，蠹虫存活倒计时才开始计时，并在蠹虫全部消失后销毁时间线。事件也是类似的道理，在不需要时应销毁。
+ */
+class BedwarsMode {
 
     /** 模式类型 */
-    type = "classic";
+    type = "";
 
     /** 模式名称 */
-    name = "经典";
+    name = "";
 
     /** 系统 @type {BedwarsSystem} */
     system;
@@ -1512,12 +1475,6 @@ class BedwarsClassicMode {
 
     /** 游戏开始倒计时，单位：秒（仅在等待期间使用） */
     gameStartCountdown = 21;
-
-    /** 物品类商店物品数据 @type {data.BedwarsItemShopitemInfo[]} */
-    itemShopitemData = [];
-
-    /** 团队升级类商店物品数据 @type {data.BedwarsUpgradeShopitemInfo[]} */
-    upgradeShopitemData = [];
 
     /** 游戏前选队数据 */
     selectTeamBeforeGame = {
@@ -1560,21 +1517,18 @@ class BedwarsClassicMode {
     /** 下一个事件 */
     nextEvent = {
 
-        /** 下一个事件的 ID @type {"diamond_2"|"emerald_2"|"diamond_3"|"emerald_3"|"bed_destruction"|"death_match"|"game_over"} */
-        id: "diamond_2",
+        /** 下一个事件的 ID */
+        id: "",
 
         /** 下一个事件的倒计时，单位：秒 */
         countdown: 360,
 
-        /** 下一个事件的名称 @type {"钻石生成点 II 级"|"绿宝石生成点 II 级"|"钻石生成点 III 级"|"绿宝石生成点 III 级"|"床自毁"|"绝杀模式"|"游戏结束"} */
-        name: "钻石生成点 II 级",
+        /** 下一个事件的名称 */
+        name: "",
 
     }
 
-    /**
-     * @param {BedwarsSystem} system
-     * @param {BedwarsMap} map 
-     */
+    /** @param {BedwarsSystem} system @param {BedwarsMap} map */
     constructor(system, map) {
 
         /** 系统 */
@@ -1686,19 +1640,7 @@ class BedwarsClassicMode {
 
     };
 
-    /** 游戏前时间线与事件，包括游戏前基本逻辑和游戏前信息板，并检查玩家在游戏前进入
-     * 
-     * @warning
-     * 
-     * 【debug】该函数实测会在exitWaitingState执行移除时间线的方法后，仍然在1秒后执行一次，原因不详，无论换成什么内容都会执行。
-     * 
-     * 有可能是gameStartCountdown时间线及相关方法执行效果出现问题所导致。因此下面这段代码，在该问题得到彻底解决前请勿删除！
-     * 
-     * @example 
-     * 
-     * // 请勿删除的片段
-     * if (this.system.gameStage >= 3) return;
-     */
+    /** 游戏前时间线与事件，包括游戏前基本逻辑和游戏前信息板，并检查玩家在游戏前进入 */
     functionBeforeGaming() {
         this.system.subscribeTimeline({
             typeId: "beforeGaming",
@@ -1759,6 +1701,9 @@ class BedwarsClassicMode {
             typeId: "selectTeam",
             interval: {
                 callback: () => {
+                    // 如果已经进入游戏阶段，则直接终止运行
+                    if (this.system.gameStage >= 3) return;
+
                     // 检查 (4, 120, 0) 位置是否有选队 NPC，如果没有则创建之
 
                     /** NPC 位置 @type {minecraft.Vector3} */
@@ -1952,6 +1897,9 @@ class BedwarsClassicMode {
         // 清除玩家所有物品
         lib.ItemUtil.removeItem(player);
 
+        // 清除玩家的经验等级
+        player.resetLevel();
+
         // 清除玩家的末影箱
         lib.PlayerUtil.resetEnderChest(player);
 
@@ -2071,6 +2019,9 @@ class BedwarsClassicMode {
     /** 进入清空地图状态，仅在进入此状态时执行一次 */
     entryClearMapState() {
 
+        // 进入游戏阶段前事件
+        this.beforeEntryClearMapState();
+
         // 设置常加载区域
         minecraft.world.getDimension("overworld").runCommand("tickingarea add 0 0 0 100 0 100 gamingArea1 true");
         minecraft.world.getDimension("overworld").runCommand("tickingarea add 0 0 0 100 0 -100 gamingArea2 true");
@@ -2080,16 +2031,16 @@ class BedwarsClassicMode {
         // 游戏规则初始化，并设置为禁止 PVP
         minecraft.world.gameRules.pvp = false;
         minecraft.world.gameRules.sendCommandFeedback = false;
-        minecraft.world.gameRules.showTags = false
-        minecraft.world.gameRules.doImmediateRespawn = true
-        minecraft.world.gameRules.showDeathMessages = false
-        minecraft.world.gameRules.doMobLoot = false
-        minecraft.world.gameRules.doEntityDrops = false
-        minecraft.world.gameRules.keepInventory = true
-        minecraft.world.gameRules.doMobSpawning = false
-        minecraft.world.gameRules.randomTickSpeed = 0
-        minecraft.world.gameRules.doDayLightCycle = false
-        minecraft.world.gameRules.doWeatherCycle = false
+        minecraft.world.gameRules.showTags = false;
+        minecraft.world.gameRules.doImmediateRespawn = true;
+        minecraft.world.gameRules.showDeathMessages = false;
+        minecraft.world.gameRules.doMobLoot = false;
+        minecraft.world.gameRules.doEntityDrops = false;
+        minecraft.world.gameRules.keepInventory = true;
+        minecraft.world.gameRules.doMobSpawning = false;
+        minecraft.world.gameRules.randomTickSpeed = 0;
+        minecraft.world.gameRules.doDayLightCycle = false;
+        minecraft.world.gameRules.doWeatherCycle = false;
 
         // 设置天气为晴天
         minecraft.world.getDimension("overworld").setWeather("Clear");
@@ -2134,17 +2085,16 @@ class BedwarsClassicMode {
         // 注册事件
         this.eventSettings(); // 世界设置事件
 
+        // 进入游戏阶段后事件
+        this.afterEntryClearMapState();
+
     };
 
-    /** 离开清空地图状态，仅在退出此状态时执行一次 */
-    exitClearMapState() {
-        // 移除所有事件和时间线，状态数 +1
-        this.system.unsubscribeAllTimelines();
-        this.system.unsubscribeAllEvents();
-        this.system.gameStage++;
-        // 注册下一状态的事件和时间线
-        this.entryGenerateMapState();
-    };
+    /** 其他模式在进入清除地图阶段前执行的函数，在进入下一阶段前开始执行，以用于其他模式 @abstract */
+    beforeEntryClearMapState() { };
+
+    /** 其他模式在进入清除地图阶段后执行的函数，在本阶段代码执行后执行，以用于其他模式 @abstract */
+    afterEntryClearMapState() { };
 
     /** 玩家进入后触发清除地图的事件 */
     eventPlayerSpawnWhenClearingMap() {
@@ -2179,7 +2129,7 @@ class BedwarsClassicMode {
                         }
                     };
                     // 清除完毕后，离开本状态
-                    if (this.clearingLayer == 0) this.exitClearMapState();
+                    if (this.clearingLayer == 0) this.entryGenerateMapState();
                 },
                 tickInterval: Math.ceil(6 / this.getLayerClearSpeed()), // 每 6 * clearLayer 刻执行 1 次
             },
@@ -2207,6 +2157,12 @@ class BedwarsClassicMode {
 
     /** 进入生成地图状态，仅在进入此状态时执行一次 */
     entryGenerateMapState() {
+
+        // 生成地图状态前事件
+        this.beforeEntryGenerateMapState();
+
+        // 进入下一个阶段
+        this.system.entryNextStage();
 
         // 加载边界
         for (let i of [-1, 1]) {
@@ -2245,8 +2201,8 @@ class BedwarsClassicMode {
             // 移除其他实体（但不移除选择队伍的 NPC）
             lib.EntityUtil.removeAll({ location: { x: 4, y: 120, z: 0 }, minDistance: 2 });
 
-            // 加载完毕后，离开此状态
-            this.exitGenerateMapState();
+            // 加载完毕后，进入等待状态
+            this.entryWaitingState();
 
         })();
 
@@ -2271,17 +2227,16 @@ class BedwarsClassicMode {
         // 注册事件
         this.eventSettings(); // 世界设置事件
 
+        // 生成地图后事件
+        this.afterEntryGenerateMapState();
+
     };
 
-    /** 离开生成地图状态，仅在退出此状态时执行一次 */
-    exitGenerateMapState() {
-        // 移除所有事件和时间线，状态数 +1
-        this.system.unsubscribeAllTimelines();
-        this.system.unsubscribeAllEvents();
-        this.system.gameStage++;
-        // 注册下一状态的事件和时间线
-        this.entryWaitingState();
-    };
+    /** 其他模式在进入生成地图阶段前执行的函数，在进入下一阶段前开始执行，以用于其他模式 @abstract */
+    beforeEntryGenerateMapState() { };
+
+    /** 其他模式在进入生成地图阶段后执行的函数，在本阶段代码执行后执行，以用于其他模式 @abstract */
+    afterEntryGenerateMapState() { };
 
     // ====================
     //
@@ -2292,6 +2247,12 @@ class BedwarsClassicMode {
     /** 进入等待状态，仅在进入此状态时执行一次 */
     entryWaitingState() {
 
+        // 等待阶段前事件
+        this.beforeEntryWaitingState();
+
+        // 进入下一个阶段
+        this.system.entryNextStage();
+
         // 注册综合功能
         this.functionGeneral();
         this.functionWaiting(false);
@@ -2300,21 +2261,15 @@ class BedwarsClassicMode {
         // 注册事件
         this.eventSettings(); // 世界设置事件
 
-        this.entryWaitingStateForOtherMode();
+        // 等待阶段后事件
+        this.afterEntryWaitingState();
     };
 
-    /** 离开等待状态，仅在退出此状态时执行一次 */
-    exitWaitingState() {
-        // 移除所有事件和时间线，状态数 +1
-        this.system.unsubscribeAllTimelines();
-        this.system.unsubscribeAllEvents();
-        this.system.gameStage++;
-        // 注册下一状态的事件和时间线
-        this.entryGamingState();
-    };
+    /** 其他模式在进入等待阶段前执行的函数，在进入下一阶段前开始执行，以用于其他模式 @abstract */
+    beforeEntryWaitingState() { };
 
-    /** 其他模式在游戏开始后执行的函数 @abstract */
-    entryWaitingStateForOtherMode() { };
+    /** 其他模式在进入等待阶段后执行的函数，在本阶段代码执行后执行，以用于其他模式 @abstract */
+    afterEntryWaitingState() { };
 
     /** 玩家等待状态功能，并且调用此函数时将进行一次检测
      * @param {boolean} showMessage 是否在玩家不足时提醒玩家人数不足
@@ -2355,7 +2310,7 @@ class BedwarsClassicMode {
                                 });
                             }
                             else if (this.gameStartCountdown == 0) {
-                                this.exitWaitingState();
+                                this.entryGamingState();
                             }
                         },
                         tickInterval: 20,
@@ -2399,6 +2354,15 @@ class BedwarsClassicMode {
 
     /** 进入游戏状态，仅在进入此状态时执行一次 */
     entryGamingState() {
+
+        // 生成地图状态前事件
+        this.beforeEntryGamingState();
+
+        // 进入下一个阶段
+        this.system.entryNextStage();
+
+        // 移除选队 NPC
+        lib.EntityUtil.removeAll();
 
         // 为玩家分配队伍
         this.map.assignTeam();
@@ -2465,10 +2429,6 @@ class BedwarsClassicMode {
         // 生成资源点实体
         this.map.spawnSpawner();
 
-        // 初始化商店物品
-        this.itemShopitemData = Object.values(data.itemShopitemData).filter(data => data.description.classicModeEnabled != false);
-        this.upgradeShopitemData = Object.values(data.upgradeShopitemData).filter(data => data.description.classicModeEnabled != false);
-
         // 注册综合功能
         this.functionGeneral();
 
@@ -2493,27 +2453,16 @@ class BedwarsClassicMode {
         this.timelineGameEvent(); // 游戏事件时间线
         if (this.map.playerCouldIntoShop === false) this.timelineStopPlayerIntoShop(); // 阻止玩家进入商店的时间线
 
-        this.entryGamingStateForOtherMode();
+        // 游戏阶段后事件
+        this.afterEntryGamingState();
 
     };
 
-    /** 离开游戏状态，仅在退出此状态时执行一次
-     * 
-     * 备注：该函数不会在 BedwarsMode 内执行，而是在队伍被淘汰后通过 BedwarsMap.gameOver() 函数运行，这要求其他方法在覆写该函数时，必须保留该函数的名称。
-     */
-    exitGamingState() {
-        // 移除所有事件和时间线，状态数 +1
-        this.system.unsubscribeAllTimelines();
-        this.system.unsubscribeAllEvents();
-        this.system.gameStage++;
-        // 注册下一状态的事件和时间线
-        this.entryGameOverState();
-        // 移除所有的末影龙
-        lib.EntityUtil.get("minecraft:ender_dragon").forEach(dragon => dragon.kill());
-    };
+    /** 其他模式在进入生成地图阶段前执行的函数，在进入下一阶段前开始执行，以用于其他模式 @abstract */
+    beforeEntryGamingState() { };
 
-    /** 其他模式在游戏开始后执行的函数 @abstract */
-    entryGamingStateForOtherMode() { };
+    /** 其他模式在进入生成地图阶段后执行的函数，在本阶段代码执行后执行，以用于其他模式 @abstract */
+    afterEntryGamingState() { };
 
     // 游戏主体逻辑
 
@@ -3077,30 +3026,30 @@ class BedwarsClassicMode {
                             // 各自的倒计时结束后，尝试生成资源
                             if (ironData.countdown <= 0) {
                                 // 当生成次数小于等于铁的规定最大生成次数时，生成铁
-                                if (team.ironSpawnerInfo.spawnedTimes < gameSettings.resourceLimit.iron * forgeBonus) {
+                                if (team.ironSpawnerInfo.spawnedTimes < gameSettings.resource.ironLimit * forgeBonus) {
                                     spawnResource("bedwars:iron_ingot", this.map.ironSpawnTimes);
                                     team.ironSpawnerInfo.spawnedTimes = team.ironSpawnerInfo.spawnedTimes + this.map.ironSpawnTimes;
                                 };
                                 // 重置倒计时
-                                ironData.countdown = Math.floor(gameSettings.resourceInterval.iron * this.map.ironSpawnTimes / (this.map.isSolo ? gameSettings.resourceInterval.soloSpeedMultiplier : 1.0) / forgeBonus);
+                                ironData.countdown = Math.floor(gameSettings.resource.ironInterval * this.map.ironSpawnTimes / this.map.teamResourceSpawnSpeed / forgeBonus);
                             };
                             if (goldData.countdown <= 0) {
                                 // 当生成次数小于等于金的规定最大生成次数时，生成金
-                                if (team.goldSpawnerInfo.spawnedTimes < gameSettings.resourceLimit.gold * forgeBonus) {
+                                if (team.goldSpawnerInfo.spawnedTimes < gameSettings.resource.goldLimit * forgeBonus) {
                                     spawnResource("bedwars:gold_ingot");
                                     team.goldSpawnerInfo.spawnedTimes++;
                                 }
                                 // 重置倒计时
-                                goldData.countdown = Math.floor(gameSettings.resourceInterval.gold / (this.map.isSolo ? gameSettings.resourceInterval.soloSpeedMultiplier : 1.0) / forgeBonus);
+                                goldData.countdown = Math.floor(gameSettings.resource.goldInterval / this.map.teamResourceSpawnSpeed / forgeBonus);
                             };
                             if (emeraldData.countdown <= 0) {
                                 // 当生成次数小于等于绿宝石的规定最大生成次数时，并且已解锁绿宝石锻炉后，生成绿宝石
-                                if (team.emeraldSpawnerInfo.spawnedTimes < gameSettings.resourceLimit.emerald && team.teamUpgrades.forge >= 3) {
+                                if (team.emeraldSpawnerInfo.spawnedTimes < gameSettings.resource.emeraldLimit && team.teamUpgrades.forge >= 3) {
                                     spawnResource("bedwars:emerald");
                                     team.emeraldSpawnerInfo.spawnedTimes++;
                                 }
                                 // 重置倒计时
-                                emeraldData.countdown = gameSettings.resourceInterval.emerald - 10;
+                                emeraldData.countdown = Math.floor((gameSettings.resource.emeraldInterval - 10) / this.map.emeraldSpawnSpeed);
                             };
                         });
                     },
@@ -3120,7 +3069,7 @@ class BedwarsClassicMode {
                             // 更新倒计时显示
                             if (data.textLine3) data.textLine3.nameTag = `§e在 §c${diamondData.countdown} §e秒后产出`;
                             // 当倒计时结束后，尝试生成资源并记录次数（默认，钻石最多能生成 8 次）
-                            if (diamondData.countdown <= 0 && data.spawnedTimes < this.system.settings.gaming.resourceLimit.diamond) {
+                            if (diamondData.countdown <= 0 && data.spawnedTimes < this.system.settings.gaming.resource.diamondLimit) {
                                 lib.ItemUtil.spawnItem(lib.Vector3Util.add(data.location, 0, 2, 0), "bedwars:diamond", {}, this.map.clearVelocity);
                                 data.spawnedTimes++;
                             };
@@ -3131,14 +3080,14 @@ class BedwarsClassicMode {
                             // 更新倒计时显示
                             if (data.textLine3) data.textLine3.nameTag = `§e在 §c${emeraldData.countdown} §e秒后产出`;
                             // 当倒计时结束后，尝试生成资源并记录次数（默认，绿宝石最多能生成 4 次）
-                            if (emeraldData.countdown <= 0 && data.spawnedTimes < this.system.settings.gaming.resourceLimit.emerald) {
+                            if (emeraldData.countdown <= 0 && data.spawnedTimes < this.system.settings.gaming.resource.emeraldLimit) {
                                 lib.ItemUtil.spawnItem(lib.Vector3Util.add(data.location, 0, 2, 0), "bedwars:emerald", {}, this.map.clearVelocity);
                                 data.spawnedTimes++;
                             };
                         });
                         // 重置倒计时
-                        if (diamondData.countdown <= 0) diamondData.countdown = this.system.settings.gaming.resourceInterval.diamond - 10 * diamondData.level;
-                        if (emeraldData.countdown <= 0) emeraldData.countdown = this.system.settings.gaming.resourceInterval.emerald - 10 * emeraldData.level;
+                        if (diamondData.countdown <= 0) diamondData.countdown = this.system.settings.gaming.resource.diamondInterval - 10 * diamondData.level;
+                        if (emeraldData.countdown <= 0) emeraldData.countdown = Math.floor((this.system.settings.gaming.resource.emeraldInterval - 10 * emeraldData.level) / this.map.emeraldSpawnSpeed);
                     },
                     tickInterval: 20,
                 },
@@ -3239,15 +3188,15 @@ class BedwarsClassicMode {
 
                         // 如果玩家的视角改变超过 5°，或者玩家和商人之间的距离大于 5 格，则移除物品商人
                         const currentRotation = tradingTrader.player.getRotation();
-                        const tradingRotation = tradingTrader.playerInfo.tradeInfo.rotation;
+                        const tradingRotation = tradingTrader.playerData.tradeInfo.rotation;
                         if (
                             Math.abs(currentRotation.x - tradingRotation.x) > 10
                             || Math.abs(currentRotation.y - tradingRotation.y) > 10
                             || lib.Vector3Util.distance(tradingTrader.trader.location, tradingTrader.player.location) > 5
                         ) {
-                            tradingTrader.playerInfo.unlockAllItems();
-                            tradingTrader.playerInfo.tradeInfo.trader = void 0;
-                            tradingTrader.playerInfo.tradeInfo.rotation = void 0;
+                            tradingTrader.playerData.unlockAllItems();
+                            tradingTrader.playerData.tradeInfo.trader = void 0;
+                            tradingTrader.playerData.tradeInfo.rotation = void 0;
                             this.map.removeTrader(tradingTrader.trader);
                         }
                     });
@@ -4029,6 +3978,15 @@ class BedwarsClassicMode {
     /** 进入结束状态，仅在进入此状态时执行一次 */
     entryGameOverState() {
 
+        // 生成地图状态前事件
+        this.beforeEntryGameOverState();
+
+        // 进入下一个阶段
+        this.system.entryNextStage();
+
+        // 移除所有的末影龙
+        lib.EntityUtil.get("minecraft:ender_dragon").forEach(dragon => dragon.kill());
+
         // 注册综合功能
         this.functionGeneral();
 
@@ -4043,17 +4001,21 @@ class BedwarsClassicMode {
         lib.PlayerUtil.getAll().forEach(player => player.addEffect("resistance", 210, { amplifier: 9, showParticles: false }));
 
         // 在 10 秒之后，离开结束状态
-        minecraft.system.runTimeout(() => this.exitGameOverState(), 200);
+        minecraft.system.runTimeout(() => {
+            this.system.entryNextStage();
+            this.system.resetMap();
+        }, 200);
+
+        // 进入游戏阶段后事件
+        this.afterEntryGameOverState();
 
     };
 
-    /** 离开结束状态，仅在退出此状态时执行一次 */
-    exitGameOverState() {
-        // 移除所有事件和时间线，令系统生成一个新的地图，并弃用此实例
-        this.system.unsubscribeAllTimelines();
-        this.system.unsubscribeAllEvents();
-        this.system.resetMap();
-    };
+    /** 其他模式在进入生成地图阶段前执行的函数，在进入下一阶段前开始执行，以用于其他模式 @abstract */
+    beforeEntryGameOverState() { };
+
+    /** 其他模式在进入生成地图阶段后执行的函数，在本阶段代码执行后执行，以用于其他模式 @abstract */
+    afterEntryGameOverState() { };
 
     /** 玩家掉进虚空后，将玩家传送回来 */
     eventGameOverPlayerFellIntoVoid() {
@@ -4075,327 +4037,7 @@ class BedwarsClassicMode {
     };
 
 };
-
-/** 夺点模式起床战争的相关函数和方法，继承自经典模式起床战争 */
-class BedwarsCaptureMode extends BedwarsClassicMode {
-
-    /** 系统类型 */
-    type = "capture";
-
-    /** 模式名称 */
-    name = "夺点";
-
-    /** 下一个事件 */
-    nextEvent = {
-
-        /** 下一个事件的 ID @type {"diamond_2"|"emerald_2"|"diamond_3"|"emerald_3"|undefined} */
-        id: "diamond_2",
-
-        /** 下一个事件的倒计时，单位：秒 */
-        countdown: 240,
-
-        /** 下一个事件的名称 @type {"钻石生成点 II 级"|"绿宝石生成点 II 级"|"钻石生成点 III 级"|"绿宝石生成点 III 级"|undefined} */
-        name: "钻石生成点 II 级",
-
-    };
-
-    /**
-     * @param {BedwarsSystem} system 
-     * @param {BedwarsMap} map 
-     */
-    constructor(system, map) {
-        super(system, map);
-    };
-
-    /** @override */
-    entryWaitingStateForOtherMode() {
-        this.map.teams.forEach(team => {
-            lib.DimensionUtil.setBlock("overworld", team.bedLocation, "minecraft:air");
-            team.placeBedCapture();
-        });
-    }
-
-    /** @override */
-    entryGamingStateForOtherMode() {
-        // 重新注册商店物品
-        this.itemShopitemData = Object.values(data.itemShopitemData).filter(data => data.description.captureModeEnabled != false);
-        this.upgradeShopitemData = Object.values(data.upgradeShopitemData).filter(data => data.description.captureModeEnabled != false);
-        // 玩家放置床事件
-        this.eventPlayerPlaceBed();
-    };
-
-    /** 玩家放置床
-     * @add 在游戏开始时添加
-     */
-    eventPlayerPlaceBed() {
-        this.system.subscribeEvent({
-            typeId: "playerPlaceBed",
-            event: {
-                type: minecraft.world.afterEvents.playerInteractWithBlock,
-                /** @type {function(minecraft.PlayerInteractWithBlockAfterEvent): void} */
-                callback: event => {
-                    // 检查玩家交互时是否手持物品，如果没有物品则直接终止程序
-                    if (!event.beforeItemStack) return;
-                    // 检查玩家是否有起床战争信息（并且必须有合适的队伍），如果没有则直接终止程序
-                    const player = event.player;
-                    const playerData = this.map.getBedwarsPlayer(player);
-                    if (!playerData) return;
-                    if (!playerData.team) return;
-                    const team = playerData.team;
-                    // 检查是否使用了床，如果没有则直接终止程序
-                    const validBedIds = ["bedwars:red_bed", "bedwars:blue_bed"];
-                    if (!validBedIds.includes(event.beforeItemStack.typeId)) return;
-                    // 检查使用床的点位（必须是未经占用的点位），如果找不到则直接终止程序（不过一般情况下都能找到）
-                    const placeLocation = lib.DimensionUtil.getPlaceLocation(event.block, event.blockFace);
-                    const bedData = this.map.validBeds
-                        .filter(validBed => !validBed.team)
-                        .find(validBed => lib.Vector3Util.distance(validBed.location, placeLocation) <= 2);
-                    if (!bedData) return;
-                    // 找到床后：
-                    // 1. 将该床标记为该队伍的床
-                    bedData.team = team;
-                    // 2. 替换附近羊毛、染色硬化粘土、防爆玻璃的颜色为自己队伍的颜色
-                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), ["minecraft:white_wool"], `minecraft:${team.id}_wool`);
-                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), ["bedwars:white_wool"], `bedwars:${team.id}_wool`);
-                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), ["bedwars:white_stained_hardened_clay"], `bedwars:${team.id}_stained_hardened_clay`);
-                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), ["bedwars:white_blast_proof_glass"], `bedwars:${team.id}_blast_proof_glass`);
-                    // 3. 重新放置一张床
-                    team.placeBedCapture();
-                    // 4. 通报其他队伍，该队伍获得了一张床，以及当前床的总数
-                    const bedCount = this.map.getBedCount(team.id).this;
-                    minecraft.world.sendMessage({ translate: "message.capture.bedCaptured", with: { rawtext: [{ translate: `team.${team.id}` }, { text: `${bedCount}` }] } });
-                    // 5. 如果该队伍在获得床后是该队伍的唯一一张床，则尝试重生该队伍的全体成员
-                    if (bedCount == 1) {
-                        minecraft.world.sendMessage({ translate: `message.respawn.newBed` });
-                        team.alivePlayers = team.players;
-                        team.bedIsExist = true;
-                        team.players.filter(p => p.isEliminated).forEach(p => {
-                            p.respawnTime = this.system.settings.gaming.respawnTime.normalPlayers;
-                            p.isEliminated = false;
-                        });
-                        this.timelinePlayerRespawn();
-                    };
-                },
-            }
-        });
-    };
-
-    /** @override */
-    eventPlayerBreakBed() {
-        this.system.subscribeEvent({
-            typeId: "playerBreakBed",
-            event: {
-                type: minecraft.world.afterEvents.playerBreakBlock,
-                /** @type {function(minecraft.PlayerBreakBlockAfterEvent): void} */
-                callback: event => {
-                    // 清除掉落物
-                    lib.ItemUtil.removeItemEntity("minecraft:bed");
-                    // 检查哪队的床被破坏了，如果没有队伍则直接终止运行
-                    const breakLocation = event.block.location;
-                    const bedData = this.map.validBeds.find(validBed => lib.Vector3Util.distance(validBed.location, breakLocation) <= 2);
-                    if (!bedData.team) return;
-                    const team = bedData.team;
-                    // 获取破坏者及其起床战争信息
-                    const breaker = event.player;
-                    const breakerData = this.map.getBedwarsPlayer(breaker);
-                    // 在玩家破坏床后，按照以下几种情况讨论：
-                    // 1. 如果是杂玩家、旁观玩家，则还原床，警告无权限破坏床
-                    if (!breakerData || !breakerData.team) {
-                        BedwarsSystem.warnPlayer(breaker, { translate: "message.invalidPlayer.breakingBed" });
-                        team.placeBedCapture();
-                        return;
-                    }
-                    // 2. 如果是自家玩家，则还原床，警告不能破坏自家床
-                    if (breakerData.team.id == team.id) {
-                        BedwarsSystem.warnPlayer(breaker, { translate: "message.selfTeamPlayer.breakingBed" });
-                        team.placeBedCapture();
-                        return;
-                    }
-                    // 3. 否则，为别队玩家破坏了床，认定床被破坏：
-                    // (1) 更新床的状态
-                    bedData.team = void 0;
-                    // (2) 替换附近羊毛、染色硬化粘土、防爆玻璃的颜色为自己队伍的颜色
-                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), [`minecraft:${team.id}_wool`], "minecraft:white_wool");
-                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), [`bedwars:${team.id}_wool`], "bedwars:white_wool");
-                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), [`bedwars:${team.id}_stained_hardened_clay`], "bedwars:white_stained_hardened_clay");
-                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), [`bedwars:${team.id}_blast_proof_glass`], "bedwars:white_blast_proof_glass");
-                    // (3) 播报该队伍没有床
-                    const bedCount = this.map.getBedCount(team.id).this;
-                    minecraft.world.sendMessage({ translate: "message.capture.bedDestroyed", with: { rawtext: [{ translate: `team.${team.id}` }, { text: `${bedCount}` }] } });
-                    // (4) 如果床的数量为 0 则认定没有床
-                    if (bedCount == 0) {
-                        team.bedIsExist = false;
-                        this.map.informBedDestroyedCapture(team);
-                    }
-                    // (5) 如果该队伍在破坏床后已经没有存活玩家，则直接淘汰
-                    if (team.alivePlayers.length == 0) team.setEliminated();
-                },
-                /** @type {minecraft.BlockEventOptions} */
-                options: {
-                    blockTypes: ["minecraft:bed"],
-                },
-            },
-        });
-    };
-
-    /** @override @param {minecraft.Player} player @param {BedwarsPlayer} playerInfo */
-    gamingInfoboard(player, playerInfo) {
-
-        // 如果玩家没有起床战争信息，直接跳过之
-        if (!playerInfo) return;
-
-        /** 玩家所在的队伍 */
-        const playerTeam = playerInfo.team;
-
-        /** 信息板文本 */
-        const infoboardTexts = [
-            "§l§e       起床战争§r       ",
-            `§8${this.map.teamCount}队${this.name}模式 ${this.system.gameId}`,
-            "",
-        ];
-
-        // 添加事件信息
-        const dominantTeamData = this.map.getDominantTeam();
-        const dominantTeam = this.map.teams.find(team => team.id == dominantTeamData.id);
-        if (this.nextEvent.id) infoboardTexts.push(
-            `§f${this.nextEvent.name} - §a${lib.JSUtil.timeToString(lib.JSUtil.secondToMinute(this.nextEvent.countdown))}`,
-        );
-        if (dominantTeamData.countdown !== Infinity) infoboardTexts.push(
-            `${dominantTeamData.id ? `${dominantTeam.getTeamName()}队胜利` : "游戏结束"} - §a${lib.JSUtil.timeToString(lib.JSUtil.secondToMinute(dominantTeamData.countdown))}`
-        );
-        infoboardTexts.push("");
-
-        // 添加队伍信息（备注：目前仅对两队情况有所支持）
-        const team1 = this.map.teams[0];
-        const team2 = this.map.teams[1];
-        const bedAmountIndicator = (() => {
-            let result = ``;
-            const team1BedAmount = this.map.getBedCount(team1.id).this;
-            const team2BedAmount = this.map.getBedCount(team2.id).this;
-            const emptyBedAmount = 5 - team1BedAmount - team2BedAmount;
-            for (let i = 0; i < team1BedAmount; i++) result += `${team1.getTeamColor()}⬢`;
-            for (let i = 0; i < emptyBedAmount; i++) result += `§f⬡`;
-            for (let i = 0; i < team2BedAmount; i++) result += `${team2.getTeamColor()}⬢`;
-            return result;
-        })();
-        infoboardTexts.push(`${team1.getTeamNameWithColor()} ${bedAmountIndicator} ${team2.getTeamNameWithColor()}`);
-        infoboardTexts.push("");
-        this.map.teams.forEach(team => {
-            const playerInTeam = playerTeam?.id == team.id ? "§7（你）" : "";
-            const teamState = (() => {
-                if (this.map.getBedCount(team.id).this > 0) return "§a✔";
-                else if (team.alivePlayers.length > 0) return `§a${team.alivePlayers.length}`;
-                else return "§c✘";
-            })();
-            infoboardTexts.push(`${team.getTeamNameWithColor()} §f${team.getTeamName()}队： ${teamState} §f${team.captureModeData.score} §7-${this.map.getBedCount(team.id).other}§r ${playerInTeam}`)
-        });
-        infoboardTexts.push("");
-
-        // 添加击杀数信息或旁观者信息
-        if (playerTeam) infoboardTexts.push(`§f击杀数： §a${playerInfo.killCount}`)
-        else infoboardTexts.push("§f您当前为旁观者");
-        infoboardTexts.push("")
-
-        // 添加作者信息
-        infoboardTexts.push("§e一只卑微的量筒");
-
-        player.onScreenDisplay.setActionBar(infoboardTexts.join("§r\n"));
-
-    };
-
-    /** @override */
-    timelineGameEvent() {
-        this.system.subscribeTimeline({
-            typeId: "gameEvent",
-            interval: [
-                // 常规游戏事件
-                {
-                    callback: () => {
-                        this.nextEvent.countdown--;
-                        if (this.nextEvent.countdown <= 0) {
-                            switch (this.nextEvent.id) {
-                                case "diamond_2":
-                                    // 更新下一个游戏事件
-                                    this.nextEvent.id = "emerald_2";
-                                    this.nextEvent.name = "绿宝石生成点 II 级";
-                                    // 更新钻石生成点的等级
-                                    this.map.diamondSpawnerInfo.level = 2;
-                                    this.map.diamondSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cII`);
-                                    minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier2" });
-                                    break;
-                                case "emerald_2":
-                                    // 更新下一个游戏事件
-                                    this.nextEvent.id = "diamond_3";
-                                    this.nextEvent.name = "钻石生成点 III 级";
-                                    // 更新绿宝石生成点的等级
-                                    this.map.emeraldSpawnerInfo.level = 2;
-                                    this.map.emeraldSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cII`);
-                                    minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier2" });
-                                    break;
-                                case "diamond_3":
-                                    // 更新下一个游戏事件
-                                    this.nextEvent.id = "emerald_3";
-                                    this.nextEvent.name = "绿宝石生成点 III 级";
-                                    // 更新钻石生成点的等级
-                                    this.map.diamondSpawnerInfo.level = 3;
-                                    this.map.diamondSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cIII`);
-                                    minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier3" });
-                                    break;
-                                case "emerald_3":
-                                    // 更新下一个游戏事件
-                                    this.nextEvent.id = undefined;
-                                    this.nextEvent.name = undefined;
-                                    // 更新绿宝石生成点的等级
-                                    this.map.emeraldSpawnerInfo.level = 3;
-                                    this.map.emeraldSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cIII`);
-                                    minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier3" });
-                                    break;
-                                default: break;
-                            };
-                            this.nextEvent.countdown = 240;
-                        };
-                    },
-                    tickInterval: 20
-                },
-                // 每秒对队伍扣分
-                {
-                    callback: () => {
-                        const scoreData = this.map.teams.map(team => {
-                            const otherTeamBedCount = this.map.getBedCount(team.id).other;
-                            team.captureModeData.score -= otherTeamBedCount;
-                            return {
-                                /** 该队伍 */
-                                team: team,
-
-                                /** 该队伍还剩余的分数，若剩余 0 分则终止游戏 */
-                                score: team.captureModeData.score,
-                            };
-                        });
-                        // 如果有队伍减到 0 分，则结束游戏
-                        if (scoreData.some(data => data.score <= 0)) {
-                            const eliminatedTeams = scoreData.filter(data => data.score <= 0).map(data => data.team);
-                            if (eliminatedTeams.length == this.map.teamCount) this.map.gameOver(); // 如果所有队伍均扣到 0 分，则平局结束游戏
-                            else eliminatedTeams.forEach(team => {
-                                team.setEliminated();
-                                team.players.forEach(playerData => playerData.player.setGameMode(minecraft.GameMode.Spectator));
-                            }); // 否则，触发淘汰程序，并将所有该队成员设置为旁观模式
-                        }
-                    },
-                    tickInterval: 20,
-                }
-            ]
-        });
-    };
-
-};
-
-// ===== 地图 =====
-// 地图负责存储该地图内的特殊信息。
-// 例如：岛屿位置、商人位置、钻石或绿宝石生成点的位置等。
-// 同时，地图规定了一张地图最多有多少队伍。
-
-// --- 商店物品 ---
-
+/** 商店物品 */
 class BedwarsShopitem {
 
     // ===== 系统和玩家数据 =====
@@ -4417,6 +4059,12 @@ class BedwarsShopitem {
     /** 描述 @type {string[]} */
     description = [];
 
+    /** 经典模式是否启用 */
+    classicModeEnabled = true;
+
+    /** 夺点模式是否启用 */
+    captureModeEnabled = true;
+
     // ===== 组件 =====
 
     /** 商店物品 ID，对于物品类商品将决定显示的物品和给予的物品，而对于团队升级类商品将决定对何种数据进行操作 */
@@ -4428,11 +4076,26 @@ class BedwarsShopitem {
     /** 要购买此资源的资源消耗数 */
     resourceAmount = 1;
 
+    /** 要购买此资源的经验消耗数，若不指定则使用默认算法 */
+    experienceAmount;
+
+    /** 当资源使用经验购买时，资源将按照何种资源的价值（注意：不是价格）放大，若不指定则不放大 @type {data.ResourceType | undefined} */
+    resourceAmplifier;
+
     /** 物品数量，决定显示在商店内的物品数量和给予玩家的物品数量 */
     amount = 1;
 
     /** 物品等级 @type {number} */
     tier = 0;
+
+    /** 资源 ID */
+    resourceTypeId = "";
+
+    /** 资源名称 */
+    resourceName = "";
+
+    /** 资源颜色 */
+    resourceColor = ""
 
     // ===== 其它参数 =====
 
@@ -4441,40 +4104,30 @@ class BedwarsShopitem {
 
     /**
      * @param {BedwarsSystem} system 
-     * @param {BedwarsPlayer} playerInfo 
+     * @param {BedwarsPlayer} playerData 
      */
-    constructor(system, playerInfo) {
+    constructor(system, playerData) {
         this.system = system;
-        this.player = playerInfo;
-        this.team = playerInfo.team;
-    };
-
-    /** 获取资源的 typeId */
-    getResourceTypeId() {
-        switch (this.resourceType) {
-            case data.ResourceType.iron: default: return "bedwars:iron_ingot";
-            case data.ResourceType.gold: return "bedwars:gold_ingot";
-            case data.ResourceType.diamond: return "bedwars:diamond";
-            case data.ResourceType.emerald: return "bedwars:emerald";
-        }
-    };
-
-    /** 获取资源的名称 */
-    getResourceName() {
-        switch (this.resourceType) {
-            case data.ResourceType.iron: default: return "铁锭";
-            case data.ResourceType.gold: return "金锭";
-            case data.ResourceType.diamond: return "钻石";
-            case data.ResourceType.emerald: return "绿宝石";
-        }
+        this.player = playerData;
+        this.team = playerData.team;
     };
 
     /** 检查玩家还需要多少资源 */
     getResourceNeeded() {
-        const playerResourceAmount = lib.InventoryUtil.hasItemAmount(this.player.player, this.getResourceTypeId())
+        // 获取玩家目前所拥有的资源数目，如果类型是经验则获取玩家的经验等级，否则获取玩家的对应物品数目
+        const playerResourceAmount = this.resourceType == data.ResourceType.level ? this.player.player.level : lib.InventoryUtil.hasItemAmount(this.player.player, this.resourceTypeId);
+        // 然后，检查玩家目前还差多少资源，如果小于等于 0 个则认为差 0 个资源
         this.resourceNeeded = this.resourceAmount - playerResourceAmount;
         if (this.resourceNeeded <= 0) this.resourceNeeded = 0;
         return this.resourceNeeded;
+    };
+
+    /** 同步资源信息 */
+    setResourceData() {
+        const resourceData = data.resourceData(this.resourceType);
+        this.resourceTypeId = resourceData.typeId;
+        this.resourceName = resourceData.name;
+        this.resourceColor = resourceData.color;
     };
 
     /** 物品在商店内的备注信息
@@ -4495,7 +4148,6 @@ class BedwarsShopitem {
     purchaseSuccess() { };
 
 };
-
 /** 物品类商店物品，在接受商店物品后进行数据操作，并提供商店物品相关方法 */
 class BedwarsItemShopitem extends BedwarsShopitem {
 
@@ -4541,35 +4193,37 @@ class BedwarsItemShopitem extends BedwarsShopitem {
 
     /**
      * @param {BedwarsSystem} system
-     * @param {BedwarsPlayer} playerInfo
-     * @param {data.BedwarsItemShopitemInfo} info
+     * @param {BedwarsPlayer} playerData
+     * @param {data.BedwarsItemShopitemInfo} itemData
      */
-    constructor(system, playerInfo, info) {
+    constructor(system, playerData, itemData) {
 
         // ===== 继承类 =====
-        super(system, playerInfo);
+        super(system, playerData);
 
         // ===== 描述部分解析 =====
-        this.category = info.description.category;
-        if (info.description.description) this.description = info.description.description;
-        if (info.description.isQuickBuy) this.isQuickBuy = info.description.isQuickBuy;
-        if (info.description.isPickaxe) this.isPickaxe = info.description.isPickaxe;
-        if (info.description.isAxe) this.isAxe = info.description.isAxe;
-        if (info.description.isArmor) this.isArmor = info.description.isArmor;
-        if (info.description.isShears) this.isShears = info.description.isShears;
+        this.category = itemData.description.category;
+        this.description = itemData.description.description ?? [];
+        this.isQuickBuy = itemData.description.isQuickBuy ?? false;
+        this.isPickaxe = itemData.description.isPickaxe ?? false;
+        this.isAxe = itemData.description.isAxe ?? false;
+        this.isArmor = itemData.description.isArmor ?? false;
+        this.isShears = itemData.description.isShears ?? false;
+        this.classicModeEnabled = itemData.description.classicModeEnabled ?? true;
+        this.captureModeEnabled = itemData.description.captureModeEnabled ?? true;
 
         // ===== 组件部分解析 =====
 
         /** 待解析的组件 @type {data.BedwarsItemShopitemComponent} */
         const component = (() => {
             // 如果是单物品，直接返回单物品组件
-            if (info.description.format == "item") return info.component;
+            if (itemData.description.format == "item") return itemData.component;
             // 否则，为多物品组件，找到该玩家的对应物品升级的等级 == tier - 1 的物品组件，如果都找不到则直接返回最后一个组件
-            else return info.components.find(comp => {
-                if (info.description.isAxe) return playerInfo.axeTier == comp.tier.tier - 1;
-                else if (info.description.isPickaxe) return playerInfo.pickaxeTier == comp.tier.tier - 1;
+            else return itemData.components.find(comp => {
+                if (itemData.description.isAxe) return playerData.axeTier == comp.tier.tier - 1;
+                else if (itemData.description.isPickaxe) return playerData.pickaxeTier == comp.tier.tier - 1;
                 return false;
-            }) ?? info.components[info.components.length - 1]
+            }) ?? itemData.components[itemData.components.length - 1]
         })();
 
         // 物品 ID 和数量
@@ -4579,7 +4233,13 @@ class BedwarsItemShopitem extends BedwarsShopitem {
         // 资源类型和资源数量
         this.resourceType = component.resource.type;
         this.resourceAmount = component.resource.amount;
-        if (component.resource.amountInSolo && system.mode.map.isSolo) this.resourceAmount = component.resource.amountInSolo;
+        this.experienceAmount = component.resource.experienceAmount;
+        if (system.mode.map.isSolo) {
+            this.experienceAmount = component.resource.experienceAmountInSolo ?? this.experienceAmount;
+            this.resourceAmount = component.resource.amountInSolo ?? this.resourceAmount;
+        };
+        this.resourceAmplifier = component.resource.amplifier;
+        this.setResourceData();
 
         // 指定实际给予的物品 ID
         this.itemId = `bedwars:${this.id}`
@@ -4595,7 +4255,7 @@ class BedwarsItemShopitem extends BedwarsShopitem {
         // 附魔
         if (component.enchantment?.list) this.enchantment.push(...component.enchantment.list);
         if (component.enchantment?.applySharpness && this.team.teamUpgrades.sharpenedSwords) this.enchantment.push({ id: "sharpness", level: 1 });
-        if (component.enchantment?.applyFeatherFalling && this.team.teamUpgrades.cushionedBoots) this.enchantment.push({ id: "feather_falling", level: playerInfo.team.teamUpgrades.cushionedBoots });
+        if (component.enchantment?.applyFeatherFalling && this.team.teamUpgrades.cushionedBoots) this.enchantment.push({ id: "feather_falling", level: playerData.team.teamUpgrades.cushionedBoots });
 
         // 备注
         if (component.lore) this.itemLore = component.lore;
@@ -4608,15 +4268,8 @@ class BedwarsItemShopitem extends BedwarsShopitem {
     /** @override */
     getLore() {
 
-        const cost = (() => {
-            if (this.resourceType == data.ResourceType.iron) return `§f${this.resourceAmount} 铁锭`;
-            else if (this.resourceType == data.ResourceType.gold) return `§6${this.resourceAmount} 金锭`;
-            else if (this.resourceType == data.ResourceType.diamond) return `§b${this.resourceAmount} 钻石`;
-            else return `§2${this.resourceAmount} 绿宝石`;
-        })();
-
         let lore = [
-            `§r§7花费： ${cost}`,
+            `§r§7花费： ${this.resourceColor}${this.resourceAmount} ${this.resourceName}`,
         ];
         if (this.showCurrentTier) lore.push(
             `§r§7等级： §e${lib.JSUtil.intToRoman(this.tier)}`,
@@ -4634,7 +4287,7 @@ class BedwarsItemShopitem extends BedwarsShopitem {
         );
         if (this.getResourceNeeded() > 0) lore.push(
             "",
-            `§r§c你没有足够的${this.getResourceName()}！`
+            `§r§c你没有足够的${this.resourceName}！`
         ); else lore.push(
             "",
             `§r§e点击购买！`
@@ -4659,27 +4312,25 @@ class BedwarsItemShopitem extends BedwarsShopitem {
         ) {
             BedwarsSystem.warnPlayer(player, { translate: `message.alreadyGotItem` });
             return void 0;
-        }
+        };
         // 如果购买永久性物品（镐子、斧头、剪刀）时玩家没有空余空间，阻止购买
-        else if (
+        if (
             (this.isPickaxe || this.isAxe || this.isShears)
             && player.getComponent("minecraft:inventory").container.emptySlotsCount == 0
         ) {
             BedwarsSystem.warnPlayer(player, { translate: `message.inventoryFull` });
             return void 0;
-        }
+        };
         // 如果玩家资源不足，返回还需要多少资源
-        else if (this.getResourceNeeded() > 0) {
-            BedwarsSystem.warnPlayer(player, { translate: `message.resourceNotEnough`, with: { rawtext: [{ translate: `item.${this.getResourceTypeId()}` }, { translate: `item.${this.getResourceTypeId()}` }, { text: `${this.resourceNeeded}` }] } });
+        if (this.getResourceNeeded() > 0) {
+            BedwarsSystem.warnPlayer(player, { translate: `message.resourceNotEnough`, with: [this.resourceName, this.resourceName, `${this.resourceNeeded}`] });
             return void 0;
-        }
+        };
         // 其他情况则允许购买，清除资源并提示玩家已购买
-        else {
-            lib.ItemUtil.removeItem(player, this.getResourceTypeId(), -1, this.resourceAmount);
-            BedwarsSystem.informPlayer(player, { translate: `message.purchaseItemsSuccessfully`, with: { rawtext: [{ translate: `message.bedwars:shopitem_${this.id}` }] } });
-            this.purchaseSuccess();
-            return this.id;
-        }
+        this.resourceType == data.ResourceType.level ? player.addLevels(-this.resourceAmount) : lib.ItemUtil.removeItem(player, this.resourceTypeId, -1, this.resourceAmount);
+        BedwarsSystem.informPlayer(player, { translate: `message.purchaseItemsSuccessfully`, with: { rawtext: [{ translate: `message.bedwars:shopitem_${this.id}` }] } });
+        this.purchaseSuccess();
+        return this.id;
     };
 
     /** 成功购买物品时的函数
@@ -4700,8 +4351,16 @@ class BedwarsItemShopitem extends BedwarsShopitem {
         else lib.ItemUtil.giveItem(player, this.itemId, { amount: this.amount, itemLock: "inventory", enchantments: this.enchantment, lore: this.itemLore });
     };
 
-};
+    /** 从所有商店物品信息中获取特定类别的商店物品信息，当设定为 quickBuy 时则返回快速购买的物品 @param {data.ShopitemCategory} category */
+    static getCategoryItemData(category) {
+        return Object.values(data.itemShopitemData)
+            .filter(thisItemData => category == data.ShopitemCategory.quickBuy ? thisItemData.description.isQuickBuy : thisItemData.description.category == category) // 如果需要返回快速购买物品时，检查是否为快速购买物品，否则检查是否为特定类型的物品
+    };
 
+    /** 从商店物品数据返回其特定类别的实例化结果 @abstract */
+    static getInstances() { };
+
+};
 /** 团队升级类商店物品，在接受商店物品后进行数据操作，并提供商店物品相关方法 */
 class BedwarsUpgradeShopitem extends BedwarsShopitem {
 
@@ -4726,25 +4385,25 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
 
     /**
      * @param {BedwarsSystem} system 
-     * @param {BedwarsPlayer} playerInfo 
-     * @param {data.BedwarsUpgradeShopitemInfo} info 
+     * @param {BedwarsPlayer} playerData 
+     * @param {data.BedwarsUpgradeShopitemInfo} itemData 
      */
-    constructor(system, playerInfo, info) {
+    constructor(system, playerData, itemData) {
 
         // ===== 继承类 =====
-        super(system, playerInfo);
-        this.team = playerInfo.team;
+        super(system, playerData);
+        this.team = playerData.team;
 
         // ===== 描述部分解析 =====
-        this.category = info.description.category;
-        if (info.description.description) this.description = info.description.description;
-        this.format = info.description.format;
+        this.category = itemData.description.category;
+        if (itemData.description.description) this.description = itemData.description.description;
+        this.format = itemData.description.format;
 
         // ===== 组件部分解析 =====
         /** @type {data.BedwarsUpgradeShopitemComponent} */
         const component = (() => {
-            if (info.description.format == "item") return info.component;
-            else return info.components.find(comp => this.team.teamUpgrades[comp.id] == comp.tier?.tier - 1) ?? info.components[info.components.length - 1];
+            if (itemData.description.format == "item") return itemData.component;
+            else return itemData.components.find(comp => this.team.teamUpgrades[comp.id] == comp.tier?.tier - 1) ?? itemData.components[itemData.components.length - 1];
         })();
 
         // 物品 ID 和数量
@@ -4759,11 +4418,12 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
             this.resourceAmount = this.resourceAmount * (2 ** this.team.traps.length);
             if (this.resourceAmount > 4) this.resourceAmount = 4;
         }
+        this.setResourceData();
 
         // 等级
         if (component.tier?.tier) this.tier = component.tier.tier;
         this.id = component.id;
-        if (info.description.format == "itemGroup") this.allComponents = info.components;
+        if (itemData.description.format == "itemGroup") this.allComponents = itemData.components;
 
     };
 
@@ -4788,21 +4448,14 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
         //
         // 你没有足够的钻石！/点击购买！
 
-        const cost = (() => {
-            if (this.resourceType == data.ResourceType.iron) return `§f${this.resourceAmount} 铁锭`;
-            else if (this.resourceType == data.ResourceType.gold) return `§6${this.resourceAmount} 金锭`;
-            else if (this.resourceType == data.ResourceType.diamond) return `§b${this.resourceAmount} 钻石`;
-            else return `§2${this.resourceAmount} 绿宝石`;
-        })();
-
         let lore = this.description.flatMap(text => `§r§7${text}`) ?? [];
 
         lore.push("");
-        if (this.format == "item") lore.push(`§r§7花费：${cost}`,)
+        if (this.format == "item") lore.push(`§r§7花费：${this.resourceColor}${this.resourceAmount} ${this.resourceName}`,)
         else lore.push(...this.allComponents.flatMap(comp => {
             const color = this.team.teamUpgrades[comp.id] >= comp.tier?.tier ? "§r§a" : "§r§7"
             const costThisTier = this.system.mode.map.isSolo ? comp.resource.amountInSolo : comp.resource.amount
-            return `${color}${comp.tier?.tier}级： ${comp.tier?.thisTierDescription}， §r§b${costThisTier} 钻石`;
+            return `${color}${comp.tier?.tier}级： ${comp.tier?.thisTierDescription}， §r${this.resourceColor}${costThisTier} ${this.resourceName}`;
         }));
 
         lore.push("");
@@ -4811,7 +4464,7 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
         // 如果是单物品团队升级（布尔型）且队伍当前有此升级时，阻止购买
         else if (this.category == "upgrade" && this.format == "item" && this.team.teamUpgrades[this.id]) lore.push(`§r§a已解锁`);
         else if (this.category == "trap" && this.team.traps.length >= 3) lore.push(`§r§c陷阱已排满！`);
-        else if (this.getResourceNeeded() > 0) lore.push(`§r§c你没有足够的${this.getResourceName()}！`);
+        else if (this.getResourceNeeded() > 0) lore.push(`§r§c你没有足够的${this.resourceName}！`);
         else lore.push(`§r§e点击购买！`);
 
         return lore;
@@ -4840,12 +4493,12 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
         }
         // 如果玩家资源不足，返回还需要多少资源
         else if (this.getResourceNeeded() > 0) {
-            BedwarsSystem.warnPlayer(player, { translate: `message.resourceNotEnough`, with: { rawtext: [{ translate: `item.${this.getResourceTypeId()}` }, { translate: `item.${this.getResourceTypeId()}` }, { text: `${this.resourceNeeded}` }] } });
+            BedwarsSystem.warnPlayer(player, { translate: `message.resourceNotEnough`, with: [this.resourceName, this.resourceName, `${this.resourceNeeded}`] });
             return void 0;
         }
         // 其他情况则允许购买，清除资源并提示玩家已购买
         else {
-            lib.ItemUtil.removeItem(player, this.getResourceTypeId(), -1, this.resourceAmount);
+            this.resourceType == data.ResourceType.level ? player.addLevels(-this.resourceAmount) : lib.ItemUtil.removeItem(player, this.resourceTypeId, -1, this.resourceAmount);
             this.team.players.forEach(playerData => BedwarsSystem.informPlayer(playerData.player, { translate: `message.purchaseTeamUpgradeSuccessfully`, with: { rawtext: [{ text: `${player.name}` }, { translate: `message.${this.shopitemId}` }] } }));
             this.purchaseSuccess();
             return this.id;
@@ -4878,10 +4531,16 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
         }
     };
 
+    /** 从所有商店物品信息中获取特定类别的商店物品信息 @param {"upgrade"|"trap"} category */
+    static getCategoryItemData(category) {
+        return Object.values(data.upgradeShopitemData)
+            .filter(thisItemData => thisItemData.description.category == category);
+    };
+
+    /** 从商店物品数据返回其特定类别的实例化结果 @abstract */
+    static getInstances() { };
+
 };
-
-// --- 商人 ---
-
 /** 起床战争商人的一般属性 */
 class BedwarsTrader {
 
@@ -4913,7 +4572,7 @@ class BedwarsTrader {
     player;
 
     /** 玩家起床战争信息，需注意在交互后才能调用到信息 @type {BedwarsPlayer | undefined} */
-    playerInfo;
+    playerData;
 
     /** 上次购买成功的物品 @type {string | undefined} */
     lastPurchasedItem;
@@ -4956,14 +4615,14 @@ class BedwarsTrader {
 
     /** 玩家与商人交互时
      * @param {minecraft.Player} player 与商人交互的玩家
-     * @param {BedwarsPlayer} playerInfo 该玩家的起床战争信息
+     * @param {BedwarsPlayer} playerData 该玩家的起床战争信息
      */
-    interacted(player, playerInfo) {
+    interacted(player, playerData) {
 
         const trader = this.trader;
 
         // 检查该玩家上一个交易的商人，并立刻移除
-        this.system.mode.map.removeTrader(playerInfo.tradeInfo.trader);
+        this.system.mode.map.removeTrader(playerData.tradeInfo.trader);
 
         // 检查该商人是否已经被交互过，如果已经被交互过（例如同时交互）则立刻移除并终止代码运行
         if (this.isTrading) {
@@ -4987,16 +4646,16 @@ class BedwarsTrader {
 
         // 记录基本信息
         this.player = player;
-        this.playerInfo = playerInfo;
+        this.playerData = playerData;
         this.isTrading = true;
         this.system.mode.map.addTradingTrader(this);
 
         // 向玩家数据登记商人信息
-        playerInfo.tradeInfo.trader = trader;
-        playerInfo.tradeInfo.rotation = player.getRotation();
+        playerData.tradeInfo.trader = trader;
+        playerData.tradeInfo.rotation = player.getRotation();
 
         // 锁定玩家物品
-        playerInfo.lockAllItems();
+        playerData.lockAllItems();
 
         // 重新召唤 NPC
         const newTraderData = this.system.mode.map.addTrader({ ...this.info, skin: this.skin });
@@ -5027,83 +4686,83 @@ class BedwarsTrader {
     itemChangeTest() { };
 
 };
-
 /** 起床战争物品类商人，包括地图内商人的各种基本信息和方法，可通过 BedwarsMap 类获取 */
 class BedwarsItemTrader extends BedwarsTrader {
 
     name = "§b道具商店";
 
-    /** 商店物品 @type {BedwarsItemShopitem[]} */
-    items = [];
+    /** 当前商店正在显示的商店物品 @type {BedwarsItemShopitem[]} */
+    currentItems = [];
 
-    /** 快速购买商店物品 @type {BedwarsItemShopitem[]} */
-    quickBuy = [];
+    /** 当前商店使用的商店物品类，在设置物品时，将调用此类中的物品 @abstract */
+    currentClass = BedwarsClassicItemShopitem;
 
-    /** 方块商店物品 @type {BedwarsItemShopitem[]} */
-    blocks = [];
-
-    /** 近战商店物品 @type {BedwarsItemShopitem[]} */
-    melee = [];
-
-    /** 盔甲商店物品 @type {BedwarsItemShopitem[]} */
-    armor = [];
-
-    /** 工具商店物品 @type {BedwarsItemShopitem[]} */
-    tools = [];
-
-    /** 远程商店物品 @type {BedwarsItemShopitem[]} */
-    ranged = [];
-
-    /** 药水商店物品 @type {BedwarsItemShopitem[]} */
-    potions = [];
-
-    /** 实用物品商店物品 @type {BedwarsItemShopitem[]} */
-    utility = [];
-
-    /** 轮换物品商店物品 @type {BedwarsItemShopitem[]} */
-    rotatingItems = [];
-
-    /**
-     * @param {BedwarsSystem} system
-     * @param {data.TraderData} info
-     */
-    constructor(system, info) {
-        super(system, info);
+    /** @param {BedwarsSystem} system @param {data.TraderData} traderData */
+    constructor(system, traderData) {
+        super(system, traderData);
     };
 
     /** 设置物品类商人物品
      * @override
+     * @param {"all"|"category"|"shopitem"} category 要设置槽位的类型，all（默认）：按照目前使用的目录替换全部物品；category：替换标签页物品；shopitem：替换商店物品
+     * @param {number} priority 当 category 未设置为 all 时，具体替换的物品在所有物品列表的优先级（即此物品的位置），设置为 -1 时则全部替换，默认为 -1
      */
-    setShopitem() {
+    setShopitem(category = "all", priority = -1) {
 
-        // 录入物品数据 debug 这里的大量new仍然有优化空间，等到后续再继续优化写法
-        this.items = this.system.mode.itemShopitemData.map(data => new BedwarsItemShopitem(this.system, this.playerInfo, data));
-        this.quickBuy = this.items.filter(item => item.isQuickBuy);
-        this.blocks = this.items.filter(item => item.category == data.ShopitemCategory.blocks);
-        this.melee = this.items.filter(item => item.category == data.ShopitemCategory.melee);
-        this.armor = this.items.filter(item => item.category == data.ShopitemCategory.armor);
-        this.tools = this.items.filter(item => item.category == data.ShopitemCategory.tools);
-        this.ranged = this.items.filter(item => item.category == data.ShopitemCategory.ranged);
-        this.potions = this.items.filter(item => item.category == data.ShopitemCategory.potions);
-        this.utility = this.items.filter(item => item.category == data.ShopitemCategory.utility);
-        this.rotatingItems = this.items.filter(item => item.category == data.ShopitemCategory.rotatingItems);
+        const currentCategory = this.playerData.tradeInfo.category;
+        this.currentItems = this.currentClass.getInstances(currentCategory, this.system, this.playerData);
+        /** 替换标签页物品 @param {number} slot 为 -1 时则全部替换，否则只替换对应槽位的物品 */
+        const resetCategoryItems = (slot) => {
+            const itemIds = [
+                "bedwars:category_quick_buy",
+                "bedwars:category_blocks",
+                "bedwars:category_melee",
+                "bedwars:category_armor",
+                "bedwars:category_tools",
+                "bedwars:category_ranged",
+                "bedwars:category_potions",
+                "bedwars:category_utility",
+                "bedwars:category_rotating_items",
+            ];
+            itemIds.forEach((itemId, index) => {
+                // 如果未设置为全部替换，且此槽位并非要替换的槽位时，终止运行
+                if (slot != -1 && slot != index) return;
+                if (index == 0) lib.ItemUtil.replaceInventoryItem(this.trader, itemId, index);
+                else lib.ItemUtil.replaceInventoryItem(this.trader, itemId, index, { lore: ["§r§e点击查看！"] });
+            });
+        };
+        /** 替换商店物品 @param {number} slot  为 -1 时则全部替换，否则只替换对应槽位的物品 */
+        const resetShopitemItems = (slot) => {
+            this.currentItems.forEach((shopitem, index) => {
+                // 如果未设置为全部替换，且此槽位并非要替换的槽位时，终止运行
+                if (slot != -1 && slot != index) return;
+                lib.ItemUtil.replaceInventoryItem(this.trader, `bedwars:shopitem_${shopitem.id}`, this.getRealSlot(index), { lore: shopitem.getLore(), amount: shopitem.amount });
+            });
+        };
+        /** 移除商店物品 */
+        const removeShopitemItems = () => {
+            for (let index = 0; index <= 13; index++) {
+                lib.ItemUtil.replaceInventoryItem(this.trader, `minecraft:air`, this.getRealSlot(index));
+            };
+        };
+        if (category == "all") {
+            lib.InventoryUtil.getInventory(this.trader).container.clearAll();
+            resetCategoryItems(-1);
+            resetShopitemItems(-1);
+            return;
+        };
+        if (category == "category") {
+            resetCategoryItems(priority);
+            removeShopitemItems();
+            resetShopitemItems(-1);
+            return;
+        };
+        if (category == "shopitem") {
+            resetShopitemItems(priority);
+            return;
+        };
+        return;
 
-        // 清除物品
-        lib.InventoryUtil.getInventory(this.trader).container.clearAll();
-
-        // 设置标签
-        lib.ItemUtil.replaceInventoryItem(this.trader, "bedwars:category_quick_buy", 0);
-        lib.ItemUtil.replaceInventoryItem(this.trader, "bedwars:category_blocks", 1, { lore: ["§r§e点击查看！"] });
-        lib.ItemUtil.replaceInventoryItem(this.trader, "bedwars:category_melee", 2, { lore: ["§r§e点击查看！"] });
-        lib.ItemUtil.replaceInventoryItem(this.trader, "bedwars:category_armor", 3, { lore: ["§r§e点击查看！"] });
-        lib.ItemUtil.replaceInventoryItem(this.trader, "bedwars:category_tools", 4, { lore: ["§r§e点击查看！"] });
-        lib.ItemUtil.replaceInventoryItem(this.trader, "bedwars:category_ranged", 5, { lore: ["§r§e点击查看！"] });
-        lib.ItemUtil.replaceInventoryItem(this.trader, "bedwars:category_potions", 6, { lore: ["§r§e点击查看！"] });
-        lib.ItemUtil.replaceInventoryItem(this.trader, "bedwars:category_utility", 7, { lore: ["§r§e点击查看！"] });
-        lib.ItemUtil.replaceInventoryItem(this.trader, "bedwars:category_rotating_items", 8, { lore: ["§r§e点击查看！"] });
-
-        // 设置标签内的物品
-        this.getUsingCategory().forEach((item, index) => { lib.ItemUtil.replaceInventoryItem(this.trader, `bedwars:shopitem_${item.id}`, this.getRealSlot(index), { lore: item.getLore(), amount: item.amount }); });
     };
 
     /** 从物品信息的优先级中得到实际应当将物品放到何种槽位
@@ -5118,56 +4777,40 @@ class BedwarsItemTrader extends BedwarsTrader {
         else return priority + 12;
     };
 
-    /** 获取当前正使用的类别物品列表 */
-    getUsingCategory() {
-        switch (this.playerInfo.tradeInfo.category) {
-            default: case data.ShopitemCategory.quickBuy: return this.quickBuy;
-            case data.ShopitemCategory.blocks: return this.blocks;
-            case data.ShopitemCategory.melee: return this.melee;
-            case data.ShopitemCategory.armor: return this.armor;
-            case data.ShopitemCategory.tools: return this.tools;
-            case data.ShopitemCategory.ranged: return this.ranged;
-            case data.ShopitemCategory.potions: return this.potions;
-            case data.ShopitemCategory.utility: return this.utility;
-            case data.ShopitemCategory.rotatingItems: return this.rotatingItems;
-        }
-    };
-
     /** @override */
     itemChangeTest() {
 
         // 检查 0~8 号位的物品是否为该物品，如果不是则更改分类菜单并重新设置物品
         Object.values(data.categoryItemData).forEach((data, index) => {
             if (!lib.InventoryUtil.slotIsItem(this.trader, index, data.icon)) {
-                this.playerInfo.tradeInfo.category = data.category;
+                this.playerData.tradeInfo.category = data.category;
                 lib.ItemUtil.removeItem(this.player, data.icon);
                 lib.ItemUtil.removeItemEntity(data.icon);
-                this.setShopitem();
+                this.setShopitem("category", index);
             };
         });
 
         // 检查对应分类的对应槽位的物品是否为该物品，如果不是则尝试清除并购买该物品
-        this.getUsingCategory().forEach((item, index) => {
+        this.currentItems.forEach((item, index) => {
             const shopitemId = `bedwars:shopitem_${item.id}`
             if (!lib.InventoryUtil.slotIsItem(this.trader, this.getRealSlot(index), shopitemId, item.amount)) {
                 lib.ItemUtil.removeItem(this.player, shopitemId);
                 lib.ItemUtil.removeItemEntity(shopitemId);
                 this.lastPurchasedItem = item.purchaseTest();
-                this.setShopitem();
+                this.setShopitem("shopitem", -1);
+                // ↑ debug 目前因为其他物品可能还沿用旧的玩家物品数量信息，这里先做全局替换
+                // 例如当玩家消耗掉最后 4 个铁后，可能羊毛会显示数量不足，但是其他需要铁的物品还是会显示点击购买
+                // 之后再做按照资源类型更新物品
             };
         });
 
     };
 
 };
-
 /** 起床战争团队升级商人，包括地图内商人的各种基本信息和方法，可通过 BedwarsMap 类获取 */
 class BedwarsUpgradeTrader extends BedwarsTrader {
 
     name = "§b团队模式升级";
-
-    /** 商店物品 @type {BedwarsUpgradeShopitem[]} */
-    items = [];
 
     /** 团队升级类商店物品 @type {BedwarsUpgradeShopitem[]} */
     upgrade = [];
@@ -5178,48 +4821,82 @@ class BedwarsUpgradeTrader extends BedwarsTrader {
     /** 陷阱信息物品 @type {data.BedwarsTrapInformation[]} */
     trapInformation = [];
 
-    /**
-     * @param {BedwarsSystem} system
-     * @param {data.TraderData} info
-     */
-    constructor(system, info) {
-        super(system, info);
+    /** 当前商店使用的商店物品类，在设置物品时，将调用此类中的物品 @abstract */
+    currentClass = BedwarsClassicUpgradeShopitem;
+
+    /** @param {BedwarsSystem} system @param {data.TraderData} traderData */
+    constructor(system, traderData) {
+        super(system, traderData);
     };
 
     /** 设置商店物品
      * @override
+     * @param {"all"|"upgrade"|"trap"|"trapInformation"} category 要设置槽位的类型，all（默认）：替换全部物品；upgrade：替换团队升级物品；trap：替换陷阱物品；trapInformation：替换陷阱信息物品
+     * @param {number} priority 当 category 未设置为 all 时，具体替换的物品在所有物品列表的优先级（即此物品的位置），设置为 -1 时则全部替换，默认为 -1
      */
-    setShopitem() {
-        // 录入物品数据 debug 这里的大量new仍然有优化空间，等到后续再继续优化写法
-        this.items = this.system.mode.upgradeShopitemData.map(data => new BedwarsUpgradeShopitem(this.system, this.playerInfo, data));
-        this.upgrade = this.items.filter(item => item.category == "upgrade");
-        this.trap = this.items.filter(item => item.category == "trap");
-        this.trapInformation = [];
-        for (let i = 0; i < 3; i++) {
-            this.trapInformation.push(data.trapInformationData[this.playerInfo.team.traps[i] ?? "noTrap"]);
-        }
+    setShopitem(category = "all", priority = -1) {
 
-        // 清除物品
-        lib.InventoryUtil.getInventory(this.trader).container.clearAll();
+        /** 替换团队升级物品 @param {number} slot 为 -1 时则全部替换，否则只替换对应槽位的物品 */
+        const resetUpgradeItems = (slot) => {
+            this.upgrade = this.currentClass.getInstances("upgrade", this.system, this.playerData);
+            this.upgrade.forEach((shopitem, index) => {
+                // 如果未设置为全部替换，且此槽位并非要替换的槽位时，终止运行
+                if (slot != -1 && slot != index) return;
+                lib.ItemUtil.replaceInventoryItem(this.trader, shopitem.shopitemId, this.getUpdateSlot(index), { lore: shopitem.getLore(), amount: shopitem.amount });
+            });
+        };
+        /** 替换陷阱物品 @param {number} slot 为 -1 时则全部替换，否则只替换对应槽位的物品 */
+        const resetTrapItems = (slot) => {
+            this.trap = this.currentClass.getInstances("trap", this.system, this.playerData)
+            this.trap.forEach((shopitem, index) => {
+                // 如果未设置为全部替换，且此槽位并非要替换的槽位时，终止运行
+                if (slot != -1 && slot != index) return;
+                lib.ItemUtil.replaceInventoryItem(this.trader, shopitem.shopitemId, this.getTrapSlot(index), { lore: shopitem.getLore(), amount: shopitem.amount });
+            });
+        };
+        /** 替换陷阱信息物品 @param {number} slot 为 -1 时则全部替换，否则只替换对应槽位的物品 */
+        const resetTrapInformationItems = (slot) => {
+            this.trapInformation = [];
+            for (let i = 0; i < 3; i++) this.trapInformation.push(data.trapInformationData[this.playerData.team.traps[i] ?? "noTrap"]);
+            // 设置商店内当前陷阱信息
+            this.trapInformation.forEach((info, index) => {
+                // 如果未设置为全部替换，且此槽位并非要替换的槽位时，终止运行
+                if (slot != -1 && slot != index) return;
+                const name = `${info.isValid ? "§r§a" : "§r§c"}陷阱 #${index + 1}：${info.name}`;
+                const lore = [
+                    "",
+                    `§r§7第${index + 1}个敌人进入你的基地时将触发此陷阱！`,
+                    "",
+                    "§r§7购买的陷阱将在此排队触发。",
+                    "§r§7陷阱的价格将随着队列中陷阱的数量而增加。",
+                    "",
+                    this.playerData.team.traps.length >= 3 ? `§r§c陷阱已排满！` : `§r§7下个陷阱：§b${2 ** this.playerData.team.traps.length} 钻石`
+                ];
+                lib.ItemUtil.replaceInventoryItem(this.trader, info.icon, this.getTrapInformationSlot(index), { lore: lore, name: name });
+            });
+        };
+        if (category == "all") {
+            lib.InventoryUtil.getInventory(this.trader).container.clearAll();
+            resetUpgradeItems(-1);
+            resetTrapItems(-1);
+            resetTrapInformationItems(-1);
+            return;
+        };
+        if (category == "upgrade") {
+            resetUpgradeItems(priority);
+            return;
+        };
+        if (category == "trap") {
+            resetTrapItems(priority);
+            resetTrapInformationItems(-1);
+            return;
+        };
+        if (category == "trapInformation") {
+            resetTrapInformationItems(priority);
+            return;
+        };
+        return;
 
-        // 设置物品
-        this.upgrade.forEach((item, index) => { lib.ItemUtil.replaceInventoryItem(this.trader, item.shopitemId, this.getUpdateSlot(index), { lore: item.getLore(), amount: item.amount }); });
-        this.trap.forEach((item, index) => { lib.ItemUtil.replaceInventoryItem(this.trader, item.shopitemId, this.getTrapSlot(index), { lore: item.getLore(), amount: item.amount }); });
-
-        // 设置商店内当前陷阱信息
-        this.trapInformation.forEach((info, index) => {
-            const name = `${info.isValid ? "§r§a" : "§r§c"}陷阱 #${index + 1}：${info.name}`;
-            const lore = [
-                "",
-                `§r§7第${index + 1}个敌人进入你的基地时将触发此陷阱！`,
-                "",
-                "§r§7购买的陷阱将在此排队触发。",
-                "§r§7陷阱的价格将随着队列中陷阱的数量而增加。",
-                "",
-                this.playerInfo.team.traps.length >= 3 ? `§r§c陷阱已排满！` : `§r§7下个陷阱：§b${2 ** this.playerInfo.team.traps.length} 钻石`
-            ];
-            lib.ItemUtil.replaceInventoryItem(this.trader, info.icon, this.getTrapInformationSlot(index), { lore: lore, name: name });
-        });
     };
 
     /** 从物品信息的优先级中得到实际应当将团队升级物品放到何种槽位
@@ -5273,7 +4950,10 @@ class BedwarsUpgradeTrader extends BedwarsTrader {
                 lib.ItemUtil.removeItem(this.player, item.shopitemId);
                 lib.ItemUtil.removeItemEntity(item.shopitemId);
                 this.lastPurchasedItem = item.purchaseTest();
-                this.setShopitem();
+                this.setShopitem("upgrade", -1);
+                // ↑ debug 目前因为其他物品可能还沿用旧的玩家物品数量信息，这里先做全局替换
+                // 例如当玩家消耗掉最后 4 个铁后，可能羊毛会显示数量不足，但是其他需要铁的物品还是会显示点击购买
+                // 之后再做按照资源类型更新物品
             };
         });
 
@@ -5283,7 +4963,10 @@ class BedwarsUpgradeTrader extends BedwarsTrader {
                 lib.ItemUtil.removeItem(this.player, item.shopitemId);
                 lib.ItemUtil.removeItemEntity(item.shopitemId);
                 this.lastPurchasedItem = item.purchaseTest();
-                this.setShopitem();
+                this.setShopitem("trap", -1);
+                // ↑ debug 目前因为其他物品可能还沿用旧的玩家物品数量信息，这里先做全局替换
+                // 例如当玩家消耗掉最后 4 个铁后，可能羊毛会显示数量不足，但是其他需要铁的物品还是会显示点击购买
+                // 之后再做按照资源类型更新物品
             };
         });
 
@@ -5292,17 +4975,17 @@ class BedwarsUpgradeTrader extends BedwarsTrader {
             if (!lib.InventoryUtil.slotIsItem(this.trader, this.getTrapInformationSlot(index), item.icon)) {
                 lib.ItemUtil.removeItem(this.player, item.icon);
                 lib.ItemUtil.removeItemEntity(item.icon);
-                this.setShopitem();
+                this.setShopitem("trapInformation", index);
             };
         });
 
     };
 
 };
-
-// --- 地图 ---
-
-/** 起床战争地图，包含各地图的各种基本信息和方法 */
+/** 起床战争地图，包含各地图的各种基本信息和方法
+ * 
+ * 地图负责存储该地图内的特殊信息。同时，地图规定了一张地图最多有多少队伍。
+ */
 class BedwarsMap {
 
     /** ID，它将控制地图的运行方式 */
@@ -5311,7 +4994,7 @@ class BedwarsMap {
     /** 名称，它将按照给定名称在游戏开始前显示出来 */
     name = "";
 
-    /** 模式，该地图将按照什么模式执行 @type {"classic"|"capture"} */
+    /** 模式，该地图将按照什么模式执行 @type {"classic"|"capture"|"experience"} */
     mode = "classic";
 
     /** 系统 @type {BedwarsSystem} */
@@ -5353,6 +5036,12 @@ class BedwarsMap {
 
     /** 生成资源时是否清除向量，否则资源将会在生成时溅开 */
     clearVelocity = true;
+
+    /** 生成绿宝石的速度 */
+    emeraldSpawnSpeed = 1;
+
+    /** 生成队伍岛资源的速度 */
+    teamResourceSpawnSpeed = 1;
 
     /** 重生点，重生时将按照旁观模式玩家的身份重生在此处 @type {minecraft.Vector3} */
     spawnpoint = { x: 0, y: 100, z: 0 };
@@ -5446,24 +5135,13 @@ class BedwarsMap {
     /** 玩家是否能够进入商店 */
     playerCouldIntoShop = true;
 
-    /** ValidBedData 有效床
-     * @typedef ValidBedData
-     * @property {minecraft.Vector3} location 床的位置
-     * @property {BedwarsTeam} [team] 该床归何队伍所有
-     */
-    /** 所有床的有效点位 @type {ValidBedData[]} */
-    validBeds = [];
-
-    /**
-     * @param {BedwarsSystem} system 系统信息
-     * @param {data.BedwarsMapInfo} info 地图信息
-     */
-    constructor(system, info) {
+    /** @param {BedwarsSystem} system @param {data.BedwarsMapInfo} mapData */
+    constructor(system, mapData) {
         this.system = system;
 
         // ===== 描述解析 =====
 
-        const description = info.description;
+        const description = mapData.description;
         this.id = description.id;
         this.name = description.name;
         this.mode = description.mode;
@@ -5472,15 +5150,16 @@ class BedwarsMap {
         // ===== 组件解析 =====
 
         // 资源组件
-        const resourceComponent = info.components.resource;
+        const resourceComponent = mapData.components.resource;
         resourceComponent.diamondSpawnerLocation.forEach(location => this.addDiamondSpawner(location));
         resourceComponent.emeraldSpawnerLocation.forEach(location => this.addEmeraldSpawner(location));
         this.clearVelocity = resourceComponent.clearVelocity ?? true;
         this.ironSpawnTimes = resourceComponent.ironSpawnTimes ?? 5;
         this.distributeResource = resourceComponent.distributeResource ?? true;
+        if (this.isSolo) this.teamResourceSpawnSpeed *= this.system.settings.gaming.resource.soloSpeedMultiplier;
 
         // 队伍组件，添加队伍、商人、队伍岛屿信息等
-        const teamComponent = info.components.team;
+        const teamComponent = mapData.components.team;
         teamComponent.teamData.forEach(data => {
             this.addTeam(data);
             data.trader.forEach(t => this.addTrader(t));
@@ -5500,11 +5179,11 @@ class BedwarsMap {
         this.healPoolRadius = teamComponent.healPoolRadius ?? 20;
 
         // 非队伍岛屿组件
-        const islandComponent = info.components.island;
+        const islandComponent = mapData.components.island;
         this.islands = islandComponent;
 
         // 大小组件
-        const sizeComponent = info.components.size;
+        const sizeComponent = mapData.components.size;
         this.size.x = sizeComponent?.sizeX ?? 105;
         this.size.z = sizeComponent?.sizeZ ?? 105;
         this.heightLimitMax = sizeComponent?.heightLimitMax ?? 110;
@@ -5512,17 +5191,7 @@ class BedwarsMap {
         this.spawnpoint = { x: 0, y: this.heightLimitMax + 7, z: 0 };
 
         // 移除物品组件
-        if (info.components.removeItemEntity) this.removeItemEntity.push(...info.components.removeItemEntity);
-
-        // 夺点模式组件
-        const captureComponent = info.components.capture
-        if (captureComponent) {
-            this.validBeds = captureComponent.validBeds.map(validBedData => {
-                const team = this.teams.find(t => t.id == validBedData.teamId)
-                return { location: validBedData.location, team: team, }
-            });
-            this.teams.forEach(team => team.captureModeData.score = captureComponent.score);
-        };
+        if (mapData.components.removeItemEntity) this.removeItemEntity.push(...mapData.components.removeItemEntity);
 
         // ===== 注册安全区位置 =====
 
@@ -5533,15 +5202,8 @@ class BedwarsMap {
         this.safeAreaLocation.emerald = this.emeraldSpawnerInfo.info.flatMap(info => info.location);
     };
 
-    /** 为地图添加队伍
-     * @param {data.TeamData} teamInfo 
-     */
-    addTeam(teamInfo) {
-        let team = new BedwarsTeam(this.system, this, teamInfo);
-        this.teams.push(team);
-        this.aliveTeams.push(team);
-        this.teamCount += 1;
-    };
+    /** 为地图添加队伍 @abstract */
+    addTeam() { };
 
     /** 添加新的钻石生成点信息
      * @param {minecraft.Vector3} location 
@@ -5802,20 +5464,11 @@ class BedwarsMap {
 
     // ===== 商人信息操作 =====
 
-    /** 添加商人
-     * @param {data.TraderData} traderData 
-     */
-    addTrader(traderData) {
-        const traderDataObject = (() => {
-            if (traderData.type == "item") return new BedwarsItemTrader(this.system, traderData);
-            else return new BedwarsUpgradeTrader(this.system, traderData);
-        })()
-        this.traders.push(traderDataObject);
-        return traderDataObject;
-    };
+    /** 添加商人 @abstract */
+    addTrader() { };
 
     /** 添加交易中的商人
-     * @param {BedwarsItemTrader} traderData
+     * @param {BedwarsItemTrader | BedwarsUpgradeTrader} traderData
      */
     addTradingTrader(traderData) {
         this.tradingTraders.push(traderData);
@@ -5847,7 +5500,7 @@ class BedwarsMap {
      */
     gameOver(team) {
         // 设置为离开游戏状态
-        this.system.mode.exitGamingState();
+        this.system.mode.entryGameOverState();
         // 如果没有队伍胜利，则对全体通报游戏结束的消息
         if (!team) lib.PlayerUtil.getAll().forEach(player => {
             if (!player.isValid) return; // 在 2025.12.04的一次测试中遇到退出游戏的玩家导致这里报错的问题
@@ -5883,94 +5536,11 @@ class BedwarsMap {
         });
     };
 
-    // ===== 夺点模式方法 =====
-
-    /** 获取夺点模式的优势方，以及返回劣势方要结束游戏的时间
-     * @captureModeOnly 该方法仅夺点模式可用，其他情况请勿使用
-     * @returns {{id: string | undefined, countdown: number}}
-     */
-    getDominantTeam() {
-
-        // 获取各个队伍如果要结束游戏需要多长时间
-        // 时间更短的队伍则被视作“优势方”
-        const teamData = this.teams.map(team => {
-            /** 其他队伍拥有的床数 */
-            const otherBedAmount = this.getBedCount(team.id).other;
-            return {
-                id: team.id,
-                countdown: Math.ceil(team.captureModeData.score / otherBedAmount),
-            };
-        });
-
-        // 尝试返回优势方和结束游戏时间
-        // 1. 如果有多个队伍都是最小值，则队伍改为 void 0 输出
-        const countdown = teamData.map(data => data.countdown);
-        const minCountdown = Math.min(...countdown);
-        const minCountdownTeamData = teamData.filter(data => data.countdown === minCountdown);
-        if (minCountdownTeamData.length > 1) return { id: void 0, countdown: minCountdown };
-        // 2. 返回倒计时最小值的倒计时和倒计时最大值的队伍 ID
-        const maxCountdown = Math.max(...countdown);
-        const maxCountdownTeamData = teamData.find(data => data.countdown === maxCountdown);
-        return {
-            /** 优势方队伍 ID */
-            id: maxCountdownTeamData.id,
-            /** 游戏结束倒计时，单位：秒（可以为 Infinity） */
-            countdown: minCountdown
-        };
-
-    };
-
-    /** 获取特定队伍和其他队伍的床数
-     * @captureModeOnly 该方法仅夺点模式可用，其他情况请勿使用
-     * @param {string} teamId 
-     */
-    getBedCount(teamId) {
-        const thisTeamBedCount = this.validBeds.filter(validBed => validBed.team?.id == teamId).length;
-        const otherTeamBedCount = this.validBeds.filter(validBed => validBed.team?.id !== void 0 && validBed.team.id != teamId).length;
-        return {
-            /** 本队的床数 */
-            this: thisTeamBedCount,
-            /** 别队的床数 */
-            other: otherTeamBedCount,
-        };
-    };
-
-    /** 当队伍的全部床被破坏后，播报床被破坏
-     * @captureModeOnly 该方法仅夺点模式可用，其他情况请勿使用
-     * @param {BedwarsTeam} team 被破坏床的队伍
-     */
-    informBedDestroyedCapture(team) {
-
-        // 对于被破坏床的队伍
-        team.players
-            .forEach(playerData => {
-                const player = playerData.player;
-                lib.PlayerUtil.setTitle(player, { translate: "title.capture.allBedDestroyed", with: { rawtext: [{ translate: `team.${team.id}` }] } }, { translate: "subtitle.capture.allBedDestroyed.self" });
-                player.playSound("mob.wither.death");
-                player.sendMessage({ translate: "message.capture.allBedDestroyed.self" });
-            });
-
-        // 对于其他队伍和旁观玩家
-        this.teams
-            .filter(otherTeam => otherTeam.id != team.id)
-            .flatMap(otherTeam => otherTeam.players)
-            .concat(this.spectatorPlayers)
-            .forEach(playerData => {
-                const player = playerData.player;
-                lib.PlayerUtil.setTitle(player, { translate: "title.capture.allBedDestroyed", with: { rawtext: [{ translate: `team.${team.id}` }] } }, { translate: "subtitle.capture.allBedDestroyed.other" });
-                player.playSound("mob.enderdragon.growl", { location: lib.Vector3Util.add(player.location, 0, 12, 0) }); // 末影龙的麦很炸，所以提高 12 格
-                player.sendMessage({ translate: "message.capture.allBedDestroyed.other" });
-            });
-
-    };
-
 };
-
-// ===== 队伍 =====
-// 队伍规定了当前的队伍状态。
-// 这些玩家的信息可以通过地图的队伍信息（BedwarsMap.teams）读取。
-
-/** 起床战争队伍，代表每个队伍的状态 */
+/** 起床战争队伍，代表每个队伍的状态
+ * 
+ * 队伍规定了当前的队伍状态。这些玩家的信息可以通过地图的队伍信息（BedwarsMap.teams）读取。
+ */
 class BedwarsTeam {
 
     /** 游戏系统 @type {BedwarsSystem} */
@@ -6077,14 +5647,6 @@ class BedwarsTeam {
     /** 是否正在等待陷阱冷却，在陷阱冷却期不能触发陷阱 */
     isWaitingTrapCooldown = false;
 
-    /** 夺点模式数据 */
-    captureModeData = {
-
-        /** 分数 */
-        score: 1500,
-
-    };
-
     /** @param {BedwarsSystem} system @param {BedwarsMap} map @param {data.TeamData} info */
     constructor(system, map, info) {
         this.system = system;
@@ -6132,18 +5694,6 @@ class BedwarsTeam {
         minecraft.world.getDimension("overworld").runCommand(`setblock ${x} ${y} ${z} air destroy`);
         lib.ItemUtil.removeItemEntity("minecraft:bed");
         if (this.alivePlayers.length == 0) this.setEliminated();
-    };
-
-    /** 放置该队伍拥有的全部的床
-     * @captureModeOnly 该方法仅夺点模式可用，其他情况请勿使用
-     */
-    placeBedCapture() {
-        this.system.mode.map.validBeds
-            .filter(validBed => validBed.team?.id == this.id)
-            .forEach(validBed => {
-                // 若没有床，则放置一张床
-                if (lib.DimensionUtil.getBlock("overworld", validBed.location)?.typeId != "minecraft:bed") lib.StructureUtil.placeAsync(`beds:${this.id}_bed`, "overworld", validBed.location, { rotation: this.bedRotation });
-            });
     };
 
     // ===== 玩家 =====
@@ -6323,13 +5873,12 @@ class BedwarsTeam {
     };
 
 };
-
-// ===== 玩家 =====
-// 起床战争玩家（注意：请和 Minecraft 的 Player 类区分开）规定了起床战争中每个玩家的信息（包括旁观者）
-// 这些玩家的信息可以通过各个队伍的玩家信息（BedwarsTeam.players）读取，也可以通过地图的旁观玩家信息（BedwarsMap.spectatorPlayers）读取。
-// 此外，起床战争玩家还规定了击杀样式。
-
-/** 起床战争玩家，代表起床战争内部的一个玩家 */
+/** 起床战争玩家，代表起床战争内部的一个玩家
+ * 
+ * 起床战争玩家（注意：请和 Minecraft 的 Player 类区分开）规定了起床战争中每个玩家的信息（包括旁观者）。
+ * 这些玩家的信息可以通过各个队伍的玩家信息（BedwarsTeam.players）读取，也可以通过地图的旁观玩家信息（BedwarsMap.spectatorPlayers）读取。
+ * 此外，起床战争玩家还规定了击杀样式。
+ */
 class BedwarsPlayer {
 
     /** 系统 @type {BedwarsSystem} */
@@ -6557,13 +6106,18 @@ class BedwarsPlayer {
         else if (this.deathType == "void") defaultDeath("fellIntoVoid"); // 如果自走虚空
         else defaultDeath(); // 其余所有情况
 
-        // --- 其它功能 ---
+        // --- 其它功能 ---、
+        // 移除玩家的物品和经验
         lib.ItemUtil.removeItem(this.player);
+        switch (this.system.settings.gaming.resource.loseLevelTier) {
+            case 0: default: break;
+            case 1: this.player.addLevels(-Math.floor(this.player.level / 2)); break;
+            case 2: this.player.resetLevel(); break;
+        };
         this.player.setGameMode("Spectator");
         this.resetAttackedInfo();
         this.magicMilkCountdown = 0;
         if (this.system.mode.type == "capture" && this.isEliminated) this.player.sendMessage({ translate: "message.respawnTipWhenHaveBed" }); // 如果玩家在夺点模式已被淘汰，则提醒玩家重新获得一张床即可复活
-
     };
 
     /** 玩家受伤，并移除玩家的隐身状态
@@ -6656,6 +6210,7 @@ class BedwarsPlayer {
      * @param {BedwarsPlayer} killedPlayerInfo 
      */
     getBonus(killedPlayerInfo) {
+        /** 被击杀者 */
         const killedPlayer = killedPlayerInfo.player;
 
         // 播放音效
@@ -6667,26 +6222,38 @@ class BedwarsPlayer {
         else this.finalKillCount++;
 
         // 击杀奖励
-        const ironAmount = lib.InventoryUtil.hasItemAmount(killedPlayer, "bedwars:iron_ingot");
-        if (ironAmount > 0) {
-            lib.ItemUtil.giveItem(this.player, "bedwars:iron_ingot", { amount: ironAmount })
-            this.player.sendMessage(`§f+${ironAmount}块铁锭`);
+        /** @param {data.ResourceType} resourceType */
+        const itemBonus = (resourceType) => {
+            // 获取资源数据
+            const resourceData = data.resourceData(resourceType);
+            // 获取资源对应的数量，如果没有资源则直接终止运行
+            const itemAmount = lib.InventoryUtil.hasItemAmount(killedPlayer, resourceData.typeId);
+            if (itemAmount <= 0) return;
+            // 否则，给予击杀者资源，并提醒玩家获取的资源数
+            lib.ItemUtil.giveItem(this.player, resourceData.typeId, { amount: itemAmount });
+            this.player.sendMessage(`${resourceData.color}+${itemAmount}${resourceData.name}`);
         };
-        const goldAmount = lib.InventoryUtil.hasItemAmount(killedPlayer, "bedwars:gold_ingot");
-        if (goldAmount > 0) {
-            lib.ItemUtil.giveItem(this.player, "bedwars:gold_ingot", { amount: goldAmount })
-            this.player.sendMessage(`§6+${goldAmount}块金锭`);
+        const levelBonus = () => {
+            // 获取经验数据
+            const resourceData = data.resourceData(data.ResourceType.level);
+            // 获取经验对应的数量，如果没有经验则直接终止运行
+            const levelAmount = (() => {
+                switch (this.system.settings.gaming.resource.loseLevelTier) {
+                    case 0: default: return 0;
+                    case 1: return Math.floor(killedPlayer.level / 2);
+                    case 2: return killedPlayer.level;
+                };
+            })();
+            if (levelAmount <= 0) return;
+            // 否则，给予击杀者经验，并提醒玩家获取的经验数
+            this.player.addLevels(levelAmount);
+            this.player.sendMessage(`${resourceData.color}+${levelAmount}${resourceData.name}`);
         };
-        const diamondAmount = lib.InventoryUtil.hasItemAmount(killedPlayer, "bedwars:diamond");
-        if (diamondAmount > 0) {
-            lib.ItemUtil.giveItem(this.player, "bedwars:diamond", { amount: diamondAmount })
-            this.player.sendMessage(`§b+${diamondAmount}钻石`);
-        };
-        const emeraldAmount = lib.InventoryUtil.hasItemAmount(killedPlayer, "bedwars:emerald");
-        if (emeraldAmount > 0) {
-            lib.ItemUtil.giveItem(this.player, "bedwars:emerald", { amount: emeraldAmount })
-            this.player.sendMessage(`§2+${emeraldAmount}绿宝石`);
-        };
+        itemBonus(data.ResourceType.iron);
+        itemBonus(data.ResourceType.gold);
+        itemBonus(data.ResourceType.diamond);
+        itemBonus(data.ResourceType.emerald);
+        levelBonus();
     };
 
     /** 生成时（游戏刚开始和重生时）给予装备 */
@@ -6805,10 +6372,893 @@ class BedwarsPlayer {
 
 };
 
+// ===== 经典模式 =====
+
+/** 经典模式起床战争的相关函数和方法 */
+class BedwarsClassicMode extends BedwarsMode {
+
+    /** 模式类型 */
+    type = "classic";
+
+    /** 模式名称 */
+    name = "经典";
+
+    /** 下一个事件 */
+    nextEvent = {
+
+        /** 下一个事件的 ID @type {"diamond_2"|"emerald_2"|"diamond_3"|"emerald_3"|"bed_destruction"|"death_match"|"game_over"} */
+        id: "diamond_2",
+
+        /** 下一个事件的倒计时，单位：秒 */
+        countdown: 360,
+
+        /** 下一个事件的名称 @type {"钻石生成点 II 级"|"绿宝石生成点 II 级"|"钻石生成点 III 级"|"绿宝石生成点 III 级"|"床自毁"|"绝杀模式"|"游戏结束"} */
+        name: "钻石生成点 II 级",
+
+    };
+
+    /** @param {BedwarsSystem} system @param {BedwarsMap} map */
+    constructor(system, map) {
+        super(system, map);
+    };
+
+};
+/** 经典模式物品类商店物品 */
+class BedwarsClassicItemShopitem extends BedwarsItemShopitem {
+
+    /** @param {BedwarsSystem} system @param {BedwarsPlayer} playerData @param {data.BedwarsItemShopitemInfo} itemData */
+    constructor(system, playerData, itemData) {
+        super(system, playerData, itemData);
+    };
+
+    /** @override @param {data.ShopitemCategory} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
+    static getInstances(category, system, playerData) {
+        return BedwarsItemShopitem.getCategoryItemData(category)
+            .filter(data => data.description.classicModeEnabled !== false)
+            .map(data => new BedwarsClassicItemShopitem(system, playerData, data));
+    };
+
+};
+/** 经典模式团队升级类商店物品 */
+class BedwarsClassicUpgradeShopitem extends BedwarsUpgradeShopitem {
+
+    /** @param {BedwarsSystem} system @param {BedwarsPlayer} playerData @param {data.BedwarsUpgradeShopitemInfo} itemData */
+    constructor(system, playerData, itemData) {
+        super(system, playerData, itemData);
+    };
+
+    /** @override @param {"upgrade"|"trap"} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
+    static getInstances(category, system, playerData) {
+        return BedwarsUpgradeShopitem.getCategoryItemData(category)
+            .filter(data => data.description.classicModeEnabled !== false)
+            .map(data => new BedwarsClassicUpgradeShopitem(system, playerData, data));
+    };
+
+};
+/** 经典模式物品类商人 */
+class BedwarsClassicItemTrader extends BedwarsItemTrader {
+
+    /** @param {BedwarsSystem} system @param {data.TraderData} traderData */
+    constructor(system, traderData) {
+        super(system, traderData);
+    };
+
+};
+/** 经典模式团队升级类商人 */
+class BedwarsClassicUpgradeTrader extends BedwarsUpgradeTrader {
+
+    /** @param {BedwarsSystem} system @param {data.TraderData} traderData */
+    constructor(system, traderData) {
+        super(system, traderData);
+    };
+
+};
+/** 经典模式地图 */
+class BedwarsClassicMap extends BedwarsMap {
+
+    /** @param {BedwarsSystem} system @param {data.BedwarsMapInfo} mapData */
+    constructor(system, mapData) {
+        super(system, mapData);
+        // ===== 类型注释（无实际用途） =====
+        /** @type {(BedwarsClassicItemTrader | BedwarsClassicUpgradeTrader)[]} */ this.traders;
+        /** @type {(BedwarsClassicItemTrader | BedwarsClassicUpgradeTrader)[]} */ this.tradingTraders;
+    };
+
+    /** 为地图添加队伍
+     * @override
+     * @param {data.TeamData} teamData
+     */
+    addTeam(teamData) {
+        let team = new BedwarsClassicTeam(this.system, this, teamData);
+        this.teams.push(team);
+        this.aliveTeams.push(team);
+        this.teamCount += 1;
+    };
+
+    /** 添加商人
+     * @param {data.TraderData} traderData 
+     */
+    addTrader(traderData) {
+        const traderDataObject = traderData.type == "item" ? new BedwarsClassicItemTrader(this.system, traderData) : new BedwarsClassicUpgradeTrader(this.system, traderData);
+        this.traders.push(traderDataObject);
+        return traderDataObject;
+    };
+
+};
+/** 经典模式队伍 */
+class BedwarsClassicTeam extends BedwarsTeam {
+
+    /** @param {BedwarsSystem} system @param {BedwarsMap} map @param {data.TeamData} teamData */
+    constructor(system, map, teamData) {
+        super(system, map, teamData);
+    };
+
+};
+/** 经典模式玩家 */
+// class BedwarsClassicPlayer extends BedwarsPlayer {};
+
+// ===== 夺点模式 =====
+
+/** 夺点模式起床战争的相关函数和方法，继承自经典模式起床战争 */
+class BedwarsCaptureMode extends BedwarsClassicMode {
+
+    /** 系统类型 */
+    type = "capture";
+
+    /** 模式名称 */
+    name = "夺点";
+
+    /** 下一个事件 */
+    nextEvent = {
+
+        /** 下一个事件的 ID @type {"diamond_2"|"emerald_2"|"diamond_3"|"emerald_3"|undefined} */
+        id: "diamond_2",
+
+        /** 下一个事件的倒计时，单位：秒 */
+        countdown: 240,
+
+        /** 下一个事件的名称 @type {"钻石生成点 II 级"|"绿宝石生成点 II 级"|"钻石生成点 III 级"|"绿宝石生成点 III 级"|undefined} */
+        name: "钻石生成点 II 级",
+
+    };
+
+    /** @param {BedwarsSystem} system @param {BedwarsCaptureMap} map */
+    constructor(system, map) {
+        super(system, map);
+        // ===== 类型注释（无实际用途） =====
+        /** @type {BedwarsCaptureMap} */ this.map;
+    };
+
+    /** @override */
+    afterEntryGamingState() {
+        // 玩家放置床事件
+        this.eventPlayerPlaceBed();
+    };
+
+    /** 玩家放置床
+     * @add 在游戏开始时添加
+     */
+    eventPlayerPlaceBed() {
+        this.system.subscribeEvent({
+            typeId: "playerPlaceBed",
+            event: {
+                type: minecraft.world.afterEvents.playerInteractWithBlock,
+                /** @type {function(minecraft.PlayerInteractWithBlockAfterEvent): void} */
+                callback: event => {
+                    // 检查玩家交互时是否手持物品，如果没有物品则直接终止程序
+                    if (!event.beforeItemStack) return;
+                    // 检查玩家是否有起床战争信息（并且必须有合适的队伍），如果没有则直接终止程序
+                    const player = event.player;
+                    const playerData = this.map.getBedwarsPlayer(player);
+                    if (!playerData) return;
+                    if (!playerData.team) return;
+                    const team = playerData.team;
+                    // 检查是否使用了床，如果没有则直接终止程序
+                    const validBedIds = ["bedwars:red_bed", "bedwars:blue_bed"];
+                    if (!validBedIds.includes(event.beforeItemStack.typeId)) return;
+                    // 检查使用床的点位（必须是未经占用的点位），如果找不到则直接终止程序（不过一般情况下都能找到）
+                    const placeLocation = lib.DimensionUtil.getPlaceLocation(event.block, event.blockFace);
+                    const bedData = this.map.validBeds
+                        .filter(validBed => !validBed.team)
+                        .find(validBed => lib.Vector3Util.distance(validBed.location, placeLocation) <= 2);
+                    if (!bedData) return;
+                    // 找到床后：
+                    // 1. 将该床标记为该队伍的床
+                    bedData.team = team;
+                    // 2. 替换附近羊毛、染色硬化粘土、防爆玻璃的颜色为自己队伍的颜色
+                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), ["minecraft:white_wool"], `minecraft:${team.id}_wool`);
+                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), ["bedwars:white_wool"], `bedwars:${team.id}_wool`);
+                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), ["bedwars:white_stained_hardened_clay"], `bedwars:${team.id}_stained_hardened_clay`);
+                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), ["bedwars:white_blast_proof_glass"], `bedwars:${team.id}_blast_proof_glass`);
+                    // 3. 重新放置一张床
+                    team.placeBed();
+                    // 4. 通报其他队伍，该队伍获得了一张床，以及当前床的总数
+                    const bedCount = this.map.getBedCount(team.id).this;
+                    minecraft.world.sendMessage({ translate: "message.capture.bedCaptured", with: { rawtext: [{ translate: `team.${team.id}` }, { text: `${bedCount}` }] } });
+                    // 5. 如果该队伍在获得床后是该队伍的唯一一张床，则尝试重生该队伍的全体成员
+                    if (bedCount == 1) {
+                        minecraft.world.sendMessage({ translate: `message.respawn.newBed` });
+                        team.alivePlayers = team.players;
+                        team.bedIsExist = true;
+                        team.players.filter(p => p.isEliminated).forEach(p => {
+                            p.respawnTime = this.system.settings.gaming.respawnTime.normalPlayers;
+                            p.isEliminated = false;
+                        });
+                        this.timelinePlayerRespawn();
+                    };
+                },
+            }
+        });
+    };
+
+    /** @override */
+    eventPlayerBreakBed() {
+        this.system.subscribeEvent({
+            typeId: "playerBreakBed",
+            event: {
+                type: minecraft.world.afterEvents.playerBreakBlock,
+                /** @type {function(minecraft.PlayerBreakBlockAfterEvent): void} */
+                callback: event => {
+                    // 清除掉落物
+                    lib.ItemUtil.removeItemEntity("minecraft:bed");
+                    // 检查哪队的床被破坏了，如果没有队伍则直接终止运行
+                    const breakLocation = event.block.location;
+                    const bedData = this.map.validBeds.find(validBed => lib.Vector3Util.distance(validBed.location, breakLocation) <= 2);
+                    if (!bedData.team) return;
+                    const team = bedData.team;
+                    // 获取破坏者及其起床战争信息
+                    const breaker = event.player;
+                    const breakerData = this.map.getBedwarsPlayer(breaker);
+                    // 在玩家破坏床后，按照以下几种情况讨论：
+                    // 1. 如果是杂玩家、旁观玩家，则还原床，警告无权限破坏床
+                    if (!breakerData || !breakerData.team) {
+                        BedwarsSystem.warnPlayer(breaker, { translate: "message.invalidPlayer.breakingBed" });
+                        team.placeBed();
+                        return;
+                    }
+                    // 2. 如果是自家玩家，则还原床，警告不能破坏自家床
+                    if (breakerData.team.id == team.id) {
+                        BedwarsSystem.warnPlayer(breaker, { translate: "message.selfTeamPlayer.breakingBed" });
+                        team.placeBed();
+                        return;
+                    }
+                    // 3. 否则，为别队玩家破坏了床，认定床被破坏：
+                    // (1) 更新床的状态
+                    bedData.team = void 0;
+                    // (2) 替换附近羊毛、染色硬化粘土、防爆玻璃的颜色为自己队伍的颜色
+                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), [`minecraft:${team.id}_wool`], "minecraft:white_wool");
+                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), [`bedwars:${team.id}_wool`], "bedwars:white_wool");
+                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), [`bedwars:${team.id}_stained_hardened_clay`], "bedwars:white_stained_hardened_clay");
+                    lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedData.location, -4, -1, -3), lib.Vector3Util.add(bedData.location, 4, 8, 4), [`bedwars:${team.id}_blast_proof_glass`], "bedwars:white_blast_proof_glass");
+                    // (3) 播报该队伍没有床
+                    const bedCount = this.map.getBedCount(team.id).this;
+                    minecraft.world.sendMessage({ translate: "message.capture.bedDestroyed", with: { rawtext: [{ translate: `team.${team.id}` }, { text: `${bedCount}` }] } });
+                    // (4) 如果床的数量为 0 则认定没有床
+                    if (bedCount == 0) {
+                        team.bedIsExist = false;
+                        this.map.informBedDestroyedCapture(team);
+                    }
+                    // (5) 如果该队伍在破坏床后已经没有存活玩家，则直接淘汰
+                    if (team.alivePlayers.length == 0) team.setEliminated();
+                },
+                /** @type {minecraft.BlockEventOptions} */
+                options: {
+                    blockTypes: ["minecraft:bed"],
+                },
+            },
+        });
+    };
+
+    /** @override @param {minecraft.Player} player @param {BedwarsPlayer} playerInfo */
+    gamingInfoboard(player, playerInfo) {
+
+        // 如果玩家没有起床战争信息，直接跳过之
+        if (!playerInfo) return;
+
+        /** 玩家所在的队伍 */
+        const playerTeam = playerInfo.team;
+
+        /** 信息板文本 */
+        const infoboardTexts = [
+            "§l§e       起床战争§r       ",
+            `§8${this.map.teamCount}队${this.name}模式 ${this.system.gameId}`,
+            "",
+        ];
+
+        // 添加事件信息
+        const dominantTeamData = this.map.getDominantTeam();
+        const dominantTeam = this.map.teams.find(team => team.id == dominantTeamData.id);
+        if (this.nextEvent.id) infoboardTexts.push(
+            `§f${this.nextEvent.name} - §a${lib.JSUtil.timeToString(lib.JSUtil.secondToMinute(this.nextEvent.countdown))}`,
+        );
+        if (dominantTeamData.countdown !== Infinity) infoboardTexts.push(
+            `${dominantTeamData.id ? `${dominantTeam.getTeamName()}队胜利` : "游戏结束"} - §a${lib.JSUtil.timeToString(lib.JSUtil.secondToMinute(dominantTeamData.countdown))}`
+        );
+        infoboardTexts.push("");
+
+        // 添加队伍信息（备注：目前仅对两队情况有所支持）
+        const team1 = this.map.teams[0];
+        const team2 = this.map.teams[1];
+        const bedAmountIndicator = (() => {
+            let result = ``;
+            const team1BedAmount = this.map.getBedCount(team1.id).this;
+            const team2BedAmount = this.map.getBedCount(team2.id).this;
+            const emptyBedAmount = 5 - team1BedAmount - team2BedAmount;
+            for (let i = 0; i < team1BedAmount; i++) result += `${team1.getTeamColor()}⬢`;
+            for (let i = 0; i < emptyBedAmount; i++) result += `§f⬡`;
+            for (let i = 0; i < team2BedAmount; i++) result += `${team2.getTeamColor()}⬢`;
+            return result;
+        })();
+        infoboardTexts.push(`${team1.getTeamNameWithColor()} ${bedAmountIndicator} ${team2.getTeamNameWithColor()}`);
+        infoboardTexts.push("");
+        this.map.teams.forEach(team => {
+            const playerInTeam = playerTeam?.id == team.id ? "§7（你）" : "";
+            const teamState = (() => {
+                if (this.map.getBedCount(team.id).this > 0) return "§a✔";
+                else if (team.alivePlayers.length > 0) return `§a${team.alivePlayers.length}`;
+                else return "§c✘";
+            })();
+            infoboardTexts.push(`${team.getTeamNameWithColor()} §f${team.getTeamName()}队： ${teamState} §f${team.captureModeData.score} §7-${this.map.getBedCount(team.id).other}§r ${playerInTeam}`)
+        });
+        infoboardTexts.push("");
+
+        // 添加击杀数信息或旁观者信息
+        if (playerTeam) infoboardTexts.push(`§f击杀数： §a${playerInfo.killCount}`)
+        else infoboardTexts.push("§f您当前为旁观者");
+        infoboardTexts.push("")
+
+        // 添加作者信息
+        infoboardTexts.push("§e一只卑微的量筒");
+
+        player.onScreenDisplay.setActionBar(infoboardTexts.join("§r\n"));
+
+    };
+
+    /** @override */
+    timelineGameEvent() {
+        this.system.subscribeTimeline({
+            typeId: "gameEvent",
+            interval: [
+                // 常规游戏事件
+                {
+                    callback: () => {
+                        this.nextEvent.countdown--;
+                        if (this.nextEvent.countdown <= 0) {
+                            switch (this.nextEvent.id) {
+                                case "diamond_2":
+                                    // 更新下一个游戏事件
+                                    this.nextEvent.id = "emerald_2";
+                                    this.nextEvent.name = "绿宝石生成点 II 级";
+                                    // 更新钻石生成点的等级
+                                    this.map.diamondSpawnerInfo.level = 2;
+                                    this.map.diamondSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cII`);
+                                    minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier2" });
+                                    break;
+                                case "emerald_2":
+                                    // 更新下一个游戏事件
+                                    this.nextEvent.id = "diamond_3";
+                                    this.nextEvent.name = "钻石生成点 III 级";
+                                    // 更新绿宝石生成点的等级
+                                    this.map.emeraldSpawnerInfo.level = 2;
+                                    this.map.emeraldSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cII`);
+                                    minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier2" });
+                                    break;
+                                case "diamond_3":
+                                    // 更新下一个游戏事件
+                                    this.nextEvent.id = "emerald_3";
+                                    this.nextEvent.name = "绿宝石生成点 III 级";
+                                    // 更新钻石生成点的等级
+                                    this.map.diamondSpawnerInfo.level = 3;
+                                    this.map.diamondSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cIII`);
+                                    minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier3" });
+                                    break;
+                                case "emerald_3":
+                                    // 更新下一个游戏事件
+                                    this.nextEvent.id = undefined;
+                                    this.nextEvent.name = undefined;
+                                    // 更新绿宝石生成点的等级
+                                    this.map.emeraldSpawnerInfo.level = 3;
+                                    this.map.emeraldSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cIII`);
+                                    minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier3" });
+                                    break;
+                                default: break;
+                            };
+                            this.nextEvent.countdown = 240;
+                        };
+                    },
+                    tickInterval: 20
+                },
+                // 每秒对队伍扣分
+                {
+                    callback: () => {
+                        const scoreData = this.map.teams.map(team => {
+                            const otherTeamBedCount = this.map.getBedCount(team.id).other;
+                            team.captureModeData.score -= otherTeamBedCount;
+                            return {
+                                /** 该队伍 */
+                                team: team,
+
+                                /** 该队伍还剩余的分数，若剩余 0 分则终止游戏 */
+                                score: team.captureModeData.score,
+                            };
+                        });
+                        // 如果有队伍减到 0 分，则结束游戏
+                        if (scoreData.some(data => data.score <= 0)) {
+                            const eliminatedTeams = scoreData.filter(data => data.score <= 0).map(data => data.team);
+                            if (eliminatedTeams.length == this.map.teamCount) this.map.gameOver(); // 如果所有队伍均扣到 0 分，则平局结束游戏
+                            else eliminatedTeams.forEach(team => {
+                                team.setEliminated();
+                                team.players.forEach(playerData => playerData.player.setGameMode(minecraft.GameMode.Spectator));
+                            }); // 否则，触发淘汰程序，并将所有该队成员设置为旁观模式
+                        }
+                    },
+                    tickInterval: 20,
+                }
+            ]
+        });
+    };
+
+};
+/** 夺点模式物品类商店物品 */
+class BedwarsCaptureItemShopitem extends BedwarsItemShopitem {
+
+    /** @param {BedwarsSystem} system @param {BedwarsPlayer} playerData @param {data.BedwarsItemShopitemInfo} itemData */
+    constructor(system, playerData, itemData) {
+        super(system, playerData, itemData);
+    };
+
+    /** @override @param {data.ShopitemCategory} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
+    static getInstances(category, system, playerData) {
+        return BedwarsItemShopitem.getCategoryItemData(category)
+            .filter(data => data.description.captureModeEnabled !== false)
+            .map(data => new BedwarsCaptureItemShopitem(system, playerData, data));
+    };
+
+};
+/** 夺点模式团队升级类商店物品 */
+class BedwarsCaptureUpgradeShopitem extends BedwarsUpgradeShopitem {
+
+    /** @override @param {"upgrade"|"trap"} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
+    constructor(system, playerData, itemData) {
+        super(system, playerData, itemData);
+    };
+
+    /** @override @param {"upgrade"|"trap"} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
+    static getInstances(category, system, playerData) {
+        return BedwarsUpgradeShopitem.getCategoryItemData(category)
+            .filter(data => data.description.captureModeEnabled !== false)
+            .map(data => new BedwarsCaptureUpgradeShopitem(system, playerData, data));
+    };
+
+};
+/** 夺点模式物品类商人 */
+class BedwarsCaptureItemTrader extends BedwarsItemTrader {
+    /** @param {BedwarsSystem} system @param {data.TraderData} traderData */
+    constructor(system, traderData) {
+        super(system, traderData);
+        this.currentClass = BedwarsCaptureItemShopitem;
+    };
+};
+/** 夺点模式团队升级类商人 */
+class BedwarsCaptureUpgradeTrader extends BedwarsUpgradeTrader {
+    /** @param {BedwarsSystem} system @param {data.TraderData} traderData */
+    constructor(system, traderData) {
+        super(system, traderData);
+        this.currentClass = BedwarsCaptureUpgradeShopitem;
+    };
+};
+/** 夺点模式地图 */
+class BedwarsCaptureMap extends BedwarsMap {
+
+    /** ValidBedData 有效床
+     * @typedef ValidBedData
+     * @property {minecraft.Vector3} location 床的位置
+     * @property {BedwarsCaptureTeam} [team] 该床归何队伍所有
+     */
+    /** 所有床的有效点位 @type {ValidBedData[]} */
+    validBeds = [];
+
+    /** @param {BedwarsSystem} system @param {data.BedwarsMapInfo} mapData */
+    constructor(system, mapData) {
+        super(system, mapData);
+
+        // ===== 类型注释（无实际用途） =====
+        /** @type {BedwarsCaptureTeam[]} */ this.teams;
+        /** @type {BedwarsCaptureTeam[]} */ this.aliveTeams;
+        /** @type {(BedwarsCaptureItemTrader | BedwarsCaptureUpgradeTrader)[]} */ this.traders;
+        /** @type {(BedwarsCaptureItemTrader | BedwarsCaptureUpgradeTrader)[]} */ this.tradingTraders;
+
+        // ===== 组件解析 =====
+
+        // 夺点模式组件
+        const captureComponent = mapData.components.capture;
+        if (captureComponent) {
+            this.validBeds = captureComponent.validBeds.map(validBedData => {
+                const team = this.teams.find(t => t.id == validBedData.teamId)
+                return { location: validBedData.location, team: team, }
+            });
+            this.teams.forEach(team => team.captureModeData.score = captureComponent.score);
+        };
+
+    };
+
+    /** 为地图添加队伍
+     * @override
+     * @param {data.TeamData} teamData
+     */
+    addTeam(teamData) {
+        let team = new BedwarsCaptureTeam(this.system, this, teamData);
+        this.teams.push(team);
+        this.aliveTeams.push(team);
+        this.teamCount += 1;
+    };
+
+    /** 添加商人
+     * @param {data.TraderData} traderData 
+     */
+    addTrader(traderData) {
+        const traderDataObject = traderData.type == "item" ? new BedwarsCaptureItemTrader(this.system, traderData) : new BedwarsCaptureUpgradeTrader(this.system, traderData);
+        this.traders.push(traderDataObject);
+        return traderDataObject;
+    };
+
+    // ===== 夺点模式方法 =====
+
+    /** 获取夺点模式的优势方，以及返回劣势方要结束游戏的时间
+     * @returns {{id: string | undefined, countdown: number}}
+     */
+    getDominantTeam() {
+
+        // 获取各个队伍如果要结束游戏需要多长时间
+        // 时间更短的队伍则被视作“优势方”
+        const teamData = this.teams.map(team => {
+            /** 其他队伍拥有的床数 */
+            const otherBedAmount = this.getBedCount(team.id).other;
+            return {
+                id: team.id,
+                countdown: Math.ceil(team.captureModeData.score / otherBedAmount),
+            };
+        });
+
+        // 尝试返回优势方和结束游戏时间
+        // 1. 如果有多个队伍都是最小值，则队伍改为 void 0 输出
+        const countdown = teamData.map(data => data.countdown);
+        const minCountdown = Math.min(...countdown);
+        const minCountdownTeamData = teamData.filter(data => data.countdown === minCountdown);
+        if (minCountdownTeamData.length > 1) return { id: void 0, countdown: minCountdown };
+        // 2. 返回倒计时最小值的倒计时和倒计时最大值的队伍 ID
+        const maxCountdown = Math.max(...countdown);
+        const maxCountdownTeamData = teamData.find(data => data.countdown === maxCountdown);
+        return {
+            /** 优势方队伍 ID */
+            id: maxCountdownTeamData.id,
+            /** 游戏结束倒计时，单位：秒（可以为 Infinity） */
+            countdown: minCountdown
+        };
+
+    };
+
+    /** 获取特定队伍和其他队伍的床数
+     * @param {string} teamId 
+     */
+    getBedCount(teamId) {
+        const thisTeamBedCount = this.validBeds.filter(validBed => validBed.team?.id == teamId).length;
+        const otherTeamBedCount = this.validBeds.filter(validBed => validBed.team?.id !== void 0 && validBed.team.id != teamId).length;
+        return {
+            /** 本队的床数 */
+            this: thisTeamBedCount,
+            /** 别队的床数 */
+            other: otherTeamBedCount,
+        };
+    };
+
+    /** 当队伍的全部床被破坏后，播报床被破坏
+     * @param {BedwarsCaptureTeam} team 被破坏床的队伍
+     */
+    informBedDestroyedCapture(team) {
+
+        // 对于被破坏床的队伍
+        team.players
+            .forEach(playerData => {
+                const player = playerData.player;
+                lib.PlayerUtil.setTitle(player, { translate: "title.capture.allBedDestroyed", with: { rawtext: [{ translate: `team.${team.id}` }] } }, { translate: "subtitle.capture.allBedDestroyed.self" });
+                player.playSound("mob.wither.death");
+                player.sendMessage({ translate: "message.capture.allBedDestroyed.self" });
+            });
+
+        // 对于其他队伍和旁观玩家
+        this.teams
+            .filter(otherTeam => otherTeam.id != team.id)
+            .flatMap(otherTeam => otherTeam.players)
+            .concat(this.spectatorPlayers)
+            .forEach(playerData => {
+                const player = playerData.player;
+                lib.PlayerUtil.setTitle(player, { translate: "title.capture.allBedDestroyed", with: { rawtext: [{ translate: `team.${team.id}` }] } }, { translate: "subtitle.capture.allBedDestroyed.other" });
+                player.playSound("mob.enderdragon.growl", { location: lib.Vector3Util.add(player.location, 0, 12, 0) }); // 末影龙的麦很炸，所以提高 12 格
+                player.sendMessage({ translate: "message.capture.allBedDestroyed.other" });
+            });
+
+    };
+
+};
+/** 夺点模式队伍 */
+class BedwarsCaptureTeam extends BedwarsTeam {
+
+    /** 夺点模式数据 */
+    captureModeData = {
+
+        /** 分数 */
+        score: 1500,
+
+    };
+
+    /** @param {BedwarsSystem} system @param {BedwarsMap} map @param {data.TeamData} teamData */
+    constructor(system, map, teamData) {
+        super(system, map, teamData);
+    };
+
+    /** 放置该队伍拥有的全部的床 @override */
+    placeBed() {
+        this.system.mode.map.validBeds
+            .filter(validBed => validBed.team?.id == this.id)
+            .forEach(validBed => {
+                // 若没有床，则放置一张床
+                if (lib.DimensionUtil.getBlock("overworld", validBed.location)?.typeId != "minecraft:bed") lib.StructureUtil.placeAsync(`beds:${this.id}_bed`, "overworld", validBed.location, { rotation: this.bedRotation });
+            });
+    };
+
+};
+/** 夺点模式玩家 */
+// class BedwarsCapturePlayer extends BedwarsPlayer {};
+
+// ===== 经验模式 =====
+
+/** 经验模式起床战争的相关函数和方法，继承自经典模式起床战争 */
+class BedwarsExperienceMode extends BedwarsClassicMode {
+
+    /** 系统类型 */
+    type = "experience";
+
+    /** 模式名称 */
+    name = "经验";
+
+    /** @param {BedwarsSystem} system @param {BedwarsMap} map */
+    constructor(system, map) {
+        super(system, map);
+    };
+
+    /** @override */
+    afterEntryGamingState() {
+        this.eventConvertPlayersResource();
+        this.eventConvertShareableResourceToNormalResource();
+    };
+
+    // debug
+    // 为实现经验模式，在资源生成方面和商人交易方面有以下问题需要解决：
+    // - 实现令资源有一定程度的加速生成。应注意做到中岛生成资源的效率要高于队伍岛。
+    // - 有待讨论：是否实现部分商品的不可持续？比如钻石盔甲是否要在死亡后撤回？
+
+    /** 转化玩家经验 */
+    eventConvertPlayersResource() {
+        this.system.subscribeEvent({
+            typeId: "convertPlayersResource",
+            event: [
+                {
+                    type: minecraft.world.afterEvents.playerInventoryItemChange,
+                    /** @type {function(minecraft.PlayerInventoryItemChangeAfterEvent): void} */
+                    callback: event => {
+
+                        const changedItemId = event.beforeItemStack?.typeId ?? event.itemStack?.typeId;
+
+                        /** 经验转化器
+                         * @param {string} itemId 
+                         * @param {number} levelPerItem 
+                         * @returns 
+                         */
+                        const converter = (itemId, levelPerItem) => {
+                            // 如果被改变的物品与给定的物品不符，则直接终止运行
+                            if (changedItemId != itemId) return;
+                            // 检查这次改变物品的数目，如果这次改变不是增加物品则终止运行
+                            const beforeCount = event.beforeItemStack?.amount ?? 0;
+                            const afterCount = event.itemStack?.amount ?? 0;
+                            const deltaCount = afterCount - beforeCount;
+                            if (deltaCount <= 0) return;
+                            // 一切判断完毕后，令此玩家增加经验，播放经验球音效并阻止播放升级音效，然后移除此物品
+                            const player = event.player;
+                            player.addLevels(deltaCount * levelPerItem);
+                            player.playSound("random.orb");
+                            minecraft.system.runTimeout(() => player.runCommand("stopsound @s random.levelup"), 1);
+                            player.runCommand(`clear @s ${itemId} -1 ${deltaCount}`);
+                        };
+
+                        // 转化主程序
+                        converter("bedwars:iron_ingot", this.system.settings.gaming.resource.ironValue);
+                        converter("bedwars:gold_ingot", this.system.settings.gaming.resource.goldValue);
+                        converter("bedwars:emerald", this.system.settings.gaming.resource.emeraldValue);
+
+                    },
+                    /** @type {minecraft.InventoryItemEventOptions} */
+                    options: {
+                        includeItems: ["bedwars:iron_ingot", "bedwars:gold_ingot", "bedwars:emerald"],
+                    },
+                },
+            ],
+        });
+    };
+
+    /** 将可共享资源转化为经验资源 */
+    eventConvertShareableResourceToNormalResource() {
+        const shareableItemId = ["bedwars:iron_ingot_shareable", "bedwars:gold_ingot_shareable", "bedwars:emerald_shareable"];
+        this.system.subscribeEvent({
+            typeId: "convertShareableResourceToNormalResource",
+            event: [
+                {
+                    type: minecraft.world.afterEvents.entitySpawn,
+                    /** @type {function(minecraft.EntitySpawnAfterEvent): void} */
+                    callback: event => {
+                        // 如果不是掉落物，终止运行
+                        const item = event.entity;
+                        if (item.typeId != "minecraft:item") return;
+                        // 如果掉落物瞬间被移除（例如床在被破坏后会瞬间移除掉落物），检查物品是否有效，无效则终止运行
+                        if (!item.isValid) return;
+                        // 如果掉落物不是规定的物品，终止运行
+                        const itemStack = item.getComponent("minecraft:item").itemStack;
+                        const itemId = itemStack.typeId;
+                        if (!shareableItemId.includes(itemId)) return;
+                        // 检查通过后，在 1 秒后获取物品状态，用新物品替换（防止玩家马上捡起来），然后移除原物品
+                        minecraft.system.runTimeout(() => {
+                            const itemData = {
+                                amount: itemStack.amount,
+                                typeId: itemStack.typeId,
+                                location: item.location,
+                                velocity: item.getVelocity(),
+                            };
+                            const newItemId = itemData.typeId.replace(/_shareable$/, '');
+                            const newItems = lib.ItemUtil.spawnItem(itemData.location, newItemId, { amount: itemData.amount });
+                            newItems.forEach(newItem => {
+                                newItem.clearVelocity();
+                                newItem.applyImpulse(itemData.velocity);
+                            });
+                            item.remove();
+                        }, 20);
+                    },
+                }
+            ]
+        })
+    };
+
+};
+/** 经验模式物品类商店物品 */
+class BedwarsExperienceItemShopitem extends BedwarsItemShopitem {
+
+    /** @param {BedwarsSystem} system @param {BedwarsPlayer} playerData @param {data.BedwarsItemShopitemInfo} itemData */
+    constructor(system, playerData, itemData) {
+        super(system, playerData, itemData);
+
+        // ===== 组件部分解析 =====
+
+        // 资源类型和资源数量
+        this.resourceAmount = this.resourceAmount * (() => {
+            // 如果设定了经验值，按照设定值设定数目
+            if (this.experienceAmount) return this.experienceAmount;
+            // 否则，按照默认值设定
+            switch (this.resourceType) {
+                case data.ResourceType.iron: return this.system.settings.gaming.resource.ironPrice;
+                case data.ResourceType.gold: return this.system.settings.gaming.resource.goldPrice;
+                case data.ResourceType.emerald: return this.system.settings.gaming.resource.emeraldPrice;
+                case data.ResourceType.level:
+                    if (!this.resourceAmplifier) return 1;
+                    switch (this.resourceAmplifier) {
+                        case data.ResourceType.iron: return this.system.settings.gaming.resource.ironValue;
+                        case data.ResourceType.gold: return this.system.settings.gaming.resource.goldValue;
+                        case data.ResourceType.emerald: return this.system.settings.gaming.resource.emeraldValue;
+                    };
+                default: return 1;
+            };
+        })();
+        this.resourceType = data.ResourceType.level;
+        this.setResourceData();
+    };
+
+    /** @override @param {data.ShopitemCategory} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
+    static getInstances(category, system, playerData) {
+        return BedwarsItemShopitem.getCategoryItemData(category)
+            .filter(data => data.description.experienceModeEnabled !== false)
+            .map(data => new BedwarsExperienceItemShopitem(system, playerData, data));
+    };
+
+};
+/** 经验模式团队升级类商店物品 */
+class BedwarsExperienceUpgradeShopitem extends BedwarsUpgradeShopitem {
+
+    /** @override @param {"upgrade"|"trap"} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
+    constructor(system, playerData, itemData) {
+        super(system, playerData, itemData);
+    };
+
+    /** @override @param {"upgrade"|"trap"} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
+    static getInstances(category, system, playerData) {
+        return BedwarsUpgradeShopitem.getCategoryItemData(category)
+            .filter(data => data.description.experienceModeEnabled !== false)
+            .map(data => new BedwarsExperienceUpgradeShopitem(system, playerData, data));
+    };
+
+};
+/** 经验模式物品类商人 */
+class BedwarsExperienceItemTrader extends BedwarsItemTrader {
+
+    /** @param {BedwarsSystem} system @param {data.TraderData} traderData */
+    constructor(system, traderData) {
+        super(system, traderData);
+        this.currentClass = BedwarsExperienceItemShopitem;
+    };
+
+};
+/** 经验模式团队升级类商人 */
+class BedwarsExperienceUpgradeTrader extends BedwarsUpgradeTrader {
+
+    /** @param {BedwarsSystem} system @param {data.TraderData} traderData */
+    constructor(system, traderData) {
+        super(system, traderData);
+        this.currentClass = BedwarsExperienceUpgradeShopitem;
+    };
+
+};
+/** 经验模式地图 */
+class BedwarsExperienceMap extends BedwarsMap {
+
+    /** @param {BedwarsSystem} system @param {data.BedwarsMapInfo} mapData */
+    constructor(system, mapData) {
+        super(system, mapData);
+        // ===== 类型注释（无实际用途） =====
+        /** @type {(BedwarsExperienceItemTrader | BedwarsExperienceUpgradeTrader)[]} */ this.traders;
+        /** @type {(BedwarsExperienceItemTrader | BedwarsExperienceUpgradeTrader)[]} */ this.tradingTraders;
+
+        this.teamResourceSpawnSpeed *= this.system.settings.gaming.resource.experienceTeamResourceSpeedMultiplier;
+        this.emeraldSpawnSpeed *= this.system.settings.gaming.resource.experienceEmeraldSpeedMultiplier;
+
+        this.emeraldSpawnerInfo.countdown = Math.floor(this.emeraldSpawnerInfo.countdown / this.emeraldSpawnSpeed);
+        this.ironSpawnTimes = 1;
+
+    };
+
+    /** 为地图添加队伍
+     * @override
+     * @param {data.TeamData} teamData
+     */
+    addTeam(teamData) {
+        let team = new BedwarsExperienceTeam(this.system, this, teamData);
+        this.teams.push(team);
+        this.aliveTeams.push(team);
+        this.teamCount += 1;
+    };
+
+    /** 添加商人
+     * @param {data.TraderData} traderData 
+     */
+    addTrader(traderData) {
+        const traderDataObject = traderData.type == "item" ? new BedwarsExperienceItemTrader(this.system, traderData) : new BedwarsExperienceUpgradeTrader(this.system, traderData);
+        this.traders.push(traderDataObject);
+        return traderDataObject;
+    };
+
+};
+/** 经验模式队伍 */
+class BedwarsExperienceTeam extends BedwarsTeam {
+
+    /** @param {BedwarsSystem} system @param {BedwarsMap} map @param {data.TeamData} teamData */
+    constructor(system, map, teamData) {
+        super(system, map, teamData);
+    };
+
+};
+/** 经验模式玩家 */
+// class BedwarsExperiencePlayer extends BedwarsPlayer {};
+
 // ===== 进入游戏后，开始运行系统 =====
 
 minecraft.world.afterEvents.worldLoad.subscribe(() => {
-    let bedwarsSystem = new BedwarsSystem();
+    const bedwarsSystem = new BedwarsSystem();
 });
 
 // ===== 待办事项 =====

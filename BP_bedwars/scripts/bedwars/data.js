@@ -20,7 +20,7 @@ import * as minecraft from "@minecraft/server";
  * @typedef BedwarsMapDescription
  * @property {string} id ID，它将控制地图的运行方式
  * @property {string} name 名称，它将按照给定名称在游戏开始前显示出来
- * @property {"classic"|"capture"} mode 模式，该地图将按照什么模式执行
+ * @property {"classic"|"capture"|"experience"} mode 模式，该地图将按照什么模式执行
  * @property {boolean} [isSolo] 是否为单挑模式（通常意义上是 8 队模式），单挑模式会影响资源的生成速度和物资售价 | 默认值：false
  */
 
@@ -163,7 +163,8 @@ import * as minecraft from "@minecraft/server";
  * @property {string[]} [description] 物品简介，按照 lore 的形式显示到商店物品上，一个字符串代表一行
  * @property {boolean} [isQuickBuy] 是否为快速购买物品，若是则在商店首页显示
  * @property {boolean} [classicModeEnabled] 该物品是否在经典模式启用
- * @property {boolean} [captureModeEnabled] 该物品是否在经典模式启用
+ * @property {boolean} [captureModeEnabled] 该物品是否在夺点模式启用
+ * @property {boolean} [experienceModeEnabled] 该物品是否在经验模式启用
  * @property {boolean} [isArmor] 该物品是否为盔甲，它是永久性装备，不会直接给予
  * @property {boolean} [isShears] 该物品是否为剪刀，它是永久性装备，不会直接给予
  * @property {boolean} [isPickaxe] 该物品是否为镐子，它是永久性装备，不会直接给予
@@ -174,7 +175,7 @@ import * as minecraft from "@minecraft/server";
  * @typedef BedwarsItemShopitemComponent
  * @property {string} id 物品 ID，决定显示在商店内的商店物品和给予玩家的物品
  * @property {number} amount 物品数量，决定显示在商店内的物品数量和给予玩家的物品数量
- * @property {BedwarsResourceComponent} resource 指定该物品的资源需求
+ * @property {BedwarsItemResourceComponent} resource 指定该物品的资源需求
  * @property {BedwarsItemTierComponent} [tier] 指定该物品的等级，多物品情况下应指定该组件，以指定显示物品的条件
  * @property {BedwarsItemRealItemIdComponent} [realItemId] 指定该物品是否要覆写默认值，不指定该组件时将默认将给予物品的 ID 设置为 bedwars:(id)
  * @property {BedwarsItemEnchantmentComponent} [enchantment] 物品的附魔信息
@@ -189,11 +190,14 @@ import * as minecraft from "@minecraft/server";
  * @property {string} [id] 指定要直接覆写为的 ID 
  */
 
-/** BedwarsResourceComponent
- * @typedef BedwarsResourceComponent
+/** BedwarsItemResourceComponent
+ * @typedef BedwarsItemResourceComponent
  * @property {ResourceType} type 该物品需要什么类型的资源
  * @property {number} amount 该物品需要多少资源
- * @property {number} [amountInSolo] 该物品在 8 队模式下需要多少资源
+ * @property {number} [amountInSolo] 该物品在 8 队模式下需要多少资源，若不指定则默认为 amount
+ * @property {number} [experienceAmount] 该物品在经验模式下需要多少资源，若不指定则默认为 (资源价格)*amount
+ * @property {number} [experienceAmountInSolo] 该物品在 8 队经验模式下需要多少资源，若不指定则默认为 (资源价格)*amountInSolo
+ * @property {ResourceType} [amplifier] 当资源使用经验购买时，资源将按照何种资源的价值（注意：不是价格）放大，若不指定则不放大
  */
 
 /** BedwarsItemEnchantmentComponent
@@ -226,6 +230,7 @@ import * as minecraft from "@minecraft/server";
  * @property {string[]} [description] 商店物品简介，显示该团队升级的最根本用途
  * @property {boolean} [classicModeEnabled] 在经典模式是否启用
  * @property {boolean} [captureModeEnabled] 在夺点模式是否启用
+ * @property {boolean} [experienceModeEnabled] 在经验模式是否启用
  */
 
 /** BedwarsUpgradeShopitemComponent
@@ -233,7 +238,7 @@ import * as minecraft from "@minecraft/server";
  * @property {TeamUpgrade|Trap} id 团队升级 ID
  * @property {string} shopitemId 商店物品 ID
  * @property {number} amount 在商店中显示为多少物品
- * @property {BedwarsResourceComponent} resource 指定该物品的资源需求
+ * @property {BedwarsItemResourceComponent} resource 指定该物品的资源需求
  * @property {BedwarsUpgradeTierComponent} [tier] 指定该物品的等级
  */
 
@@ -303,7 +308,22 @@ export const ResourceType = {
     gold: "gold",
     diamond: "diamond",
     emerald: "emerald",
+    level: "level",
 };
+
+/** 获取资源数据
+ * @param {ResourceType} resourceType 
+ */
+export function resourceData(resourceType) {
+    switch (resourceType) {
+        case ResourceType.iron: return {type: ResourceType.iron, typeId: "bedwars:iron_ingot", name: "铁锭", color: "§f"};
+        case ResourceType.gold: return {type: ResourceType.gold, typeId: "bedwars:gold_ingot", name: "金锭", color: "§6"};
+        case ResourceType.diamond: return {type: ResourceType.diamond, typeId: "bedwars:diamond", name: "钻石", color: "§b"};
+        case ResourceType.emerald: return {type: ResourceType.emerald, typeId: "bedwars:emerald", name: "绿宝石", color: "§2"};
+        case ResourceType.level: return {type: ResourceType.level, typeId: "", name: "经验", color: "§a"};
+        default: return {type: "", typeId: "", name: "", color: "§r"};
+    };
+}
 
 /** 所有团队升级
  * @enum {string}
@@ -337,7 +357,7 @@ export const mapData = {
     classic: {
 
         /** 2 队地图 */
-        TwoTeams: {
+        twoTeams: {
 
             /** 地图：神秘 @type {BedwarsMapInfo} */
             cryptic: {
@@ -760,7 +780,7 @@ export const mapData = {
         },
 
         /** 4 队地图 */
-        FourTeams: {
+        fourTeams: {
 
             /** 水族馆 @type {BedwarsMapInfo} */
             aquarium: {
@@ -1459,7 +1479,7 @@ export const mapData = {
         },
 
         /** 8 队地图 */
-        EightTeams: {
+        eightTeams: {
 
             /** 亚马逊 @type {BedwarsMapInfo} */
             amazon: {
@@ -2616,8 +2636,10 @@ export const mapData = {
 
     },
 
+    /** 夺点模式地图数据 */
     capture: {
-        TwoTeams: {
+
+        twoTeams: {
 
             /** 地图：野餐 @type {BedwarsMapInfo} */
             picnic: {
@@ -2709,8 +2731,17 @@ export const mapData = {
             }
 
         }
+
     },
 
+};
+
+/** 将经典模式地图数据输出为经验模式
+ * @param {BedwarsMapInfo} mapData 
+ * @returns {BedwarsMapInfo}
+ */
+export function classicToExperience(mapData) {
+    return { ...mapData, description: { ...mapData.description, mode: "experience" } };
 };
 
 // ===== 商人数据 =====
@@ -3346,12 +3377,61 @@ export const itemShopitemData = {
             category: ShopitemCategory.rotatingItems,
             description: ["在基岩上放置床以夺取点位，", "使敌方更快地减少分数！"],
             classicModeEnabled: false,
+            experienceModeEnabled: false,
         },
         component: {
             id: "bed",
             amount: 1,
             resource: { type: ResourceType.diamond, amount: 2 },
             realItemId: { isColored: true }
+        }
+    },
+    /** 铁锭，(铁锭价值) 等级 -> 铁锭 @type {BedwarsItemShopitemInfo} */
+    ironIngot: {
+        description: {
+            format: "item",
+            category: ShopitemCategory.rotatingItems,
+            description: ["向队友扔出此物品以分享你的经验。"],
+            classicModeEnabled: false,
+            captureModeEnabled: false,
+        },
+        component: {
+            id: "iron_ingot_shareable",
+            amount: 1,
+            resource: { type: ResourceType.level, amount: 1, amplifier: ResourceType.iron },
+            lore: ["§r§7扔出此物品并拾起以获取经验。"]
+        }
+    },
+    /** 金锭，(金锭价值) 等级 -> 金锭 @type {BedwarsItemShopitemInfo} */
+    goldIngot: {
+        description: {
+            format: "item",
+            category: ShopitemCategory.rotatingItems,
+            description: ["向队友扔出此物品以分享你的经验。"],
+            classicModeEnabled: false,
+            captureModeEnabled: false,
+        },
+        component: {
+            id: "gold_ingot_shareable",
+            amount: 1,
+            resource: { type: ResourceType.level, amount: 1, amplifier: ResourceType.gold },
+            lore: ["§r§7扔出此物品并拾起以获取经验。"]
+        }
+    },
+    /** 绿宝石，(绿宝石价值) 等级 -> 绿宝石 @type {BedwarsItemShopitemInfo} */
+    emeraldIngot: {
+        description: {
+            format: "item",
+            category: ShopitemCategory.rotatingItems,
+            description: ["向队友扔出此物品以分享你的经验。"],
+            classicModeEnabled: false,
+            captureModeEnabled: false,
+        },
+        component: {
+            id: "emerald_shareable",
+            amount: 1,
+            resource: { type: ResourceType.level, amount: 1, amplifier: ResourceType.emerald },
+            lore: ["§r§7扔出此物品并拾起以获取经验。"]
         }
     },
 
@@ -3524,6 +3604,7 @@ export const upgradeShopitemData = {
             description: ["你的队伍在绝杀模式中将会有两条末影龙，而不是一条！"],
             classicModeEnabled: false,
             captureModeEnabled: false,
+            experienceModeEnabled: false,
         },
         component: {
             id: TeamUpgrade.dragonBuff,

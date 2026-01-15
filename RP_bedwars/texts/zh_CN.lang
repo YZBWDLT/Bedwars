@@ -55,6 +55,9 @@ item.bedwars:diamond=钻石
 item.bedwars:emerald=绿宝石
 item.bedwars:iron_ingot=铁锭
 item.bedwars:gold_ingot=金锭
+item.bedwars:emerald_shareable=绿宝石
+item.bedwars:iron_ingot_shareable=铁锭
+item.bedwars:gold_ingot_shareable=金锭
 
 #### 游玩时物品
 item.bedwars:magic_milk=魔法牛奶
@@ -182,6 +185,9 @@ item.bedwars:shopitem_magic_milk=§a魔法牛奶
 tile.bedwars:shopitem_sponge.name=§a海绵
 item.bedwars:shopitem_compact_pop_up_tower=§a紧凑型速建塔
 item.bedwars:shopitem_bed=§a床
+item.bedwars:shopitem_emerald_shareable=§a绿宝石
+item.bedwars:shopitem_iron_ingot_shareable=§a铁锭
+item.bedwars:shopitem_gold_ingot_shareable=§a金锭
 
 #### 团队升级物品
 item.bedwars:upgrade_sharpened_swords=§a锋利附魔
@@ -525,6 +531,9 @@ message.bedwars:shopitem_magic_milk=魔法牛奶
 message.bedwars:shopitem_sponge=海绵
 message.bedwars:shopitem_compact_pop_up_tower=紧凑型速建塔
 message.bedwars:shopitem_bed=床
+message.bedwars:shopitem_iron_ingot_shareable=铁锭
+message.bedwars:shopitem_gold_ingot_shareable=金锭
+message.bedwars:shopitem_emerald_shareable=绿宝石
 message.bedwars:upgrade_sharpened_swords=锋利附魔
 message.bedwars:upgrade_reinforced_armor_tier_1=盔甲强化 I
 message.bedwars:upgrade_reinforced_armor_tier_2=盔甲强化 II

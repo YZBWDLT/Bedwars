@@ -204,7 +204,6 @@ export class Vector3Util {
 
 // ===== 玩家 & 实体 =====
 
-
 /** 实体操作方法 */
 export class EntityUtil {
 
@@ -318,6 +317,13 @@ export class PlayerUtil {
      */
     static showLineMessage(player, message) {
         player.sendMessage(message.slice(0, -1).flatMap(msg => [msg, "§r\n"]).concat(message.slice(-1)));
+    };
+
+    /** 对全体玩家广播消息
+     * @param {string | minecraft.RawMessage | (string | minecraft.RawMessage)[]} message 显示要对全体玩家广播的消息
+     */
+    static broadcast(message) {
+        this.getAll().forEach(player => player.sendMessage(message));
     };
 
 };
@@ -598,9 +604,10 @@ export class ItemUtil {
      * @param {"overworld"|"nether"|"the_end"} dimensionId 在何维度下生成
      */
     static spawnItem(location, itemId, options = {}, clearVelocity = false, dimensionId = "overworld") {
-        this.getItemStacks(itemId, options).forEach(itemStack => {
-            if (clearVelocity) minecraft.world.getDimension(dimensionId).spawnItem(itemStack, location).clearVelocity();
-            else minecraft.world.getDimension(dimensionId).spawnItem(itemStack, location);
+        return this.getItemStacks(itemId, options).map(itemStack => {
+            const item = minecraft.world.getDimension(dimensionId).spawnItem(itemStack, location);
+            if (clearVelocity) item.clearVelocity();
+            return item;
         });
     };
 

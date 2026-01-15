@@ -1,12 +1,12 @@
 {
-    "format_version": "1.20.50",
+    "format_version": "1.21.50",
     "minecraft:item": {
         "description": {
-            "identifier": "bedwars:diamond",
+            "identifier": "bedwars:shopitem_emerald_shareable",
             "menu_category": { "category": "items", "is_hidden_in_commands": false }
         },
         "components": {
-            "minecraft:icon": "bedwars_diamond",
+            "minecraft:icon": "bedwars_emerald",
             "minecraft:should_despawn": false
         }
     }

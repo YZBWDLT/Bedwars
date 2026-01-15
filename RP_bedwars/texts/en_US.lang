@@ -55,6 +55,9 @@ item.bedwars:diamond=Diamond
 item.bedwars:emerald=Emerald
 item.bedwars:iron_ingot=Iron Ingot
 item.bedwars:gold_ingot=Gold Ingot
+item.bedwars:emerald_shareable=Emerald
+item.bedwars:iron_ingot_shareable=Iron Ingot
+item.bedwars:gold_ingot_shareable=Gold Ingot
 
 #### Gadgets
 item.bedwars:magic_milk=Magic Milk
@@ -182,6 +185,9 @@ item.bedwars:shopitem_magic_milk=§aMagic Milk
 tile.bedwars:shopitem_sponge.name=§aSponge
 item.bedwars:shopitem_compact_pop_up_tower=§aCompact Pop-up Tower
 item.bedwars:shopitem_bed=§aBed
+item.bedwars:shopitem_emerald_shareable=§aEmerald
+item.bedwars:shopitem_iron_ingot_shareable=§aIron Ingot
+item.bedwars:shopitem_gold_ingot_shareable=§aGold Ingot
 
 #### Team Upgrades
 item.bedwars:upgrade_sharpened_swords=§aSharpened Swords
@@ -525,6 +531,9 @@ message.bedwars:shopitem_magic_milk=Magic Milk
 message.bedwars:shopitem_sponge=Sponge
 message.bedwars:shopitem_compact_pop_up_tower=Compact Pop-Up Tower
 message.bedwars:shopitem_bed=Bed
+message.bedwars:shopitem_iron_ingot_shareable=Iron Ingot
+message.bedwars:shopitem_gold_ingot_shareable=Gold Ingot
+message.bedwars:shopitem_emerald_shareable=Emerald
 message.bedwars:upgrade_sharpened_swords=Sharpened Swords
 message.bedwars:upgrade_reinforced_armor_tier_1=Reinforced Armor I
 message.bedwars:upgrade_reinforced_armor_tier_2=Reinforced Armor II

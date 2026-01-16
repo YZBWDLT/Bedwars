@@ -327,7 +327,7 @@ class BedwarsSettings {
             goldPrice: 10,
 
             /** 1 个绿宝石在商店中需要花费的经验 */
-            emeraldPrice: 100,
+            emeraldPrice: 200,
 
             // ===== 其他设置 =====
 
@@ -335,7 +335,7 @@ class BedwarsSettings {
             soloSpeedMultiplier: 0.6,
 
             /** 经验模式下生成绿宝石的速度 */
-            experienceEmeraldSpeedMultiplier: 4,
+            experienceEmeraldSpeedMultiplier: 1.5,
 
             /** 经验模式下生成队伍岛资源的速度 */
             experienceTeamResourceSpeedMultiplier: 0.5,
@@ -3827,7 +3827,7 @@ class BedwarsMode {
                 /** @type {function(minecraft.ItemCompleteUseAfterEvent): void} */
                 callback: event => {
                     // 如果使用的不是魔法牛奶，终止运行
-                    if (!event.itemStack.typeId == "bedwars:magic_milk") return;
+                    if (event.itemStack.typeId != "bedwars:magic_milk") return;
                     // 如果玩家没有起床战争数据，终止运行
                     const playerData = this.map.getBedwarsPlayer(event.source);
                     if (!playerData) return;
@@ -3886,6 +3886,7 @@ class BedwarsMode {
                         // 检查完毕，每游戏刻创建一个桥面，并播放音效
                         for (let x = -1; x <= 1; x++) for (let z = -1; z <= 1; z++) {
                             const placingLocation = lib.Vector3Util.add(bridgeEgg.location, x, -2, z);
+                            if (placingLocation.y < this.map.heightLimitMin) continue; // 不放置在最低限度之下
                             if (Math.random() > 0.60) continue; // 按照 60% 的完整度放置
                             if (this.map.locationInSafeArea(placingLocation)) continue; // 不放置在安全区
                             lib.DimensionUtil.replaceBlock(bridgeEgg.dimension.id, placingLocation, placingLocation, ["minecraft:air"], `bedwars:${team.id}_wool`);
@@ -5464,7 +5465,7 @@ class BedwarsMap {
             Math.abs(x) > this.size.x + range // 越过 X 界限
             || Math.abs(z) > this.size.z + range // 越过 Z 界限
             || (upFaceTest && y > this.heightLimitMax + range) // 在检查顶面的情况下，越过 Y 上限
-            || y < this.heightLimitMin - range // 越过 Y 下限
+            || y < this.heightLimitMin + range // 越过 Y 下限
         ) {
             projectile.remove();
             return true;

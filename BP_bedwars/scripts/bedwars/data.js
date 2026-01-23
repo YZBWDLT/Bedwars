@@ -6,62 +6,154 @@
 import * as lib from "./lib";
 import * as minecraft from "@minecraft/server";
 
-// ===== type 定义 =====
+// ===== enum 定义 =====
 
-// BedwarsMapInfo 定义一张地图的基本信息
+/** 所有起床战争模式
+ * @enum {string}
+ */
+export const BedwarsModeType = {
+    /** 经典模式 */ Classic: "classic",
+    /** 夺点模式 */ Capture: "capture",
+    /** 经验模式 */ Experience: "experience",
+    /** 疾速模式 */ Rush: "rush",
+}
 
+/** 所有可用的队伍
+ * @readonly
+ * @enum {string}
+ */
+export const BedwarsTeamType = {
+    Red: "red",
+    Blue: "blue",
+    Yellow: "yellow",
+    Green: "green",
+    Pink: "pink",
+    Cyan: "cyan",
+    White: "white",
+    Gray: "gray",
+    Purple: "purple",
+    Brown: "brown",
+    Orange: "orange",
+};
+
+/** 商店物品类型
+ * @enum {string}
+ */
+export const BedwarsItemShopitemCategory = {
+    QuickBuy: "quickBuy",
+    Blocks: "blocks",
+    Melee: "melee",
+    Armor: "armor",
+    Tools: "tools",
+    Ranged: "ranged",
+    Potions: "potions",
+    Utility: "utility",
+    RotatingItems: "rotatingItems",
+};
+
+/** 资源类型
+ * @enum {string}
+ */
+export const BedwarsResourceType = {
+    Iron: "iron",
+    Gold: "gold",
+    Diamond: "diamond",
+    Emerald: "emerald",
+    Level: "level",
+};
+
+/** 获取资源数据
+ * @param {BedwarsResourceType} resourceType 
+ */
+export function resourceData(resourceType) {
+    switch (resourceType) {
+        case BedwarsResourceType.Iron: return { type: BedwarsResourceType.Iron, typeId: "bedwars:iron_ingot", name: "铁锭", color: "§f" };
+        case BedwarsResourceType.Gold: return { type: BedwarsResourceType.Gold, typeId: "bedwars:gold_ingot", name: "金锭", color: "§6" };
+        case BedwarsResourceType.Diamond: return { type: BedwarsResourceType.Diamond, typeId: "bedwars:diamond", name: "钻石", color: "§b" };
+        case BedwarsResourceType.Emerald: return { type: BedwarsResourceType.Emerald, typeId: "bedwars:emerald", name: "绿宝石", color: "§2" };
+        case BedwarsResourceType.Level: return { type: BedwarsResourceType.Level, typeId: "", name: "经验", color: "§a" };
+        default: return { type: "", typeId: "", name: "", color: "§r" };
+    };
+}
+
+/** 所有团队升级
+ * @enum {string}
+ */
+export const BedwarsTeamUpgradeType = {
+    SharpenedSwords: "sharpenedSwords",
+    ReinforcedArmor: "reinforcedArmor",
+    ManiacMiner: "maniacMiner",
+    Forge: "forge",
+    HealPool: "healPool",
+    CushionedBoots: "cushionedBoots",
+    DragonBuff: "dragonBuff",
+};
+
+/** 所有陷阱
+ * @enum {string}
+ */
+export const BedwarsTrapType = {
+    BlindnessTrap: "blindnessTrap",
+    CounterOffensiveTrap: "counterOffensiveTrap",
+    RevealTrap: "revealTrap",
+    MinerFatigueTrap: "minerFatigueTrap",
+};
+
+// ===== 地图数据 =====
+
+// 地图基本信息
 /**
- * @typedef BedwarsMapInfo
+ * @typedef BedwarsMapData 定义一张地图的基本信息
  * @property {BedwarsMapDescription} description 地图描述
  * @property {BedwarsMapComponent} components 地图使用的组件
- */
-
-/** BedwarsMapDescription 地图描述
- * @typedef BedwarsMapDescription
+ * 
+ * @typedef BedwarsMapDescription 地图描述
  * @property {string} id ID，它将控制地图的运行方式
  * @property {string} name 名称，它将按照给定名称在游戏开始前显示出来
- * @property {"classic"|"capture"|"experience"} mode 模式，该地图将按照什么模式执行
+ * @property {BedwarsModeType} mode 模式，该地图将按照什么模式执行
  * @property {boolean} [isSolo] 是否为单挑模式（通常意义上是 8 队模式），单挑模式会影响资源的生成速度和物资售价 | 默认值：false
- */
-
-/** BedwarsMapComponent 地图组件
- * @typedef BedwarsMapComponent
- * @property {BedwarsResourceComponent} resource 规定地图的资源点运行
- * @property {BedwarsTeamComponent} team 规定地图的队伍信息
- * @property {BedwarsIslandComponent[]} island 规定地图的非队伍岛屿
- * @property {BedwarsSizeComponent} [size] 规定地图大小，包括长、宽、高的规定
- * @property {BedwarsCaptureModeComponent} [capture] （游戏使用夺点模式后必须使用，仅夺点模式可用）规定夺点模式的有效床点位等
+ *
+ * @typedef BedwarsMapComponent 地图组件
+ * @property {BedwarsMapResourceComponent} resource 规定地图的资源点运行
+ * @property {BedwarsMapTeamComponent} team 规定地图的队伍信息
+ * @property {BedwarsMapIslandComponent[]} island 规定地图的非队伍岛屿
+ * @property {BedwarsMapSizeComponent} [size] 规定地图大小，包括长、宽、高的规定
+ * @property {BedwarsMapCaptureModeComponent} [capture] （游戏使用夺点模式后必须使用，仅夺点模式可用）规定夺点模式的有效床点位等
  * @property {string[]} [removeItemEntity] 地图将移除物品掉落物的类型
  */
 
-/** BedwarsResourceComponent 资源组件
- * @typedef BedwarsResourceComponent
+// 地图组件及其附属信息
+/**
+ * @typedef BedwarsMapResourceComponent 地图资源组件
  * @property {minecraft.Vector3[]} diamondSpawnerLocation 钻石生成点位置（请选定生成点下方钻石块所在的位置）
  * @property {minecraft.Vector3[]} emeraldSpawnerLocation 绿宝石生成点位置（请选定生成点下方绿宝石块所在的位置）
  * @property {boolean} [distributeResource] 生成资源时是否分散，如果是则在每次生成时 3*3 地分散式生成资源 | 默认值：true
  * @property {boolean} [clearVelocity] 生成资源时是否分散，如果是则在每次生成时 3*3 地分散式生成资源 | 默认值：true
  * @property {number} [ironSpawnTimes] 一次最多生成铁的数量 | 默认值：5
- */
-
-/** BedwarsSizeComponent 大小组件
- * @typedef BedwarsSizeComponent
+ * 
+ * @typedef BedwarsMapSizeComponent 地图尺寸组件
  * @property {number} [sizeX] 地图的 x 方向半边长大小 | 默认值：105
  * @property {number} [sizeZ] 地图的 z 方向半边长大小 | 默认值：105
  * @property {number} [heightLimitMax] 最高高度限制，在高于此高度的位置放置方块时会阻止之，并且同时规定该地图中旁观模式的玩家重生在何高度（高于该高度 7 格） | 默认值：110
  * @property {number} [heightLimitMin] 最低高度限制，在低于此高度的位置放置方块时会阻止之 | 默认值：50
- */
-
-/** BedwarsTeamComponent 队伍组件
- * @typedef BedwarsTeamComponent
+ * 
+ * @typedef BedwarsMapTeamComponent 地图队伍组件
  * @property {TeamData[]} teamData 定义各队伍的信息
  * @property {number} islandLoadTime 定义岛屿加载时间，单位：秒，必须定义结构"(地图 ID):team_island"，推荐以结构文件大小为基准，每 100 kB 加 1 秒
  * @property {number} [healPoolRadius] 治愈池半径 | 默认值：20
  * @property {boolean} [playerCouldIntoShop] 玩家是否能够进入商店，若设置为 false 则在玩家接近商人后将玩家传送出去 | 默认值：true
- */
-
-/** TeamData 各队伍信息
- * @typedef TeamData
- * @property {ValidTeams} id 定义该队伍的 ID
+ * 
+ * @typedef BedwarsMapIslandComponent 地图岛屿组件（非队伍岛屿）
+ * @property {string} id 结构名称，在加载时会自动查找"(地图 ID):(此 id)"结构并加载之
+ * @property {number} loadTime 定义岛屿加载时间，单位：秒，必须定义结构"(地图 ID):(此 id)"，推荐以结构文件大小为基准，每 100 kB 加 1 秒
+ * @property {StructureLoadData[]} islandData 定义该队伍的岛屿加载信息
+ * 
+ * @typedef BedwarsMapCaptureModeComponent 地图夺点模式组件
+ * @property {ValidBedData[]} validBeds 所有床的有效点位
+ * @property {number} score 开始游戏时，每队的分数
+ * 
+ * @typedef TeamData 队伍数据
+ * @property {BedwarsTeamType} id 定义该队伍的 ID
  * @property {BedData} bed 定义该队伍的床的信息
  * @property {minecraft.Vector3} resourceLocation 定义该队伍的资源点的位置，若为分散式生成资源应选取中心点
  * @property {minecraft.Vector3} spawnpointLocation 定义该队伍的重生点的位置，若玩家能够重生则重生到此位置上
@@ -69,286 +161,31 @@ import * as minecraft from "@minecraft/server";
  * @property {StructureLoadData} island 定义该队伍的岛屿加载信息
  * @property {FlagLocationData} [flagLocation] 定义该队伍的旗帜位置起始点与终止点，若不指定则不更换旗帜的颜色 | 默认值：——
  * @property {TraderData[]} trader 定义该队伍的商人信息
- */
-
-/** BedData 床的信息
- * @typedef BedData
+ * 
+ * @typedef BedData 床信息
  * @property {minecraft.Vector3} location 定义床脚的位置
  * @property {minecraft.StructureRotation} [rotation] 定义床的旋转
- */
-
-/** StructureLoadData 队伍岛屿信息
- * @typedef StructureLoadData
- * @property {minecraft.Vector3} location 定义该岛屿结构加载位置
- * @property {minecraft.StructureMirrorAxis} [mirror] 定义该岛屿的结构镜像加载
- * @property {minecraft.StructureRotation} [rotation] 定义该岛屿的结构旋转加载
- */
-
-/** FlagLocationData 岛屿旗帜位置信息
- * @typedef FlagLocationData
+ * 
+ * @typedef FlagLocationData 旗帜位置信息
  * @property {minecraft.Vector3} from 定义该队伍的旗帜位置起始点
  * @property {minecraft.Vector3} to 定义该队伍的旗帜位置终止点
- */
-
-/** TraderData 商人信息，定义商人的位置、朝向、类型和其他基本信息
- * @typedef TraderData
+ * 
+ * @typedef TraderData 商人信息
  * @property {minecraft.Vector3} location 商人位置
  * @property {number} rotation 商人旋转角度，为 0°~360°
  * @property {"item"|"upgrade"} type 商人信息
  * @property {number} [skin] 皮肤 ID，若未指定则随机指定皮肤 | 默认值：0~30 间的随机值
  * @property {minecraft.Vector3} [teleportNearbyPlayerLocation] 当玩家过于接近商人后，将玩家传送到何处，若未指定则不做任何操作 | 默认值：——
- */
-
-/** BedwarsIslandComponent 非队伍岛屿组件
- * @typedef BedwarsIslandComponent
- * @property {string} id 结构名称，在加载时会自动查找"(地图 ID):(此 id)"结构并加载之
- * @property {number} loadTime 定义岛屿加载时间，单位：秒，必须定义结构"(地图 ID):(此 id)"，推荐以结构文件大小为基准，每 100 kB 加 1 秒
- * @property {StructureLoadData[]} islandData 定义该队伍的岛屿加载信息
- */
-
-/** BedwarsCaptureModeComponent 夺点模式组件
- * @typedef BedwarsCaptureModeComponent
- * @property {ValidBedData[]} validBeds 所有床的有效点位
- * @property {number} score 开始游戏时，每队的分数
- */
-
-/** ValidBedData 有效床
- * @typedef ValidBedData
+ * 
+ * @typedef StructureLoadData 结构加载数据
+ * @property {minecraft.Vector3} location 定义该岛屿结构加载位置
+ * @property {minecraft.StructureMirrorAxis} [mirror] 定义该岛屿的结构镜像加载
+ * @property {minecraft.StructureRotation} [rotation] 定义该岛屿的结构旋转加载
+ * 
+ * @typedef ValidBedData 有效床数据（夺点模式）
  * @property {minecraft.Vector3} location 床的位置
- * @property {ValidTeams} [teamId] 该床归何队伍所有
+ * @property {BedwarsTeamType} [teamId] 该床归何队伍所有
  */
-
-// StartIntro 开始游戏时的介绍
-
-/**
- * @typedef StartIntro
- * @property {minecraft.RawMessage} title 开始游戏时的标题，例如“起床战争（经典模式）”
- * @property {minecraft.RawMessage} intro 开始游戏时的玩法内容，例如“保护你的床并摧毁敌人的床……”
- */
-
-// SpawnerInfo 资源生成点信息
-
-/**
- * @typedef SpawnerInfo
- * @property {minecraft.Vector3} location 资源点位置（资源点的钻石块或绿宝石块的位置）
- * @property {number} spawnedTimes 生成次数
- * @property {minecraft.Entity} [spawnerEntity] 动画实体
- * @property {minecraft.Entity} [textLine1] 第一行文本展示实体，通常用于展示等级
- * @property {minecraft.Entity} [textLine2] 第二行文本展示实体，通常用于展示类型
- * @property {minecraft.Entity} [textLine3] 第三行文本展示实体，通常用于展示下一个资源在何时产出
- */
-
-// BedwarsPlayerInfo 定义起床战争的玩家信息，包括其队伍和玩家本体信息
-
-/**
- * @typedef BedwarsPlayerInfo
- * @property {BedwarsTeam | undefined} team 该玩家所属的队伍，若为 undefined 则为旁观模式
- * @property {minecraft.Player} player 该玩家信息所对应的玩家
- * @property {string} [killStyle] 该玩家所采用的击杀信息
- */
-
-// BedwarsItemShopitemInfo 定义物品类商店物品信息，包含诸多附属 type 定义
-
-/** BedwarsItemShopitemInfo
- * @typedef BedwarsItemShopitemInfo
- * @property {BedwarsItemShopitemDescription} description 物品类类商店物品描述
- * @property {BedwarsItemShopitemComponent} [component] 物品类商店物品组件（单物品形式可用）
- * @property {BedwarsItemShopitemComponent[]} [components] 物品类商店物品组件（多物品形式可用）
- */
-
-/** BedwarsItemShopitemDescription
- * @typedef BedwarsItemShopitemDescription
- * @property {"item"|"itemGroup"} format 商店物品形式
- * @property {ShopitemCategory} category 商店物品类别
- * @property {string[]} [description] 物品简介，按照 lore 的形式显示到商店物品上，一个字符串代表一行
- * @property {boolean} [isQuickBuy] 是否为快速购买物品，若是则在商店首页显示
- * @property {boolean} [classicModeEnabled] 该物品是否在经典模式启用
- * @property {boolean} [captureModeEnabled] 该物品是否在夺点模式启用
- * @property {boolean} [experienceModeEnabled] 该物品是否在经验模式启用
- * @property {boolean} [isArmor] 该物品是否为盔甲，它是永久性装备，不会直接给予
- * @property {boolean} [isShears] 该物品是否为剪刀，它是永久性装备，不会直接给予
- * @property {boolean} [isPickaxe] 该物品是否为镐子，它是永久性装备，不会直接给予
- * @property {boolean} [isAxe] 该物品是否为斧头，它是永久性装备，不会直接给予
- */
-
-/** BedwarsItemShopitemComponent
- * @typedef BedwarsItemShopitemComponent
- * @property {string} id 物品 ID，决定显示在商店内的商店物品和给予玩家的物品
- * @property {number} amount 物品数量，决定显示在商店内的物品数量和给予玩家的物品数量
- * @property {BedwarsItemResourceComponent} resource 指定该物品的资源需求
- * @property {BedwarsItemTierComponent} [tier] 指定该物品的等级，多物品情况下应指定该组件，以指定显示物品的条件
- * @property {BedwarsItemRealItemIdComponent} [realItemId] 指定该物品是否要覆写默认值，不指定该组件时将默认将给予物品的 ID 设置为 bedwars:(id)
- * @property {BedwarsItemEnchantmentComponent} [enchantment] 物品的附魔信息
- * @property {string[]} [lore] 给予物品后的 lore 信息
- * @property {string[]} [removeItem] 购买此物品后将移除哪些物品，应指定为物品 ID 的数组
- */
-
-/** BedwarsItemRealItemIdComponent
- * @typedef BedwarsItemRealItemIdComponent
- * @property {boolean} [isVanilla] 该物品是否为原版物品，指定该参数将设置 ID 为 minecraft:(id)，指定 id 参数时会直接覆盖该参数的解析
- * @property {boolean} [isColored] 该物品是否为彩色物品，指定该参数将设置 ID 为 bedwars:(队伍颜色)_(id)，指定 id 参数时会直接覆盖该参数的解析
- * @property {string} [id] 指定要直接覆写为的 ID 
- */
-
-/** BedwarsItemResourceComponent
- * @typedef BedwarsItemResourceComponent
- * @property {ResourceType} type 该物品需要什么类型的资源
- * @property {number} amount 该物品需要多少资源
- * @property {number} [amountInSolo] 该物品在 8 队模式下需要多少资源，若不指定则默认为 amount
- * @property {number} [experienceAmount] 该物品在经验模式下需要多少资源，若不指定则默认为 (资源价格)*amount
- * @property {number} [experienceAmountInSolo] 该物品在 8 队经验模式下需要多少资源，若不指定则默认为 (资源价格)*amountInSolo
- * @property {ResourceType} [amplifier] 当资源使用经验购买时，资源将按照何种资源的价值（注意：不是价格）放大，若不指定则不放大
- */
-
-/** BedwarsItemEnchantmentComponent
- * @typedef BedwarsItemEnchantmentComponent
- * @property {lib.EnchantmentInfo[]} [list] 物品固有的附魔
- * @property {boolean} [applySharpness] （仅限非永久性物品可用）是否在玩家所在团队拥有锋利附魔升级时添加锋利附魔
- * @property {boolean} [applyFeatherFalling] （仅限非永久性物品可用）是否在玩家所在团队拥有缓冲靴子升级时添加摔落缓冲附魔
- */
-
-/** BedwarsItemTierComponent
- * @typedef BedwarsItemTierComponent
- * @property {number} tier 商店物品等级，对于堆叠式物品（format: itemGroup），当该玩家的对应物品升级的等级 = tier - 1 时允许购买；对于单个物品，该玩家的对应物品升级的等级 < tier 时允许购买
- * @property {boolean} [showCurrentTier] 显示当前等级和物品可升级提示
- * @property {boolean} [loseTierUponDeath] 物品是否会降级，同时显示降级提示
- */
-
-// BedwarsUpgradeShopitemInfo 定义团队升级商店物品信息，包含诸多附属 type 定义
-
-/** BedwarsUpgradeShopitemInfo
- * @typedef BedwarsUpgradeShopitemInfo
- * @property {BedwarsUpgradeShopitemDescription} description 团队升级类商店物品描述
- * @property {BedwarsUpgradeShopitemComponent} [component] 团队升级类商店物品组件（单物品形式可用）
- * @property {BedwarsUpgradeShopitemComponent[]} [components] 团队升级类商店物品组件（多物品形式可用）
- */
-
-/** BedwarsUpgradeShopitemDescription
- * @typedef BedwarsUpgradeShopitemDescription
- * @property {"item"|"itemGroup"} format 商店物品形式
- * @property {"upgrade"|"trap"} category 商店物品分类
- * @property {string[]} [description] 商店物品简介，显示该团队升级的最根本用途
- * @property {boolean} [classicModeEnabled] 在经典模式是否启用
- * @property {boolean} [captureModeEnabled] 在夺点模式是否启用
- * @property {boolean} [experienceModeEnabled] 在经验模式是否启用
- */
-
-/** BedwarsUpgradeShopitemComponent
- * @typedef BedwarsUpgradeShopitemComponent
- * @property {TeamUpgrade|Trap} id 团队升级 ID
- * @property {string} shopitemId 商店物品 ID
- * @property {number} amount 在商店中显示为多少物品
- * @property {BedwarsItemResourceComponent} resource 指定该物品的资源需求
- * @property {BedwarsUpgradeTierComponent} [tier] 指定该物品的等级
- */
-
-/** BedwarsUpgradeTierComponent
- * @typedef BedwarsUpgradeTierComponent
- * @property {number} tier 团队升级等级，只有当该队伍的对应升级的等级 = tier - 1 时允许购买
- * @property {string[]} [thisTierDescription] （仅限多物品模式可用）显示该等级的用途，最后将显示为：“tier级： thisTierDecription， resourceAmount 钻石”
- */
-
-// BedwarsCategoryItem 定义分类物品信息
-
-/**
- * @typedef BedwarsCategoryItem
- * @property {string} icon 物品分类物品的图标物品
- * @property {ShopitemCategory} category 物品分类的 ID
- */
-
-// BedwarsTrapInformation 定义当前陷阱信息
-
-/**
- * @typedef BedwarsTrapInformation
- * @property {string} icon 陷阱信息的图标物品
- * @property {string} name 陷阱信息显示为何种名字
- * @property {boolean} [isValid] 是否为有效的陷阱，有效陷阱将显示为绿色标题
- */
-
-// ===== enum 定义 =====
-
-/** 所有可用的队伍
- * @readonly
- * @enum {string}
- */
-export const ValidTeams = {
-    red: "red",
-    blue: "blue",
-    yellow: "yellow",
-    green: "green",
-    pink: "pink",
-    cyan: "cyan",
-    white: "white",
-    gray: "gray",
-    purple: "purple",
-    brown: "brown",
-    orange: "orange",
-};
-
-/** 商店物品类型
- * @enum {string}
- */
-export const ShopitemCategory = {
-    quickBuy: "quickBuy",
-    blocks: "blocks",
-    melee: "melee",
-    armor: "armor",
-    tools: "tools",
-    ranged: "ranged",
-    potions: "potions",
-    utility: "utility",
-    rotatingItems: "rotatingItems",
-};
-
-/** 资源类型
- * @enum {string}
- */
-export const ResourceType = {
-    iron: "iron",
-    gold: "gold",
-    diamond: "diamond",
-    emerald: "emerald",
-    level: "level",
-};
-
-/** 获取资源数据
- * @param {ResourceType} resourceType 
- */
-export function resourceData(resourceType) {
-    switch (resourceType) {
-        case ResourceType.iron: return {type: ResourceType.iron, typeId: "bedwars:iron_ingot", name: "铁锭", color: "§f"};
-        case ResourceType.gold: return {type: ResourceType.gold, typeId: "bedwars:gold_ingot", name: "金锭", color: "§6"};
-        case ResourceType.diamond: return {type: ResourceType.diamond, typeId: "bedwars:diamond", name: "钻石", color: "§b"};
-        case ResourceType.emerald: return {type: ResourceType.emerald, typeId: "bedwars:emerald", name: "绿宝石", color: "§2"};
-        case ResourceType.level: return {type: ResourceType.level, typeId: "", name: "经验", color: "§a"};
-        default: return {type: "", typeId: "", name: "", color: "§r"};
-    };
-}
-
-/** 所有团队升级
- * @enum {string}
- */
-export const TeamUpgrade = {
-    sharpenedSwords: "sharpenedSwords",
-    reinforcedArmor: "reinforcedArmor",
-    maniacMiner: "maniacMiner",
-    forge: "forge",
-    healPool: "healPool",
-    cushionedBoots: "cushionedBoots",
-    dragonBuff: "dragonBuff",
-};
-
-/** 所有陷阱
- * @enum {string}
- */
-export const Trap = {
-    blindnessTrap: "blindnessTrap",
-    counterOffensiveTrap: "counterOffensiveTrap",
-    revealTrap: "revealTrap",
-    minerFatigueTrap: "minerFatigueTrap",
-};
-
-// ===== 地图数据 =====
 
 /** 所有地图数据 */
 export const mapData = {
@@ -359,12 +196,12 @@ export const mapData = {
         /** 2 队地图 */
         twoTeams: {
 
-            /** 地图：神秘 @type {BedwarsMapInfo} */
+            /** 地图：神秘 @type {BedwarsMapData} */
             cryptic: {
                 description: {
                     id: "cryptic",
                     name: "神秘",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                 },
                 components: {
                     resource: {
@@ -375,7 +212,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: 2, y: 77, z: 73 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 2, y: 78, z: 90 },
                                 spawnpointLocation: { x: 2, y: 78, z: 85 },
@@ -388,7 +225,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 2, y: 77, z: -73 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: 2, y: 78, z: -90 },
                                 spawnpointLocation: { x: 2, y: 78, z: -85 },
@@ -435,12 +272,12 @@ export const mapData = {
                 },
             },
 
-            /** 地图：极寒 @type {BedwarsMapInfo} */
+            /** 地图：极寒 @type {BedwarsMapData} */
             frost: {
                 description: {
                     id: "frost",
                     name: "极寒",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                 },
                 components: {
                     resource: {
@@ -451,7 +288,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: 0, y: 72, z: 59 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 0, y: 72, z: 75 },
                                 spawnpointLocation: { x: 0, y: 72, z: 70 },
@@ -463,7 +300,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 0, y: 72, z: -59 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: 0, y: 72, z: -75 },
                                 spawnpointLocation: { x: 0, y: 72, z: -70 },
@@ -502,12 +339,12 @@ export const mapData = {
                 },
             },
 
-            /** 地图：花园 @type {BedwarsMapInfo} */
+            /** 地图：花园 @type {BedwarsMapData} */
             garden: {
                 description: {
                     id: "garden",
                     name: "花园",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                 },
                 components: {
                     resource: {
@@ -517,7 +354,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: 79, y: 77, z: 0 }, },
                                 resourceLocation: { x: 98, y: 79, z: 0 },
                                 spawnpointLocation: { x: 94, y: 79, z: 0 },
@@ -530,7 +367,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: -79, y: 77, z: 0 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -98, y: 79, z: 0 },
                                 spawnpointLocation: { x: -94, y: 79, z: 0 },
@@ -570,12 +407,12 @@ export const mapData = {
                 },
             },
 
-            /** 地图：狮庙 @type {BedwarsMapInfo} */
+            /** 地图：狮庙 @type {BedwarsMapData} */
             lionTemple: {
                 description: {
                     id: "lion_temple",
                     name: "狮庙",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                 },
                 components: {
                     resource: {
@@ -587,7 +424,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: -2, y: 73, z: 58 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: -2, y: 75, z: 78 },
                                 spawnpointLocation: { x: -2, y: 75, z: 73 },
@@ -600,7 +437,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: -2, y: 73, z: -58 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: -2, y: 75, z: -78 },
                                 spawnpointLocation: { x: -2, y: 75, z: -73 },
@@ -640,12 +477,12 @@ export const mapData = {
                 },
             },
 
-            /** 地图：野餐 @type {BedwarsMapInfo} */
+            /** 地图：野餐 @type {BedwarsMapData} */
             picnic: {
                 description: {
                     id: "picnic",
                     name: "野餐",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                 },
                 components: {
                     resource: {
@@ -656,7 +493,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: 0, y: 65, z: -62 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: 0, y: 64, z: -78 },
                                 spawnpointLocation: { x: 0, y: 64, z: -74 },
@@ -669,7 +506,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 0, y: 65, z: 61 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 0, y: 64, z: 77 },
                                 spawnpointLocation: { x: 0, y: 64, z: 73 },
@@ -709,12 +546,12 @@ export const mapData = {
                 }
             },
 
-            /** 地图：废墟 @type {BedwarsMapInfo} */
+            /** 地图：废墟 @type {BedwarsMapData} */
             ruins: {
                 description: {
                     id: "ruins",
                     name: "废墟",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                 },
                 components: {
                     resource: {
@@ -724,7 +561,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: -4, y: 71, z: -64 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: 0, y: 72, z: -82 },
                                 spawnpointLocation: { x: 0, y: 72, z: -78 },
@@ -737,7 +574,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 4, y: 71, z: 64 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 0, y: 72, z: 82 },
                                 spawnpointLocation: { x: 0, y: 72, z: 78 },
@@ -782,12 +619,12 @@ export const mapData = {
         /** 4 队地图 */
         fourTeams: {
 
-            /** 水族馆 @type {BedwarsMapInfo} */
+            /** 水族馆 @type {BedwarsMapData} */
             aquarium: {
                 description: {
                     id: "aquarium",
                     name: "水族馆",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                 },
                 components: {
                     resource: {
@@ -797,7 +634,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: 0, y: 87, z: -48 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: 0, y: 87, z: -64 },
                                 spawnpointLocation: { x: 0, y: 87, z: -58 },
@@ -810,7 +647,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 48, y: 87, z: 0 }, },
                                 resourceLocation: { x: 64, y: 87, z: 0 },
                                 spawnpointLocation: { x: 58, y: 87, z: 0 },
@@ -823,7 +660,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.green,
+                                id: BedwarsTeamType.Green,
                                 bed: { location: { x: 0, y: 87, z: 48 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 0, y: 87, z: 64 },
                                 spawnpointLocation: { x: 0, y: 87, z: 58 },
@@ -836,7 +673,7 @@ export const mapData = {
                                 ]
                             },
                             {
-                                id: ValidTeams.yellow,
+                                id: BedwarsTeamType.Yellow,
                                 bed: { location: { x: -48, y: 87, z: 0 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -64, y: 87, z: 0 },
                                 spawnpointLocation: { x: -58, y: 87, z: 0 },
@@ -878,12 +715,12 @@ export const mapData = {
                 }
             },
 
-            /** 拱形廊道 @type {BedwarsMapInfo} */
+            /** 拱形廊道 @type {BedwarsMapData} */
             archway: {
                 description: {
                     id: "archway",
                     name: "拱形廊道",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                 },
                 components: {
                     resource: {
@@ -895,7 +732,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: -15, y: 66, z: -66 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: -14, y: 65, z: -79 },
                                 spawnpointLocation: { x: -14, y: 65, z: -75 },
@@ -908,7 +745,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 66, y: 66, z: -15 }, },
                                 resourceLocation: { x: 79, y: 65, z: -14 },
                                 spawnpointLocation: { x: 75, y: 65, z: -14 },
@@ -921,7 +758,7 @@ export const mapData = {
                                 ]
                             },
                             {
-                                id: ValidTeams.green,
+                                id: BedwarsTeamType.Green,
                                 bed: { location: { x: 15, y: 66, z: 66 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 14, y: 65, z: 79 },
                                 spawnpointLocation: { x: 14, y: 65, z: 75 },
@@ -934,7 +771,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.yellow,
+                                id: BedwarsTeamType.Yellow,
                                 bed: { location: { x: -66, y: 66, z: 15 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -79, y: 65, z: 14 },
                                 spawnpointLocation: { x: -75, y: 65, z: 14 },
@@ -977,12 +814,12 @@ export const mapData = {
 
             },
 
-            /** 蘑菇岛 @type {BedwarsMapInfo} */
+            /** 蘑菇岛 @type {BedwarsMapData} */
             boletum: {
                 description: {
                     id: "boletum",
                     name: "蘑菇岛",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                 },
                 components: {
                     resource: {
@@ -992,7 +829,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: 0, y: 69, z: 66 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 0, y: 68, z: 82 },
                                 spawnpointLocation: { x: 0, y: 68, z: 78 },
@@ -1005,7 +842,7 @@ export const mapData = {
                                 ]
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: -68, y: 69, z: 0 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -84, y: 68, z: 0 },
                                 spawnpointLocation: { x: -80, y: 68, z: 0 },
@@ -1018,7 +855,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.green,
+                                id: BedwarsTeamType.Green,
                                 bed: { location: { x: -2, y: 69, z: -68 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: -2, y: 68, z: -84 },
                                 spawnpointLocation: { x: -2, y: 68, z: -80 },
@@ -1031,7 +868,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.yellow,
+                                id: BedwarsTeamType.Yellow,
                                 bed: { location: { x: 66, y: 69, z: -2 }, },
                                 resourceLocation: { x: 82, y: 68, z: -2 },
                                 spawnpointLocation: { x: 78, y: 68, z: -2 },
@@ -1073,12 +910,12 @@ export const mapData = {
                 },
             },
 
-            /** 甲壳 @type {BedwarsMapInfo} */
+            /** 甲壳 @type {BedwarsMapData} */
             carapace: {
                 description: {
                     id: "carapace",
                     name: "甲壳",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                 },
                 components: {
                     resource: {
@@ -1091,7 +928,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: 0, y: 66, z: -48 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: 0, y: 66, z: -64 },
                                 spawnpointLocation: { x: 0, y: 66, z: -58 },
@@ -1104,7 +941,7 @@ export const mapData = {
                                 ]
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 48, y: 66, z: 0 }, },
                                 resourceLocation: { x: 64, y: 66, z: 0 },
                                 spawnpointLocation: { x: 58, y: 66, z: 0 },
@@ -1117,7 +954,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.green,
+                                id: BedwarsTeamType.Green,
                                 bed: { location: { x: 0, y: 66, z: 48 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 0, y: 66, z: 64 },
                                 spawnpointLocation: { x: 0, y: 66, z: 58 },
@@ -1130,7 +967,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.yellow,
+                                id: BedwarsTeamType.Yellow,
                                 bed: { location: { x: -48, y: 66, z: 0 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -64, y: 66, z: 0 },
                                 spawnpointLocation: { x: -58, y: 66, z: 0 },
@@ -1172,12 +1009,12 @@ export const mapData = {
                 }
             },
 
-            /** 铁索连环 @type {BedwarsMapInfo} */
+            /** 铁索连环 @type {BedwarsMapData} */
             chained: {
                 description: {
                     id: "chained",
                     name: "铁索连环",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                 },
                 components: {
                     resource: {
@@ -1187,7 +1024,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: 69, y: 65, z: 0 }, },
                                 resourceLocation: { x: 86, y: 64, z: 0 },
                                 spawnpointLocation: { x: 81, y: 64, z: 0 },
@@ -1200,7 +1037,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 0, y: 65, z: 69 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 0, y: 64, z: 86 },
                                 spawnpointLocation: { x: 0, y: 64, z: 81 },
@@ -1213,7 +1050,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.green,
+                                id: BedwarsTeamType.Green,
                                 bed: { location: { x: -69, y: 65, z: 0 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -86, y: 64, z: 0 },
                                 spawnpointLocation: { x: -81, y: 64, z: 0 },
@@ -1226,7 +1063,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.yellow,
+                                id: BedwarsTeamType.Yellow,
                                 bed: { location: { x: 0, y: 65, z: -69 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: 0, y: 64, z: -86 },
                                 spawnpointLocation: { x: 0, y: 64, z: -81 },
@@ -1268,12 +1105,12 @@ export const mapData = {
                 },
             },
 
-            /** 伊斯特伍德 @type {BedwarsMapInfo} */
+            /** 伊斯特伍德 @type {BedwarsMapData} */
             eastwood: {
                 description: {
                     id: "eastwood",
                     name: "伊斯特伍德",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                 },
                 components: {
                     resource: {
@@ -1283,7 +1120,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: 55, y: 66, z: 0 }, },
                                 resourceLocation: { x: 70, y: 66, z: 0 },
                                 spawnpointLocation: { x: 66, y: 66, z: 0 },
@@ -1296,7 +1133,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 0, y: 66, z: 55 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 0, y: 66, z: 70 },
                                 spawnpointLocation: { x: 0, y: 66, z: 66 },
@@ -1309,7 +1146,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.green,
+                                id: BedwarsTeamType.Green,
                                 bed: { location: { x: -55, y: 66, z: 0 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -70, y: 66, z: 0 },
                                 spawnpointLocation: { x: -66, y: 66, z: 0 },
@@ -1322,7 +1159,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.yellow,
+                                id: BedwarsTeamType.Yellow,
                                 bed: { location: { x: 0, y: 66, z: -55 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: 0, y: 66, z: -70 },
                                 spawnpointLocation: { x: 0, y: 66, z: -66 },
@@ -1365,12 +1202,110 @@ export const mapData = {
                 },
             },
 
-            /** 兰花 @type {BedwarsMapInfo} */
+            /** 方尖碑 @type {BedwarsMapData} */
+            obelisk: {
+                description: {
+                    id: "obelisk",
+                    name: "方尖碑",
+                    mode: BedwarsModeType.Classic,
+                },
+                components: {
+                    resource: {
+                        diamondSpawnerLocation: [{ x: 35, y: 70, z: -35 }, { x: 35, y: 70, z: 35 }, { x: -35, y: 70, z: 35 }, { x: -35, y: 70, z: -35 }],
+                        emeraldSpawnerLocation: [{ x: 0, y: 69, z: 0 }, { x: -6, y: 77, z: 6 }, { x: 6, y: 77, z: -6 }],
+                        distributeResource: false,
+                    },
+                    team: {
+                        teamData: [
+                            {
+                                id: BedwarsTeamType.Red,
+                                bed: { location: { x: 0, y: 74, z: -75 }, rotation: minecraft.StructureRotation.Rotate270, },
+                                resourceLocation: { x: 0, y: 73, z: -88 },
+                                spawnpointLocation: { x: 0, y: 74, z: -85 },
+                                chestLocation: { x: 4, y: 74, z: -83 },
+                                island: { location: { x: -22, y: 60, z: -95 } },
+                                flagLocation: { from: { x: -7, y: 80, z: -80 }, to: { x: 7, y: 75, z: -90 }, },
+                                trader: [
+                                    { type: "item", location: { x: 6, y: 74, z: -86 }, rotation: 90, teleportNearbyPlayerLocation: { x: 3, y: 74, z: -86 }, },
+                                    { type: "upgrade", location: { x: -6, y: 74, z: -86 }, rotation: 270, teleportNearbyPlayerLocation: { x: -3, y: 74, z: -86 }, },
+                                ],
+                            },
+                            {
+                                id: BedwarsTeamType.Blue,
+                                bed: { location: { x: 75, y: 74, z: 0 }, },
+                                resourceLocation: { x: 88, y: 73, z: 0 },
+                                spawnpointLocation: { x: 85, y: 74, z: 0 },
+                                chestLocation: { x: 83, y: 74, z: 4 },
+                                island: { location: { x: 59, y: 60, z: -22 }, rotation: minecraft.StructureRotation.Rotate90 },
+                                flagLocation: { from: { x: 80, y: 80, z: -7 }, to: { x: 90, y: 75, z: 7 }, },
+                                trader: [
+                                    { type: "item", location: { x: 86, y: 74, z: 6 }, rotation: 180, teleportNearbyPlayerLocation: { x: 86, y: 74, z: 3 }, },
+                                    { type: "upgrade", location: { x: 86, y: 74, z: -6 }, rotation: 0, teleportNearbyPlayerLocation: { x: 86, y: 74, z: -3 }, },
+                                ],
+                            },
+                            {
+                                id: BedwarsTeamType.Green,
+                                bed: { location: { x: 0, y: 74, z: 75 }, rotation: minecraft.StructureRotation.Rotate90, },
+                                resourceLocation: { x: 0, y: 73, z: 88 },
+                                spawnpointLocation: { x: 0, y: 74, z: 85 },
+                                chestLocation: { x: -4, y: 74, z: 83 },
+                                island: { location: { x: -22, y: 60, z: 59 }, rotation: minecraft.StructureRotation.Rotate180 },
+                                flagLocation: { from: { x: 7, y: 80, z: 80 }, to: { x: -7, y: 75, z: 90 }, },
+                                trader: [
+                                    { type: "item", location: { x: -6, y: 74, z: 86 }, rotation: 270, teleportNearbyPlayerLocation: { x: -3, y: 74, z: 86 }, },
+                                    { type: "upgrade", location: { x: 6, y: 74, z: 86 }, rotation: 90, teleportNearbyPlayerLocation: { x: 3, y: 74, z: 86 }, },
+                                ],
+                            },
+                            {
+                                id: BedwarsTeamType.Yellow,
+                                bed: { location: { x: -75, y: 74, z: 0 }, rotation: minecraft.StructureRotation.Rotate180, },
+                                resourceLocation: { x: -88, y: 73, z: 0 },
+                                spawnpointLocation: { x: -85, y: 74, z: 0 },
+                                chestLocation: { x: -83, y: 74, z: -4 },
+                                island: { location: { x: -95, y: 60, z: -22 }, rotation: minecraft.StructureRotation.Rotate270 },
+                                flagLocation: { from: { x: -80, y: 80, z: 7 }, to: { x: -90, y: 75, z: -7 }, },
+                                trader: [
+                                    { type: "item", location: { x: -86, y: 74, z: -6 }, rotation: 0, teleportNearbyPlayerLocation: { x: -86, y: 74, z: -3 }, },
+                                    { type: "upgrade", location: { x: -86, y: 74, z: 6 }, rotation: 180, teleportNearbyPlayerLocation: { x: -86, y: 74, z: 3 }, },
+                                ],
+                            },
+                        ],
+                        islandLoadTime: 4,
+                        healPoolRadius: 15,
+                        playerCouldIntoShop: false,
+                    },
+                    island: [
+                        {
+                            id: "diamond_island",
+                            loadTime: 2,
+                            islandData: [
+                                { location: { x: 22, y: 64, z: -53 }, },
+                                { location: { x: 25, y: 64, z: 22 }, rotation: minecraft.StructureRotation.Rotate90, },
+                                { location: { x: -53, y: 64, z: 25 }, rotation: minecraft.StructureRotation.Rotate180, },
+                                { location: { x: -53, y: 64, z: -53 }, rotation: minecraft.StructureRotation.Rotate270, },
+                            ],
+                        },
+                        {
+                            id: "center_island",
+                            loadTime: 15,
+                            islandData: [
+                                { location: { x: -30, y: 55, z: -30 }, },
+                            ],
+                        }
+                    ],
+                    size: {
+                        heightLimitMax: 105,
+                        heightLimitMin: 67,
+                    }
+                }
+            },
+
+            /** 兰花 @type {BedwarsMapData} */
             orchid: {
                 description: {
                     id: "orchid",
                     name: "兰花",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                 },
                 components: {
                     resource: {
@@ -1380,7 +1315,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: 41, y: 71, z: -50 }, },
                                 resourceLocation: { x: 62, y: 71, z: -50 },
                                 spawnpointLocation: { x: 58, y: 71, z: -49 },
@@ -1393,7 +1328,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 41, y: 71, z: 50 }, },
                                 resourceLocation: { x: 62, y: 71, z: 50 },
                                 spawnpointLocation: { x: 58, y: 71, z: 49 },
@@ -1406,7 +1341,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.green,
+                                id: BedwarsTeamType.Green,
                                 bed: { location: { x: -41, y: 71, z: 50 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -62, y: 71, z: 50 },
                                 spawnpointLocation: { x: -58, y: 71, z: 49 },
@@ -1419,7 +1354,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.yellow,
+                                id: BedwarsTeamType.Yellow,
                                 bed: { location: { x: -41, y: 71, z: -50 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -62, y: 71, z: -50 },
                                 spawnpointLocation: { x: -58, y: 71, z: -49 },
@@ -1476,17 +1411,209 @@ export const mapData = {
                 },
             },
 
+            /** 野餐 @type {BedwarsMapData} */ // 原名 Treenan
+            picnic: {
+                description: {
+                    id: "picnic_4team",
+                    name: "野餐",
+                    mode: BedwarsModeType.Classic,
+                },
+                components: {
+                    resource: {
+                        diamondSpawnerLocation: [{ x: 31, y: 66, z: 29 }, { x: -29, y: 66, z: 31 }, { x: -31, y: 66, z: -29 }, { x: 29, y: 66, z: -31 },],
+                        emeraldSpawnerLocation: [{ x: 8, y: 70, z: 12 }, { x: -7, y: 70, z: -11 },]
+                    },
+                    team: {
+                        teamData: [
+                            {
+                                id: BedwarsTeamType.Red,
+                                bed: { location: { x: 66, y: 67, z: 0 }, },
+                                resourceLocation: { x: 82, y: 66, z: 0 },
+                                spawnpointLocation: { x: 78, y: 66, z: 0 },
+                                chestLocation: { x: 77, y: 66, z: 3 },
+                                island: { location: { x: 60, y: 57, z: -12 }, },
+                                flagLocation: { from: { x: 75, y: 79, z: -6 }, to: { x: 73, y: 83, z: 13 }, },
+                                trader: [
+                                    { type: "item", location: { x: 79.5, y: 66, z: 6 }, rotation: 180, },
+                                    { type: "upgrade", location: { x: 79.5, y: 66, z: -6 }, rotation: 0, },
+                                ],
+                            },
+                            {
+                                id: BedwarsTeamType.Blue,
+                                bed: { location: { x: 0, y: 67, z: 66 }, rotation: minecraft.StructureRotation.Rotate90, },
+                                resourceLocation: { x: 0, y: 66, z: 82 },
+                                spawnpointLocation: { x: 0, y: 66, z: 78 },
+                                chestLocation: { x: -3, y: 66, z: 77 },
+                                island: { location: { x: -14, y: 57, z: 60 }, rotation: minecraft.StructureRotation.Rotate90, },
+                                flagLocation: { from: { x: 6, y: 79, z: 75 }, to: { x: -13, y: 83, z: 73 }, },
+                                trader: [
+                                    { type: "item", location: { x: -6, y: 66, z: 79.5 }, rotation: 270, },
+                                    { type: "upgrade", location: { x: 6, y: 66, z: 79.5 }, rotation: 90, },
+                                ],
+                            },
+                            {
+                                id: BedwarsTeamType.Green,
+                                bed: { location: { x: -66, y: 67, z: 0 }, rotation: minecraft.StructureRotation.Rotate180, },
+                                resourceLocation: { x: -82, y: 66, z: 0 },
+                                spawnpointLocation: { x: -78, y: 66, z: 0 },
+                                chestLocation: { x: -77, y: 66, z: -3 },
+                                island: { location: { x: -87, y: 57, z: -14 }, rotation: minecraft.StructureRotation.Rotate180, },
+                                flagLocation: { from: { x: -75, y: 79, z: 6 }, to: { x: -73, y: 83, z: -13 }, },
+                                trader: [
+                                    { type: "item", location: { x: -79.5, y: 66, z: -6 }, rotation: 0, },
+                                    { type: "upgrade", location: { x: -79.5, y: 66, z: 6 }, rotation: 180, },
+                                ],
+                            },
+                            {
+                                id: BedwarsTeamType.Yellow,
+                                bed: { location: { x: 0, y: 67, z: -66 }, rotation: minecraft.StructureRotation.Rotate270, },
+                                resourceLocation: { x: 0, y: 66, z: -82 },
+                                spawnpointLocation: { x: 0, y: 66, z: -78 },
+                                chestLocation: { x: 3, y: 66, z: -77 },
+                                island: { location: { x: -12, y: 57, z: -87 }, rotation: minecraft.StructureRotation.Rotate270, },
+                                flagLocation: { from: { x: -6, y: 79, z: -75 }, to: { x: 13, y: 83, z: -73 }, },
+                                trader: [
+                                    { type: "item", location: { x: 6, y: 66, z: -79.5 }, rotation: 90, },
+                                    { type: "upgrade", location: { x: -6, y: 66, z: -79.5 }, rotation: 270, },
+                                ],
+                            },
+                        ],
+                        healPoolRadius: 18,
+                        islandLoadTime: 2,
+                    },
+                    island: [
+                        {
+                            id: "diamond_island",
+                            loadTime: 1,
+                            islandData: [
+                                { location: { x: 25, y: 61, z: 23 }, },
+                                { location: { x: -41, y: 61, z: 25 }, rotation: minecraft.StructureRotation.Rotate90, },
+                                { location: { x: -43, y: 61, z: -41 }, rotation: minecraft.StructureRotation.Rotate180, },
+                                { location: { x: 23, y: 61, z: -43 }, rotation: minecraft.StructureRotation.Rotate270, },
+                            ],
+                        },
+                        {
+                            id: "center_island",
+                            loadTime: 10,
+                            islandData: [
+                                { location: { x: -21, y: 51, z: -22 }, },
+                            ],
+                        },
+                    ],
+                    size: {
+                        heightLimitMin: 56,
+                        heightLimitMax: 97,
+                    },
+                },
+            },
+
+            /** 海盗船 @type {BedwarsMapData} */
+            swashbuckle: {
+                description: {
+                    id: "swashbuckle",
+                    name: "海盗船",
+                    mode: BedwarsModeType.Classic,
+                },
+                components: {
+                    resource: {
+                        diamondSpawnerLocation: [{ x: 35, y: 63, z: -35 }, { x: 35, y: 63, z: 35 }, { x: -35, y: 63, z: 35 }, { x: -35, y: 63, z: -35 },],
+                        emeraldSpawnerLocation: [{ x: -7, y: 63, z: -7 }, { x: 7, y: 63, z: 7 },],
+                    },
+                    team: {
+                        teamData: [
+                            {
+                                id: BedwarsTeamType.Red,
+                                bed: { location: { x: 0, y: 66, z: -70 }, rotation: minecraft.StructureRotation.Rotate90, },
+                                resourceLocation: { x: 0, y: 64, z: -90 },
+                                spawnpointLocation: { x: 0, y: 64, z: -85 },
+                                chestLocation: { x: 3, y: 64, z: -83 },
+                                island: { location: { x: -14, y: 52, z: -95 }, },
+                                flagLocation: { from: { x: 8, y: 103, z: -95 }, to: { x: -8, y: 64, z: -69 } },
+                                trader: [
+                                    { type: "item", location: { x: 5, y: 64, z: -85 }, rotation: 90 },
+                                    { type: "upgrade", location: { x: -5, y: 64, z: -85 }, rotation: 270 },
+                                ],
+                            },
+                            {
+                                id: BedwarsTeamType.Blue,
+                                bed: { location: { x: 70, y: 66, z: 0 }, rotation: minecraft.StructureRotation.Rotate180, },
+                                resourceLocation: { x: 90, y: 64, z: 0 },
+                                spawnpointLocation: { x: 85, y: 64, z: 0 },
+                                chestLocation: { x: 83, y: 64, z: 3 },
+                                island: { location: { x: 55, y: 52, z: -14 }, rotation: minecraft.StructureRotation.Rotate90, },
+                                flagLocation: { from: { x: 95, y: 103, z: 8 }, to: { x: 69, y: 64, z: -8 } },
+                                trader: [
+                                    { type: "item", location: { x: 85, y: 64, z: 5 }, rotation: 180 },
+                                    { type: "upgrade", location: { x: 85, y: 64, z: -5 }, rotation: 0 },
+                                ],
+                            },
+                            {
+                                id: BedwarsTeamType.Green,
+                                bed: { location: { x: 0, y: 66, z: 70 }, rotation: minecraft.StructureRotation.Rotate270, },
+                                resourceLocation: { x: 0, y: 64, z: 90 },
+                                spawnpointLocation: { x: 0, y: 64, z: 85 },
+                                chestLocation: { x: -3, y: 64, z: 83 },
+                                island: { location: { x: -14, y: 52, z: 55 }, rotation: minecraft.StructureRotation.Rotate180, },
+                                flagLocation: { from: { x: -8, y: 103, z: 95 }, to: { x: 8, y: 64, z: 69 } },
+                                trader: [
+                                    { type: "item", location: { x: -5, y: 64, z: 85 }, rotation: 270 },
+                                    { type: "upgrade", location: { x: 5, y: 64, z: 85 }, rotation: 90 },
+                                ],
+                            },
+                            {
+                                id: BedwarsTeamType.Yellow,
+                                bed: { location: { x: -70, y: 66, z: 0 }, },
+                                resourceLocation: { x: -90, y: 64, z: 0 },
+                                spawnpointLocation: { x: -85, y: 64, z: 0 },
+                                chestLocation: { x: -83, y: 64, z: -3 },
+                                island: { location: { x: -95, y: 52, z: -14 }, rotation: minecraft.StructureRotation.Rotate270, },
+                                flagLocation: { from: { x: -95, y: 103, z: -8 }, to: { x: -69, y: 64, z: 8 } },
+                                trader: [
+                                    { type: "item", location: { x: -85, y: 64, z: -5 }, rotation: 0 },
+                                    { type: "upgrade", location: { x: -85, y: 64, z: 5 }, rotation: 180 },
+                                ],
+                            },
+                        ],
+                        healPoolRadius: 22,
+                        islandLoadTime: 5,
+                    },
+                    island: [
+                        {
+                            id: "diamond_island",
+                            loadTime: 1,
+                            islandData: [
+                                { location: { x: 27, y: 55, z: -47 }, },
+                                { location: { x: 27, y: 55, z: 27 }, rotation: minecraft.StructureRotation.Rotate90, },
+                                { location: { x: -47, y: 55, z: 27 }, rotation: minecraft.StructureRotation.Rotate180, },
+                                { location: { x: -47, y: 55, z: -47 }, rotation: minecraft.StructureRotation.Rotate270, },
+                            ],
+                        },
+                        {
+                            id: "center_island",
+                            loadTime: 6,
+                            islandData: [
+                                { location: { x: -25, y: 57, z: -25 }, },
+                            ],
+                        },
+                    ],
+                    size: {
+                        heightLimitMin: 58,
+                        heightLimitMax: 90,
+                    },
+                }
+            },
+
         },
 
         /** 8 队地图 */
         eightTeams: {
 
-            /** 亚马逊 @type {BedwarsMapInfo} */
+            /** 亚马逊 @type {BedwarsMapData} */
             amazon: {
                 description: {
                     id: "amazon",
                     name: "亚马逊",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                     isSolo: true,
                 },
                 components: {
@@ -1499,7 +1626,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: -33, y: 65, z: -80 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: -33, y: 65, z: -100 },
                                 spawnpointLocation: { x: -33, y: 65, z: -95 },
@@ -1512,7 +1639,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 33, y: 65, z: -80 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: 33, y: 65, z: -100 },
                                 spawnpointLocation: { x: 33, y: 65, z: -95 },
@@ -1525,7 +1652,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.green,
+                                id: BedwarsTeamType.Green,
                                 bed: { location: { x: 80, y: 65, z: -33 }, },
                                 resourceLocation: { x: 100, y: 65, z: -33 },
                                 spawnpointLocation: { x: 95, y: 65, z: -33 },
@@ -1538,7 +1665,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.yellow,
+                                id: BedwarsTeamType.Yellow,
                                 bed: { location: { x: 80, y: 65, z: 33 }, },
                                 resourceLocation: { x: 100, y: 65, z: 33 },
                                 spawnpointLocation: { x: 95, y: 65, z: 33 },
@@ -1551,7 +1678,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.cyan,
+                                id: BedwarsTeamType.Cyan,
                                 bed: { location: { x: 33, y: 65, z: 80 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 33, y: 65, z: 100 },
                                 spawnpointLocation: { x: 33, y: 65, z: 95 },
@@ -1564,7 +1691,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.white,
+                                id: BedwarsTeamType.White,
                                 bed: { location: { x: -33, y: 65, z: 80 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: -33, y: 65, z: 100 },
                                 spawnpointLocation: { x: -33, y: 65, z: 95 },
@@ -1576,7 +1703,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.pink,
+                                id: BedwarsTeamType.Pink,
                                 bed: { location: { x: -80, y: 65, z: 33 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -100, y: 65, z: 33 },
                                 spawnpointLocation: { x: -95, y: 65, z: 33 },
@@ -1589,7 +1716,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.gray,
+                                id: BedwarsTeamType.Gray,
                                 bed: { location: { x: -80, y: 65, z: -33 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -100, y: 65, z: -33 },
                                 spawnpointLocation: { x: -95, y: 65, z: -33 },
@@ -1652,12 +1779,12 @@ export const mapData = {
                 },
             },
 
-            /** 莲叶 @type {BedwarsMapInfo} */
+            /** 莲叶 @type {BedwarsMapData} */
             deadwood: {
                 description: {
                     id: "deadwood",
                     name: "莲叶",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                     isSolo: true,
                 },
                 components: {
@@ -1669,7 +1796,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: -30, y: 64, z: -82 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: -30, y: 66, z: -99 },
                                 spawnpointLocation: { x: -30, y: 66, z: -94 },
@@ -1682,7 +1809,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 30, y: 64, z: -82 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: 30, y: 66, z: -99 },
                                 spawnpointLocation: { x: 30, y: 66, z: -94 },
@@ -1695,7 +1822,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.green,
+                                id: BedwarsTeamType.Green,
                                 bed: { location: { x: 82, y: 64, z: -30 }, },
                                 resourceLocation: { x: 99, y: 66, z: -30 },
                                 spawnpointLocation: { x: 94, y: 66, z: -30 },
@@ -1708,7 +1835,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.yellow,
+                                id: BedwarsTeamType.Yellow,
                                 bed: { location: { x: 82, y: 64, z: 30 }, },
                                 resourceLocation: { x: 99, y: 66, z: 30 },
                                 spawnpointLocation: { x: 94, y: 66, z: 30 },
@@ -1721,7 +1848,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.cyan,
+                                id: BedwarsTeamType.Cyan,
                                 bed: { location: { x: 30, y: 64, z: 82 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 30, y: 66, z: 99 },
                                 spawnpointLocation: { x: 30, y: 66, z: 94 },
@@ -1734,7 +1861,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.white,
+                                id: BedwarsTeamType.White,
                                 bed: { location: { x: -30, y: 64, z: 82 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: -30, y: 66, z: 99 },
                                 spawnpointLocation: { x: -30, y: 66, z: 94 },
@@ -1746,7 +1873,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.pink,
+                                id: BedwarsTeamType.Pink,
                                 bed: { location: { x: -82, y: 64, z: 30 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -99, y: 66, z: 30 },
                                 spawnpointLocation: { x: -94, y: 66, z: 30 },
@@ -1759,7 +1886,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.gray,
+                                id: BedwarsTeamType.Gray,
                                 bed: { location: { x: -82, y: 64, z: -30 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -99, y: 66, z: -30 },
                                 spawnpointLocation: { x: -94, y: 66, z: -30 },
@@ -1825,12 +1952,12 @@ export const mapData = {
                 },
             },
 
-            /** 冰川 @type {BedwarsMapInfo} */
+            /** 冰川 @type {BedwarsMapData} */
             glacier: {
                 description: {
                     id: "glacier",
                     name: "冰川",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                     isSolo: true,
                 },
                 components: {
@@ -1843,7 +1970,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: -32, y: 81, z: -65 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: -32, y: 81, z: -86 },
                                 spawnpointLocation: { x: -32, y: 81, z: -80 },
@@ -1856,7 +1983,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 32, y: 81, z: -65 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: 32, y: 81, z: -86 },
                                 spawnpointLocation: { x: 32, y: 81, z: -80 },
@@ -1869,7 +1996,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.green,
+                                id: BedwarsTeamType.Green,
                                 bed: { location: { x: 65, y: 81, z: -32 }, },
                                 resourceLocation: { x: 86, y: 81, z: -32 },
                                 spawnpointLocation: { x: 80, y: 81, z: -32 },
@@ -1882,7 +2009,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.yellow,
+                                id: BedwarsTeamType.Yellow,
                                 bed: { location: { x: 65, y: 81, z: 32 }, },
                                 resourceLocation: { x: 86, y: 81, z: 32 },
                                 spawnpointLocation: { x: 80, y: 81, z: 32 },
@@ -1895,7 +2022,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.cyan,
+                                id: BedwarsTeamType.Cyan,
                                 bed: { location: { x: 32, y: 81, z: 65 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 32, y: 81, z: 86 },
                                 spawnpointLocation: { x: 32, y: 81, z: 80 },
@@ -1908,7 +2035,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.white,
+                                id: BedwarsTeamType.White,
                                 bed: { location: { x: -32, y: 81, z: 65 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: -32, y: 81, z: 86 },
                                 spawnpointLocation: { x: -32, y: 81, z: 80 },
@@ -1920,7 +2047,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.pink,
+                                id: BedwarsTeamType.Pink,
                                 bed: { location: { x: -65, y: 81, z: 32 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -86, y: 81, z: 32 },
                                 spawnpointLocation: { x: -80, y: 81, z: 32 },
@@ -1933,7 +2060,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.gray,
+                                id: BedwarsTeamType.Gray,
                                 bed: { location: { x: -65, y: 81, z: -32 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -86, y: 81, z: -32 },
                                 spawnpointLocation: { x: -80, y: 81, z: -32 },
@@ -1976,12 +2103,12 @@ export const mapData = {
                 },
             },
 
-            /** 灯塔 @type {BedwarsMapInfo} */
+            /** 灯塔 @type {BedwarsMapData} */
             lighthouse: {
                 description: {
                     id: "lighthouse",
                     name: "灯塔",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                     isSolo: true,
                 },
                 components: {
@@ -1994,7 +2121,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: -23, y: 66, z: -75 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: -23, y: 65, z: -91 },
                                 spawnpointLocation: { x: -23, y: 65, z: -87 },
@@ -2007,7 +2134,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 29, y: 66, z: -75 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: 29, y: 65, z: -91 },
                                 spawnpointLocation: { x: 29, y: 65, z: -87 },
@@ -2020,7 +2147,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.green,
+                                id: BedwarsTeamType.Green,
                                 bed: { location: { x: 78, y: 66, z: -26 }, },
                                 resourceLocation: { x: 94, y: 65, z: -26 },
                                 spawnpointLocation: { x: 90, y: 65, z: -26 },
@@ -2033,7 +2160,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.yellow,
+                                id: BedwarsTeamType.Yellow,
                                 bed: { location: { x: 78, y: 66, z: 26 }, },
                                 resourceLocation: { x: 94, y: 65, z: 26 },
                                 spawnpointLocation: { x: 90, y: 65, z: 26 },
@@ -2046,7 +2173,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.cyan,
+                                id: BedwarsTeamType.Cyan,
                                 bed: { location: { x: 29, y: 66, z: 75 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 29, y: 65, z: 91 },
                                 spawnpointLocation: { x: 29, y: 65, z: 87 },
@@ -2059,7 +2186,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.white,
+                                id: BedwarsTeamType.White,
                                 bed: { location: { x: -23, y: 66, z: 75 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: -23, y: 65, z: 91 },
                                 spawnpointLocation: { x: -23, y: 65, z: 87 },
@@ -2071,7 +2198,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.pink,
+                                id: BedwarsTeamType.Pink,
                                 bed: { location: { x: -72, y: 66, z: 26 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -88, y: 65, z: 26 },
                                 spawnpointLocation: { x: -84, y: 65, z: 26 },
@@ -2084,7 +2211,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.gray,
+                                id: BedwarsTeamType.Gray,
                                 bed: { location: { x: -72, y: 66, z: -26 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -88, y: 65, z: -26 },
                                 spawnpointLocation: { x: -84, y: 65, z: -26 },
@@ -2137,12 +2264,12 @@ export const mapData = {
                 },
             },
 
-            /** 乐园 @type {BedwarsMapInfo} */
+            /** 乐园 @type {BedwarsMapData} */
             playground: {
                 description: {
                     id: "playground",
                     name: "乐园",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                     isSolo: true,
                 },
                 components: {
@@ -2155,7 +2282,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: -38, y: 62, z: -80 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: -38, y: 62, z: -97 },
                                 spawnpointLocation: { x: -38, y: 62, z: -92 },
@@ -2168,7 +2295,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 38, y: 62, z: -80 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: 38, y: 62, z: -97 },
                                 spawnpointLocation: { x: 38, y: 62, z: -92 },
@@ -2181,7 +2308,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.green,
+                                id: BedwarsTeamType.Green,
                                 bed: { location: { x: 80, y: 62, z: -38 }, },
                                 resourceLocation: { x: 97, y: 62, z: -38 },
                                 spawnpointLocation: { x: 92, y: 62, z: -38 },
@@ -2194,7 +2321,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.yellow,
+                                id: BedwarsTeamType.Yellow,
                                 bed: { location: { x: 80, y: 62, z: 38 }, },
                                 resourceLocation: { x: 97, y: 62, z: 38 },
                                 spawnpointLocation: { x: 92, y: 62, z: 38 },
@@ -2207,7 +2334,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.cyan,
+                                id: BedwarsTeamType.Cyan,
                                 bed: { location: { x: 38, y: 62, z: 80 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 38, y: 62, z: 97 },
                                 spawnpointLocation: { x: 38, y: 62, z: 92 },
@@ -2220,7 +2347,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.white,
+                                id: BedwarsTeamType.White,
                                 bed: { location: { x: -38, y: 62, z: 80 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: -38, y: 62, z: 97 },
                                 spawnpointLocation: { x: -38, y: 62, z: 92 },
@@ -2232,7 +2359,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.pink,
+                                id: BedwarsTeamType.Pink,
                                 bed: { location: { x: -80, y: 62, z: 38 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -97, y: 62, z: 38 },
                                 spawnpointLocation: { x: -92, y: 62, z: 38 },
@@ -2245,7 +2372,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.gray,
+                                id: BedwarsTeamType.Gray,
                                 bed: { location: { x: -80, y: 62, z: -38 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -97, y: 62, z: -38 },
                                 spawnpointLocation: { x: -92, y: 62, z: -38 },
@@ -2309,12 +2436,12 @@ export const mapData = {
                 },
             },
 
-            /** 屋顶 @type {BedwarsMapInfo} */
+            /** 屋顶 @type {BedwarsMapData} */
             rooftop: {
                 description: {
                     id: "rooftop",
                     name: "屋顶",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                     isSolo: true,
                 },
                 components: {
@@ -2327,7 +2454,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: -34, y: 66, z: -79 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: -34, y: 66, z: -96 },
                                 spawnpointLocation: { x: -34, y: 66, z: -89 },
@@ -2340,7 +2467,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 34, y: 66, z: -79 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: 34, y: 66, z: -96 },
                                 spawnpointLocation: { x: 34, y: 66, z: -89 },
@@ -2353,7 +2480,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.green,
+                                id: BedwarsTeamType.Green,
                                 bed: { location: { x: 79, y: 66, z: -34 }, },
                                 resourceLocation: { x: 96, y: 66, z: -34 },
                                 spawnpointLocation: { x: 89, y: 66, z: -34 },
@@ -2366,7 +2493,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.yellow,
+                                id: BedwarsTeamType.Yellow,
                                 bed: { location: { x: 79, y: 66, z: 34 }, },
                                 resourceLocation: { x: 96, y: 66, z: 34 },
                                 spawnpointLocation: { x: 89, y: 66, z: 34 },
@@ -2379,7 +2506,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.cyan,
+                                id: BedwarsTeamType.Cyan,
                                 bed: { location: { x: 34, y: 66, z: 79 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 34, y: 66, z: 96 },
                                 spawnpointLocation: { x: 34, y: 66, z: 89 },
@@ -2392,7 +2519,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.white,
+                                id: BedwarsTeamType.White,
                                 bed: { location: { x: -34, y: 66, z: 79 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: -34, y: 66, z: 96 },
                                 spawnpointLocation: { x: -34, y: 66, z: 89 },
@@ -2404,7 +2531,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.pink,
+                                id: BedwarsTeamType.Pink,
                                 bed: { location: { x: -79, y: 66, z: 34 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -96, y: 66, z: 34 },
                                 spawnpointLocation: { x: -89, y: 66, z: 34 },
@@ -2417,7 +2544,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.gray,
+                                id: BedwarsTeamType.Gray,
                                 bed: { location: { x: -79, y: 66, z: -34 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -96, y: 66, z: -34 },
                                 spawnpointLocation: { x: -89, y: 66, z: -34 },
@@ -2470,12 +2597,12 @@ export const mapData = {
                 },
             },
 
-            /** 瀑布 @type {BedwarsMapInfo} */
+            /** 瀑布 @type {BedwarsMapData} */
             waterfall: {
                 description: {
                     id: "waterfall",
                     name: "瀑布",
-                    mode: "classic",
+                    mode: BedwarsModeType.Classic,
                     isSolo: true,
                 },
                 components: {
@@ -2488,7 +2615,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: -33, y: 66, z: -64 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: -34, y: 66, z: -77 },
                                 spawnpointLocation: { x: -34, y: 66, z: -74 },
@@ -2501,7 +2628,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 33, y: 66, z: -64 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: 32, y: 66, z: -77 },
                                 spawnpointLocation: { x: 32, y: 66, z: -74 },
@@ -2514,7 +2641,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.green,
+                                id: BedwarsTeamType.Green,
                                 bed: { location: { x: 64, y: 66, z: -33 }, },
                                 resourceLocation: { x: 77, y: 66, z: -34 },
                                 spawnpointLocation: { x: 74, y: 66, z: -34 },
@@ -2527,7 +2654,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.yellow,
+                                id: BedwarsTeamType.Yellow,
                                 bed: { location: { x: 64, y: 66, z: 33 }, },
                                 resourceLocation: { x: 77, y: 66, z: 32 },
                                 spawnpointLocation: { x: 74, y: 66, z: 32 },
@@ -2540,7 +2667,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.cyan,
+                                id: BedwarsTeamType.Cyan,
                                 bed: { location: { x: 33, y: 66, z: 64 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 34, y: 66, z: 77 },
                                 spawnpointLocation: { x: 34, y: 66, z: 74 },
@@ -2553,7 +2680,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.white,
+                                id: BedwarsTeamType.White,
                                 bed: { location: { x: -33, y: 66, z: 64 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: -32, y: 66, z: 77 },
                                 spawnpointLocation: { x: -32, y: 66, z: 74 },
@@ -2565,7 +2692,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.pink,
+                                id: BedwarsTeamType.Pink,
                                 bed: { location: { x: -64, y: 66, z: 33 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -77, y: 66, z: 34 },
                                 spawnpointLocation: { x: -74, y: 66, z: 34 },
@@ -2578,7 +2705,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.gray,
+                                id: BedwarsTeamType.Gray,
                                 bed: { location: { x: -64, y: 66, z: -33 }, rotation: minecraft.StructureRotation.Rotate180, },
                                 resourceLocation: { x: -77, y: 66, z: -32 },
                                 spawnpointLocation: { x: -74, y: 66, z: -32 },
@@ -2641,18 +2768,18 @@ export const mapData = {
 
         twoTeams: {
 
-            /** 地图：野餐 @type {BedwarsMapInfo} */
+            /** 地图：野餐 @type {BedwarsMapData} */
             picnic: {
                 description: {
                     id: "picnic_capture",
                     name: "野餐",
-                    mode: "capture",
+                    mode: BedwarsModeType.Capture,
                 },
                 components: {
                     capture: {
                         validBeds: [
-                            { location: { x: 0, y: 64, z: -63 }, teamId: ValidTeams.red, },
-                            { location: { x: 0, y: 64, z: 61 }, teamId: ValidTeams.blue, },
+                            { location: { x: 0, y: 64, z: -63 }, teamId: BedwarsTeamType.Red, },
+                            { location: { x: 0, y: 64, z: 61 }, teamId: BedwarsTeamType.Blue, },
                             { location: { x: 48, y: 64, z: 10 }, },
                             { location: { x: 0, y: 64, z: -1 }, },
                             { location: { x: -48, y: 64, z: -11 }, },
@@ -2667,7 +2794,7 @@ export const mapData = {
                     team: {
                         teamData: [
                             {
-                                id: ValidTeams.red,
+                                id: BedwarsTeamType.Red,
                                 bed: { location: { x: 0, y: 64, z: -63 }, rotation: minecraft.StructureRotation.Rotate270, },
                                 resourceLocation: { x: 0, y: 63, z: -78 },
                                 spawnpointLocation: { x: 0, y: 63, z: -74 },
@@ -2680,7 +2807,7 @@ export const mapData = {
                                 ],
                             },
                             {
-                                id: ValidTeams.blue,
+                                id: BedwarsTeamType.Blue,
                                 bed: { location: { x: 0, y: 64, z: 61 }, rotation: minecraft.StructureRotation.Rotate90, },
                                 resourceLocation: { x: 0, y: 63, z: 77 },
                                 spawnpointLocation: { x: 0, y: 63, z: 73 },
@@ -2736,251 +2863,313 @@ export const mapData = {
 
 };
 
-/** 将经典模式地图数据输出为经验模式
- * @param {BedwarsMapInfo} mapData 
- * @returns {BedwarsMapInfo}
- */
-export function classicToExperience(mapData) {
-    return { ...mapData, description: { ...mapData.description, mode: "experience" } };
-};
-
 // ===== 商人数据 =====
+
+/**
+ * @typedef BedwarsCategoryItem 定义分类物品信息
+ * @property {string} icon 物品分类物品的图标物品
+ * @property {BedwarsItemShopitemCategory} category 物品分类的 ID
+ */
 
 /** 物品类商人标签物品信息 */
 export const categoryItemData = {
     /** 快速购买 @type {BedwarsCategoryItem} */
     quickBuy: {
         icon: "bedwars:category_quick_buy",
-        category: ShopitemCategory.quickBuy,
+        category: BedwarsItemShopitemCategory.QuickBuy,
     },
     /** 方块 @type {BedwarsCategoryItem} */
     blocks: {
         icon: "bedwars:category_blocks",
-        category: ShopitemCategory.blocks,
+        category: BedwarsItemShopitemCategory.Blocks,
     },
     /** 近战 @type {BedwarsCategoryItem} */
     melee: {
         icon: "bedwars:category_melee",
-        category: ShopitemCategory.melee,
+        category: BedwarsItemShopitemCategory.Melee,
     },
     /** 盔甲 @type {BedwarsCategoryItem} */
     armor: {
         icon: "bedwars:category_armor",
-        category: ShopitemCategory.armor,
+        category: BedwarsItemShopitemCategory.Armor,
     },
     /** 工具 @type {BedwarsCategoryItem} */
     tools: {
         icon: "bedwars:category_tools",
-        category: ShopitemCategory.tools,
+        category: BedwarsItemShopitemCategory.Tools,
     },
     /** 远程 @type {BedwarsCategoryItem} */
     ranged: {
         icon: "bedwars:category_ranged",
-        category: ShopitemCategory.ranged,
+        category: BedwarsItemShopitemCategory.Ranged,
     },
     /** 药水 @type {BedwarsCategoryItem} */
     potions: {
         icon: "bedwars:category_potions",
-        category: ShopitemCategory.potions,
+        category: BedwarsItemShopitemCategory.Potions,
     },
     /** 实用道具 @type {BedwarsCategoryItem} */
     utility: {
         icon: "bedwars:category_utility",
-        category: ShopitemCategory.utility,
+        category: BedwarsItemShopitemCategory.Utility,
     },
     /** 轮换物品 @type {BedwarsCategoryItem} */
     rotatingItems: {
         icon: "bedwars:category_rotating_items",
-        category: ShopitemCategory.rotatingItems,
+        category: BedwarsItemShopitemCategory.RotatingItems,
     },
 };
+
+// 商店物品基本信息
+/**
+ * @typedef BedwarsShopitemModeEnabledDescription 商店物品启用信息
+ * @property {boolean} [classic] 该物品是否在经典模式启用 | 默认值：true
+ * @property {boolean} [capture] 该物品是否在夺点模式启用 | 默认值：true
+ * @property {boolean} [experience] 该物品是否在经验模式启用 | 默认值：true
+ * @property {boolean} [rush] 该物品是否在疾速模式启用 | 默认值：true
+ */
+
+// 物品类商店物品基本信息
+/**
+ * @typedef BedwarsItemShopitemData 定义物品类商店物品信息
+ * @property {BedwarsItemShopitemDescription} description 物品类类商店物品描述
+ * @property {BedwarsItemShopitemComponent} [component] 物品类商店物品组件（单物品形式可用）
+ * @property {BedwarsItemShopitemComponent[]} [components] 物品类商店物品组件（多物品形式可用）
+ * 
+ * @typedef BedwarsItemShopitemDescription 物品类商店物品描述
+ * @property {"item"|"itemGroup"} format 商店物品形式
+ * @property {BedwarsItemShopitemCategory} category 商店物品类别
+ * @property {string[]} [description] 物品简介，按照 lore 的形式显示到商店物品上，一个字符串代表一行
+ * @property {boolean} [isQuickBuy] 是否为快速购买物品，若是则在商店首页显示
+ * @property {BedwarsShopitemModeEnabledDescription} [modeEnabled] 该物品在特定模式下是否启用 | 默认值：均为 true
+ * @property {boolean} [isArmor] 该物品是否为盔甲，它是永久性装备，不会直接给予
+ * @property {boolean} [isShears] 该物品是否为剪刀，它是永久性装备，不会直接给予
+ * @property {boolean} [isPickaxe] 该物品是否为镐子，它是永久性装备，不会直接给予
+ * @property {boolean} [isAxe] 该物品是否为斧头，它是永久性装备，不会直接给予
+ * 
+ * @typedef BedwarsItemShopitemComponent 物品类商店物品组件
+ * @property {string} id 物品 ID，决定显示在商店内的商店物品和给予玩家的物品
+ * @property {number} amount 物品数量，决定显示在商店内的物品数量和给予玩家的物品数量
+ * @property {BedwarsItemResourceComponent} resource 指定该物品的资源需求
+ * @property {BedwarsItemTierComponent} [tier] 指定该物品的等级，多物品情况下应指定该组件，以指定显示物品的条件
+ * @property {BedwarsItemRealItemIdComponent} [realItemId] 指定该物品是否要覆写默认值，不指定该组件时将默认将给予物品的 ID 设置为 bedwars:(id)
+ * @property {BedwarsItemEnchantmentComponent} [enchantment] 物品的附魔信息
+ * @property {string[]} [lore] 给予物品后的 lore 信息
+ * @property {string[]} [removeItem] 购买此物品后将移除哪些物品，应指定为物品 ID 的数组
+ */
+
+// 物品类商店物品组件
+/**
+ * @typedef BedwarsItemRealItemIdComponent 真实 ID 组件
+ * @property {boolean} [isVanilla] 该物品是否为原版物品，指定该参数将设置 ID 为 minecraft:(id)，指定 id 参数时会直接覆盖该参数的解析
+ * @property {boolean} [isColored] 该物品是否为彩色物品，指定该参数将设置 ID 为 bedwars:(队伍颜色)_(id)，指定 id 参数时会直接覆盖该参数的解析
+ * @property {string} [id] 指定要直接覆写为的 ID 
+ * 
+ * @typedef BedwarsItemResourceComponent 所需物品组件
+ * @property {BedwarsResourceType} type 该物品需要什么类型的资源
+ * @property {number} amount 该物品需要多少资源
+ * @property {number} [amountInSolo] 该物品在 8 队模式下需要多少资源，若不指定则默认为 amount
+ * @property {number} [experienceAmount] 该物品在经验模式下需要多少资源，若不指定则默认为 (资源价格)*amount
+ * @property {number} [experienceAmountInSolo] 该物品在 8 队经验模式下需要多少资源，若不指定则默认为 (资源价格)*amountInSolo
+ * @property {BedwarsResourceType} [amplifier] 当资源使用经验购买时，资源将按照何种资源的价值（注意：不是价格）放大，若不指定则不放大
+ * 
+ * @typedef BedwarsItemEnchantmentComponent 物品附魔组件
+ * @property {lib.EnchantmentInfo[]} [list] 物品固有的附魔
+ * @property {boolean} [applySharpness] （仅限非永久性物品可用）是否在玩家所在团队拥有锋利附魔升级时添加锋利附魔
+ * @property {boolean} [applyFeatherFalling] （仅限非永久性物品可用）是否在玩家所在团队拥有缓冲靴子升级时添加摔落缓冲附魔
+ * 
+ * @typedef BedwarsItemTierComponent 物品等级组件
+ * @property {number} tier 商店物品等级，对于堆叠式物品（format: itemGroup），当该玩家的对应物品升级的等级 = tier - 1 时允许购买；对于单个物品，该玩家的对应物品升级的等级 < tier 时允许购买
+ * @property {boolean} [showCurrentTier] 显示当前等级和物品可升级提示
+ * @property {boolean} [loseTierUponDeath] 物品是否会降级，同时显示降级提示
+ */
 
 /** 物品类商店物品基本信息 */
 export const itemShopitemData = {
 
     // ===== 方块 =====
 
-    /** 羊毛，4 铁锭 -> 16 羊毛 @type {BedwarsItemShopitemInfo} */
+    /** 羊毛，4 铁锭 -> 16 羊毛 @type {BedwarsItemShopitemData} */
     wool: {
         description: {
             format: "item",
-            category: ShopitemCategory.blocks,
+            category: BedwarsItemShopitemCategory.Blocks,
             description: ["可用于搭桥穿越岛屿。搭出的桥的颜色会对应你的队伍颜色。"],
             isQuickBuy: true,
         },
         component: {
             id: "wool",
             amount: 16,
-            resource: { type: ResourceType.iron, amount: 4 },
+            resource: { type: BedwarsResourceType.Iron, amount: 4 },
             realItemId: { isColored: true },
         },
     },
-    /** 硬化粘土（陶瓦），12 铁锭 -> 16 硬化粘土 @type {BedwarsItemShopitemInfo} */
+    /** 硬化粘土（陶瓦），12 铁锭 -> 16 硬化粘土 @type {BedwarsItemShopitemData} */
     stainedHardenedClay: {
         description: {
             format: "item",
-            category: ShopitemCategory.blocks,
+            category: BedwarsItemShopitemCategory.Blocks,
             description: ["用于保卫床的基础方块。"],
         },
         component: {
             id: "stained_hardened_clay",
             amount: 16,
-            resource: { type: ResourceType.iron, amount: 12 },
+            resource: { type: BedwarsResourceType.Iron, amount: 12 },
             realItemId: { isColored: true }
         },
     },
-    /** 防爆玻璃，12 铁锭 -> 4 防爆玻璃 @type {BedwarsItemShopitemInfo} */
+    /** 防爆玻璃，12 铁锭 -> 4 防爆玻璃 @type {BedwarsItemShopitemData} */
     blastProofGlass: {
         description: {
             format: "item",
-            category: ShopitemCategory.blocks,
+            category: BedwarsItemShopitemCategory.Blocks,
             description: ["免疫爆炸。"],
         },
         component: {
             id: "blast_proof_glass",
             amount: 4,
-            resource: { type: ResourceType.iron, amount: 12 },
+            resource: { type: BedwarsResourceType.Iron, amount: 12 },
             realItemId: { isColored: true }
         },
     },
-    /** 末地石，24 铁锭 -> 12 末地石 @type {BedwarsItemShopitemInfo} */
+    /** 末地石，24 铁锭 -> 12 末地石 @type {BedwarsItemShopitemData} */
     endStone: {
         description: {
             format: "item",
-            category: ShopitemCategory.blocks,
+            category: BedwarsItemShopitemCategory.Blocks,
             description: ["用于保卫床的坚固方块。"],
             isQuickBuy: true,
         },
         component: {
             id: "end_stone",
             amount: 12,
-            resource: { type: ResourceType.iron, amount: 24 },
+            resource: { type: BedwarsResourceType.Iron, amount: 24 },
         },
     },
-    /** 梯子，4 铁锭 -> 8 梯子 @type {BedwarsItemShopitemInfo} */
+    /** 梯子，4 铁锭 -> 8 梯子 @type {BedwarsItemShopitemData} */
     ladder: {
         description: {
             format: "item",
-            category: ShopitemCategory.blocks,
+            category: BedwarsItemShopitemCategory.Blocks,
             description: ["可用于救助在树上卡住的猫。"],
         },
         component: {
             id: "ladder",
             amount: 8,
-            resource: { type: ResourceType.iron, amount: 4 },
+            resource: { type: BedwarsResourceType.Iron, amount: 4 },
             realItemId: { isVanilla: true }
         },
     },
-    /** 木板，4 金锭 -> 16 木板 @type {BedwarsItemShopitemInfo} */
+    /** 木板，4 金锭 -> 16 木板 @type {BedwarsItemShopitemData} */
     planks: {
         description: {
             format: "item",
-            category: ShopitemCategory.blocks,
+            category: BedwarsItemShopitemCategory.Blocks,
             description: ["用于保卫床的优质方块。能有效", "抵御镐子的破坏。"],
             isQuickBuy: true,
         },
         component: {
             id: "oak_planks",
             amount: 16,
-            resource: { type: ResourceType.gold, amount: 4 },
+            resource: { type: BedwarsResourceType.Gold, amount: 4 },
         },
     },
-    /** 黑曜石，4 绿宝石 -> 4 黑曜石 @type {BedwarsItemShopitemInfo} */
+    /** 黑曜石，4 绿宝石 -> 4 黑曜石 @type {BedwarsItemShopitemData} */
     obsidian: {
         description: {
             format: "item",
-            category: ShopitemCategory.blocks,
-            description: [ "百分百保护你的床。" ],
+            category: BedwarsItemShopitemCategory.Blocks,
+            description: ["百分百保护你的床。"],
         },
         component: {
             id: "obsidian",
             amount: 4,
-            resource: { type: ResourceType.emerald, amount: 4 },
+            resource: { type: BedwarsResourceType.Emerald, amount: 4 },
         },
     },
 
     // ===== 近战 =====
 
-    /** 石剑，10 铁锭 -> 1 石剑 @type {BedwarsItemShopitemInfo} */
+    /** 石剑，10 铁锭 -> 1 石剑 @type {BedwarsItemShopitemData} */
     stoneSword: {
         description: {
             format: "item",
-            category: ShopitemCategory.melee,
+            category: BedwarsItemShopitemCategory.Melee,
         },
         component: {
             id: "stone_sword",
             amount: 1,
-            resource: { type: ResourceType.iron, amount: 10 },
+            resource: { type: BedwarsResourceType.Iron, amount: 10 },
             enchantment: { applySharpness: true },
             removeItem: ["bedwars:wooden_sword"],
         },
     },
-    /** 铁剑，7 金锭 -> 1 铁剑 @type {BedwarsItemShopitemInfo} */
+    /** 铁剑，7 金锭 -> 1 铁剑 @type {BedwarsItemShopitemData} */
     ironSword: {
         description: {
             format: "item",
-            category: ShopitemCategory.melee,
+            category: BedwarsItemShopitemCategory.Melee,
             isQuickBuy: true,
         },
         component: {
             id: "iron_sword",
             amount: 1,
-            resource: { type: ResourceType.gold, amount: 7 },
+            resource: { type: BedwarsResourceType.Gold, amount: 7 },
             enchantment: { applySharpness: true },
             removeItem: ["bedwars:wooden_sword"],
         },
     },
-    /** 钻石剑，3 绿宝石（非 8 队）或 4 绿宝石（8 队） -> 1 钻石剑 @type {BedwarsItemShopitemInfo} */
+    /** 钻石剑，3 绿宝石（非 8 队）或 4 绿宝石（8 队） -> 1 钻石剑 @type {BedwarsItemShopitemData} */
     diamondSword: {
         description: {
             format: "item",
-            category: ShopitemCategory.melee,
+            category: BedwarsItemShopitemCategory.Melee,
         },
         component: {
             id: "diamond_sword",
             amount: 1,
-            resource: { type: ResourceType.emerald, amount: 3, amountInSolo: 4 },
+            resource: { type: BedwarsResourceType.Emerald, amount: 3, amountInSolo: 4 },
             enchantment: { applySharpness: true },
             removeItem: ["bedwars:wooden_sword"],
         },
     },
-    /** 击退棒，5 金锭 -> 1 击退棒 @type {BedwarsItemShopitemInfo} */
+    /** 击退棒，5 金锭 -> 1 击退棒 @type {BedwarsItemShopitemData} */
     knockbackStick: {
         description: {
             format: "item",
-            category: ShopitemCategory.melee,
+            category: BedwarsItemShopitemCategory.Melee,
         },
         component: {
             id: "knockback_stick",
             amount: 1,
-            resource: { type: ResourceType.gold, amount: 5 },
+            resource: { type: BedwarsResourceType.Gold, amount: 5 },
             enchantment: { list: [{ id: "knockback", level: 1 }] },
         },
     },
 
     // ===== 盔甲 =====
 
-    /** 永久的锁链盔甲，24 铁锭 -> 1 永久的锁链盔甲 @type {BedwarsItemShopitemInfo} */
+    /** 永久的锁链盔甲，24 铁锭 -> 1 永久的锁链盔甲 @type {BedwarsItemShopitemData} */
     chainArmor: {
         description: {
             format: "item",
-            category: ShopitemCategory.armor,
+            category: BedwarsItemShopitemCategory.Armor,
             description: ["每次重生时，会获得锁链护腿和锁链靴子。"],
             isArmor: true,
         },
         component: {
             id: "chain_armor",
             amount: 1,
-            resource: { type: ResourceType.iron, amount: 24 },
+            resource: { type: BedwarsResourceType.Iron, amount: 24 },
             // enchantment: { applyFeatherFalling: true }, （该物品是永久性物品，指定此参数无效）,
             tier: { tier: 2 }
         },
     },
-    /** 永久的铁盔甲，12 金锭 -> 1 永久的铁盔甲 @type {BedwarsItemShopitemInfo} */
+    /** 永久的铁盔甲，12 金锭 -> 1 永久的铁盔甲 @type {BedwarsItemShopitemData} */
     ironArmor: {
         description: {
             format: "item",
-            category: ShopitemCategory.armor,
+            category: BedwarsItemShopitemCategory.Armor,
             description: ["每次重生时，会获得铁护腿和铁靴子。"],
             isQuickBuy: true,
             isArmor: true,
@@ -2988,23 +3177,23 @@ export const itemShopitemData = {
         component: {
             id: "iron_armor",
             amount: 1,
-            resource: { type: ResourceType.gold, amount: 12 },
+            resource: { type: BedwarsResourceType.Gold, amount: 12 },
             // enchantment: { applyFeatherFalling: true }, （该物品是永久性物品，指定此参数无效）
             tier: { tier: 3 }
         },
     },
-    /** 永久的钻石盔甲，6 绿宝石 -> 1 永久的钻石盔甲 @type {BedwarsItemShopitemInfo} */
+    /** 永久的钻石盔甲，6 绿宝石 -> 1 永久的钻石盔甲 @type {BedwarsItemShopitemData} */
     diamondArmor: {
         description: {
             format: "item",
-            category: ShopitemCategory.armor,
+            category: BedwarsItemShopitemCategory.Armor,
             description: ["每次重生时，会获得钻石护腿和钻石靴子。"],
             isArmor: true,
         },
         component: {
             id: "diamond_armor",
             amount: 1,
-            resource: { type: ResourceType.emerald, amount: 6 },
+            resource: { type: BedwarsResourceType.Emerald, amount: 6 },
             // enchantment: { applyFeatherFalling: true }, （该物品是永久性物品，指定此参数无效）
             tier: { tier: 4 },
         },
@@ -3012,25 +3201,25 @@ export const itemShopitemData = {
 
     // ===== 工具 =====
 
-    /** 永久的剪刀，20 铁锭 -> 1 永久的剪刀 @type {BedwarsItemShopitemInfo} */
+    /** 永久的剪刀，20 铁锭 -> 1 永久的剪刀 @type {BedwarsItemShopitemData} */
     shears: {
         description: {
             format: "item",
-            category: ShopitemCategory.tools,
+            category: BedwarsItemShopitemCategory.Tools,
             description: ["适用于破坏羊毛，每次重生时会获得剪刀。"],
             isShears: true,
         },
         component: {
             id: "shears",
             amount: 1,
-            resource: { type: ResourceType.iron, amount: 20 },
+            resource: { type: BedwarsResourceType.Iron, amount: 20 },
         },
     },
-    /** 镐 @type {BedwarsItemShopitemInfo} */
+    /** 镐 @type {BedwarsItemShopitemData} */
     pickaxe: {
         description: {
             format: "itemGroup",
-            category: ShopitemCategory.tools,
+            category: BedwarsItemShopitemCategory.Tools,
             isQuickBuy: true,
             isPickaxe: true,
         },
@@ -3038,37 +3227,37 @@ export const itemShopitemData = {
             {
                 id: "wooden_pickaxe",
                 amount: 1,
-                resource: { type: ResourceType.iron, amount: 10 },
+                resource: { type: BedwarsResourceType.Iron, amount: 10 },
                 tier: { tier: 1, showCurrentTier: true, loseTierUponDeath: true },
             },
             {
                 id: "iron_pickaxe",
                 amount: 1,
-                resource: { type: ResourceType.iron, amount: 10 },
+                resource: { type: BedwarsResourceType.Iron, amount: 10 },
                 removeItem: ["bedwars:wooden_pickaxe"],
                 tier: { tier: 2, showCurrentTier: true, loseTierUponDeath: true },
             },
             {
                 id: "golden_pickaxe",
                 amount: 1,
-                resource: { type: ResourceType.gold, amount: 3 },
+                resource: { type: BedwarsResourceType.Gold, amount: 3 },
                 removeItem: ["bedwars:wooden_pickaxe", "bedwars:iron_pickaxe"],
                 tier: { tier: 3, showCurrentTier: true, loseTierUponDeath: true },
             },
             {
                 id: "diamond_pickaxe",
                 amount: 1,
-                resource: { type: ResourceType.gold, amount: 6 },
+                resource: { type: BedwarsResourceType.Gold, amount: 6 },
                 removeItem: ["bedwars:wooden_pickaxe", "bedwars:iron_pickaxe", "bedwars:golden_pickaxe"],
                 tier: { tier: 4, showCurrentTier: true, loseTierUponDeath: true },
             }
         ],
     },
-    /** 斧 @type {BedwarsItemShopitemInfo} */
+    /** 斧 @type {BedwarsItemShopitemData} */
     axe: {
         description: {
             format: "itemGroup",
-            category: ShopitemCategory.tools,
+            category: BedwarsItemShopitemCategory.Tools,
             isQuickBuy: true,
             isAxe: true,
         },
@@ -3076,14 +3265,14 @@ export const itemShopitemData = {
             {
                 id: "wooden_axe",
                 amount: 1,
-                resource: { type: ResourceType.iron, amount: 10 },
+                resource: { type: BedwarsResourceType.Iron, amount: 10 },
                 // enchantment: { applySharpness: true }, （该物品是永久性物品，指定此参数无效）
                 tier: { tier: 1, showCurrentTier: true, loseTierUponDeath: true },
             },
             {
                 id: "stone_axe",
                 amount: 1,
-                resource: { type: ResourceType.iron, amount: 10 },
+                resource: { type: BedwarsResourceType.Iron, amount: 10 },
                 // enchantment: { applySharpness: true }, （该物品是永久性物品，指定此参数无效）
                 removeItem: ["bedwars:wooden_axe"],
                 tier: { tier: 2, showCurrentTier: true, loseTierUponDeath: true },
@@ -3091,7 +3280,7 @@ export const itemShopitemData = {
             {
                 id: "iron_axe",
                 amount: 1,
-                resource: { type: ResourceType.gold, amount: 3 },
+                resource: { type: BedwarsResourceType.Gold, amount: 3 },
                 // enchantment: { applySharpness: true }, （该物品是永久性物品，指定此参数无效）
                 removeItem: ["bedwars:wooden_axe", "bedwars:stone_axe"],
                 tier: { tier: 3, showCurrentTier: true, loseTierUponDeath: true },
@@ -3099,7 +3288,7 @@ export const itemShopitemData = {
             {
                 id: "diamond_axe",
                 amount: 1,
-                resource: { type: ResourceType.gold, amount: 6 },
+                resource: { type: BedwarsResourceType.Gold, amount: 6 },
                 // enchantment: { applySharpness: true }, （该物品是永久性物品，指定此参数无效）
                 removeItem: ["bedwars:wooden_axe", "bedwars:stone_axe", "bedwars:iron_axe"],
                 tier: { tier: 4, showCurrentTier: true, loseTierUponDeath: true },
@@ -3109,58 +3298,58 @@ export const itemShopitemData = {
 
     // ===== 远程 =====
 
-    /** 箭，2 金锭 -> 6 箭 @type {BedwarsItemShopitemInfo} */
+    /** 箭，2 金锭 -> 6 箭 @type {BedwarsItemShopitemData} */
     arrow: {
         description: {
             format: "item",
-            category: ShopitemCategory.ranged,
+            category: BedwarsItemShopitemCategory.Ranged,
             isQuickBuy: true,
         },
         component: {
             id: "arrow",
             amount: 6,
-            resource: { type: ResourceType.gold, amount: 2 },
+            resource: { type: BedwarsResourceType.Gold, amount: 2 },
             realItemId: { isVanilla: true },
         },
     },
-    /** 弓，12 金锭 -> 1 弓 @type {BedwarsItemShopitemInfo} */
+    /** 弓，12 金锭 -> 1 弓 @type {BedwarsItemShopitemData} */
     bow: {
         description: {
             format: "item",
-            category: ShopitemCategory.ranged,
+            category: BedwarsItemShopitemCategory.Ranged,
             isQuickBuy: true,
         },
         component: {
             id: "bow",
             amount: 1,
-            resource: { type: ResourceType.gold, amount: 12 },
+            resource: { type: BedwarsResourceType.Gold, amount: 12 },
             realItemId: { isVanilla: true },
         },
     },
-    /** 弓（力量 I），20 金锭 -> 1 弓（力量 I） @type {BedwarsItemShopitemInfo} */
+    /** 弓（力量 I），20 金锭 -> 1 弓（力量 I） @type {BedwarsItemShopitemData} */
     bowPower: {
         description: {
             format: "item",
-            category: ShopitemCategory.ranged,
+            category: BedwarsItemShopitemCategory.Ranged,
         },
         component: {
             id: "bow_power",
             amount: 1,
-            resource: { type: ResourceType.gold, amount: 20 },
+            resource: { type: BedwarsResourceType.Gold, amount: 20 },
             realItemId: { id: "minecraft:bow" },
             enchantment: { list: [{ id: "power", level: 1 }] },
         },
     },
-    /** 弓（力量 I，冲击 I），6 绿宝石 -> 1 弓（力量 I，冲击 I） @type {BedwarsItemShopitemInfo} */
+    /** 弓（力量 I，冲击 I），6 绿宝石 -> 1 弓（力量 I，冲击 I） @type {BedwarsItemShopitemData} */
     bowPowerPunch: {
         description: {
             format: "item",
-            category: ShopitemCategory.ranged,
+            category: BedwarsItemShopitemCategory.Ranged,
         },
         component: {
             id: "bow_power_punch",
             amount: 1,
-            resource: { type: ResourceType.emerald, amount: 6 },
+            resource: { type: BedwarsResourceType.Emerald, amount: 6 },
             realItemId: { id: "minecraft:bow" },
             enchantment: { list: [{ id: "power", level: 1 }, { id: "punch", level: 1 }] },
         },
@@ -3168,280 +3357,304 @@ export const itemShopitemData = {
 
     // ===== 药水 =====
 
-    /** 速度药水，1 绿宝石 -> 1 速度药水 @type {BedwarsItemShopitemInfo} */
+    /** 速度药水，1 绿宝石 -> 1 速度药水 @type {BedwarsItemShopitemData} */
     speedPotion: {
         description: {
             format: "item",
-            category: ShopitemCategory.potions,
+            category: BedwarsItemShopitemCategory.Potions,
             description: ["§9速度 II（0:30）。"],
         },
         component: {
             id: "potion_speed",
             amount: 1,
-            resource: { type: ResourceType.emerald, amount: 1 },
+            resource: { type: BedwarsResourceType.Emerald, amount: 1 },
             lore: ["§r§9迅捷 II (0:30)"],
         },
     },
-    /** 跳跃药水，1 绿宝石 -> 1 跳跃药水 @type {BedwarsItemShopitemInfo} */
+    /** 跳跃药水，1 绿宝石 -> 1 跳跃药水 @type {BedwarsItemShopitemData} */
     jumpBoostPotion: {
         description: {
             format: "item",
-            category: ShopitemCategory.potions,
+            category: BedwarsItemShopitemCategory.Potions,
             description: ["§9跳跃提升 V（0:45）。"],
         },
         component: {
             id: "potion_jump_boost",
             amount: 1,
-            resource: { type: ResourceType.emerald, amount: 1 },
+            resource: { type: BedwarsResourceType.Emerald, amount: 1 },
             lore: ["§r§9跳跃提升 V (0:45)"],
         },
     },
-    /** 隐身药水，2 绿宝石 -> 1 隐身药水 @type {BedwarsItemShopitemInfo} */
+    /** 隐身药水，2 绿宝石 -> 1 隐身药水 @type {BedwarsItemShopitemData} */
     invisibilityPotion: {
         description: {
             format: "item",
-            category: ShopitemCategory.potions,
+            category: BedwarsItemShopitemCategory.Potions,
             description: ["§9完全隐身（0:30）。"],
             isQuickBuy: true,
-            experienceModeEnabled: false,
+            modeEnabled: { experience: false },
         },
         component: {
             id: "potion_invisibility",
             amount: 1,
-            resource: { type: ResourceType.emerald, amount: 2 },
+            resource: { type: BedwarsResourceType.Emerald, amount: 2 },
             lore: ["§r§9隐身 (0:30)"],
         },
     },
 
     // ===== 实用道具 =====
 
-    /** 金苹果，3 金锭 -> 1 金苹果 @type {BedwarsItemShopitemInfo} */
+    /** 金苹果，3 金锭 -> 1 金苹果 @type {BedwarsItemShopitemData} */
     goldenApple: {
         description: {
             format: "item",
-            category: ShopitemCategory.utility,
+            category: BedwarsItemShopitemCategory.Utility,
             description: ["全面治愈。"],
             isQuickBuy: true,
         },
         component: {
             id: "golden_apple",
             amount: 1,
-            resource: { type: ResourceType.gold, amount: 3 },
+            resource: { type: BedwarsResourceType.Gold, amount: 3 },
             realItemId: { isVanilla: true }
         },
     },
-    /** 床虱，24 铁锭 -> 1 床虱 @type {BedwarsItemShopitemInfo} */
+    /** 床虱，24 铁锭 -> 1 床虱 @type {BedwarsItemShopitemData} */
     bedBug: {
         description: {
             format: "item",
-            category: ShopitemCategory.utility,
+            category: BedwarsItemShopitemCategory.Utility,
             description: ["在雪球着陆的地方生成蠹虫，", "用于分散敌人注意力，持续15秒。"],
         },
         component: {
             id: "bed_bug",
             amount: 1,
-            resource: { type: ResourceType.iron, amount: 24 },
+            resource: { type: BedwarsResourceType.Iron, amount: 24 },
         },
     },
-    /** 梦境守护者，120 铁锭 -> 1 梦境守护者 @type {BedwarsItemShopitemInfo} */
+    /** 梦境守护者，120 铁锭 -> 1 梦境守护者 @type {BedwarsItemShopitemData} */
     dreamDefender: {
         description: {
             format: "item",
-            category: ShopitemCategory.utility,
+            category: BedwarsItemShopitemCategory.Utility,
             description: ["铁傀儡帮你守卫基地，", "持续4分钟。"],
         },
         component: {
             id: "dream_defender",
             amount: 1,
-            resource: { type: ResourceType.iron, amount: 120 },
+            resource: { type: BedwarsResourceType.Iron, amount: 120 },
         },
     },
-    /** 火球，40 铁锭 -> 1 火球 @type {BedwarsItemShopitemInfo} */
+    /** 火球，40 铁锭 -> 1 火球 @type {BedwarsItemShopitemData} */
     fireball: {
         description: {
             format: "item",
-            category: ShopitemCategory.utility,
+            category: BedwarsItemShopitemCategory.Utility,
             description: ["右键发射！击飞在桥上行走的敌人！"],
             isQuickBuy: true,
         },
         component: {
             id: "fireball",
             amount: 1,
-            resource: { type: ResourceType.iron, amount: 40 },
+            resource: { type: BedwarsResourceType.Iron, amount: 40 },
         },
     },
-    /** TNT，8 金锭（非 8 队）或 4 金锭（8 队） -> 1 TNT @type {BedwarsItemShopitemInfo} */
+    /** TNT，8 金锭（非 8 队）或 4 金锭（8 队） -> 1 TNT @type {BedwarsItemShopitemData} */
     tnt: {
         description: {
             format: "item",
-            category: ShopitemCategory.utility,
+            category: BedwarsItemShopitemCategory.Utility,
             description: ["瞬间点燃，适用于摧毁沿途防御工事！"],
             isQuickBuy: true,
         },
         component: {
             id: "tnt",
             amount: 1,
-            resource: { type: ResourceType.gold, amount: 8, amountInSolo: 4 },
+            resource: { type: BedwarsResourceType.Gold, amount: 8, amountInSolo: 4 },
         },
     },
-    /** 末影珍珠，4 绿宝石 -> 1 末影珍珠 @type {BedwarsItemShopitemInfo} */
+    /** 末影珍珠，4 绿宝石 -> 1 末影珍珠 @type {BedwarsItemShopitemData} */
     enderPearl: {
         description: {
             format: "item",
-            category: ShopitemCategory.utility,
+            category: BedwarsItemShopitemCategory.Utility,
             description: ["入侵敌人基地的最快方法。"],
         },
         component: {
             id: "ender_pearl",
             amount: 1,
-            resource: { type: ResourceType.emerald, amount: 4 },
+            resource: { type: BedwarsResourceType.Emerald, amount: 4 },
             realItemId: { isVanilla: true },
         },
     },
-    /** 水桶，3 金锭（非 8 队）或 2 金锭（8 队） -> 1 水桶 @type {BedwarsItemShopitemInfo} */
+    /** 水桶，3 金锭（非 8 队）或 2 金锭（8 队） -> 1 水桶 @type {BedwarsItemShopitemData} */
     waterBucket: {
         description: {
             format: "item",
-            category: ShopitemCategory.utility,
+            category: BedwarsItemShopitemCategory.Utility,
             description: ["能很好地降低来犯敌人的速度。", "也可以抵御来自TNT的伤害。"],
         },
         component: {
             id: "water_bucket",
             amount: 1,
-            resource: { type: ResourceType.gold, amount: 3, amountInSolo: 2 },
+            resource: { type: BedwarsResourceType.Gold, amount: 3, amountInSolo: 2 },
             realItemId: { isVanilla: true },
         },
     },
-    /** 搭桥蛋，1 绿宝石 -> 1 搭桥蛋 @type {BedwarsItemShopitemInfo} */
+    /** 搭桥蛋，1 绿宝石 -> 1 搭桥蛋 @type {BedwarsItemShopitemData} */
     bridgeEgg: {
         description: {
             format: "item",
-            category: ShopitemCategory.utility,
+            category: BedwarsItemShopitemCategory.Utility,
             description: ["扔出蛋后，会在其飞行轨迹上生成一座桥。"],
         },
         component: {
             id: "bridge_egg",
             amount: 1,
-            resource: { type: ResourceType.emerald, amount: 1 },
+            resource: { type: BedwarsResourceType.Emerald, amount: 1 },
         },
     },
-    /** 魔法牛奶，4 金锭 -> 1 魔法牛奶 @type {BedwarsItemShopitemInfo} */
+    /** 魔法牛奶，4 金锭 -> 1 魔法牛奶 @type {BedwarsItemShopitemData} */
     magicMilk: {
         description: {
             format: "item",
-            category: ShopitemCategory.utility,
+            category: BedwarsItemShopitemCategory.Utility,
             description: ["使用后，30秒内避免触发陷阱。"],
             isQuickBuy: true,
         },
         component: {
             id: "magic_milk",
             amount: 1,
-            resource: { type: ResourceType.gold, amount: 4 },
+            resource: { type: BedwarsResourceType.Gold, amount: 4 },
         },
     },
-    /** 海绵，3 金锭（非 8 队）或 2 金锭（8 队） -> 4 海绵 @type {BedwarsItemShopitemInfo} */
+    /** 海绵，3 金锭（非 8 队）或 2 金锭（8 队） -> 4 海绵 @type {BedwarsItemShopitemData} */
     sponge: {
         description: {
             format: "item",
-            category: ShopitemCategory.utility,
+            category: BedwarsItemShopitemCategory.Utility,
             description: ["用于吸收水分。"],
         },
         component: {
             id: "sponge",
             amount: 4,
-            resource: { type: ResourceType.gold, amount: 3, amountInSolo: 2 },
+            resource: { type: BedwarsResourceType.Gold, amount: 3, amountInSolo: 2 },
             realItemId: { isVanilla: true }
         },
     },
-    // /** 紧凑式速建塔，24 铁锭 -> 1 紧凑式速建塔 @type {BedwarsItemShopitemInfo} */
+    // /** 紧凑式速建塔，24 铁锭 -> 1 紧凑式速建塔 @type {BedwarsItemShopitemData} */
     // conpactPopUpTower: {
     //     description: {
     //         format: "item",
-    //         category: ShopitemCategory.utility,
+    //         category: BedwarsItemShopitemCategory.Utility,
     //         description: ["建造一座速建塔！"],
     //     },
     //     component: {
     //         id: "conpactPopUpTower",
     //         amount: 1,
-    //         resource: { type: ResourceType.iron, amount: 24 },
+    //         resource: { type: BedwarsResourceType.Iron, amount: 24 },
     //     },
     // },
 
     // ===== 轮换道具 =====
 
-    /** 床，2 钻石 -> 1 床 @type {BedwarsItemShopitemInfo} */
+    /** 床，2 钻石 -> 1 床 @type {BedwarsItemShopitemData} */
     bed: {
         description: {
             format: "item",
-            category: ShopitemCategory.rotatingItems,
+            category: BedwarsItemShopitemCategory.RotatingItems,
             description: ["在基岩上放置床以夺取点位，", "使敌方更快地减少分数！"],
-            classicModeEnabled: false,
-            experienceModeEnabled: false,
+            modeEnabled: { classic: false, experience: false, rush: false },
         },
         component: {
             id: "bed",
             amount: 1,
-            resource: { type: ResourceType.diamond, amount: 2 },
+            resource: { type: BedwarsResourceType.Diamond, amount: 2 },
             realItemId: { isColored: true }
         }
     },
-    /** 铁锭，(铁锭价值) 等级 -> 铁锭 @type {BedwarsItemShopitemInfo} */
+    /** 铁锭，(铁锭价值) 等级 -> 铁锭 @type {BedwarsItemShopitemData} */
     ironIngot: {
         description: {
             format: "item",
-            category: ShopitemCategory.rotatingItems,
+            category: BedwarsItemShopitemCategory.RotatingItems,
             description: ["向队友扔出此物品以分享你的经验。"],
-            classicModeEnabled: false,
-            captureModeEnabled: false,
+            modeEnabled: { classic: false, capture: false, rush: false },
         },
         component: {
             id: "iron_ingot_shareable",
             amount: 1,
-            resource: { type: ResourceType.level, amount: 1, amplifier: ResourceType.iron },
+            resource: { type: BedwarsResourceType.Level, amount: 1, amplifier: BedwarsResourceType.Iron },
             lore: ["§r§7扔出此物品并拾起以获取经验。"]
         }
     },
-    /** 金锭，(金锭价值) 等级 -> 金锭 @type {BedwarsItemShopitemInfo} */
+    /** 金锭，(金锭价值) 等级 -> 金锭 @type {BedwarsItemShopitemData} */
     goldIngot: {
         description: {
             format: "item",
-            category: ShopitemCategory.rotatingItems,
+            category: BedwarsItemShopitemCategory.RotatingItems,
             description: ["向队友扔出此物品以分享你的经验。"],
-            classicModeEnabled: false,
-            captureModeEnabled: false,
+            modeEnabled: { classic: false, capture: false, rush: false },
         },
         component: {
             id: "gold_ingot_shareable",
             amount: 1,
-            resource: { type: ResourceType.level, amount: 1, amplifier: ResourceType.gold },
+            resource: { type: BedwarsResourceType.Level, amount: 1, amplifier: BedwarsResourceType.Gold },
             lore: ["§r§7扔出此物品并拾起以获取经验。"]
         }
     },
-    /** 绿宝石，(绿宝石价值) 等级 -> 绿宝石 @type {BedwarsItemShopitemInfo} */
+    /** 绿宝石，(绿宝石价值) 等级 -> 绿宝石 @type {BedwarsItemShopitemData} */
     emeraldIngot: {
         description: {
             format: "item",
-            category: ShopitemCategory.rotatingItems,
+            category: BedwarsItemShopitemCategory.RotatingItems,
             description: ["向队友扔出此物品以分享你的经验。"],
-            classicModeEnabled: false,
-            captureModeEnabled: false,
+            modeEnabled: { classic: false, capture: false, rush: false },
         },
         component: {
             id: "emerald_shareable",
             amount: 1,
-            resource: { type: ResourceType.level, amount: 1, amplifier: ResourceType.emerald },
+            resource: { type: BedwarsResourceType.Level, amount: 1, amplifier: BedwarsResourceType.Emerald },
             lore: ["§r§7扔出此物品并拾起以获取经验。"]
         }
     },
 
 };
 
+// 团队升级类商店物品基本信息
+/**
+ * @typedef BedwarsUpgradeShopitemData 定义团队升级商店物品信息
+ * @property {BedwarsUpgradeShopitemDescription} description 团队升级类商店物品描述
+ * @property {BedwarsUpgradeShopitemComponent} [component] 团队升级类商店物品组件（单物品形式可用）
+ * @property {BedwarsUpgradeShopitemComponent[]} [components] 团队升级类商店物品组件（多物品形式可用）
+ * 
+ * @typedef BedwarsUpgradeShopitemDescription
+ * @property {"item"|"itemGroup"} format 商店物品形式
+ * @property {"upgrade"|"trap"} category 商店物品分类
+ * @property {string[]} [description] 商店物品简介，显示该团队升级的最根本用途
+ * @property {BedwarsShopitemModeEnabledDescription} [modeEnabled] 该物品在特定模式下是否启用 | 默认值：均为 true
+ * 
+ * @typedef BedwarsUpgradeShopitemComponent
+ * @property {BedwarsTeamUpgradeType|BedwarsTrapType} id 团队升级 ID
+ * @property {string} shopitemId 商店物品 ID
+ * @property {number} amount 在商店中显示为多少物品
+ * @property {BedwarsItemResourceComponent} resource 指定该物品的资源需求
+ * @property {BedwarsUpgradeTierComponent} [tier] 指定该物品的等级
+ */
+
+// 团队升级类商店物品组件
+/**
+ * @typedef BedwarsUpgradeTierComponent
+ * @property {number} tier 团队升级等级，只有当该队伍的对应升级的等级 = tier - 1 时允许购买
+ * @property {string[]} [thisTierDescription] （仅限多物品模式可用）显示该等级的用途，最后将显示为：“tier级： thisTierDecription， resourceAmount 钻石”
+ */
+
 /** 团队升级类商店物品基本信息 */
 export const upgradeShopitemData = {
 
     // --- 团队升级 ---
 
-    /** 锋利附魔 @type {BedwarsUpgradeShopitemInfo} */
+    /** 锋利附魔 @type {BedwarsUpgradeShopitemData} */
     sharpenedSwords: {
         description: {
             format: "item",
@@ -3449,14 +3662,14 @@ export const upgradeShopitemData = {
             description: ["你方所有成员的剑和斧将永久获得锋利I附魔！"],
         },
         component: {
-            id: TeamUpgrade.sharpenedSwords,
+            id: BedwarsTeamUpgradeType.SharpenedSwords,
             shopitemId: "bedwars:upgrade_sharpened_swords",
             amount: 1,
-            resource: { type: ResourceType.diamond, amount: 8, amountInSolo: 4 },
+            resource: { type: BedwarsResourceType.Diamond, amount: 8, amountInSolo: 4 },
             tier: { tier: 1 },
         }
     },
-    /** 盔甲强化 @type {BedwarsUpgradeShopitemInfo} */
+    /** 盔甲强化 @type {BedwarsUpgradeShopitemData} */
     reinforcedArmor: {
         description: {
             format: "itemGroup",
@@ -3465,36 +3678,36 @@ export const upgradeShopitemData = {
         },
         components: [
             {
-                id: TeamUpgrade.reinforcedArmor,
+                id: BedwarsTeamUpgradeType.ReinforcedArmor,
                 shopitemId: "bedwars:upgrade_reinforced_armor_tier_1",
                 amount: 1,
-                resource: { type: ResourceType.diamond, amount: 5, amountInSolo: 2 },
+                resource: { type: BedwarsResourceType.Diamond, amount: 5, amountInSolo: 2 },
                 tier: { tier: 1, thisTierDescription: ["保护 I"] },
             },
             {
-                id: TeamUpgrade.reinforcedArmor,
+                id: BedwarsTeamUpgradeType.ReinforcedArmor,
                 shopitemId: "bedwars:upgrade_reinforced_armor_tier_2",
                 amount: 2,
-                resource: { type: ResourceType.diamond, amount: 10, amountInSolo: 4 },
+                resource: { type: BedwarsResourceType.Diamond, amount: 10, amountInSolo: 4 },
                 tier: { tier: 2, thisTierDescription: ["保护 II"] },
             },
             {
-                id: TeamUpgrade.reinforcedArmor,
+                id: BedwarsTeamUpgradeType.ReinforcedArmor,
                 shopitemId: "bedwars:upgrade_reinforced_armor_tier_3",
                 amount: 3,
-                resource: { type: ResourceType.diamond, amount: 20, amountInSolo: 8 },
+                resource: { type: BedwarsResourceType.Diamond, amount: 20, amountInSolo: 8 },
                 tier: { tier: 3, thisTierDescription: ["保护 III"] },
             },
             {
-                id: TeamUpgrade.reinforcedArmor,
+                id: BedwarsTeamUpgradeType.ReinforcedArmor,
                 shopitemId: "bedwars:upgrade_reinforced_armor_tier_4",
                 amount: 4,
-                resource: { type: ResourceType.diamond, amount: 30, amountInSolo: 16 },
+                resource: { type: BedwarsResourceType.Diamond, amount: 30, amountInSolo: 16 },
                 tier: { tier: 4, thisTierDescription: ["保护 IV"] },
             }
         ]
     },
-    /** 疯狂矿工 @type {BedwarsUpgradeShopitemInfo} */
+    /** 疯狂矿工 @type {BedwarsUpgradeShopitemData} */
     maniacMiner: {
         description: {
             format: "itemGroup",
@@ -3503,22 +3716,22 @@ export const upgradeShopitemData = {
         },
         components: [
             {
-                id: TeamUpgrade.maniacMiner,
+                id: BedwarsTeamUpgradeType.ManiacMiner,
                 shopitemId: "bedwars:upgrade_maniac_miner_tier_1",
                 amount: 1,
-                resource: { type: ResourceType.diamond, amount: 4, amountInSolo: 2 },
+                resource: { type: BedwarsResourceType.Diamond, amount: 4, amountInSolo: 2 },
                 tier: { tier: 1, thisTierDescription: ["急迫 I"] },
             },
             {
-                id: TeamUpgrade.maniacMiner,
+                id: BedwarsTeamUpgradeType.ManiacMiner,
                 shopitemId: "bedwars:upgrade_maniac_miner_tier_2",
                 amount: 2,
-                resource: { type: ResourceType.diamond, amount: 6, amountInSolo: 4 },
+                resource: { type: BedwarsResourceType.Diamond, amount: 6, amountInSolo: 4 },
                 tier: { tier: 2, thisTierDescription: ["急迫 II"] },
             }
         ]
     },
-    /** 锻炉 @type {BedwarsUpgradeShopitemInfo} */
+    /** 锻炉 @type {BedwarsUpgradeShopitemData} */
     forge: {
         description: {
             format: "itemGroup",
@@ -3527,36 +3740,36 @@ export const upgradeShopitemData = {
         },
         components: [
             {
-                id: TeamUpgrade.forge,
+                id: BedwarsTeamUpgradeType.Forge,
                 shopitemId: "bedwars:upgrade_forge_tier_1",
                 amount: 1,
-                resource: { type: ResourceType.diamond, amount: 4, amountInSolo: 2 },
+                resource: { type: BedwarsResourceType.Diamond, amount: 4, amountInSolo: 2 },
                 tier: { tier: 1, thisTierDescription: ["+50%资源"] },
             },
             {
-                id: TeamUpgrade.forge,
+                id: BedwarsTeamUpgradeType.Forge,
                 shopitemId: "bedwars:upgrade_forge_tier_2",
                 amount: 2,
-                resource: { type: ResourceType.diamond, amount: 8, amountInSolo: 4 },
+                resource: { type: BedwarsResourceType.Diamond, amount: 8, amountInSolo: 4 },
                 tier: { tier: 2, thisTierDescription: ["+100%资源"] },
             },
             {
-                id: TeamUpgrade.forge,
+                id: BedwarsTeamUpgradeType.Forge,
                 shopitemId: "bedwars:upgrade_forge_tier_3",
                 amount: 3,
-                resource: { type: ResourceType.diamond, amount: 12, amountInSolo: 6 },
+                resource: { type: BedwarsResourceType.Diamond, amount: 12, amountInSolo: 6 },
                 tier: { tier: 3, thisTierDescription: ["生成绿宝石"] },
             },
             {
-                id: TeamUpgrade.forge,
+                id: BedwarsTeamUpgradeType.Forge,
                 shopitemId: "bedwars:upgrade_forge_tier_4",
                 amount: 4,
-                resource: { type: ResourceType.diamond, amount: 16, amountInSolo: 8 },
+                resource: { type: BedwarsResourceType.Diamond, amount: 16, amountInSolo: 8 },
                 tier: { tier: 4, thisTierDescription: ["+200%资源"] },
             }
         ]
     },
-    /** 治愈池 @type {BedwarsUpgradeShopitemInfo} */
+    /** 治愈池 @type {BedwarsUpgradeShopitemData} */
     healPool: {
         description: {
             format: "item",
@@ -3564,14 +3777,14 @@ export const upgradeShopitemData = {
             description: ["基地附近的队伍成员将获得生命恢复效果！"],
         },
         component: {
-            id: TeamUpgrade.healPool,
+            id: BedwarsTeamUpgradeType.HealPool,
             shopitemId: "bedwars:upgrade_heal_pool",
             amount: 1,
-            resource: { type: ResourceType.diamond, amount: 3, amountInSolo: 1 },
+            resource: { type: BedwarsResourceType.Diamond, amount: 3, amountInSolo: 1 },
             tier: { tier: 1 }
         }
     },
-    /** 缓冲靴子 @type {BedwarsUpgradeShopitemInfo} */
+    /** 缓冲靴子 @type {BedwarsUpgradeShopitemData} */
     cushionedBoots: {
         description: {
             format: "itemGroup",
@@ -3580,43 +3793,41 @@ export const upgradeShopitemData = {
         },
         components: [
             {
-                id: TeamUpgrade.cushionedBoots,
+                id: BedwarsTeamUpgradeType.CushionedBoots,
                 shopitemId: "bedwars:upgrade_cushioned_boots_tier_1",
                 amount: 1,
-                resource: { type: ResourceType.diamond, amount: 2, amountInSolo: 1 },
+                resource: { type: BedwarsResourceType.Diamond, amount: 2, amountInSolo: 1 },
                 tier: { tier: 1, thisTierDescription: ["摔落缓冲 I"] },
             },
             {
-                id: TeamUpgrade.cushionedBoots,
+                id: BedwarsTeamUpgradeType.CushionedBoots,
                 shopitemId: "bedwars:upgrade_cushioned_boots_tier_2",
                 amount: 2,
-                resource: { type: ResourceType.diamond, amount: 4, amountInSolo: 2 },
+                resource: { type: BedwarsResourceType.Diamond, amount: 4, amountInSolo: 2 },
                 tier: { tier: 2, thisTierDescription: ["摔落缓冲 II"] },
             }
         ]
     },
-    /** 末影龙增益 @type {BedwarsUpgradeShopitemInfo} */
+    /** 末影龙增益 @type {BedwarsUpgradeShopitemData} */
     dragonBuff: {
         description: {
             format: "item",
             category: "upgrade",
             description: ["你的队伍在绝杀模式中将会有两条末影龙，而不是一条！"],
-            classicModeEnabled: false,
-            captureModeEnabled: false,
-            experienceModeEnabled: false,
+            modeEnabled: { classic: false, capture: false, experience: false, rush: false },
         },
         component: {
-            id: TeamUpgrade.dragonBuff,
+            id: BedwarsTeamUpgradeType.DragonBuff,
             shopitemId: "bedwars:upgrade_dragon_buff",
             amount: 1,
-            resource: { type: ResourceType.diamond, amount: 5 },
+            resource: { type: BedwarsResourceType.Diamond, amount: 5 },
             tier: { tier: 1 },
         }
     },
 
     // --- 陷阱 ---
 
-    /** 失明陷阱 @type {BedwarsUpgradeShopitemInfo} */
+    /** 失明陷阱 @type {BedwarsUpgradeShopitemData} */
     blindnessTrap: {
         description: {
             format: "item",
@@ -3624,13 +3835,13 @@ export const upgradeShopitemData = {
             description: ["造成失明与缓慢效果，持续8秒。"],
         },
         component: {
-            id: Trap.blindnessTrap,
+            id: BedwarsTrapType.BlindnessTrap,
             shopitemId: "bedwars:upgrade_blindness_trap",
             amount: 1,
-            resource: { type: ResourceType.diamond, amount: 1 },
+            resource: { type: BedwarsResourceType.Diamond, amount: 1 },
         }
     },
-    /** 反击陷阱 @type {BedwarsUpgradeShopitemInfo} */
+    /** 反击陷阱 @type {BedwarsUpgradeShopitemData} */
     counterOffensiveTrap: {
         description: {
             format: "item",
@@ -3638,13 +3849,13 @@ export const upgradeShopitemData = {
             description: ["赋予基地附近的队友速度 II 与跳跃提升 II", "效果，持续15秒。"],
         },
         component: {
-            id: Trap.counterOffensiveTrap,
+            id: BedwarsTrapType.CounterOffensiveTrap,
             shopitemId: "bedwars:upgrade_counter_offensive_trap",
             amount: 1,
-            resource: { type: ResourceType.diamond, amount: 1 },
+            resource: { type: BedwarsResourceType.Diamond, amount: 1 },
         },
     },
-    /** 显影陷阱 @type {BedwarsUpgradeShopitemInfo} */
+    /** 显影陷阱 @type {BedwarsUpgradeShopitemData} */
     revealTrap: {
         description: {
             format: "item",
@@ -3652,13 +3863,13 @@ export const upgradeShopitemData = {
             description: ["显示隐身的玩家，", "及其名称与队伍名。"],
         },
         component: {
-            id: Trap.revealTrap,
+            id: BedwarsTrapType.RevealTrap,
             shopitemId: "bedwars:upgrade_reveal_trap",
             amount: 1,
-            resource: { type: ResourceType.diamond, amount: 1 },
+            resource: { type: BedwarsResourceType.Diamond, amount: 1 },
         },
     },
-    /** 挖掘疲劳陷阱 @type {BedwarsUpgradeShopitemInfo} */
+    /** 挖掘疲劳陷阱 @type {BedwarsUpgradeShopitemData} */
     minerFatigueTrap: {
         description: {
             format: "item",
@@ -3666,14 +3877,21 @@ export const upgradeShopitemData = {
             description: ["造成挖掘疲劳效果，持续8秒。"],
         },
         component: {
-            id: Trap.minerFatigueTrap,
+            id: BedwarsTrapType.MinerFatigueTrap,
             shopitemId: "bedwars:upgrade_miner_fatigue_trap",
             amount: 1,
-            resource: { type: ResourceType.diamond, amount: 1 },
+            resource: { type: BedwarsResourceType.Diamond, amount: 1 },
         },
     },
 
 };
+
+/**
+ * @typedef BedwarsTrapInformation
+ * @property {string} icon 陷阱信息的图标物品
+ * @property {string} name 陷阱信息显示为何种名字
+ * @property {boolean} [isValid] 是否为有效的陷阱，有效陷阱将显示为绿色标题
+ */
 
 /** 陷阱信息 */
 export const trapInformationData = {
@@ -3710,7 +3928,7 @@ export const trapInformationData = {
 
 // ===== 击杀样式数据 =====
 
-/** killStyleData
+/**
  * @typedef killStyleData
  * @property {string} id 击杀样式的 ID
  * @property {string} name 击杀样式的名称

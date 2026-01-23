@@ -51,7 +51,7 @@ class BedwarsSystem {
     // ===== 系统内方法 =====
 
     /** 重置地图，重新选择一张地图并创建模式
-     * @param {data.BedwarsMapInfo} [mapData] 指定要生成的地图，若不指定则随机生成
+     * @param {data.BedwarsMapData} [mapData] 指定要生成的地图，若不指定则随机生成
      */
     resetMap(mapData) {
 
@@ -59,30 +59,37 @@ class BedwarsSystem {
         this.unsubscribeAllEvents();
         this.unsubscribeAllTimelines();
 
-        /** 地图信息 @type {data.BedwarsMapInfo[]} */
+        /** 地图信息 @type {data.BedwarsMapData[]} */
         let maps = [];
 
         // 导入地图
-        if (this.settings.mapEnabled.classicTwoTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.twoTeams));
-        if (this.settings.mapEnabled.classicFourTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.fourTeams));
-        if (this.settings.mapEnabled.classicEightTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.eightTeams));
-        if (this.settings.mapEnabled.experienceTwoTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.twoTeams).map(map => data.classicToExperience(map)));
-        if (this.settings.mapEnabled.experienceFourTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.fourTeams).map(map => data.classicToExperience(map)));
-        if (this.settings.mapEnabled.experienceEightTeamsEnabled) maps = maps.concat(Object.values(data.mapData.classic.eightTeams).map(map => data.classicToExperience(map)));
-        if (this.settings.mapEnabled.captureTwoTeamsEnabled) maps = maps.concat(Object.values(data.mapData.capture.twoTeams));
+        maps.push(...BedwarsClassicMap.getMapData(this, "twoTeams"));
+        maps.push(...BedwarsClassicMap.getMapData(this, "fourTeams"));
+        maps.push(...BedwarsClassicMap.getMapData(this, "eightTeams"));
+        maps.push(...BedwarsExperienceMap.getMapData(this, "twoTeams"));
+        maps.push(...BedwarsExperienceMap.getMapData(this, "fourTeams"));
+        maps.push(...BedwarsExperienceMap.getMapData(this, "eightTeams"));
+        maps.push(...BedwarsRushMap.getMapData(this, "twoTeams"));
+        maps.push(...BedwarsRushMap.getMapData(this, "fourTeams"));
+        maps.push(...BedwarsRushMap.getMapData(this, "eightTeams"));
+        maps.push(...BedwarsCaptureMap.getMapData(this, "twoTeams"));
 
         // 在所有已启用地图中选择地图
         let map = mapData ?? maps[lib.JSUtil.randomInt(0, maps.length - 1)];
-        if (map.description.mode == "classic") {
-            this.mode = new BedwarsClassicMode(this, new BedwarsClassicMap(this, map));
-        }
-        else if (map.description.mode == "capture") {
-            this.mode = new BedwarsCaptureMode(this, new BedwarsCaptureMap(this, map));
-        }
-        else if (map.description.mode == "experience") {
-            this.mode = new BedwarsExperienceMode(this, new BedwarsExperienceMap(this, map));
+        switch (map.description.mode) {
+            case data.BedwarsModeType.Classic: default:
+                this.mode = new BedwarsClassicMode(this, new BedwarsClassicMap(this, map));
+                break;
+            case data.BedwarsModeType.Capture:
+                this.mode = new BedwarsCaptureMode(this, new BedwarsCaptureMap(this, map));
+                break;
+            case data.BedwarsModeType.Experience:
+                this.mode = new BedwarsExperienceMode(this, new BedwarsExperienceMap(this, map));
+                break;
+            case data.BedwarsModeType.Rush:
+                this.mode = new BedwarsRushMode(this, new BedwarsRushMap(this, map));
+                break;
         };
-
         return map;
 
     };
@@ -228,7 +235,6 @@ class BedwarsSystem {
     };
 
 };
-
 /** 地图设置信息 */
 class BedwarsSettings {
 
@@ -327,12 +333,15 @@ class BedwarsSettings {
             goldPrice: 10,
 
             /** 1 个绿宝石在商店中需要花费的经验 */
-            emeraldPrice: 200,
+            emeraldPrice: 150,
 
             // ===== 其他设置 =====
 
             /** 单挑模式下生成资源的速度，影响铁锭和金锭 */
             soloSpeedMultiplier: 0.6,
+
+            /** 疾速模式下生成资源的速度，影响铁锭和金锭 */
+            rushSpeedMultiplier: 0.5,
 
             /** 经验模式下生成绿宝石的速度 */
             experienceEmeraldSpeedMultiplier: 1.5,
@@ -409,6 +418,15 @@ class BedwarsSettings {
 
         /** 是否启用经验八队模式 */
         experienceEightTeamsEnabled: true,
+
+        /** 是否启用疾速两队模式 */
+        rushTwoTeamsEnabled: true,
+
+        /** 是否启用疾速四队模式 */
+        rushFourTeamsEnabled: true,
+
+        /** 是否启用疾速八队模式 */
+        rushEightTeamsEnabled: true,
 
     };
 
@@ -700,41 +718,42 @@ class BedwarsSettings {
                     parentForm: parentForm,
                     submitButton: "确认",
                     components: [
-                        { type: "header", text: "资源设置" },
-                        { type: "label", text: "控制各类资源在游戏内的表现。" },
-                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
-                        { type: "divider", }, // 3
-                        { type: "label", text: "§l资源设置" }, // 4
-                        { type: "slider", text: "铁锭上限", tipText: `当前值：§a${settings.gaming.resource.ironLimit}`, min: 8, max: 400, step: 8, default: settings.gaming.resource.ironLimit },
-                        { type: "slider", text: "金锭上限", tipText: `当前值：§a${settings.gaming.resource.goldLimit}`, min: 1, max: 50, step: 1, default: settings.gaming.resource.goldLimit },
-                        { type: "slider", text: "钻石上限", tipText: `当前值：§a${settings.gaming.resource.diamondLimit}`, min: 1, max: 50, step: 1, default: settings.gaming.resource.diamondLimit },
-                        { type: "slider", text: "绿宝石上限", tipText: `当前值：§a${settings.gaming.resource.emeraldLimit}`, min: 1, max: 50, step: 1, default: settings.gaming.resource.emeraldLimit },
-                        { type: "divider", }, // 9
-                        { type: "label", text: "§l资源生成间隔设置" }, // 10
-                        { type: "slider", text: "铁锭间隔（x0.05秒）", tipText: `在标准模式没有任何加成时，平均每个铁锭所需要的生成时间，单位：*0.05秒。当前值：§a${settings.gaming.resource.ironInterval}`, min: 2, max: 40, step: 2, default: settings.gaming.resource.ironInterval },
-                        { type: "label", text: "§7在不同地图下，一次可能生成多个铁，总时长会成倍延长，但平均生成铁的时间不变。\n例如，该值设置为10时，则平均每10*0.05=0.5秒生成1个铁。", },
-                        { type: "slider", text: "金锭间隔（x0.05秒）", tipText: `在标准模式没有任何加成时，每个金锭所需要的生成时间，单位：*0.05秒。当前值：§a${settings.gaming.resource.goldInterval}`, min: 20, max: 300, step: 5, default: settings.gaming.resource.goldInterval },
-                        { type: "slider", text: "钻石间隔（秒）", tipText: `在标准模式没有任何加成时，每个钻石所需要的生成时间，单位：秒。当前值：§a${settings.gaming.resource.diamondInterval - 10}`, min: 25, max: 60, step: 5, default: settings.gaming.resource.diamondInterval - 10 }, // debug 这里-10是因为原始数值是0级的数值，但是实际上最低等级是1级，下文同理
-                        { type: "slider", text: "绿宝石间隔（秒）", tipText: `在标准模式没有任何加成时，每个绿宝石所需要的生成时间，单位：秒。当前值：§a${settings.gaming.resource.emeraldInterval - 10}`, min: 30, max: 90, step: 5, default: settings.gaming.resource.emeraldInterval - 10 },
-                        { type: "divider", }, // 16
-                        { type: "label", text: "§l经验模式资源价值设置" }, // 17
-                        { type: "slider", text: "铁锭价值", tipText: `在经验模式下，获得1个铁锭得到的经验。当前值：§a${settings.gaming.resource.ironValue}`, min: 1, max: 10, step: 1, default: settings.gaming.resource.ironValue },
-                        { type: "slider", text: "金锭价值", tipText: `在经验模式下，获得1个金锭得到的经验。当前值：§a${settings.gaming.resource.goldValue}`, min: 5, max: 50, step: 5, default: settings.gaming.resource.goldValue },
-                        { type: "slider", text: "绿宝石价值", tipText: `在经验模式下，获得1个绿宝石得到的经验。当前值：§a${settings.gaming.resource.emeraldValue}`, min: 50, max: 500, step: 50, default: settings.gaming.resource.emeraldValue },
-                        { type: "slider", text: "铁锭价格", tipText: `在经验模式下，在经典模式下花费1个铁锭需对应花费的经验。当前值：§a${settings.gaming.resource.ironPrice}`, min: 1, max: 10, step: 1, default: settings.gaming.resource.ironPrice },
-                        { type: "slider", text: "金锭价格", tipText: `在经验模式下，在经典模式下花费1个金锭需对应花费的经验。当前值：§a${settings.gaming.resource.goldPrice}`, min: 5, max: 50, step: 5, default: settings.gaming.resource.goldPrice },
-                        { type: "slider", text: "绿宝石价格", tipText: `在经验模式下，在经典模式下花费1个绿宝石需对应花费的经验。当前值：§a${settings.gaming.resource.emeraldPrice}`, min: 50, max: 500, step: 50, default: settings.gaming.resource.emeraldPrice },
-                        { type: "divider", }, // 24
-                        { type: "label", text: "§l资源生成速度设置" }, // 25
-                        { type: "slider", text: "单挑模式生成速度倍率（x0.1）", tipText: `在单挑模式下相比于非单挑模式的生成速率，只影响铁锭和金锭的生成，单位：*0.1。当前值：§a${settings.gaming.resource.soloSpeedMultiplier * 10}`, min: 1, max: 20, step: 1, default: settings.gaming.resource.soloSpeedMultiplier * 10 },
-                        { type: "label", text: "§7例如，该值设置为6时，则铁锭和金锭的生成速度只有非单挑模式下的0.1*6*100%%=60%%。", },
-                        { type: "slider", text: "经验模式生成队伍岛资源速度倍率（x0.1）", tipText: `在经验模式下相比于经典模式的生成速率，只影响铁锭和金锭的生成，单位：*0.1。当前值：§a${settings.gaming.resource.experienceTeamResourceSpeedMultiplier * 10}`, min: 1, max: 20, step: 1, default: settings.gaming.resource.experienceTeamResourceSpeedMultiplier * 10 },
-                        { type: "slider", text: "经验模式生成绿宝石速度倍率（x0.1）", tipText: `在经验模式下相比于经典模式的生成速率，只影响绿宝石的生成，单位：*0.1。当前值：§a${settings.gaming.resource.experienceEmeraldSpeedMultiplier * 10}`, min: 5, max: 100, step: 5, default: settings.gaming.resource.experienceEmeraldSpeedMultiplier * 10 },
-                        { type: "divider", }, // 30
-                        { type: "label", text: "§l其他设置" }, // 31
-                        { type: "toggle", text: "队伍资源生成点共享资源", tipText: `若启用，则在队伍资源生成点的所有玩家都能获得资源，否则所有玩家需相互抢夺资源。§c目前未实装。§r当前值：§a${settings.gaming.resource.allowSharedTeamResourceGenerator}`, default: settings.gaming.resource.allowSharedTeamResourceGenerator },
-                        { type: "dropdown", text: "经验模式损失资源", tipText: `在经验模式下，玩家死亡后损失多少经验，损失的经验将给予击杀者。当前值：§a${settings.gaming.resource.loseLevelTier}`, items: ["不损失经验", "损失一半经验", "损失全部经验"], default: settings.gaming.resource.loseLevelTier },
-                        { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
+                        /** 0 */ { type: "header", text: "资源设置" },
+                        /** 1 */ { type: "label", text: "控制各类资源在游戏内的表现。" },
+                        /** 2 */ { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                        /** 3 */ { type: "divider", },
+                        /** 4 */ { type: "label", text: "§l资源设置" },
+                        /** 5 */ { type: "slider", text: "铁锭上限", tipText: `当前值：§a${settings.gaming.resource.ironLimit}`, min: 8, max: 400, step: 8, default: settings.gaming.resource.ironLimit },
+                        /** 6 */ { type: "slider", text: "金锭上限", tipText: `当前值：§a${settings.gaming.resource.goldLimit}`, min: 1, max: 50, step: 1, default: settings.gaming.resource.goldLimit },
+                        /** 7 */ { type: "slider", text: "钻石上限", tipText: `当前值：§a${settings.gaming.resource.diamondLimit}`, min: 1, max: 50, step: 1, default: settings.gaming.resource.diamondLimit },
+                        /** 8 */ { type: "slider", text: "绿宝石上限", tipText: `当前值：§a${settings.gaming.resource.emeraldLimit}`, min: 1, max: 50, step: 1, default: settings.gaming.resource.emeraldLimit },
+                        /** 9 */ { type: "divider", },
+                        /** 10 */ { type: "label", text: "§l资源生成间隔设置" },
+                        /** 11 */ { type: "slider", text: "铁锭间隔（x0.05秒）", tipText: `在标准模式没有任何加成时，平均每个铁锭所需要的生成时间，单位：*0.05秒。当前值：§a${settings.gaming.resource.ironInterval}`, min: 2, max: 40, step: 2, default: settings.gaming.resource.ironInterval },
+                        /** 12 */ { type: "label", text: "§7在不同地图下，一次可能生成多个铁，总时长会成倍延长，但平均生成铁的时间不变。\n例如，该值设置为10时，则平均每10*0.05=0.5秒生成1个铁。", },
+                        /** 13 */ { type: "slider", text: "金锭间隔（x0.05秒）", tipText: `在标准模式没有任何加成时，每个金锭所需要的生成时间，单位：*0.05秒。当前值：§a${settings.gaming.resource.goldInterval}`, min: 20, max: 300, step: 5, default: settings.gaming.resource.goldInterval },
+                        /** 14 */ { type: "slider", text: "钻石间隔（秒）", tipText: `在标准模式没有任何加成时，每个钻石所需要的生成时间，单位：秒。当前值：§a${settings.gaming.resource.diamondInterval - 10}`, min: 25, max: 60, step: 5, default: settings.gaming.resource.diamondInterval - 10 }, // debug 这里-10是因为原始数值是0级的数值，但是实际上最低等级是1级，下文同理
+                        /** 15 */ { type: "slider", text: "绿宝石间隔（秒）", tipText: `在标准模式没有任何加成时，每个绿宝石所需要的生成时间，单位：秒。当前值：§a${settings.gaming.resource.emeraldInterval - 10}`, min: 30, max: 90, step: 5, default: settings.gaming.resource.emeraldInterval - 10 },
+                        /** 16 */ { type: "divider", },
+                        /** 17 */ { type: "label", text: "§l经验模式资源价值设置" },
+                        /** 18 */ { type: "slider", text: "铁锭价值", tipText: `在经验模式下，获得1个铁锭得到的经验。当前值：§a${settings.gaming.resource.ironValue}`, min: 1, max: 10, step: 1, default: settings.gaming.resource.ironValue },
+                        /** 19 */ { type: "slider", text: "金锭价值", tipText: `在经验模式下，获得1个金锭得到的经验。当前值：§a${settings.gaming.resource.goldValue}`, min: 5, max: 50, step: 5, default: settings.gaming.resource.goldValue },
+                        /** 20 */ { type: "slider", text: "绿宝石价值", tipText: `在经验模式下，获得1个绿宝石得到的经验。当前值：§a${settings.gaming.resource.emeraldValue}`, min: 50, max: 500, step: 50, default: settings.gaming.resource.emeraldValue },
+                        /** 21 */ { type: "slider", text: "铁锭价格", tipText: `在经验模式下，在经典模式下花费1个铁锭需对应花费的经验。当前值：§a${settings.gaming.resource.ironPrice}`, min: 1, max: 10, step: 1, default: settings.gaming.resource.ironPrice },
+                        /** 22 */ { type: "slider", text: "金锭价格", tipText: `在经验模式下，在经典模式下花费1个金锭需对应花费的经验。当前值：§a${settings.gaming.resource.goldPrice}`, min: 5, max: 50, step: 5, default: settings.gaming.resource.goldPrice },
+                        /** 23 */ { type: "slider", text: "绿宝石价格", tipText: `在经验模式下，在经典模式下花费1个绿宝石需对应花费的经验。当前值：§a${settings.gaming.resource.emeraldPrice}`, min: 50, max: 500, step: 50, default: settings.gaming.resource.emeraldPrice },
+                        /** 24 */ { type: "divider", },
+                        /** 25 */ { type: "label", text: "§l资源生成速度设置" },
+                        /** 26 */ { type: "slider", text: "单挑模式生成速度倍率（x0.1）", tipText: `在单挑模式下相比于非单挑模式的生成速率，只影响铁锭和金锭的生成，单位：*0.1。当前值：§a${settings.gaming.resource.soloSpeedMultiplier * 10}`, min: 1, max: 20, step: 1, default: settings.gaming.resource.soloSpeedMultiplier * 10 },
+                        /** 27 */ { type: "label", text: "§7例如，该值设置为6时，则铁锭和金锭的生成速度只有非单挑模式下的0.1*6*100%%=60%%。", },
+                        /** 28 */ { type: "slider", text: "疾速模式生成速度倍率（x0.1）", tipText: `在疾速模式下相比于经典模式的生成速率，只影响铁锭和金锭的生成，单位：*0.1。当前值：§a${settings.gaming.resource.rushSpeedMultiplier * 10}`, min: 1, max: 20, step: 1, default: settings.gaming.resource.rushSpeedMultiplier * 10 },
+                        /** 29 */ { type: "slider", text: "经验模式生成队伍岛资源速度倍率（x0.1）", tipText: `在经验模式下相比于经典模式的生成速率，只影响铁锭和金锭的生成，单位：*0.1。当前值：§a${settings.gaming.resource.experienceTeamResourceSpeedMultiplier * 10}`, min: 1, max: 20, step: 1, default: settings.gaming.resource.experienceTeamResourceSpeedMultiplier * 10 },
+                        /** 30 */ { type: "slider", text: "经验模式生成绿宝石速度倍率（x0.1）", tipText: `在经验模式下相比于经典模式的生成速率，只影响绿宝石的生成，单位：*0.1。当前值：§a${settings.gaming.resource.experienceEmeraldSpeedMultiplier * 10}`, min: 5, max: 100, step: 5, default: settings.gaming.resource.experienceEmeraldSpeedMultiplier * 10 },
+                        /** 31 */ { type: "divider", },
+                        /** 32 */ { type: "label", text: "§l其他设置" },
+                        /** 33 */ { type: "toggle", text: "队伍资源生成点共享资源", tipText: `若启用，则在队伍资源生成点的所有玩家都能获得资源，否则所有玩家需相互抢夺资源。§c目前未实装。§r当前值：§a${settings.gaming.resource.allowSharedTeamResourceGenerator}`, default: settings.gaming.resource.allowSharedTeamResourceGenerator },
+                        /** 34 */ { type: "dropdown", text: "经验模式损失资源", tipText: `在经验模式下，玩家死亡后损失多少经验，损失的经验将给予击杀者。当前值：§a${settings.gaming.resource.loseLevelTier}`, items: ["不损失经验", "损失一半经验", "损失全部经验"], default: settings.gaming.resource.loseLevelTier },
+                        /** 35 */ { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
                     ],
                     onSubmitted: {
                         openParentForm: true,
@@ -747,30 +766,41 @@ class BedwarsSettings {
                                 settings.gaming.resource.goldLimit = values[6];
                                 settings.gaming.resource.diamondLimit = values[7];
                                 settings.gaming.resource.emeraldLimit = values[8];
+
                                 settings.gaming.resource.ironInterval = values[11];
                                 settings.gaming.resource.goldInterval = values[13];
                                 settings.gaming.resource.diamondInterval = values[14] + 10;
                                 settings.gaming.resource.emeraldInterval = values[15] + 10;
+
                                 settings.gaming.resource.ironValue = values[18];
                                 settings.gaming.resource.goldValue = values[19];
                                 settings.gaming.resource.emeraldValue = values[20];
                                 settings.gaming.resource.ironPrice = values[21];
                                 settings.gaming.resource.goldPrice = values[22];
                                 settings.gaming.resource.emeraldPrice = values[23];
+
                                 settings.gaming.resource.soloSpeedMultiplier = lib.JSUtil.limitDecimal(values[26] / 10, 1);
-                                settings.gaming.resource.experienceTeamResourceSpeedMultiplier = lib.JSUtil.limitDecimal(values[28] / 10, 1);
-                                settings.gaming.resource.experienceEmeraldSpeedMultiplier = lib.JSUtil.limitDecimal(values[29] / 10, 1);
-                                settings.gaming.resource.allowSharedTeamResourceGenerator = values[32];
-                                settings.gaming.resource.loseLevelTier = values[33];
+                                settings.gaming.resource.rushSpeedMultiplier = lib.JSUtil.limitDecimal(values[28] / 10, 1);
+                                settings.gaming.resource.experienceTeamResourceSpeedMultiplier = lib.JSUtil.limitDecimal(values[29] / 10, 1);
+                                settings.gaming.resource.experienceEmeraldSpeedMultiplier = lib.JSUtil.limitDecimal(values[30] / 10, 1);
+
+                                settings.gaming.resource.allowSharedTeamResourceGenerator = values[33];
+                                settings.gaming.resource.loseLevelTier = values[34];
                             };
                             // 重新应用此设置
                             const map = system.mode.map;
-                            map.teamResourceSpawnSpeed = 1;
-                            if (map.isSolo) map.teamResourceSpawnSpeed *= settings.gaming.resource.soloSpeedMultiplier;
-                            if (map.mode == "experience") {
-                                map.teamResourceSpawnSpeed *= settings.gaming.resource.experienceTeamResourceSpeedMultiplier;
-                                map.emeraldSpawnSpeed *= settings.gaming.resource.experienceEmeraldSpeedMultiplier;
-                            };
+                            map.teamResourceSpawnSpeed = (() => {
+                                let result = 1;
+                                if (map.isSolo) result *= settings.gaming.resource.soloSpeedMultiplier;
+                                if (map.mode == data.BedwarsModeType.Experience) result *= settings.gaming.resource.experienceTeamResourceSpeedMultiplier;
+                                if (map.mode == data.BedwarsModeType.Rush) result *= settings.gaming.resource.rushSpeedMultiplier;
+                                return result;
+                            })();
+                            map.emeraldSpawnerInfo.speed = (() => {
+                                let result = 1;
+                                if (map.mode == data.BedwarsModeType.Experience) result *= settings.gaming.resource.experienceEmeraldSpeedMultiplier;
+                                return result;
+                            })();
                             // 备份设置
                             this.backup(system);
                         },
@@ -931,6 +961,9 @@ class BedwarsSettings {
                         { type: "toggle", text: "启用经验2队模式地图", tipText: `当前值：§a${settings.mapEnabled.experienceTwoTeamsEnabled}`, default: settings.mapEnabled.experienceTwoTeamsEnabled },
                         { type: "toggle", text: "启用经验4队模式地图", tipText: `当前值：§a${settings.mapEnabled.experienceFourTeamsEnabled}`, default: settings.mapEnabled.experienceFourTeamsEnabled },
                         { type: "toggle", text: "启用经验8队模式地图", tipText: `当前值：§a${settings.mapEnabled.experienceEightTeamsEnabled}`, default: settings.mapEnabled.experienceEightTeamsEnabled },
+                        { type: "toggle", text: "启用疾速2队模式地图", tipText: `当前值：§a${settings.mapEnabled.rushTwoTeamsEnabled}`, default: settings.mapEnabled.rushTwoTeamsEnabled },
+                        { type: "toggle", text: "启用疾速4队模式地图", tipText: `当前值：§a${settings.mapEnabled.rushFourTeamsEnabled}`, default: settings.mapEnabled.rushFourTeamsEnabled },
+                        { type: "toggle", text: "启用疾速8队模式地图", tipText: `当前值：§a${settings.mapEnabled.rushEightTeamsEnabled}`, default: settings.mapEnabled.rushEightTeamsEnabled },
                         { type: "toggle", text: "启用夺点2队模式地图", tipText: `当前值：§a${settings.mapEnabled.captureTwoTeamsEnabled}`, default: settings.mapEnabled.captureTwoTeamsEnabled },
                         { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
                     ],
@@ -951,7 +984,10 @@ class BedwarsSettings {
                                 settings.mapEnabled.experienceTwoTeamsEnabled = values[7];
                                 settings.mapEnabled.experienceFourTeamsEnabled = values[8];
                                 settings.mapEnabled.experienceEightTeamsEnabled = values[9];
-                                settings.mapEnabled.captureTwoTeamsEnabled = values[10];
+                                settings.mapEnabled.rushTwoTeamsEnabled = values[10];
+                                settings.mapEnabled.rushFourTeamsEnabled = values[11];
+                                settings.mapEnabled.rushEightTeamsEnabled = values[12];
+                                settings.mapEnabled.captureTwoTeamsEnabled = values[13];
                             };
                             // 备份设置
                             this.backup(system);
@@ -992,7 +1028,7 @@ class BedwarsSettings {
             ];
 
             /** 添加 UI 按钮
-             * @param {data.BedwarsMapInfo[]} maps 地图列表
+             * @param {data.BedwarsMapData[]} maps 地图列表
              * @param {string} modeName 模式名称，例如“2 队经典”
              */
             const newButton = (maps, modeName) => {
@@ -1034,13 +1070,16 @@ class BedwarsSettings {
             };
 
             // 当对应模式启用时，添加对应模式的按钮选项
-            if (settings.mapEnabled.classicTwoTeamsEnabled) newButton(Object.values(data.mapData.classic.twoTeams), "2 队经典");
-            if (settings.mapEnabled.classicFourTeamsEnabled) newButton(Object.values(data.mapData.classic.fourTeams), "4 队经典");
-            if (settings.mapEnabled.classicEightTeamsEnabled) newButton(Object.values(data.mapData.classic.eightTeams), "8 队经典");
-            if (settings.mapEnabled.experienceTwoTeamsEnabled) newButton(Object.values(data.mapData.classic.twoTeams).map(map => data.classicToExperience(map)), "2 队经验");
-            if (settings.mapEnabled.experienceFourTeamsEnabled) newButton(Object.values(data.mapData.classic.fourTeams).map(map => data.classicToExperience(map)), "4 队经验");
-            if (settings.mapEnabled.experienceEightTeamsEnabled) newButton(Object.values(data.mapData.classic.eightTeams).map(map => data.classicToExperience(map)), "8 队经验");
-            if (settings.mapEnabled.captureTwoTeamsEnabled) newButton(Object.values(data.mapData.capture.twoTeams), "2 队夺点");
+            if (settings.mapEnabled.classicTwoTeamsEnabled) newButton(BedwarsClassicMap.getMapData(system, "twoTeams"), "2 队经典");
+            if (settings.mapEnabled.classicFourTeamsEnabled) newButton(BedwarsClassicMap.getMapData(system, "fourTeams"), "4 队经典");
+            if (settings.mapEnabled.classicEightTeamsEnabled) newButton(BedwarsClassicMap.getMapData(system, "eightTeams"), "8 队经典");
+            if (settings.mapEnabled.experienceTwoTeamsEnabled) newButton(BedwarsExperienceMap.getMapData(system, "twoTeams"), "2 队经验");
+            if (settings.mapEnabled.experienceFourTeamsEnabled) newButton(BedwarsExperienceMap.getMapData(system, "fourTeams"), "4 队经验");
+            if (settings.mapEnabled.experienceEightTeamsEnabled) newButton(BedwarsExperienceMap.getMapData(system, "eightTeams"), "8 队经验");
+            if (settings.mapEnabled.rushTwoTeamsEnabled) newButton(BedwarsRushMap.getMapData(system, "twoTeams"), "2 队疾速");
+            if (settings.mapEnabled.rushFourTeamsEnabled) newButton(BedwarsRushMap.getMapData(system, "fourTeams"), "4 队疾速");
+            if (settings.mapEnabled.rushEightTeamsEnabled) newButton(BedwarsRushMap.getMapData(system, "eightTeams"), "8 队疾速");
+            if (settings.mapEnabled.captureTwoTeamsEnabled) newButton(BedwarsCaptureMap.getMapData(system, "twoTeams"), "2 队夺点");
 
             // 显示 UI
             lib.UIUtil.createAction(
@@ -2191,7 +2230,7 @@ class BedwarsMode {
                 await lib.StructureUtil.placeAsync(`${this.map.id}:team_island`, "overworld", teamIsland.location, { animationMode: "Layers", animationSeconds: teamIsland.loadTime / this.map.getStructureLoadSpeed(), rotation: teamIsland.rotation, mirror: teamIsland.mirror });
                 // 指定了队伍旗帜颜色后，设置旗帜颜色
                 if (teamIsland.flagLocationFrom && teamIsland.flagLocationTo) {
-                    const color = teamIsland.teamId == data.ValidTeams.green ? "lime" : teamIsland.teamId;
+                    const color = teamIsland.teamId == data.BedwarsTeamType.Green ? "lime" : teamIsland.teamId;
                     lib.DimensionUtil.replaceBlock("overworld", teamIsland.flagLocationFrom, teamIsland.flagLocationTo, ["minecraft:white_wool"], `minecraft:${color}_wool`);
                 };
             }
@@ -3071,7 +3110,7 @@ class BedwarsMode {
                                     team.emeraldSpawnerInfo.spawnedTimes++;
                                 }
                                 // 重置倒计时
-                                emeraldData.countdown = Math.floor((gameSettings.resource.emeraldInterval - 10) / this.map.emeraldSpawnSpeed);
+                                emeraldData.countdown = Math.floor((gameSettings.resource.emeraldInterval - 10) / this.map.emeraldSpawnerInfo.speed);
                             };
                         });
                     },
@@ -3109,7 +3148,7 @@ class BedwarsMode {
                         });
                         // 重置倒计时
                         if (diamondData.countdown <= 0) diamondData.countdown = this.system.settings.gaming.resource.diamondInterval - 10 * diamondData.level;
-                        if (emeraldData.countdown <= 0) emeraldData.countdown = Math.floor((this.system.settings.gaming.resource.emeraldInterval - 10 * emeraldData.level) / this.map.emeraldSpawnSpeed);
+                        if (emeraldData.countdown <= 0) emeraldData.countdown = Math.floor((this.system.settings.gaming.resource.emeraldInterval - 10 * emeraldData.level) / this.map.emeraldSpawnerInfo.speed);
                     },
                     tickInterval: 20,
                 },
@@ -3448,8 +3487,7 @@ class BedwarsMode {
                                 this.nextEvent.id = "emerald_2";
                                 this.nextEvent.name = "绿宝石生成点 II 级";
                                 // 更新钻石生成点的等级
-                                this.map.diamondSpawnerInfo.level = 2;
-                                this.map.diamondSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cII`);
+                                this.map.updateSpawner("diamond", 2);
                                 minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier2" });
                                 break;
                             case "emerald_2":
@@ -3457,8 +3495,7 @@ class BedwarsMode {
                                 this.nextEvent.id = "diamond_3";
                                 this.nextEvent.name = "钻石生成点 III 级";
                                 // 更新绿宝石生成点的等级
-                                this.map.emeraldSpawnerInfo.level = 2;
-                                this.map.emeraldSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cII`);
+                                this.map.updateSpawner("emerald", 2);
                                 minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier2" });
                                 break;
                             case "diamond_3":
@@ -3466,8 +3503,7 @@ class BedwarsMode {
                                 this.nextEvent.id = "emerald_3";
                                 this.nextEvent.name = "绿宝石生成点 III 级";
                                 // 更新钻石生成点的等级
-                                this.map.diamondSpawnerInfo.level = 3;
-                                this.map.diamondSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cIII`);
+                                this.map.updateSpawner("diamond", 3);
                                 minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier3" });
                                 break;
                             case "emerald_3":
@@ -3475,8 +3511,7 @@ class BedwarsMode {
                                 this.nextEvent.id = "bed_destruction";
                                 this.nextEvent.name = "床自毁";
                                 // 更新绿宝石生成点的等级
-                                this.map.emeraldSpawnerInfo.level = 3;
-                                this.map.emeraldSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cIII`);
+                                this.map.updateSpawner("emerald", 3);
                                 minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier3" });
                                 break;
                             case "bed_destruction":
@@ -4082,19 +4117,13 @@ class BedwarsShopitem {
     /** 描述 @type {string[]} */
     description = [];
 
-    /** 经典模式是否启用 */
-    classicModeEnabled = true;
-
-    /** 夺点模式是否启用 */
-    captureModeEnabled = true;
-
     // ===== 组件 =====
 
     /** 商店物品 ID，对于物品类商品将决定显示的物品和给予的物品，而对于团队升级类商品将决定对何种数据进行操作 */
     id = "";
 
-    /** 要购买此物品的资源类型 @type {data.ResourceType} */
-    resourceType = data.ResourceType.iron;
+    /** 要购买此物品的资源类型 @type {data.BedwarsResourceType} */
+    resourceType = data.BedwarsResourceType.Iron;
 
     /** 要购买此资源的资源消耗数 */
     resourceAmount = 1;
@@ -4102,7 +4131,7 @@ class BedwarsShopitem {
     /** 要购买此资源的经验消耗数，若不指定则使用默认算法 */
     experienceAmount;
 
-    /** 当资源使用经验购买时，资源将按照何种资源的价值（注意：不是价格）放大，若不指定则不放大 @type {data.ResourceType | undefined} */
+    /** 当资源使用经验购买时，资源将按照何种资源的价值（注意：不是价格）放大，若不指定则不放大 @type {data.BedwarsResourceType | undefined} */
     resourceAmplifier;
 
     /** 物品数量，决定显示在商店内的物品数量和给予玩家的物品数量 */
@@ -4138,7 +4167,7 @@ class BedwarsShopitem {
     /** 检查玩家还需要多少资源 */
     getResourceNeeded() {
         // 获取玩家目前所拥有的资源数目，如果类型是经验则获取玩家的经验等级，否则获取玩家的对应物品数目
-        const playerResourceAmount = this.resourceType == data.ResourceType.level ? this.player.player.level : lib.InventoryUtil.hasItemAmount(this.player.player, this.resourceTypeId);
+        const playerResourceAmount = this.resourceType == data.BedwarsResourceType.Level ? this.player.player.level : lib.InventoryUtil.hasItemAmount(this.player.player, this.resourceTypeId);
         // 然后，检查玩家目前还差多少资源，如果小于等于 0 个则认为差 0 个资源
         this.resourceNeeded = this.resourceAmount - playerResourceAmount;
         if (this.resourceNeeded <= 0) this.resourceNeeded = 0;
@@ -4176,8 +4205,8 @@ class BedwarsItemShopitem extends BedwarsShopitem {
 
     // ===== 描述 =====
 
-    /** 商店物品类别 @type {data.ShopitemCategory} */
-    category = data.ShopitemCategory.blocks;
+    /** 商店物品类别 @type {data.BedwarsItemShopitemCategory} */
+    category = data.BedwarsItemShopitemCategory.Blocks;
 
     /** 是否为快速购买物品 */
     isQuickBuy = false;
@@ -4217,7 +4246,7 @@ class BedwarsItemShopitem extends BedwarsShopitem {
     /**
      * @param {BedwarsSystem} system
      * @param {BedwarsPlayer} playerData
-     * @param {data.BedwarsItemShopitemInfo} itemData
+     * @param {data.BedwarsItemShopitemData} itemData
      */
     constructor(system, playerData, itemData) {
 
@@ -4232,8 +4261,6 @@ class BedwarsItemShopitem extends BedwarsShopitem {
         this.isAxe = itemData.description.isAxe ?? false;
         this.isArmor = itemData.description.isArmor ?? false;
         this.isShears = itemData.description.isShears ?? false;
-        this.classicModeEnabled = itemData.description.classicModeEnabled ?? true;
-        this.captureModeEnabled = itemData.description.captureModeEnabled ?? true;
 
         // ===== 组件部分解析 =====
 
@@ -4350,7 +4377,7 @@ class BedwarsItemShopitem extends BedwarsShopitem {
             return void 0;
         };
         // 其他情况则允许购买，清除资源并提示玩家已购买
-        this.resourceType == data.ResourceType.level ? player.addLevels(-this.resourceAmount) : lib.ItemUtil.removeItem(player, this.resourceTypeId, -1, this.resourceAmount);
+        this.resourceType == data.BedwarsResourceType.Level ? player.addLevels(-this.resourceAmount) : lib.ItemUtil.removeItem(player, this.resourceTypeId, -1, this.resourceAmount);
         BedwarsSystem.informPlayer(player, { translate: `message.purchaseItemsSuccessfully`, with: { rawtext: [{ translate: `message.bedwars:shopitem_${this.id}` }] } });
         this.purchaseSuccess();
         return this.id;
@@ -4374,10 +4401,10 @@ class BedwarsItemShopitem extends BedwarsShopitem {
         else lib.ItemUtil.giveItem(player, this.itemId, { amount: this.amount, itemLock: "inventory", enchantments: this.enchantment, lore: this.itemLore });
     };
 
-    /** 从所有商店物品信息中获取特定类别的商店物品信息，当设定为 quickBuy 时则返回快速购买的物品 @param {data.ShopitemCategory} category */
+    /** 从所有商店物品信息中获取特定类别的商店物品信息，当设定为 quickBuy 时则返回快速购买的物品 @param {data.BedwarsItemShopitemCategory} category */
     static getCategoryItemData(category) {
         return Object.values(data.itemShopitemData)
-            .filter(thisItemData => category == data.ShopitemCategory.quickBuy ? thisItemData.description.isQuickBuy : thisItemData.description.category == category) // 如果需要返回快速购买物品时，检查是否为快速购买物品，否则检查是否为特定类型的物品
+            .filter(thisItemData => category == data.BedwarsItemShopitemCategory.QuickBuy ? thisItemData.description.isQuickBuy : thisItemData.description.category == category) // 如果需要返回快速购买物品时，检查是否为快速购买物品，否则检查是否为特定类型的物品
     };
 
     /** 从商店物品数据返回其特定类别的实例化结果 @abstract */
@@ -4409,7 +4436,7 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
     /**
      * @param {BedwarsSystem} system 
      * @param {BedwarsPlayer} playerData 
-     * @param {data.BedwarsUpgradeShopitemInfo} itemData 
+     * @param {data.BedwarsUpgradeShopitemData} itemData 
      */
     constructor(system, playerData, itemData) {
 
@@ -4521,7 +4548,7 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
         }
         // 其他情况则允许购买，清除资源并提示玩家已购买
         else {
-            this.resourceType == data.ResourceType.level ? player.addLevels(-this.resourceAmount) : lib.ItemUtil.removeItem(player, this.resourceTypeId, -1, this.resourceAmount);
+            this.resourceType == data.BedwarsResourceType.Level ? player.addLevels(-this.resourceAmount) : lib.ItemUtil.removeItem(player, this.resourceTypeId, -1, this.resourceAmount);
             this.team.players.forEach(playerData => BedwarsSystem.informPlayer(playerData.player, { translate: `message.purchaseTeamUpgradeSuccessfully`, with: { rawtext: [{ text: `${player.name}` }, { translate: `message.${this.shopitemId}` }] } }));
             this.purchaseSuccess();
             return this.id;
@@ -4536,7 +4563,7 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
         if (this.category == "upgrade" && this.format == "item") {
             this.team.teamUpgrades[this.id] = true;
             // 如果该物品是锋利附魔，调用队伍的锋利附魔函数
-            if (this.id == data.TeamUpgrade.sharpenedSwords) {
+            if (this.id == data.BedwarsTeamUpgradeType.SharpenedSwords) {
                 this.team.applySharpness();
             }
         }
@@ -4544,7 +4571,7 @@ class BedwarsUpgradeShopitem extends BedwarsShopitem {
         else if (this.category == "upgrade" && this.format == "itemGroup") {
             this.team.teamUpgrades[this.id]++;
             // 如果该物品是盔甲强化或缓冲靴子，重新给予盔甲
-            if (this.id == data.TeamUpgrade.reinforcedArmor || this.id == data.TeamUpgrade.cushionedBoots) {
+            if (this.id == data.BedwarsTeamUpgradeType.ReinforcedArmor || this.id == data.BedwarsTeamUpgradeType.CushionedBoots) {
                 this.team.alivePlayers.forEach(alivePlayer => alivePlayer.giveArmor());
             };
         }
@@ -5011,14 +5038,24 @@ class BedwarsUpgradeTrader extends BedwarsTrader {
  */
 class BedwarsMap {
 
+    /**
+     * @typedef SpawnerInfo
+     * @property {minecraft.Vector3} location 资源点位置（资源点的钻石块或绿宝石块的位置）
+     * @property {number} spawnedTimes 生成次数
+     * @property {minecraft.Entity} [spawnerEntity] 动画实体
+     * @property {minecraft.Entity} [textLine1] 第一行文本展示实体，通常用于展示等级
+     * @property {minecraft.Entity} [textLine2] 第二行文本展示实体，通常用于展示类型
+     * @property {minecraft.Entity} [textLine3] 第三行文本展示实体，通常用于展示下一个资源在何时产出
+     */
+
     /** ID，它将控制地图的运行方式 */
     id = "";
 
     /** 名称，它将按照给定名称在游戏开始前显示出来 */
     name = "";
 
-    /** 模式，该地图将按照什么模式执行 @type {"classic"|"capture"|"experience"} */
-    mode = "classic";
+    /** 模式，该地图将按照什么模式执行 @type {data.BedwarsModeType} */
+    mode = data.BedwarsModeType.Classic;
 
     /** 系统 @type {BedwarsSystem} */
     system;
@@ -5032,7 +5069,7 @@ class BedwarsMap {
         /** 距离下次生成剩余的时长，单位：秒 */
         countdown: 30,
 
-        /** 钻石点位置与生成次数信息 @type {data.SpawnerInfo[]} */
+        /** 钻石点位置与生成次数信息 @type {SpawnerInfo[]} */
         info: []
 
     };
@@ -5046,8 +5083,11 @@ class BedwarsMap {
         /** 距离下次生成剩余的时长，单位：秒 */
         countdown: 65,
 
-        /** 绿宝石点位置与生成次数信息 @type {data.SpawnerInfo[]} */
-        info: []
+        /** 绿宝石点位置与生成次数信息 @type {SpawnerInfo[]} */
+        info: [],
+
+        /** 生成绿宝石的速度 */
+        speed: 1,
 
     };
 
@@ -5059,9 +5099,6 @@ class BedwarsMap {
 
     /** 生成资源时是否清除向量，否则资源将会在生成时溅开 */
     clearVelocity = true;
-
-    /** 生成绿宝石的速度 */
-    emeraldSpawnSpeed = 1;
 
     /** 生成队伍岛资源的速度 */
     teamResourceSpawnSpeed = 1;
@@ -5089,7 +5126,7 @@ class BedwarsMap {
 
     /** debug
      * @typedef TeamIslandInfo
-     * @property {data.ValidTeams} teamId 队伍 ID，决定生成何种颜色的羊毛
+     * @property {data.BedwarsTeamType} teamId 队伍 ID，决定生成何种颜色的羊毛
      * @property {minecraft.Vector3} location 岛屿结构加载位置
      * @property {number} loadTime 加载结构所需时间，单位：秒
      * @property {minecraft.Vector3} [flagLocationFrom] 旗帜位置起始点
@@ -5100,7 +5137,7 @@ class BedwarsMap {
     /** 队伍岛屿信息 @type {TeamIslandInfo[]} */
     teamIslands = [];
 
-    /** 其他岛屿信息 @type {data.BedwarsIslandComponent[]} */
+    /** 其他岛屿信息 @type {data.BedwarsMapIslandComponent[]} */
     islands = [];
 
     /** 最高高度限制，在高于此高度的位置放置方块会阻止 */
@@ -5158,7 +5195,7 @@ class BedwarsMap {
     /** 玩家是否能够进入商店 */
     playerCouldIntoShop = true;
 
-    /** @param {BedwarsSystem} system @param {data.BedwarsMapInfo} mapData */
+    /** @param {BedwarsSystem} system @param {data.BedwarsMapData} mapData */
     constructor(system, mapData) {
         this.system = system;
 
@@ -5225,47 +5262,15 @@ class BedwarsMap {
         this.safeAreaLocation.emerald = this.emeraldSpawnerInfo.info.flatMap(info => info.location);
     };
 
+    /** 获取该模式的地图数据
+     * @abstract
+     * @param {BedwarsSystem} system 地图系统
+     * @param {"all"|"twoTeams"|"fourTeams"|"eightTeams"} mode 地图模式
+     */
+    static getMapData(system, mode) { };
+
     /** 为地图添加队伍 @abstract */
     addTeam() { };
-
-    /** 添加新的钻石生成点信息
-     * @param {minecraft.Vector3} location 
-     */
-    addDiamondSpawner(location) {
-        /** @type {data.SpawnerInfo} */
-        const spawnerInfo = { location: lib.Vector3Util.center(location), spawnedTimes: 0 };
-        this.diamondSpawnerInfo.info.push(spawnerInfo);
-    };
-
-    /** 添加新的绿宝石生成点信息
-     * @param {minecraft.Vector3} location 
-     */
-    addEmeraldSpawner(location) {
-        /** @type {data.SpawnerInfo} */
-        const spawnerInfo = { location: lib.Vector3Util.center(location), spawnedTimes: 0 };
-        this.emeraldSpawnerInfo.info.push(spawnerInfo);
-    };
-
-    /** 生成资源生成点 */
-    spawnSpawner() {
-        this.diamondSpawnerInfo.info.forEach(info => {
-            info.spawnerEntity = lib.EntityUtil.add("bedwars:diamond_spawner", lib.Vector3Util.add(info.location, 0, 1, 0));
-            info.textLine1 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 5.5, 0));
-            info.textLine2 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 5.0, 0));
-            info.textLine3 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 4.5, 0));
-            info.textLine1.nameTag = `§e等级 §c${lib.JSUtil.intToRoman(this.emeraldSpawnerInfo.level)}`
-            info.textLine2.nameTag = `§b§l钻石`;
-        });
-        this.emeraldSpawnerInfo.info.forEach(info => {
-            info.spawnerEntity = lib.EntityUtil.add("bedwars:emerald_spawner", lib.Vector3Util.add(info.location, 0, 1, 0));
-            info.textLine1 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 5.5, 0));
-            info.textLine2 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 5.0, 0));
-            info.textLine3 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 4.5, 0));
-            info.textLine1.nameTag = `§e等级 §c${lib.JSUtil.intToRoman(this.emeraldSpawnerInfo.level)}`
-            info.textLine2.nameTag = `§2§l绿宝石`;
-        });
-
-    };
 
     /** 获取地图结构加载完成需要的时间 */
     getStructureLoadTime() {
@@ -5421,7 +5426,12 @@ class BedwarsMap {
 
     /** 获取游戏开始介绍 */
     getStartIntro() {
-        /** @type {data.StartIntro} */
+        /**
+         * @typedef StartIntro
+         * @property {minecraft.RawMessage} title 开始游戏时的标题，例如“起床战争（经典模式）”
+         * @property {minecraft.RawMessage} intro 开始游戏时的玩法内容，例如“保护你的床并摧毁敌人的床……”
+         */
+        /** @type {StartIntro} */
         const startIntro = {
             title: { translate: `message.gameStartTitle.${this.mode}` },
             intro: { translate: `message.gameStartIntroduction.${this.mode}` }
@@ -5483,6 +5493,66 @@ class BedwarsMap {
             || safeArea.trader.some(safeLocation => lib.Vector3Util.distance(location, safeLocation) <= 3)
             || safeArea.spawnpoint.concat(safeArea.teamResource).some(safeLocation => lib.Vector3Util.distance(location, safeLocation) <= 5)
         );
+    };
+
+    // ===== 资源点操作 =====
+
+
+    /** 添加新的钻石生成点信息
+     * @param {minecraft.Vector3} location 
+     */
+    addDiamondSpawner(location) {
+        /** @type {SpawnerInfo} */
+        const spawnerInfo = { location: lib.Vector3Util.center(location), spawnedTimes: 0 };
+        this.diamondSpawnerInfo.info.push(spawnerInfo);
+    };
+
+    /** 添加新的绿宝石生成点信息
+     * @param {minecraft.Vector3} location 
+     */
+    addEmeraldSpawner(location) {
+        /** @type {SpawnerInfo} */
+        const spawnerInfo = { location: lib.Vector3Util.center(location), spawnedTimes: 0 };
+        this.emeraldSpawnerInfo.info.push(spawnerInfo);
+    };
+
+    /** 生成资源生成点 */
+    spawnSpawner() {
+        this.diamondSpawnerInfo.info.forEach(info => {
+            info.spawnerEntity = lib.EntityUtil.add("bedwars:diamond_spawner", lib.Vector3Util.add(info.location, 0, 1, 0));
+            info.textLine1 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 5.5, 0));
+            info.textLine2 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 5.0, 0));
+            info.textLine3 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 4.5, 0));
+            info.textLine1.nameTag = `§e等级 §c${lib.JSUtil.intToRoman(this.diamondSpawnerInfo.level)}`;
+            info.textLine2.nameTag = `§b§l钻石`;
+        });
+        this.emeraldSpawnerInfo.info.forEach(info => {
+            info.spawnerEntity = lib.EntityUtil.add("bedwars:emerald_spawner", lib.Vector3Util.add(info.location, 0, 1, 0));
+            info.textLine1 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 5.5, 0));
+            info.textLine2 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 5.0, 0));
+            info.textLine3 = lib.EntityUtil.add("bedwars:text_display", lib.Vector3Util.add(info.location, 0, 4.5, 0));
+            info.textLine1.nameTag = `§e等级 §c${lib.JSUtil.intToRoman(this.emeraldSpawnerInfo.level)}`;
+            info.textLine2.nameTag = `§2§l绿宝石`;
+        });
+    };
+
+    /** 更新生成点及其悬浮文本
+     * @remarks 此方法必须在游戏开始后执行
+     * @param {"diamond"|"emerald"} type 
+     * @param {number} [toLevel] 是否更改生成点的等级
+     */
+    updateSpawner(type, toLevel) {
+        switch (type) {
+            case "diamond":
+                if (toLevel) this.diamondSpawnerInfo.level = toLevel;
+                this.diamondSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §c${lib.JSUtil.intToRoman(this.diamondSpawnerInfo.level)}`);
+                break;
+            case "emerald":
+                if (toLevel) this.emeraldSpawnerInfo.level = toLevel;
+                this.emeraldSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §c${lib.JSUtil.intToRoman(this.emeraldSpawnerInfo.level)}`);
+                break;
+            default: break;
+        };
     };
 
     // ===== 商人信息操作 =====
@@ -5572,7 +5642,7 @@ class BedwarsTeam {
     /** 队伍所归属的地图 @type {BedwarsMap} */
     map;
 
-    /** ID，代表一个独一无二的队伍 @type {data.ValidTeams} */
+    /** ID，代表一个独一无二的队伍 @type {data.BedwarsTeamType} */
     id = "";
 
     /** 床的位置 @type {minecraft.Vector3} */
@@ -5783,34 +5853,34 @@ class BedwarsTeam {
     /** 获取本队的队伍颜色代码 */
     getTeamColor() {
         switch (this.id) {
-            case data.ValidTeams.red: default: return "§c";
-            case data.ValidTeams.blue: return "§9";
-            case data.ValidTeams.yellow: return "§e";
-            case data.ValidTeams.green: return "§a";
-            case data.ValidTeams.white: return "§f";
-            case data.ValidTeams.cyan: return "§3";
-            case data.ValidTeams.pink: return "§d";
-            case data.ValidTeams.gray: return "§7";
-            case data.ValidTeams.orange: return "§6";
-            case data.ValidTeams.brown: return "§n";
-            case data.ValidTeams.purple: return "§5";
+            case data.BedwarsTeamType.Red: default: return "§c";
+            case data.BedwarsTeamType.Blue: return "§9";
+            case data.BedwarsTeamType.Yellow: return "§e";
+            case data.BedwarsTeamType.Green: return "§a";
+            case data.BedwarsTeamType.White: return "§f";
+            case data.BedwarsTeamType.Cyan: return "§3";
+            case data.BedwarsTeamType.Pink: return "§d";
+            case data.BedwarsTeamType.Gray: return "§7";
+            case data.BedwarsTeamType.Orange: return "§6";
+            case data.BedwarsTeamType.Brown: return "§n";
+            case data.BedwarsTeamType.Purple: return "§5";
         }
     };
 
     /** 获取本队的队伍名 */
     getTeamName() {
         switch (this.id) {
-            case data.ValidTeams.red: return "红";
-            case data.ValidTeams.blue: return "蓝";
-            case data.ValidTeams.yellow: return "黄";
-            case data.ValidTeams.green: return "绿";
-            case data.ValidTeams.white: return "白";
-            case data.ValidTeams.cyan: return "青";
-            case data.ValidTeams.pink: return "粉";
-            case data.ValidTeams.gray: return "灰";
-            case data.ValidTeams.orange: return "橙";
-            case data.ValidTeams.brown: return "棕";
-            case data.ValidTeams.purple: default: return "紫";
+            case data.BedwarsTeamType.Red: return "红";
+            case data.BedwarsTeamType.Blue: return "蓝";
+            case data.BedwarsTeamType.Yellow: return "黄";
+            case data.BedwarsTeamType.Green: return "绿";
+            case data.BedwarsTeamType.White: return "白";
+            case data.BedwarsTeamType.Cyan: return "青";
+            case data.BedwarsTeamType.Pink: return "粉";
+            case data.BedwarsTeamType.Gray: return "灰";
+            case data.BedwarsTeamType.Orange: return "橙";
+            case data.BedwarsTeamType.Brown: return "棕";
+            case data.BedwarsTeamType.Purple: default: return "紫";
         }
     };
 
@@ -5977,7 +6047,7 @@ class BedwarsPlayer {
         trader: void 0,
 
         /** 正在使用的类别 */
-        category: data.ShopitemCategory.quickBuy,
+        category: data.BedwarsItemShopitemCategory.QuickBuy,
 
         /** 玩家当前的旋转角度 @type {minecraft.Vector2 | undefined} */
         rotation: void 0,
@@ -5988,8 +6058,15 @@ class BedwarsPlayer {
     magicMilkCountdown = 0;
 
     /**
+     * @typedef BedwarsPlayerData
+     * @property {BedwarsTeam | undefined} team 该玩家所属的队伍，若为 undefined 则为旁观模式
+     * @property {minecraft.Player} player 该玩家信息所对应的玩家
+     * @property {string} [killStyle] 该玩家所采用的击杀信息
+     */
+
+    /**
      * @param {BedwarsSystem} system 系统
-     * @param {data.BedwarsPlayerInfo} info 起床战争玩家信息
+     * @param {BedwarsPlayerData} info 起床战争玩家信息
      */
     constructor(system, info) {
 
@@ -6140,7 +6217,7 @@ class BedwarsPlayer {
         this.player.setGameMode("Spectator");
         this.resetAttackedInfo();
         this.magicMilkCountdown = 0;
-        if (this.system.mode.type == "capture" && this.isEliminated) this.player.sendMessage({ translate: "message.respawnTipWhenHaveBed" }); // 如果玩家在夺点模式已被淘汰，则提醒玩家重新获得一张床即可复活
+        if (this.system.mode.type == data.BedwarsModeType.Capture && this.isEliminated) this.player.sendMessage({ translate: "message.respawnTipWhenHaveBed" }); // 如果玩家在夺点模式已被淘汰，则提醒玩家重新获得一张床即可复活
     };
 
     /** 玩家受伤，并移除玩家的隐身状态
@@ -6241,11 +6318,11 @@ class BedwarsPlayer {
 
         // 记录击杀数
         if (killedPlayerInfo.team.bedIsExist) this.killCount++;
-        else if (this.system.mode.type == "capture") this.killCount++; // 如果是夺点模式则不增加最终击杀数
+        else if (this.system.mode.type == data.BedwarsModeType.Capture) this.killCount++; // 如果是夺点模式则不增加最终击杀数
         else this.finalKillCount++;
 
         // 击杀奖励
-        /** @param {data.ResourceType} resourceType */
+        /** @param {data.BedwarsResourceType} resourceType */
         const itemBonus = (resourceType) => {
             // 获取资源数据
             const resourceData = data.resourceData(resourceType);
@@ -6258,7 +6335,7 @@ class BedwarsPlayer {
         };
         const levelBonus = () => {
             // 获取经验数据
-            const resourceData = data.resourceData(data.ResourceType.level);
+            const resourceData = data.resourceData(data.BedwarsResourceType.Level);
             // 获取经验对应的数量，如果没有经验则直接终止运行
             const levelAmount = (() => {
                 switch (this.system.settings.gaming.resource.loseLevelTier) {
@@ -6272,10 +6349,10 @@ class BedwarsPlayer {
             this.player.addLevels(levelAmount);
             this.player.sendMessage(`${resourceData.color}+${levelAmount}${resourceData.name}`);
         };
-        itemBonus(data.ResourceType.iron);
-        itemBonus(data.ResourceType.gold);
-        itemBonus(data.ResourceType.diamond);
-        itemBonus(data.ResourceType.emerald);
+        itemBonus(data.BedwarsResourceType.Iron);
+        itemBonus(data.BedwarsResourceType.Gold);
+        itemBonus(data.BedwarsResourceType.Diamond);
+        itemBonus(data.BedwarsResourceType.Emerald);
         levelBonus();
     };
 
@@ -6401,7 +6478,7 @@ class BedwarsPlayer {
 class BedwarsClassicMode extends BedwarsMode {
 
     /** 模式类型 */
-    type = "classic";
+    type = data.BedwarsModeType.Classic;
 
     /** 模式名称 */
     name = "经典";
@@ -6429,15 +6506,15 @@ class BedwarsClassicMode extends BedwarsMode {
 /** 经典模式物品类商店物品 */
 class BedwarsClassicItemShopitem extends BedwarsItemShopitem {
 
-    /** @param {BedwarsSystem} system @param {BedwarsPlayer} playerData @param {data.BedwarsItemShopitemInfo} itemData */
+    /** @param {BedwarsSystem} system @param {BedwarsPlayer} playerData @param {data.BedwarsItemShopitemData} itemData */
     constructor(system, playerData, itemData) {
         super(system, playerData, itemData);
     };
 
-    /** @override @param {data.ShopitemCategory} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
+    /** @override @param {data.BedwarsItemShopitemCategory} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
     static getInstances(category, system, playerData) {
         return BedwarsItemShopitem.getCategoryItemData(category)
-            .filter(data => data.description.classicModeEnabled !== false)
+            .filter(data => data.description.modeEnabled?.classic !== false)
             .map(data => new BedwarsClassicItemShopitem(system, playerData, data));
     };
 
@@ -6445,7 +6522,7 @@ class BedwarsClassicItemShopitem extends BedwarsItemShopitem {
 /** 经典模式团队升级类商店物品 */
 class BedwarsClassicUpgradeShopitem extends BedwarsUpgradeShopitem {
 
-    /** @param {BedwarsSystem} system @param {BedwarsPlayer} playerData @param {data.BedwarsUpgradeShopitemInfo} itemData */
+    /** @param {BedwarsSystem} system @param {BedwarsPlayer} playerData @param {data.BedwarsUpgradeShopitemData} itemData */
     constructor(system, playerData, itemData) {
         super(system, playerData, itemData);
     };
@@ -6453,7 +6530,7 @@ class BedwarsClassicUpgradeShopitem extends BedwarsUpgradeShopitem {
     /** @override @param {"upgrade"|"trap"} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
     static getInstances(category, system, playerData) {
         return BedwarsUpgradeShopitem.getCategoryItemData(category)
-            .filter(data => data.description.classicModeEnabled !== false)
+            .filter(data => data.description.modeEnabled?.classic !== false)
             .map(data => new BedwarsClassicUpgradeShopitem(system, playerData, data));
     };
 
@@ -6479,12 +6556,24 @@ class BedwarsClassicUpgradeTrader extends BedwarsUpgradeTrader {
 /** 经典模式地图 */
 class BedwarsClassicMap extends BedwarsMap {
 
-    /** @param {BedwarsSystem} system @param {data.BedwarsMapInfo} mapData */
+    /** @param {BedwarsSystem} system @param {data.BedwarsMapData} mapData */
     constructor(system, mapData) {
         super(system, mapData);
         // ===== 类型注释（无实际用途） =====
         /** @type {(BedwarsClassicItemTrader | BedwarsClassicUpgradeTrader)[]} */ this.traders;
         /** @type {(BedwarsClassicItemTrader | BedwarsClassicUpgradeTrader)[]} */ this.tradingTraders;
+    };
+
+    /** @override @param {BedwarsSystem} system @param {"twoTeams"|"fourTeams"|"eightTeams"} mode */
+    static getMapData(system, mode) {
+        switch (mode) {
+            case "twoTeams": default:
+                return system.settings.mapEnabled.classicTwoTeamsEnabled ? Object.values(data.mapData.classic.twoTeams) : [];
+            case "fourTeams":
+                return system.settings.mapEnabled.classicFourTeamsEnabled ? Object.values(data.mapData.classic.fourTeams) : [];
+            case "eightTeams":
+                return system.settings.mapEnabled.classicEightTeamsEnabled ? Object.values(data.mapData.classic.eightTeams) : [];
+        };
     };
 
     /** 为地图添加队伍
@@ -6526,7 +6615,7 @@ class BedwarsClassicTeam extends BedwarsTeam {
 class BedwarsCaptureMode extends BedwarsClassicMode {
 
     /** 系统类型 */
-    type = "capture";
+    type = data.BedwarsModeType.Capture;
 
     /** 模式名称 */
     name = "夺点";
@@ -6753,8 +6842,7 @@ class BedwarsCaptureMode extends BedwarsClassicMode {
                                     this.nextEvent.id = "emerald_2";
                                     this.nextEvent.name = "绿宝石生成点 II 级";
                                     // 更新钻石生成点的等级
-                                    this.map.diamondSpawnerInfo.level = 2;
-                                    this.map.diamondSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cII`);
+                                    this.map.updateSpawner("diamond", 2);
                                     minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier2" });
                                     break;
                                 case "emerald_2":
@@ -6762,8 +6850,7 @@ class BedwarsCaptureMode extends BedwarsClassicMode {
                                     this.nextEvent.id = "diamond_3";
                                     this.nextEvent.name = "钻石生成点 III 级";
                                     // 更新绿宝石生成点的等级
-                                    this.map.emeraldSpawnerInfo.level = 2;
-                                    this.map.emeraldSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cII`);
+                                    this.map.updateSpawner("emerald", 2);
                                     minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier2" });
                                     break;
                                 case "diamond_3":
@@ -6771,8 +6858,7 @@ class BedwarsCaptureMode extends BedwarsClassicMode {
                                     this.nextEvent.id = "emerald_3";
                                     this.nextEvent.name = "绿宝石生成点 III 级";
                                     // 更新钻石生成点的等级
-                                    this.map.diamondSpawnerInfo.level = 3;
-                                    this.map.diamondSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cIII`);
+                                    this.map.updateSpawner("diamond", 3);
                                     minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier3" });
                                     break;
                                 case "emerald_3":
@@ -6780,8 +6866,7 @@ class BedwarsCaptureMode extends BedwarsClassicMode {
                                     this.nextEvent.id = undefined;
                                     this.nextEvent.name = undefined;
                                     // 更新绿宝石生成点的等级
-                                    this.map.emeraldSpawnerInfo.level = 3;
-                                    this.map.emeraldSpawnerInfo.info.forEach(info => info.textLine1.nameTag = `§e等级 §cIII`);
+                                    this.map.updateSpawner("emerald", 3);
                                     minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier3" });
                                     break;
                                 default: break;
@@ -6825,15 +6910,15 @@ class BedwarsCaptureMode extends BedwarsClassicMode {
 /** 夺点模式物品类商店物品 */
 class BedwarsCaptureItemShopitem extends BedwarsItemShopitem {
 
-    /** @param {BedwarsSystem} system @param {BedwarsPlayer} playerData @param {data.BedwarsItemShopitemInfo} itemData */
+    /** @param {BedwarsSystem} system @param {BedwarsPlayer} playerData @param {data.BedwarsItemShopitemData} itemData */
     constructor(system, playerData, itemData) {
         super(system, playerData, itemData);
     };
 
-    /** @override @param {data.ShopitemCategory} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
+    /** @override @param {data.BedwarsItemShopitemCategory} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
     static getInstances(category, system, playerData) {
         return BedwarsItemShopitem.getCategoryItemData(category)
-            .filter(data => data.description.captureModeEnabled !== false)
+            .filter(data => data.description.modeEnabled?.capture !== false)
             .map(data => new BedwarsCaptureItemShopitem(system, playerData, data));
     };
 
@@ -6849,7 +6934,7 @@ class BedwarsCaptureUpgradeShopitem extends BedwarsUpgradeShopitem {
     /** @override @param {"upgrade"|"trap"} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
     static getInstances(category, system, playerData) {
         return BedwarsUpgradeShopitem.getCategoryItemData(category)
-            .filter(data => data.description.captureModeEnabled !== false)
+            .filter(data => data.description.modeEnabled?.capture !== false)
             .map(data => new BedwarsCaptureUpgradeShopitem(system, playerData, data));
     };
 
@@ -6881,7 +6966,7 @@ class BedwarsCaptureMap extends BedwarsMap {
     /** 所有床的有效点位 @type {ValidBedData[]} */
     validBeds = [];
 
-    /** @param {BedwarsSystem} system @param {data.BedwarsMapInfo} mapData */
+    /** @param {BedwarsSystem} system @param {data.BedwarsMapData} mapData */
     constructor(system, mapData) {
         super(system, mapData);
 
@@ -6903,6 +6988,11 @@ class BedwarsCaptureMap extends BedwarsMap {
             this.teams.forEach(team => team.captureModeData.score = captureComponent.score);
         };
 
+    };
+
+    /** @override @param {BedwarsSystem} system @param {"twoTeams"|"fourTeams"|"eightTeams"} mode */
+    static getMapData(system, mode) {
+        return system.settings.mapEnabled.captureTwoTeamsEnabled ? Object.values(data.mapData.capture.twoTeams) : [];
     };
 
     /** 为地图添加队伍
@@ -7040,7 +7130,7 @@ class BedwarsCaptureTeam extends BedwarsTeam {
 class BedwarsExperienceMode extends BedwarsClassicMode {
 
     /** 系统类型 */
-    type = "experience";
+    type = data.BedwarsModeType.Experience;
 
     /** 模式名称 */
     name = "经验";
@@ -7153,7 +7243,7 @@ class BedwarsExperienceMode extends BedwarsClassicMode {
 /** 经验模式物品类商店物品 */
 class BedwarsExperienceItemShopitem extends BedwarsItemShopitem {
 
-    /** @param {BedwarsSystem} system @param {BedwarsPlayer} playerData @param {data.BedwarsItemShopitemInfo} itemData */
+    /** @param {BedwarsSystem} system @param {BedwarsPlayer} playerData @param {data.BedwarsItemShopitemData} itemData */
     constructor(system, playerData, itemData) {
         super(system, playerData, itemData);
 
@@ -7165,27 +7255,27 @@ class BedwarsExperienceItemShopitem extends BedwarsItemShopitem {
             if (this.experienceAmount) return this.experienceAmount;
             // 否则，按照默认值设定
             switch (this.resourceType) {
-                case data.ResourceType.iron: return this.system.settings.gaming.resource.ironPrice;
-                case data.ResourceType.gold: return this.system.settings.gaming.resource.goldPrice;
-                case data.ResourceType.emerald: return this.system.settings.gaming.resource.emeraldPrice;
-                case data.ResourceType.level:
+                case data.BedwarsResourceType.Iron: return this.system.settings.gaming.resource.ironPrice;
+                case data.BedwarsResourceType.Gold: return this.system.settings.gaming.resource.goldPrice;
+                case data.BedwarsResourceType.Emerald: return this.system.settings.gaming.resource.emeraldPrice;
+                case data.BedwarsResourceType.Level:
                     if (!this.resourceAmplifier) return 1;
                     switch (this.resourceAmplifier) {
-                        case data.ResourceType.iron: return this.system.settings.gaming.resource.ironValue;
-                        case data.ResourceType.gold: return this.system.settings.gaming.resource.goldValue;
-                        case data.ResourceType.emerald: return this.system.settings.gaming.resource.emeraldValue;
+                        case data.BedwarsResourceType.Iron: return this.system.settings.gaming.resource.ironValue;
+                        case data.BedwarsResourceType.Gold: return this.system.settings.gaming.resource.goldValue;
+                        case data.BedwarsResourceType.Emerald: return this.system.settings.gaming.resource.emeraldValue;
                     };
                 default: return 1;
             };
         })();
-        this.resourceType = data.ResourceType.level;
+        this.resourceType = data.BedwarsResourceType.Level;
         this.setResourceData();
     };
 
-    /** @override @param {data.ShopitemCategory} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
+    /** @override @param {data.BedwarsItemShopitemCategory} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
     static getInstances(category, system, playerData) {
         return BedwarsItemShopitem.getCategoryItemData(category)
-            .filter(data => data.description.experienceModeEnabled !== false)
+            .filter(data => data.description.modeEnabled?.experience !== false)
             .map(data => new BedwarsExperienceItemShopitem(system, playerData, data));
     };
 
@@ -7201,7 +7291,7 @@ class BedwarsExperienceUpgradeShopitem extends BedwarsUpgradeShopitem {
     /** @override @param {"upgrade"|"trap"} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
     static getInstances(category, system, playerData) {
         return BedwarsUpgradeShopitem.getCategoryItemData(category)
-            .filter(data => data.description.experienceModeEnabled !== false)
+            .filter(data => data.description.modeEnabled?.experience !== false)
             .map(data => new BedwarsExperienceUpgradeShopitem(system, playerData, data));
     };
 
@@ -7229,7 +7319,7 @@ class BedwarsExperienceUpgradeTrader extends BedwarsUpgradeTrader {
 /** 经验模式地图 */
 class BedwarsExperienceMap extends BedwarsMap {
 
-    /** @param {BedwarsSystem} system @param {data.BedwarsMapInfo} mapData */
+    /** @param {BedwarsSystem} system @param {data.BedwarsMapData} mapData */
     constructor(system, mapData) {
         super(system, mapData);
         // ===== 类型注释（无实际用途） =====
@@ -7237,11 +7327,27 @@ class BedwarsExperienceMap extends BedwarsMap {
         /** @type {(BedwarsExperienceItemTrader | BedwarsExperienceUpgradeTrader)[]} */ this.tradingTraders;
 
         this.teamResourceSpawnSpeed *= this.system.settings.gaming.resource.experienceTeamResourceSpeedMultiplier;
-        this.emeraldSpawnSpeed *= this.system.settings.gaming.resource.experienceEmeraldSpeedMultiplier;
+        this.emeraldSpawnerInfo.speed *= this.system.settings.gaming.resource.experienceEmeraldSpeedMultiplier;
 
-        this.emeraldSpawnerInfo.countdown = Math.floor(this.emeraldSpawnerInfo.countdown / this.emeraldSpawnSpeed);
+        this.emeraldSpawnerInfo.countdown = Math.floor(this.emeraldSpawnerInfo.countdown / this.emeraldSpawnerInfo.speed);
         this.ironSpawnTimes = 1;
 
+    };
+
+    /** @override @param {BedwarsSystem} system @param {"twoTeams"|"fourTeams"|"eightTeams"} mode */
+    static getMapData(system, mode) {
+        /** @param {data.BedwarsMapData} mapData @returns {data.BedwarsMapData} */
+        const modeConverter = (mapData) => {
+            return { ...mapData, description: { ...mapData.description, mode: data.BedwarsModeType.Experience } };
+        };
+        switch (mode) {
+            case "twoTeams": default:
+                return system.settings.mapEnabled.experienceTwoTeamsEnabled ? Object.values(data.mapData.classic.twoTeams).map(data => modeConverter(data)) : [];
+            case "fourTeams":
+                return system.settings.mapEnabled.experienceFourTeamsEnabled ? Object.values(data.mapData.classic.fourTeams).map(data => modeConverter(data)) : [];
+            case "eightTeams":
+                return system.settings.mapEnabled.experienceEightTeamsEnabled ? Object.values(data.mapData.classic.eightTeams).map(data => modeConverter(data)) : [];
+        };
     };
 
     /** 为地图添加队伍
@@ -7276,6 +7382,190 @@ class BedwarsExperienceTeam extends BedwarsTeam {
 };
 /** 经验模式玩家 */
 // class BedwarsExperiencePlayer extends BedwarsPlayer {};
+
+// ===== 疾速模式 =====
+
+/** 疾速模式起床战争的相关函数和方法，继承自经典模式起床战争 */
+class BedwarsRushMode extends BedwarsClassicMode {
+
+    /** 系统类型 */
+    type = data.BedwarsModeType.Rush;
+
+    /** 模式名称 */
+    name = "疾速";
+
+    /** 下一个事件 */
+    nextEvent = {
+
+        /** 下一个事件的 ID @type {"bed_destruction"|"game_over"} */
+        id: "bed_destruction",
+
+        /** 下一个事件的倒计时，单位：秒 */
+        countdown: 900,
+
+        /** 下一个事件的名称 @type {"床自毁"|"游戏结束"} */
+        name: "床自毁",
+
+    };
+
+    /** @param {BedwarsSystem} system @param {BedwarsMap} map */
+    constructor(system, map) {
+        super(system, map);
+    };
+
+    /** 游戏事件时间线
+     * @add 在游戏开始时创建
+     */
+    timelineGameEvent() {
+        this.system.subscribeTimeline({
+            typeId: "gameEvent",
+            interval: {
+                callback: () => {
+                    this.nextEvent.countdown--;
+                    if (this.nextEvent.countdown <= 0) {
+                        switch (this.nextEvent.id) {
+                            case "bed_destruction":
+                                // 更新下一个游戏事件
+                                this.nextEvent.id = "game_over";
+                                this.nextEvent.name = "游戏结束";
+                                // 破坏玩家的所有床，并移除对应的检测事件
+                                this.map.teams.filter(team => team.bedIsExist).forEach(team => team.destroyBed());
+                                lib.PlayerUtil.getAll().forEach(player => {
+                                    player.playSound("mob.wither.death", { location: player.location });
+                                    lib.PlayerUtil.setTitle(player, { translate: "title.bedDestroyed" }, { translate: "subtitle.bedDestroyed.allTeams" });
+                                    player.sendMessage({ translate: "message.bedDestroyed.allTeams" });
+                                });
+                                this.system.unsubscribeEvent("playerBreakBed");
+                                break;
+                            case "game_over": default:
+                                // 结束游戏
+                                this.map.gameOver();
+                                break;
+                        };
+                        this.nextEvent.countdown = 900;
+                    };
+                },
+                tickInterval: 20,
+            }
+        });
+    };
+
+};
+/** 疾速模式物品类商店物品 */
+class BedwarsRushItemShopitem extends BedwarsItemShopitem {
+
+    /** @param {BedwarsSystem} system @param {BedwarsPlayer} playerData @param {data.BedwarsItemShopitemData} itemData */
+    constructor(system, playerData, itemData) {
+        super(system, playerData, itemData);
+    };
+
+    /** @override @param {data.BedwarsItemShopitemCategory} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
+    static getInstances(category, system, playerData) {
+        return BedwarsItemShopitem.getCategoryItemData(category)
+            .filter(data => data.description.modeEnabled?.rush !== false)
+            .map(data => new BedwarsRushItemShopitem(system, playerData, data));
+    };
+
+};
+/** 疾速模式团队升级类商店物品 */
+class BedwarsRushUpgradeShopitem extends BedwarsUpgradeShopitem {
+
+    /** @override @param {"upgrade"|"trap"} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
+    constructor(system, playerData, itemData) {
+        super(system, playerData, itemData);
+    };
+
+    /** @override @param {"upgrade"|"trap"} category @param {BedwarsSystem} system @param {BedwarsPlayer} playerData */
+    static getInstances(category, system, playerData) {
+        return BedwarsUpgradeShopitem.getCategoryItemData(category)
+            .filter(data => data.description.modeEnabled?.rush !== false)
+            .map(data => new BedwarsRushUpgradeShopitem(system, playerData, data));
+    };
+};
+/** 疾速模式物品类商人 */
+class BedwarsRushItemTrader extends BedwarsItemTrader {
+
+    /** @param {BedwarsSystem} system @param {data.TraderData} traderData */
+    constructor(system, traderData) {
+        super(system, traderData);
+        this.currentClass = BedwarsRushItemShopitem;
+    };
+
+};
+/** 疾速模式团队升级类商人 */
+class BedwarsRushUpgradeTrader extends BedwarsUpgradeTrader {
+
+    /** @param {BedwarsSystem} system @param {data.TraderData} traderData */
+    constructor(system, traderData) {
+        super(system, traderData);
+        this.currentClass = BedwarsRushUpgradeShopitem;
+    };
+
+};
+/** 疾速模式地图 */
+class BedwarsRushMap extends BedwarsMap {
+
+    /** @param {BedwarsSystem} system @param {data.BedwarsMapData} mapData */
+    constructor(system, mapData) {
+        super(system, mapData);
+        // ===== 类型注释（无实际用途） =====
+        /** @type {(BedwarsRushItemTrader | BedwarsRushUpgradeTrader)[]} */ this.traders;
+        /** @type {(BedwarsRushItemTrader | BedwarsRushUpgradeTrader)[]} */ this.tradingTraders;
+        // 拉满钻石和绿宝石的等级
+        this.diamondSpawnerInfo.level = 3;
+        this.emeraldSpawnerInfo.level = 3;
+        // 限制队伍岛生成资源的速度
+        this.teamResourceSpawnSpeed *= this.system.settings.gaming.resource.rushSpeedMultiplier;
+    };
+
+    /** @override @param {BedwarsSystem} system @param {"twoTeams"|"fourTeams"|"eightTeams"} mode */
+    static getMapData(system, mode) {
+        /** @param {data.BedwarsMapData} mapData @returns {data.BedwarsMapData} */
+        const modeConverter = (mapData) => {
+            return { ...mapData, description: { ...mapData.description, mode: data.BedwarsModeType.Rush } };
+        };
+        switch (mode) {
+            case "twoTeams": default:
+                return system.settings.mapEnabled.rushTwoTeamsEnabled ? Object.values(data.mapData.classic.twoTeams).map(data => modeConverter(data)) : [];
+            case "fourTeams":
+                return system.settings.mapEnabled.rushFourTeamsEnabled ? Object.values(data.mapData.classic.fourTeams).map(data => modeConverter(data)) : [];
+            case "eightTeams":
+                return system.settings.mapEnabled.rushEightTeamsEnabled ? Object.values(data.mapData.classic.eightTeams).map(data => modeConverter(data)) : [];
+        };
+    };
+
+    /** 为地图添加队伍
+     * @override
+     * @param {data.TeamData} teamData
+     */
+    addTeam(teamData) {
+        let team = new BedwarsRushTeam(this.system, this, teamData);
+        this.teams.push(team);
+        this.aliveTeams.push(team);
+        this.teamCount += 1;
+    };
+
+    /** 添加商人
+     * @param {data.TraderData} traderData 
+     */
+    addTrader(traderData) {
+        const traderDataObject = traderData.type == "item" ? new BedwarsRushItemTrader(this.system, traderData) : new BedwarsExperienceUpgradeTrader(this.system, traderData);
+        this.traders.push(traderDataObject);
+        return traderDataObject;
+    };
+
+};
+/** 疾速模式队伍 */
+class BedwarsRushTeam extends BedwarsTeam {
+
+    /** @param {BedwarsSystem} system @param {BedwarsMap} map @param {data.TeamData} teamData */
+    constructor(system, map, teamData) {
+        super(system, map, teamData);
+        // 拉满各队伍锻炉等级
+        this.teamUpgrades.forge = 4;
+    };
+
+};
 
 // ===== 进入游戏后，开始运行系统 =====
 

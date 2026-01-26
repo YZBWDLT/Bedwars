@@ -814,6 +814,103 @@ export const mapData = {
 
             },
 
+            /** 海岸 @type {BedwarsMapData} */
+            ashore: {
+                description: {
+                    id: "ashore",
+                    name: "海岸",
+                    mode: BedwarsModeType.Classic,
+                },
+                components: {
+                    resource: {
+                        diamondSpawnerLocation: [{ x: 44, y: 63, z: -46 }, { x: 47, y: 63, z: 45 }, { x: -44, y: 63, z: 48 }, { x: -47, y: 63, z: -43 },],
+                        emeraldSpawnerLocation: [{ x: 0, y: 64, z: 1 }, { x: 0, y: 83, z: 1 },],
+                        distributeResource: false,
+                    },
+                    team: {
+                        teamData: [
+                            {
+                                id: BedwarsTeamType.Red,
+                                bed: { location: { x: 0, y: 64, z: -65 }, rotation: minecraft.StructureRotation.Rotate270 },
+                                chestLocation: { x: 3, y: 63, z: -76 },
+                                flagLocation: { from: { x: -10, y: 66, z: -66 }, to: { x: 8, y: 78, z: -76 } },
+                                island: { location: { x: -10, y: 53, z: -85 }, rotation: minecraft.StructureRotation.None },
+                                resourceLocation: { x: 0, y: 63, z: -81 },
+                                spawnpointLocation: { x: 0, y: 63, z: -78 },
+                                trader: [
+                                    { type: "item", location: { x: 6, y: 63, z: -78.5 }, rotation: 90 },
+                                    { type: "upgrade", location: { x: -6, y: 63, z: -78.5 }, rotation: 270 },
+                                ],
+                            },
+                            {
+                                id: BedwarsTeamType.Blue,
+                                bed: { location: { x: 66, y: 64, z: 1 }, rotation: minecraft.StructureRotation.None },
+                                chestLocation: { x: 77, y: 63, z: 4 },
+                                flagLocation: { from: { x: 67, y: 66, z: -9 }, to: { x: 77, y: 78, z: 9 } },
+                                island: { location: { x: 60, y: 53, z: -9 }, rotation: minecraft.StructureRotation.Rotate90 },
+                                resourceLocation: { x: 82, y: 63, z: 1 },
+                                spawnpointLocation: { x: 79, y: 63, z: 1 },
+                                trader: [
+                                    { type: "item", location: { x: 79.5, y: 63, z: 7 }, rotation: 180 },
+                                    { type: "upgrade", location: { x: 79.5, y: 63, z: -5 }, rotation: 0 },
+                                ],
+                            },
+                            {
+                                id: BedwarsTeamType.Green,
+                                bed: { location: { x: 0, y: 64, z: 67 }, rotation: minecraft.StructureRotation.Rotate90 },
+                                chestLocation: { x: -3, y: 63, z: 78 },
+                                flagLocation: { from: { x: 10, y: 66, z: 68 }, to: { x: -8, y: 78, z: 78 } },
+                                island: { location: { x: -12, y: 53, z: 61 }, rotation: minecraft.StructureRotation.Rotate180 },
+                                resourceLocation: { x: 0, y: 63, z: 83 },
+                                spawnpointLocation: { x: 0, y: 63, z: 80 },
+                                trader: [
+                                    { type: "item", location: { x: -6, y: 63, z: 80.5 }, rotation: 270 },
+                                    { type: "upgrade", location: { x: 6, y: 63, z: 80.5 }, rotation: 90 },
+                                ],
+                            },
+                            {
+                                id: BedwarsTeamType.Yellow,
+                                bed: { location: { x: -66, y: 64, z: 1 }, rotation: minecraft.StructureRotation.Rotate180 },
+                                chestLocation: { x: -77, y: 63, z: -2 },
+                                flagLocation: { from: { x: -67, y: 66, z: 11 }, to: { x: -77, y: 78, z: -7 } },
+                                island: { location: { x: -86, y: 53, z: -11 }, rotation: minecraft.StructureRotation.Rotate270 },
+                                resourceLocation: { x: -82, y: 63, z: 1 },
+                                spawnpointLocation: { x: -79, y: 63, z: 1 },
+                                trader: [
+                                    { type: "item", location: { x: -79.5, y: 63, z: -5 }, rotation: 0 },
+                                    { type: "upgrade", location: { x: -79.5, y: 63, z: 7 }, rotation: 180 },
+                                ],
+                            },
+                        ],
+                        islandLoadTime: 1,
+                        healPoolRadius: 18
+                    },
+                    island: [
+                        {
+                            id: "diamond_island",
+                            loadTime: 1,
+                            islandData: [
+                                { location: { x: 38, y: 57, z: -58 }, rotation: minecraft.StructureRotation.None, },
+                                { location: { x: 41, y: 57, z: 39 }, rotation: minecraft.StructureRotation.Rotate90, },
+                                { location: { x: -58, y: 57, z: 42 }, rotation: minecraft.StructureRotation.Rotate180, },
+                                { location: { x: -59, y: 57, z: -57 }, rotation: minecraft.StructureRotation.Rotate270, },
+                            ],
+                        },
+                        {
+                            id: "center_island",
+                            loadTime: 7,
+                            islandData: [
+                                { location: { x: -20, y: 45, z: -19 }, rotation: minecraft.StructureRotation.None, },
+                            ],
+                        }
+                    ],
+                    size: {
+                        heightLimitMax: 101,
+                        heightLimitMin: 57,
+                    }
+                }
+            },
+
             /** 蘑菇岛 @type {BedwarsMapData} */
             boletum: {
                 description: {

@@ -41,10 +41,11 @@
 
 ### 新地图
 
-- 新增了 3 张 4 队地图：
+- 新增了 4 张 4 队地图：
   - Picnic（Treenan）：野餐
   - Swashbuckle：海盗船
   - Obelisk：方尖碑
+  - Ashore：海岸
 
 ### 游戏内容
 
@@ -63,5 +64,5 @@
 
 ### Todo List
 
-- [ ] 新增 4 队地图：Ashore、Invasion、Lectus、Stonekeep
+- [ ] 新增 4 队地图：Invasion、Lectus、Stonekeep
 - [ ] 经验模式：*有待讨论* 是否实现部分商品的不可持续？比如钻石盔甲是否要在死亡后撤回？

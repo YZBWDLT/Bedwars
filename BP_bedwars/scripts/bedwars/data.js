@@ -2972,6 +2972,7 @@ export const categoryItemData = {
  * @property {number} [experienceAmount] 该物品在经验模式下需要多少资源，若不指定则默认为 (资源价格)*amount
  * @property {number} [experienceAmountInSolo] 该物品在 8 队经验模式下需要多少资源，若不指定则默认为 (资源价格)*amountInSolo
  * @property {BedwarsResourceType} [amplifier] 当资源使用经验购买时，资源将按照何种资源的价值（注意：不是价格）放大，若不指定则不放大
+ * @property {number} [multiplier] 当资源使用经验购买时，资源将按照该种资源的价格的多少倍继续放大，若不指定则不放大
  * 
  * @typedef BedwarsItemEnchantmentComponent 物品附魔组件
  * @property {lib.EnchantmentInfo[]} [list] 物品固有的附魔
@@ -3080,6 +3081,7 @@ export const itemShopitemData = {
             format: "item",
             category: BedwarsItemShopitemCategory.Blocks,
             description: ["百分百保护你的床。"],
+            modeEnabled: { rush: false, }
         },
         component: {
             id: "obsidian",
@@ -3442,7 +3444,7 @@ export const itemShopitemData = {
         component: {
             id: "dream_defender",
             amount: 1,
-            resource: { type: BedwarsResourceType.Iron, amount: 120 },
+            resource: { type: BedwarsResourceType.Iron, amount: 120, multiplier: 2.5 },
         },
     },
     /** 火球，40 铁锭 -> 1 火球 @type {BedwarsItemShopitemData} */

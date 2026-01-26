@@ -443,7 +443,13 @@ class BedwarsSettings {
         backupAndRecoverSettings: true,
 
         /** 恢复饱食度间隔，单位：秒 */
-        saturationInterval: 3
+        saturationInterval: 3,
+
+        /** 信息板最后一行的黄字内容 */
+        infoboardLastLine: "一只卑微的量筒",
+
+        /** 购买物品是否通知玩家 */
+        purchaseInformation: true,
 
     };
 
@@ -585,16 +591,16 @@ class BedwarsSettings {
                             else {
                                 settings.beforeGaming.reload.clearSpeed = values[4];
                                 settings.beforeGaming.reload.loadSpeed = values[5];
-                                // 若当前正在清除地图中，重新注册时间线
-                                if (system.gameStage == 0) {
-                                    system.unsubscribeTimeline("clearMap");
-                                    system.mode.timelineClearMap();
-                                }
-                                // 若当前正在加载地图中，提示玩家在下次生效
-                                if (system.gameStage == 1) {
-                                    player.sendMessage("地图加载速度的设置将在加载下一个结构时生效，信息板的预计加载时间可能会显示异常")
-                                }
                             };
+                            // 若当前正在清除地图中，重新注册时间线
+                            if (system.gameStage == 0) {
+                                system.unsubscribeTimeline("clearMap");
+                                system.mode.timelineClearMap();
+                            }
+                            // 若当前正在加载地图中，提示玩家在下次生效
+                            if (system.gameStage == 1) {
+                                player.sendMessage("地图加载速度的设置将在加载下一个结构时生效，信息板的预计加载时间可能会显示异常")
+                            }
                             // 备份设置
                             this.backup(system);
                         },
@@ -637,9 +643,9 @@ class BedwarsSettings {
                                 settings.beforeGaming.waiting.minPlayerCount = values[4];
                                 settings.beforeGaming.waiting.maxPlayerCount = values[5];
                                 settings.beforeGaming.waiting.gameStartWaitingTime = values[6];
-                                system.mode.gameStartCountdown = values[6];
-                                system.mode.functionWaiting();
                             };
+                            system.mode.gameStartCountdown = values[6];
+                            system.mode.functionWaiting();
                             // 备份设置
                             this.backup(system);
                         },
@@ -689,12 +695,12 @@ class BedwarsSettings {
                                 settings.beforeGaming.teamAssign.mode = values[4];
                                 settings.beforeGaming.teamAssign.assignBeforeGaming = values[5];
                                 settings.beforeGaming.teamAssign.playerSelectEnabled = values[6];
-                                if (settings.beforeGaming.teamAssign.playerSelectEnabled) system.mode.timelineSelectTeam();
-                                else if (system.gameStage <= 2) {
-                                    system.unsubscribeTimeline("selectTeam");
-                                    lib.EntityUtil.getNearby("bedwars:trader", { x: 4, y: 120, z: 0 }, 3).forEach(npc => npc.remove());
-                                }
                             };
+                            if (settings.beforeGaming.teamAssign.playerSelectEnabled) system.mode.timelineSelectTeam();
+                            else if (system.gameStage <= 2) {
+                                system.unsubscribeTimeline("selectTeam");
+                                lib.EntityUtil.getNearby("bedwars:trader", { x: 4, y: 120, z: 0 }, 3).forEach(npc => npc.remove());
+                            }
                             // 备份设置
                             this.backup(system);
                         },
@@ -882,9 +888,9 @@ class BedwarsSettings {
                             else {
                                 settings.gaming.killStyle.isEnabled = values[4];
                                 settings.gaming.killStyle.randomKillStyle = values[5];
-                                // 如果玩家关闭了击杀样式，或启用了随机击杀样式，则移除玩家的物品
-                                if (!settings.gaming.killStyle.isEnabled || settings.gaming.killStyle.randomKillStyle) lib.ItemUtil.removeItem(player, "bedwars:kill_style");
                             };
+                            // 如果玩家关闭了击杀样式，或启用了随机击杀样式，则移除玩家的物品
+                            if (!settings.gaming.killStyle.isEnabled || settings.gaming.killStyle.randomKillStyle) lib.ItemUtil.removeItem(player, "bedwars:kill_style");
                             // 备份设置
                             this.backup(system);
                         },
@@ -1120,6 +1126,8 @@ class BedwarsSettings {
                         { type: "toggle", text: "虚空可扔物品", tipText: `在虚空中掉落的玩家是否允许扔出物品。当前值：§a${settings.miscellaneous.playerCanThrowItemsInVoid}`, default: settings.miscellaneous.playerCanThrowItemsInVoid },
                         { type: "toggle", text: "备份与恢复设置", tipText: `在每次应用设置时备份，并在地图重新加载或/reload后自动恢复上一次的设置。当前值：§a${settings.miscellaneous.backupAndRecoverSettings}`, default: settings.miscellaneous.backupAndRecoverSettings },
                         { type: "slider", text: "恢复饥饿值间隔", tipText: `每隔多久尝试恢复一次饥饿值。单位：秒。当前值：§a${settings.miscellaneous.saturationInterval}`, min: 1, max: 10, step: 1, default: settings.miscellaneous.saturationInterval },
+                        { type: "textField", text: "信息板末行信息", tipText: `在右侧信息板的最后一行显示的内容。当前值：§a${settings.miscellaneous.infoboardLastLine}`, placeholderText: "", default: settings.miscellaneous.infoboardLastLine },
+                        { type: "toggle", text: "购买物品通知", tipText: `在购买物品类物品后，是否通知玩家。当前值：§a${settings.miscellaneous.purchaseInformation}`, default: settings.miscellaneous.purchaseInformation },
                         { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
                     ],
                     onSubmitted: {
@@ -1133,6 +1141,8 @@ class BedwarsSettings {
                                 settings.miscellaneous.playerCanThrowItemsInVoid = values[5];
                                 settings.miscellaneous.backupAndRecoverSettings = values[6];
                                 settings.miscellaneous.saturationInterval = values[7];
+                                settings.miscellaneous.infoboardLastLine = values[8];
+                                settings.miscellaneous.purchaseInformation = values[9];
                             };
                             // 如果启用了虚空可扔物品，则添加时间线，否则移除之
                             if (settings.miscellaneous.playerCanThrowItemsInVoid) system.mode.timelineStopPlayerThrowItemInVoid();
@@ -1680,7 +1690,7 @@ class BedwarsMode {
             `§f模式： §a${this.name}`,
             `§f版本： §7${this.system.version}`,
             "",
-            `§e一只卑微的量筒`,
+            `§e${this.system.settings.miscellaneous.infoboardLastLine}`,
         ];
 
         player.onScreenDisplay.setActionBar(infoboardTexts.join("§r\n"));
@@ -2034,7 +2044,7 @@ class BedwarsMode {
         );
 
         // 添加作者信息
-        infoboardTexts.push("§e一只卑微的量筒");
+        infoboardTexts.push(`§e${this.system.settings.miscellaneous.infoboardLastLine}`);
 
         player.onScreenDisplay.setActionBar(infoboardTexts.join("§r\n"));
 
@@ -2618,6 +2628,8 @@ class BedwarsMode {
                             lib.ScoreboardPlayerUtil.set(playerName, "killCount", playerData.killCount);
                             lib.ScoreboardPlayerUtil.set(playerName, "finalKillCount", playerData.finalKillCount);
                             lib.ScoreboardPlayerUtil.set(playerName, "destroyBedCount", playerData.destroyBedCount);
+                            // 淘汰信息
+                            lib.ScoreboardPlayerUtil.setBoolean(playerName, "isEliminated", playerData.isEliminated);
                         });
                         // 2. 在队伍中移除该队员
                         team.removePlayer(playerName);
@@ -2664,9 +2676,10 @@ class BedwarsMode {
                         playerData.killCount = playerScoreboardData.getScore("killCount");
                         playerData.finalKillCount = playerScoreboardData.getScore("finalKillCount");
                         playerData.destroyBedCount = playerScoreboardData.getScore("destroyBedCount");
+                        playerData.isEliminated = playerScoreboardData.getScore("isEliminated") == 1 ? true : false;
                         // 3. 设置该玩家为已死亡状态，并根据玩家是否有床提示玩家能否重生
                         playerData.rejoined = true;
-                        playerData.setDead();
+                        playerData.setDead({ showMessage: !playerData.isEliminated }); // 如果玩家在进入前就已被淘汰，则不显示消息，防止死亡消息刷屏
                         if (playerData.team.bedIsExist) player.sendMessage({ translate: "message.playerRejoin.haveBed" });
                         else player.sendMessage({ translate: "message.playerRejoin.haveNoBed" });
                         // 4. 尝试添加玩家重生时间线
@@ -2863,7 +2876,7 @@ class BedwarsMode {
                     // 否则，设置该玩家为已死亡状态，触发队伍淘汰甚至是游戏结束事件，并广播相关消息
                     const deathType = event.damageSource.cause;
                     const killer = event.damageSource.damagingEntity;
-                    playerData.setDead(deathType, killer);
+                    playerData.setDead({ deathType: deathType, killer: killer });
                     // 如果没有玩家重生时间线，则创建之
                     this.timelinePlayerRespawn();
                     this.timelinePlayerInDeathState();
@@ -3128,7 +3141,7 @@ class BedwarsMode {
                             // 如果资源点附近有玩家，则清除生成次数
                             if (lib.PlayerUtil.getNearby(data.location, 4).length > 0) data.spawnedTimes = 0;
                             // 更新倒计时显示
-                            if (data.textLine3) data.textLine3.nameTag = `§e在 §c${diamondData.countdown} §e秒后产出`;
+                            if (data.textLine3 && data.textLine3.isValid) data.textLine3.nameTag = `§e在 §c${diamondData.countdown} §e秒后产出`;
                             // 当倒计时结束后，尝试生成资源并记录次数（默认，钻石最多能生成 8 次）
                             if (diamondData.countdown <= 0 && data.spawnedTimes < this.system.settings.gaming.resource.diamondLimit) {
                                 lib.ItemUtil.spawnItem(lib.Vector3Util.add(data.location, 0, 2, 0), "bedwars:diamond", {}, this.map.clearVelocity);
@@ -3139,7 +3152,7 @@ class BedwarsMode {
                             // 如果资源点附近有玩家，则清除生成次数
                             if (lib.PlayerUtil.getNearby(data.location, 4).length > 0) data.spawnedTimes = 0;
                             // 更新倒计时显示
-                            if (data.textLine3) data.textLine3.nameTag = `§e在 §c${emeraldData.countdown} §e秒后产出`;
+                            if (data.textLine3 && data.textLine3.isValid) data.textLine3.nameTag = `§e在 §c${emeraldData.countdown} §e秒后产出`;
                             // 当倒计时结束后，尝试生成资源并记录次数（默认，绿宝石最多能生成 4 次）
                             if (emeraldData.countdown <= 0 && data.spawnedTimes < this.system.settings.gaming.resource.emeraldLimit) {
                                 lib.ItemUtil.spawnItem(lib.Vector3Util.add(data.location, 0, 2, 0), "bedwars:emerald", {}, this.map.clearVelocity);
@@ -3537,7 +3550,7 @@ class BedwarsMode {
                                     if (team.teamUpgrades.dragonBuff) lib.EntityUtil.add("minecraft:ender_dragon", this.map.spawnpoint);
                                 });
                                 lib.PlayerUtil.getAll().forEach(player => player.onScreenDisplay.setTitle({ translate: "title.deathMatch" }));
-                                lib.DimensionUtil.setBlock("overworld", { x: 0, y: 60, z: 0 }, "minecraft:barrier")
+                                lib.DimensionUtil.setBlock("overworld", { x: 0, y: this.map.heightLimitMin, z: 0 }, "minecraft:barrier")
                                 break;
                             case "game_over": default:
                                 // 结束游戏
@@ -4134,6 +4147,9 @@ class BedwarsShopitem {
     /** 当资源使用经验购买时，资源将按照何种资源的价值（注意：不是价格）放大，若不指定则不放大 @type {data.BedwarsResourceType | undefined} */
     resourceAmplifier;
 
+    /** 当资源使用经验购买时，资源将按照该种资源的价格的多少倍继续放大 */
+    resourceMultiplier = 1;
+
     /** 物品数量，决定显示在商店内的物品数量和给予玩家的物品数量 */
     amount = 1;
 
@@ -4289,6 +4305,7 @@ class BedwarsItemShopitem extends BedwarsShopitem {
             this.resourceAmount = component.resource.amountInSolo ?? this.resourceAmount;
         };
         this.resourceAmplifier = component.resource.amplifier;
+        this.resourceMultiplier = component.resource.multiplier ?? 1;
         this.setResourceData();
 
         // 指定实际给予的物品 ID
@@ -4378,7 +4395,7 @@ class BedwarsItemShopitem extends BedwarsShopitem {
         };
         // 其他情况则允许购买，清除资源并提示玩家已购买
         this.resourceType == data.BedwarsResourceType.Level ? player.addLevels(-this.resourceAmount) : lib.ItemUtil.removeItem(player, this.resourceTypeId, -1, this.resourceAmount);
-        BedwarsSystem.informPlayer(player, { translate: `message.purchaseItemsSuccessfully`, with: { rawtext: [{ translate: `message.bedwars:shopitem_${this.id}` }] } });
+        if (this.system.settings.miscellaneous.purchaseInformation) BedwarsSystem.informPlayer(player, { translate: `message.purchaseItemsSuccessfully`, with: { rawtext: [{ translate: `message.bedwars:shopitem_${this.id}` }] } });
         this.purchaseSuccess();
         return this.id;
     };
@@ -5484,7 +5501,7 @@ class BedwarsMap {
     };
 
     /** 检查给定位置是否在安全区内
-     * @param {minecraft.Vector3Util} location 
+     * @param {minecraft.Vector3} location 
      */
     locationInSafeArea(location) {
         const safeArea = this.safeAreaLocation;
@@ -5764,6 +5781,8 @@ class BedwarsTeam {
 
     /** 标记为已被淘汰 */
     setEliminated() {
+        // 如果该队伍已经被淘汰了，则终止运行
+        if (this.isEliminated) return;
         this.isEliminated = true;
         this.map.aliveTeams = this.map.aliveTeams.filter(aliveTeam => aliveTeam.id != this.id);
         minecraft.world.sendMessage(["\n", { translate: "message.teamEliminated", with: [`${this.getTeamNameWithColor()}`] }, "\n "]);
@@ -6101,10 +6120,18 @@ class BedwarsPlayer {
     // ===== 玩家状态 =====
 
     /** 设置玩家为已死亡，同时检查床的存在性，如果没有床则设为已淘汰
-     * @param {minecraft.EntityDamageCause} deathType 
-     * @param {minecraft.Entity | undefined} killer 
+     * @param {SetDeadData} info
      */
-    setDead(deathType, killer) {
+    setDead(info = {}) {
+
+        /**
+         * @typedef SetDeadData
+         * @property {minecraft.EntityDamageCause} [deathType] 玩家死亡类型
+         * @property {minecraft.Entity} [killer] 击杀者
+         * @property {boolean} [showMessage] 是否显示击杀消息
+         */
+
+        const { deathType, killer, showMessage } = info;
 
         // --- 设置为已死亡 ---
         this.isDead = true;
@@ -6112,7 +6139,14 @@ class BedwarsPlayer {
 
         // --- 设置死亡类型 ---
         // 如果玩家死于：实体攻击、投射物、摔落、虚空、爆炸，则为了显示死亡信息应记录，其他类型统一记录为其他
-        if (["entityAttack", "projectile", "fall", "void", "entityExplosion"].includes(deathType)) this.deathType = deathType;
+        const validDeathTypes = [
+            minecraft.EntityDamageCause.entityAttack,
+            minecraft.EntityDamageCause.projectile,
+            minecraft.EntityDamageCause.fall,
+            minecraft.EntityDamageCause.void,
+            minecraft.EntityDamageCause.entityExplosion,
+        ];
+        if (validDeathTypes.includes(deathType)) this.deathType = deathType;
         else this.deathType = "other";
 
         // --- 根据床的存在性设置重生时间，或设置是否淘汰 ---
@@ -6149,13 +6183,13 @@ class BedwarsPlayer {
         // --- 广播玩家被击杀的消息，并给予击杀者奖励 ---
 
         /** 本次击杀是否为最终击杀 */
-        const isFinalKill = this.team.bedIsExist ? "" : "message.finalKill";
+        const isFinalKill = this.team?.bedIsExist ? "" : "message.finalKill";
 
         /** 普通死亡样式
          * @param {"died"|"fellIntoVoid"} type 死亡类型
          */
         const defaultDeath = (type = "died") => {
-            minecraft.world.sendMessage([{ translate: `message.kill.${type}`, with: [this.player.nameTag] }, { translate: isFinalKill }]);
+            if (showMessage !== false) minecraft.world.sendMessage([{ translate: `message.kill.${type}`, with: [this.player.nameTag] }, { translate: isFinalKill }]);
         };
 
         /** 被其他玩家击杀样式，同时给予击杀者奖励
@@ -6164,7 +6198,7 @@ class BedwarsPlayer {
          */
         const killedByOthers = (type, killerData) => {
             const killer = killerData.player;
-            minecraft.world.sendMessage([{ translate: `message.kill.${type}.${killerData.killStyle}`, with: [this.player.nameTag, killer.nameTag] }, { translate: isFinalKill }]);
+            if (showMessage !== false) minecraft.world.sendMessage([{ translate: `message.kill.${type}.${killerData.killStyle}`, with: [this.player.nameTag, killer.nameTag] }, { translate: isFinalKill }]);
             killerData.getBonus(this);
         };
 
@@ -6820,7 +6854,7 @@ class BedwarsCaptureMode extends BedwarsClassicMode {
         infoboardTexts.push("")
 
         // 添加作者信息
-        infoboardTexts.push("§e一只卑微的量筒");
+        infoboardTexts.push(`§e${this.system.settings.miscellaneous.infoboardLastLine}`);
 
         player.onScreenDisplay.setActionBar(infoboardTexts.join("§r\n"));
 
@@ -7146,10 +7180,6 @@ class BedwarsExperienceMode extends BedwarsClassicMode {
         this.eventConvertShareableResourceToNormalResource();
     };
 
-    // debug
-    // 为实现经验模式，在资源生成方面和商人交易方面有以下问题需要解决：
-    // - 有待讨论：是否实现部分商品的不可持续？比如钻石盔甲是否要在死亡后撤回？
-
     /** 转化玩家经验 */
     eventConvertPlayersResource() {
         this.system.subscribeEvent({
@@ -7250,24 +7280,28 @@ class BedwarsExperienceItemShopitem extends BedwarsItemShopitem {
         // ===== 组件部分解析 =====
 
         // 资源类型和资源数量
-        this.resourceAmount = this.resourceAmount * (() => {
-            // 如果设定了经验值，按照设定值设定数目
-            if (this.experienceAmount) return this.experienceAmount;
-            // 否则，按照默认值设定
-            switch (this.resourceType) {
-                case data.BedwarsResourceType.Iron: return this.system.settings.gaming.resource.ironPrice;
-                case data.BedwarsResourceType.Gold: return this.system.settings.gaming.resource.goldPrice;
-                case data.BedwarsResourceType.Emerald: return this.system.settings.gaming.resource.emeraldPrice;
-                case data.BedwarsResourceType.Level:
-                    if (!this.resourceAmplifier) return 1;
-                    switch (this.resourceAmplifier) {
-                        case data.BedwarsResourceType.Iron: return this.system.settings.gaming.resource.ironValue;
-                        case data.BedwarsResourceType.Gold: return this.system.settings.gaming.resource.goldValue;
-                        case data.BedwarsResourceType.Emerald: return this.system.settings.gaming.resource.emeraldValue;
-                    };
-                default: return 1;
-            };
-        })();
+        this.resourceAmount = Math.floor(
+            this.resourceAmount
+            * (() => {
+                // 如果设定了经验值，按照设定值设定数目
+                if (this.experienceAmount) return this.experienceAmount;
+                // 否则，按照默认值设定
+                switch (this.resourceType) {
+                    case data.BedwarsResourceType.Iron: return this.system.settings.gaming.resource.ironPrice;
+                    case data.BedwarsResourceType.Gold: return this.system.settings.gaming.resource.goldPrice;
+                    case data.BedwarsResourceType.Emerald: return this.system.settings.gaming.resource.emeraldPrice;
+                    case data.BedwarsResourceType.Level:
+                        if (!this.resourceAmplifier) return 1;
+                        switch (this.resourceAmplifier) {
+                            case data.BedwarsResourceType.Iron: return this.system.settings.gaming.resource.ironValue;
+                            case data.BedwarsResourceType.Gold: return this.system.settings.gaming.resource.goldValue;
+                            case data.BedwarsResourceType.Emerald: return this.system.settings.gaming.resource.emeraldValue;
+                        };
+                    default: return 1;
+                };
+            })()
+            * this.resourceMultiplier
+        );
         this.resourceType = data.BedwarsResourceType.Level;
         this.setResourceData();
     };
@@ -7413,6 +7447,23 @@ class BedwarsRushMode extends BedwarsClassicMode {
         super(system, map);
     };
 
+    /** @override */
+    beforeEntryWaitingState() {
+        /** @type {BedwarsRushTeam[]} */ const teams = this.map.teams;
+        teams.forEach(team => team.placeBedProtection());
+    };
+
+    /** @override */
+    afterEntryGamingState() {
+        this.eventPlayerPlaceWool();
+        lib.PlayerUtil.getAll().forEach(player => player.removeTag("bridgeMode"));
+    };
+
+    /** @override */
+    afterEntryGameOverState() {
+        lib.PlayerUtil.getAll().forEach(player => player.removeTag("bridgeMode"));
+    };
+
     /** 游戏事件时间线
      * @add 在游戏开始时创建
      */
@@ -7447,6 +7498,94 @@ class BedwarsRushMode extends BedwarsClassicMode {
                 },
                 tickInterval: 20,
             }
+        });
+    };
+
+    /** 玩家放置羊毛事件
+     * @add 在游戏开始时创建
+     */
+    eventPlayerPlaceWool() {
+        const blockTypes = [
+            "bedwars:red_wool",
+            "bedwars:blue_wool",
+            "bedwars:green_wool",
+            "bedwars:yellow_wool",
+            "bedwars:white_wool",
+            "bedwars:pink_wool",
+            "bedwars:cyan_wool",
+            "bedwars:gray_wool",
+            "bedwars:orange_wool",
+            "bedwars:purple_wool",
+            "bedwars:brown_wool",
+        ];
+        const swords = [
+            "bedwars:wooden_sword",
+            "bedwars:stone_sword",
+            "bedwars:iron_sword",
+            "bedwars:diamond_sword",
+        ];
+        this.system.subscribeEvent({
+            typeId: "playerPlaceWool",
+            event: [
+                {
+                    type: minecraft.world.afterEvents.playerInteractWithBlock,
+                    /** @type {function(minecraft.PlayerInteractWithBlockAfterEvent): void} */
+                    callback: event => {
+                        const { player, blockFace, beforeItemStack, isFirstEvent, block: placedBlock } = event;
+                        // 如果不是第一次交互，终止运行
+                        if (!isFirstEvent) return;
+                        // 如果玩家没有bridgeMode标签，终止运行
+                        if (!player.hasTag("bridgeMode")) return;
+                        // 如果玩家没有起床战争信息，终止运行
+                        const playerData = this.map.getBedwarsPlayer(player);
+                        if (!playerData) return;
+                        // 如果玩家放置的不是上述方块之一，终止运行
+                        if (!beforeItemStack) return;
+                        const itemId = beforeItemStack.typeId;
+                        if (!blockTypes.includes(itemId)) return;
+                        // 判断结束后，检查玩家放置的方位并尝试放置方块
+                        const dimension = placedBlock.dimension;
+                        (async () => {
+                            for (let i = 0; i < 5; i++) {
+                                const placeLocation = (() => {
+                                    switch (blockFace) {
+                                        case minecraft.Direction.Down: return lib.Vector3Util.down(placedBlock.location, i + 1);
+                                        case minecraft.Direction.East: return lib.Vector3Util.east(placedBlock.location, i + 1);
+                                        case minecraft.Direction.North: return lib.Vector3Util.north(placedBlock.location, i + 1);
+                                        case minecraft.Direction.South: return lib.Vector3Util.south(placedBlock.location, i + 1);
+                                        case minecraft.Direction.Up: return lib.Vector3Util.up(placedBlock.location, i + 1);
+                                        case minecraft.Direction.West: return lib.Vector3Util.west(placedBlock.location, i + 1);
+                                        default: return placedBlock.location;
+                                    }
+                                })();
+                                // 如果要放置的地方在安全区内，阻止放置
+                                if (this.map.locationInSafeArea(placeLocation)) continue;
+                                // 如果要放置的地方低于最低限度，阻止放置
+                                if (placeLocation.y < this.map.heightLimitMin) continue;
+                                lib.DimensionUtil.replaceBlock("overworld", placeLocation, placeLocation, ["minecraft:air"], itemId);
+                                dimension.playSound("use.cloth", placeLocation);
+                                await minecraft.system.waitTicks(2);
+                            }
+                        })();
+                    },
+                },
+                {
+                    type: minecraft.world.afterEvents.itemUse,
+                    /** @type {function(minecraft.ItemUseAfterEvent): void} */
+                    callback: event => {
+                        const { itemStack, source: player } = event;
+                        if (!swords.includes(itemStack.typeId)) return;
+                        if (player.hasTag("bridgeMode")) {
+                            player.removeTag("bridgeMode");
+                            BedwarsSystem.informPlayer(player, "§a已禁用搭桥模式");
+                        }
+                        else {
+                            player.addTag("bridgeMode");
+                            BedwarsSystem.informPlayer(player, "§a已启用搭桥模式");
+                        }
+                    },
+                },
+            ],
         });
     };
 
@@ -7553,7 +7692,6 @@ class BedwarsRushMap extends BedwarsMap {
         this.traders.push(traderDataObject);
         return traderDataObject;
     };
-
 };
 /** 疾速模式队伍 */
 class BedwarsRushTeam extends BedwarsTeam {
@@ -7565,7 +7703,28 @@ class BedwarsRushTeam extends BedwarsTeam {
         this.teamUpgrades.forge = 4;
     };
 
+    /** 设置床的保护罩 */
+    placeBedProtection() {
+        // 安置保护罩
+        let bedLocation = this.bedLocation;
+        let protectionLocation = lib.Vector3Util.add(bedLocation, -3, 0, -3);
+        if (this.bedRotation == "Rotate180") protectionLocation = lib.Vector3Util.add(protectionLocation, -1, 0, 0);
+        else if (this.bedRotation == "Rotate270") protectionLocation = lib.Vector3Util.add(protectionLocation, 0, 0, -1);
+        lib.StructureUtil.placeAsync(`beds:protection`, "overworld", protectionLocation, { rotation: this.bedRotation });
+        // 加载完毕后，更换木板、羊毛和染色玻璃为自定义方块
+        lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedLocation, -2, 0, -2), lib.Vector3Util.add(bedLocation, 2, 3, 2), ["minecraft:oak_planks"], "bedwars:oak_planks");
+        lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedLocation, -3, 0, -3), lib.Vector3Util.add(bedLocation, 3, 3, 3), ["minecraft:white_wool"], `bedwars:${this.id}_wool`);
+        lib.DimensionUtil.replaceBlock("overworld", lib.Vector3Util.add(bedLocation, -4, 0, -4), lib.Vector3Util.add(bedLocation, 4, 3, 4), ["minecraft:white_stained_glass"], `bedwars:${this.id}_blast_proof_glass`);
+    };
+
 };
+// /** 疾速模式玩家 */
+// class BedwarsRushPlayer extends BedwarsPlayer {
+//     /** @param {BedwarsSystem} system 系统 @param {BedwarsPlayerData} data 起床战争玩家信息 */
+//     constructor(system, data) {
+//         super(system, data);
+//     };
+// };
 
 // ===== 进入游戏后，开始运行系统 =====
 
@@ -7577,6 +7736,5 @@ minecraft.world.afterEvents.worldLoad.subscribe(() => {
 
 // debug
 // 1. 在完成后移除所有 // lib.Debug 函数和 debug 标记
-// 4. 在物品购买后再添加对应事件，包括物品和陷阱
 // 7. 检查玩家接近钻石点和绿宝石点不灵敏，1 秒间隔还是太长（仍需验证）
 // 9. 检查一些 unsubscribe，检查时可以用 .some

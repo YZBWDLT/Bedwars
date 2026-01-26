@@ -200,6 +200,54 @@ export class Vector3Util {
         return { x: vector3.x / this.length(vector3), y: vector3.y / this.length(vector3), z: vector3.z / this.length(vector3) };
     };
 
+    /** 返回北方的向量
+     * @param {minecraft.Vector3} vector3 
+     * @param {number} length 
+     */
+    static north(vector3, length = 1) {
+        return this.add(vector3, 0, 0, -length);
+    };
+
+    /** 返回南方的向量
+     * @param {minecraft.Vector3} vector3 
+     * @param {number} length 
+     */
+    static south(vector3, length = 1) {
+        return this.add(vector3, 0, 0, length);
+    };
+
+    /** 返回西方的向量
+     * @param {minecraft.Vector3} vector3 
+     * @param {number} length 
+     */
+    static west(vector3, length = 1) {
+        return this.add(vector3, -length, 0, 0);
+    };
+
+    /** 返回东方的向量
+     * @param {minecraft.Vector3} vector3 
+     * @param {number} length 
+     */
+    static east(vector3, length = 1) {
+        return this.add(vector3, length, 0, 0);
+    };
+
+    /** 返回上方的向量
+     * @param {minecraft.Vector3} vector3 
+     * @param {number} length 
+     */
+    static up(vector3, length = 1) {
+        return this.add(vector3, 0, length, 0);
+    };
+
+    /** 返回下方的向量
+     * @param {minecraft.Vector3} vector3 
+     * @param {number} length 
+     */
+    static down(vector3, length = 1) {
+        return this.add(vector3, 0, -length, 0);
+    };
+
 }
 
 // ===== 玩家 & 实体 =====

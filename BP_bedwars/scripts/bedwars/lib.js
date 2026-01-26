@@ -69,23 +69,67 @@ export class DimensionUtil {
      * @param {"overworld" | "nether" | "the_end"} dimensionId 维度 ID
      * @param {minecraft.Vector3} from 起始坐标
      * @param {minecraft.Vector3} to 终止坐标
-     * @param {string} blockId 方块 ID
+     * @param {string[]} replaceBlockIds 待替换的方块 ID
+     * @param {string} toBlockId 待替换的方块 ID
      */
-    static fillBlock(dimensionId, from, to, blockId) {
+    static replaceBlock(dimensionId, from, to, replaceBlockIds, toBlockId) {
+        /** 区域切割器，当给定区域大于最大容量时，则切割为多个小于最大容量的区域
+         * @param {minecraft.BlockVolume} volume
+         * @returns {minecraft.BlockVolume[]}
+         */
+        const volumeDivider = (volume) => {
+            /** 区域允许的最大容量 */
+            const maxCapacity = 32768;
+            // 如果区域容量小于最大容量，直接返回该区域
+            const volumeCapacity = volume.getCapacity();
+            if (volumeCapacity <= maxCapacity) return [volume];
+            // 开始拆分，尝试均分最长轴
+            const volumeMin = volume.getMin();
+            const volumeMax = volume.getMax();
+            const { x: dx, y: dy, z: dz } = volume.getSpan();
+            const axisInfo = [
+                { name: "x", length: dx, from: volumeMin.x, to: volumeMax.x },
+                { name: "y", length: dy, from: volumeMin.y, to: volumeMax.y },
+                { name: "z", length: dz, from: volumeMin.z, to: volumeMax.z },
+            ];
+            /** 最长轴信息 */
+            const longestAxisInfo = axisInfo.sort((a, b) => b.length - a.length)[0];
+            /** 其他方向上的截面积 */
+            const sectionalArea = { x: dy * dz, y: dz * dx, z: dx * dy }[longestAxisInfo.name] ?? 1;
+            /** 保证最长轴上拆分的每个子区域的最大长度 */ // 例如，100*100*100的区域，截面积是10000，每个子区域的宽度应为32768/10000=3（向下取整），但无论如何最小应该是 1
+            const segmentLength = Math.max(Math.floor(maxCapacity / sectionalArea), 1);
+            /** 拆分段数 */ // 例如，上述的子区域一共拆分为 100/3=34 段（向上取整）
+            const segmentCount = Math.ceil(longestAxisInfo.length / segmentLength);
+            /** 所有子区域 */
+            const subVolumes = [];
+            for (let i = 0; i < segmentCount; i++) {
+                // 确定子区域的起始点，非最长轴不变，最长轴改为原起始点 + i * 每段长度
+                const segmentStart = longestAxisInfo.from + i * segmentLength;
+                const subVolumeFrom = { ...volume.from };
+                subVolumeFrom[longestAxisInfo.name] = segmentStart;
+                // 确定子区域的终止点，非最长轴不变，最长轴改为起始点 + 每段长度，但在最后一段需选用原终止点防止出界
+                const subVolumeTo = { ...volume.to };
+                subVolumeTo[longestAxisInfo.name] = Math.min(segmentStart + segmentLength - 1, longestAxisInfo.to)
+                // 创建子区域，并且如果子区域仍然过大，则用递归兜底，继续切割
+                const subVolume = new minecraft.BlockVolume(subVolumeFrom, subVolumeTo);
+                subVolumes.push(...volumeDivider(subVolume));
+            };
+            return subVolumes;
+        };
+
         const volume = new minecraft.BlockVolume(from, to);
-        minecraft.world.getDimension(dimensionId).fillBlocks(volume, blockId);
+        const volumes = volumeDivider(volume);
+        volumes.forEach(v => minecraft.world.getDimension(dimensionId).fillBlocks(v, toBlockId, { blockFilter: { includeTypes: replaceBlockIds } }))
     };
 
     /** 令两个坐标间填充方块
      * @param {"overworld" | "nether" | "the_end"} dimensionId 维度 ID
      * @param {minecraft.Vector3} from 起始坐标
      * @param {minecraft.Vector3} to 终止坐标
-     * @param {string[]} replaceBlockIds 待替换的方块 ID
-     * @param {string} toBlockId 待替换的方块 ID
+     * @param {string} blockId 方块 ID
      */
-    static replaceBlock(dimensionId, from, to, replaceBlockIds, toBlockId) {
-        const volume = new minecraft.BlockVolume(from, to);
-        minecraft.world.getDimension(dimensionId).fillBlocks(volume, toBlockId, { blockFilter: { includeTypes: replaceBlockIds } })
+    static fillBlock(dimensionId, from, to, blockId) {
+        this.replaceBlock(dimensionId, from, to, void 0, blockId);
     };
 
     /** 在某个位置放置方块

@@ -7736,5 +7736,6 @@ minecraft.world.afterEvents.worldLoad.subscribe(() => {
 
 // debug
 // 1. 在完成后移除所有 // lib.Debug 函数和 debug 标记
-// 7. 检查玩家接近钻石点和绿宝石点不灵敏，1 秒间隔还是太长（仍需验证）
-// 9. 检查一些 unsubscribe，检查时可以用 .some
+// 2. 检查玩家接近钻石点和绿宝石点不灵敏，1 秒间隔还是太长（仍需验证）
+// 3. 检查一些 unsubscribe，检查时可以用 .some
+// 4. 经验模式：*有待讨论* 是否实现部分商品的不可持续？比如钻石盔甲是否要在死亡后撤回？

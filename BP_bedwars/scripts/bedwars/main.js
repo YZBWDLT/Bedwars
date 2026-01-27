@@ -28,7 +28,7 @@ class BedwarsSystem {
     systemEvents = {};
 
     /** 系统版本 */
-    version = "Alpha 1.1_03";
+    version = "Alpha 1.1_04";
 
     /** 游戏 ID */
     gameId = lib.JSUtil.randomInt(1000, 9999);
@@ -2312,7 +2312,7 @@ class BedwarsMode {
 
         // 注册综合功能
         this.functionGeneral();
-        this.functionWaiting(false);
+        this.functionWaiting();
         this.functionBeforeGaming();
 
         // 注册事件
@@ -2332,10 +2332,9 @@ class BedwarsMode {
      * @param {boolean} showMessage 是否在玩家不足时提醒玩家人数不足
      * @remarks 该函数仅限在游戏阶段为 2 时调用有效，其余阶段调用无效
      */
-    functionWaiting(showMessage = true) {
+    functionWaiting() {
         if (this.system.gameStage != 2) return;
         const timelineController = () => {
-            this.gameStartCountdown = this.system.settings.beforeGaming.waiting.gameStartWaitingTime + 1;
             // 如果人数充足，令倒计时等于设置值，并开始倒计时时间线
             if (lib.PlayerUtil.getAmount() >= this.system.settings.beforeGaming.waiting.minPlayerCount) {
                 this.system.subscribeTimeline({
@@ -2345,30 +2344,27 @@ class BedwarsMode {
                             // 倒计时并同步右侧快捷栏
                             this.gameStartCountdown--;
                             lib.PlayerUtil.getAll().forEach(player => this.beforeGamingInfoboard(player));
+
                             // 提醒玩家还有多长时间开始游戏
-                            if (this.gameStartCountdown == 20) {
+                            /** 倒计时提醒器 @param {number} countdown @param {string} messageColor @param {boolean} showTitle @param {string} titleColor */
+                            const countdownMessage = (countdown, messageColor = "§c", showTitle = true, titleColor = "§c") => {
+                                if (this.gameStartCountdown != countdown) return;
                                 lib.PlayerUtil.getAll().forEach(player => {
-                                    player.sendMessage({ translate: "message.gameStart", with: [`20`] });
+                                    player.sendMessage({ translate: "message.gameStart", with: [`${messageColor}${this.gameStartCountdown}`] });
+                                    if (showTitle) player.onScreenDisplay.setTitle(`${titleColor}${this.gameStartCountdown}`, { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 })
                                     player.playSound("note.hat", { location: player.location });
                                 });
-                            }
-                            else if (this.gameStartCountdown == 10) {
-                                lib.PlayerUtil.getAll().forEach(player => {
-                                    player.sendMessage({ translate: "message.gameStart", with: [`§610`] });
-                                    player.onScreenDisplay.setTitle(`§a10`, { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 })
-                                    player.playSound("note.hat", { location: player.location });
-                                });
-                            }
-                            else if (this.gameStartCountdown <= 5 && this.gameStartCountdown > 0) {
-                                lib.PlayerUtil.getAll().forEach(player => {
-                                    player.sendMessage({ translate: "message.gameStart", with: [`§c${this.gameStartCountdown}`] });
-                                    player.onScreenDisplay.setTitle(`§c${this.gameStartCountdown}`, { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 })
-                                    player.playSound("note.hat", { location: player.location });
-                                });
-                            }
-                            else if (this.gameStartCountdown == 0) {
-                                this.entryGamingState();
-                            }
+                            };
+                            countdownMessage(20, "", false);
+                            countdownMessage(10, "§6", true, "§a");
+                            countdownMessage(5);
+                            countdownMessage(4);
+                            countdownMessage(3);
+                            countdownMessage(2);
+                            countdownMessage(1);
+
+                            // 倒计时结束后，开始游戏
+                            if (this.gameStartCountdown == 0) this.entryGamingState();
                         },
                         tickInterval: 20,
                     },
@@ -2376,8 +2372,9 @@ class BedwarsMode {
             }
             // 如果人数不足，停止倒计时并提醒玩家人数不足
             else {
+                this.gameStartCountdown = this.system.settings.beforeGaming.waiting.gameStartWaitingTime + 1;
                 this.system.unsubscribeTimeline("gameStartCountdown");
-                if (showMessage) lib.PlayerUtil.getAll().forEach(player => {
+                lib.PlayerUtil.getAll().forEach(player => {
                     player.sendMessage({ translate: "message.needsMorePlayer" });
                     player.onScreenDisplay.setTitle({ translate: "title.needsMorePlayer" }, { fadeInDuration: 0, stayDuration: 40, fadeOutDuration: 0 });
                     player.playSound("note.hat", { location: player.location });
@@ -2400,6 +2397,7 @@ class BedwarsMode {
                 },
             ],
         });
+        this.gameStartCountdown = this.system.settings.beforeGaming.waiting.gameStartWaitingTime + 1;
         timelineController();
     };
 
@@ -6646,7 +6644,7 @@ class BedwarsClassicTeam extends BedwarsTeam {
 // ===== 夺点模式 =====
 
 /** 夺点模式起床战争的相关函数和方法，继承自经典模式起床战争 */
-class BedwarsCaptureMode extends BedwarsClassicMode {
+class BedwarsCaptureMode extends BedwarsMode {
 
     /** 系统类型 */
     type = data.BedwarsModeType.Capture;
@@ -7160,14 +7158,28 @@ class BedwarsCaptureTeam extends BedwarsTeam {
 
 // ===== 经验模式 =====
 
-/** 经验模式起床战争的相关函数和方法，继承自经典模式起床战争 */
-class BedwarsExperienceMode extends BedwarsClassicMode {
+/** 经验模式起床战争的相关函数和方法 */
+class BedwarsExperienceMode extends BedwarsMode {
 
     /** 系统类型 */
     type = data.BedwarsModeType.Experience;
 
     /** 模式名称 */
     name = "经验";
+
+    /** 下一个事件 */
+    nextEvent = {
+
+        /** 下一个事件的 ID @type {"diamond_2"|"emerald_2"|"diamond_3"|"emerald_3"|"bed_destruction"|"death_match"|"game_over"} */
+        id: "diamond_2",
+
+        /** 下一个事件的倒计时，单位：秒 */
+        countdown: 360,
+
+        /** 下一个事件的名称 @type {"钻石生成点 II 级"|"绿宝石生成点 II 级"|"钻石生成点 III 级"|"绿宝石生成点 III 级"|"床自毁"|"绝杀模式"|"游戏结束"} */
+        name: "钻石生成点 II 级",
+
+    };
 
     /** @param {BedwarsSystem} system @param {BedwarsMap} map */
     constructor(system, map) {
@@ -7420,7 +7432,7 @@ class BedwarsExperienceTeam extends BedwarsTeam {
 // ===== 疾速模式 =====
 
 /** 疾速模式起床战争的相关函数和方法，继承自经典模式起床战争 */
-class BedwarsRushMode extends BedwarsClassicMode {
+class BedwarsRushMode extends BedwarsMode {
 
     /** 系统类型 */
     type = data.BedwarsModeType.Rush;
@@ -7558,6 +7570,8 @@ class BedwarsRushMode extends BedwarsClassicMode {
                                         default: return placedBlock.location;
                                     }
                                 })();
+                                // 如果要放置的方块面为 UP 且有玩家在上方（即玩家竖直上搭）则直接终止全过程
+                                if (blockFace == minecraft.Direction.Up && lib.PlayerUtil.getNearby(lib.Vector3Util.center(placeLocation), 0.5).length > 0) break;
                                 // 如果要放置的地方在安全区内，阻止放置
                                 if (this.map.locationInSafeArea(placeLocation)) continue;
                                 // 如果要放置的地方低于最低限度，阻止放置

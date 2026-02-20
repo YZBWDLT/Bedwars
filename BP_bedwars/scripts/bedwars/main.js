@@ -1989,7 +1989,7 @@ class BedwarsMode {
             typeId: "showGamingInfoboard",
             interval: {
                 callback: () => {
-                    lib.PlayerUtil.getAll().forEach(player => this.gamingInfoboard(player, this.map.getBedwarsPlayer(player)));
+                    lib.PlayerUtil.getAll().forEach(player => this.gamingInfoboard(player, this.map.getPlayerData(player)));
                 },
                 tickInterval: 20,
             },
@@ -2585,7 +2585,7 @@ class BedwarsMode {
                     callback: event => {
                         // 若玩家没有起床战争信息，终止运行
                         const player = event.player;
-                        let playerData = this.map.getBedwarsPlayer(player);
+                        let playerData = this.map.getPlayerData(player);
                         if (!playerData) return;
                         // 若玩家没有队伍信息，则在旁观玩家信息里移除该玩家并终止运行
                         const playerName = player.name;
@@ -2708,7 +2708,7 @@ class BedwarsMode {
                     if (!team) return;
                     // 获取破坏者及其起床战争信息
                     const breaker = event.player;
-                    const breakerData = this.map.getBedwarsPlayer(breaker);
+                    const breakerData = this.map.getPlayerData(breaker);
                     // 在玩家破坏床后，按照以下几种情况讨论：
                     // 1. 如果是杂玩家、旁观玩家，则还原床，警告无权限破坏床
                     if (!breakerData || !breakerData.team) {
@@ -2839,7 +2839,7 @@ class BedwarsMode {
                     const player = event.player;
                     if (player.isSneaking) return;
                     // 如果玩家不带有起床战争的有效数据，终止运行
-                    const playerData = this.map.getBedwarsPlayer(player);
+                    const playerData = this.map.getPlayerData(player);
                     if (!playerData) return;
                     // 检查被开箱的队伍，如果没有被开箱的队伍，或被开箱的队伍已被淘汰（即不在存活队伍名单里），终止运行
                     const chestData = this.map.aliveTeams.map(aliveTeam => ({ team: aliveTeam, location: aliveTeam.chestLocation }));
@@ -2869,7 +2869,7 @@ class BedwarsMode {
                     // 检查玩家是否有起床战争信息，如果没有则终止运行
                     /** @type {minecraft.Player} */
                     const player = event.deadEntity;
-                    const playerData = this.map.getBedwarsPlayer(player);
+                    const playerData = this.map.getPlayerData(player);
                     if (!playerData) return;
                     // 否则，设置该玩家为已死亡状态，触发队伍淘汰甚至是游戏结束事件，并广播相关消息
                     const deathType = event.damageSource.cause;
@@ -2899,11 +2899,11 @@ class BedwarsMode {
                 callback: event => {
                     // 如果受伤玩家没有起床战争信息，终止运行
                     const player = event.hurtEntity;
-                    const playerData = this.map.getBedwarsPlayer(player);
+                    const playerData = this.map.getPlayerData(player);
                     if (!playerData) return;
                     // 如果伤害玩家没有起床战争信息，终止运行
                     const damager = event.damageSource.damagingEntity;
-                    const damagerData = this.map.getBedwarsPlayer(damager);
+                    const damagerData = this.map.getPlayerData(damager);
                     if (!damagerData) return;
                     // 如果伤害者没有队伍归属，终止运行
                     if (!damagerData.team) return;
@@ -2928,7 +2928,7 @@ class BedwarsMode {
             interval: {
                 callback: () => {
                     // 查找所有被攻击的玩家，让他们每秒计时，10 秒后恢复为未被攻击状态
-                    let attackedPlayers = this.map.teams.flatMap(team => team.players.filter(playerData => playerData.timeSinceLastAttack < 10));
+                    let attackedPlayers = this.map.getAllPlayerData({ includeSpectator: false, includeEliminated: false }).filter(playerData => playerData.timeSinceLastAttack < 10);
                     attackedPlayers.forEach(attackedPlayer => {
                         attackedPlayer.timeSinceLastAttack++;
                         if (attackedPlayer.timeSinceLastAttack >= 10) attackedPlayer.resetAttackedInfo();
@@ -2971,7 +2971,7 @@ class BedwarsMode {
             interval: {
                 callback: () => {
                     /** 正处于死亡状态且重生倒计时大于 0 的玩家 */
-                    const respawningPlayers = this.map.teams.flatMap(team => team.alivePlayers.filter(alivePlayer => alivePlayer.respawnTime > 0));
+                    const respawningPlayers = this.map.getAllPlayerData({ includeSpectator: false, includeEliminated: false }).filter(playerData => playerData.respawnTime > 0);
                     // 进行重生倒计时
                     respawningPlayers.forEach(respawningPlayer => {
                         respawningPlayer.respawnTime--;
@@ -3000,7 +3000,7 @@ class BedwarsMode {
             interval: {
                 callback: () => {
                     // 检查所有持续死亡时间不为 -1 的玩家
-                    const keepDeathPlayers = this.map.teams.flatMap(team => team.alivePlayers).filter(keepDeathPlayer => keepDeathPlayer.keepDeathTime >= 0);
+                    const keepDeathPlayers = this.map.getAllPlayerData({ includeSpectator: false, includeEliminated: false }).filter(playerData => playerData.keepDeathTime >= 0);
                     keepDeathPlayers.forEach(keepDeathPlayer => {
                         const player = keepDeathPlayer.player; // 持续死亡时间的玩家
                         const isDead = player.getComponent("minecraft:health").currentValue <= 0; // 该玩家是否处于死亡状态
@@ -3183,7 +3183,7 @@ class BedwarsMode {
                     if (!traderData) return;
                     // 检查玩家信息，若没有有效的起床战争信息则终止运行
                     const player = event.player;
-                    const playerData = this.map.getBedwarsPlayer(player);
+                    const playerData = this.map.getPlayerData(player);
                     if (!playerData) return;
                     traderData.interacted(player, playerData);
                     this.timelinePlayerTrading();
@@ -3292,12 +3292,8 @@ class BedwarsMode {
                     trappedTeams
                         .filter(trappedTeams => !trappedTeams.isWaitingTrapCooldown)
                         .forEach(trappedTeam => {
-                            const invaderData = this.map.teams
-                                // 非本队玩家
-                                .filter(invaderTeam => invaderTeam.id != trappedTeam.id)
-                                .flatMap(invaderTeam => invaderTeam.alivePlayers)
-                                // 在床 10 格附近、未喝牛奶且未处于死亡状态（旁观模式）
-                                .filter(invader => lib.EntityUtil.isNearby(invader.player, trappedTeam.bedLocation, 10) && invader.magicMilkCountdown == 0 && invader.player.getGameMode() != minecraft.GameMode.Spectator)[0];
+                            /** 入侵者：非本队存活玩家，且在本队床 10 格附近，且没有魔法牛奶效果 */
+                            const invaderData = this.map.getAllPlayerData({ includeSpectator: false, includeEliminated: false, includeDeadPlayer: false, excludeTeams: [trappedTeam.id] }).filter(playerData => lib.EntityUtil.isNearby(playerData.player, trappedTeam.bedLocation, 10) && playerData.magicMilkCountdown == 0)[0];
                             if (invaderData) trappedTeam.triggerTrap(invaderData);
                         });
                     if (trappedTeams.length == 0) this.system.unsubscribeTimeline("trap");
@@ -3448,18 +3444,17 @@ class BedwarsMode {
             typeId: "stopPlayerThrowItemInVoid",
             interval: {
                 callback: () => {
-                    const alivePlayers = this.map.aliveTeams.flatMap(aliveTeam => aliveTeam.alivePlayers)
-                    alivePlayers.forEach(alivePlayer => {
-                        const player = alivePlayer.player;
+                    this.map.getAllPlayerData({ includeDeadPlayer: false, includeSpectator: false }).forEach(playerData => {
+                        const player = playerData.player;
                         if (!player.isValid) return;
                         const { x, y, z } = player.location;
                         // 如果，玩家脚下全是空气，并且正在掉落中，则锁定物品
                         if (!player.dimension.getTopmostBlock({ x, z }, y) && player.isFalling) {
-                            alivePlayer.lockAllItems();
+                            playerData.lockAllItems();
                         }
                         // 否则可以解锁物品，但不能正处于交易状态
-                        else if (!alivePlayer.tradeInfo.trader) {
-                            alivePlayer.unlockAllItems();
+                        else if (!playerData.tradeInfo.trader) {
+                            playerData.unlockAllItems();
                         }
                     });
                 },
@@ -3638,12 +3633,12 @@ class BedwarsMode {
         const playerHurtByFireball = (event) => {
             // 如果火球没有有效的掷出者，终止运行
             const thrower = event.source;
-            const throwerData = this.map.getBedwarsPlayer(thrower);
+            const throwerData = this.map.getPlayerData(thrower);
             if (!throwerData) return;
             // 令火球附近的玩家尝试添加伤害者，并移除玩家的隐身状态
             lib.PlayerUtil.getNearby(event.location, 4).forEach(player => {
                 // 如果击中的不是有效起床战争玩家，终止该玩家的检查
-                const playerData = this.map.getBedwarsPlayer(player);
+                const playerData = this.map.getPlayerData(player);
                 if (!playerData) return;
                 // 如果击中的是本队玩家，终止该玩家的检查
                 if (playerData.team?.id == throwerData.team?.id) return;
@@ -3688,7 +3683,7 @@ class BedwarsMode {
             if (event.projectile.typeId != "bedwars:bed_bug") return;
             // 如果玩家没有起床战争信息，终止运行
             const player = event.source;
-            const playerData = this.map.getBedwarsPlayer(player);
+            const playerData = this.map.getPlayerData(player);
             if (!playerData) return;
             // 如果玩家没有队伍，终止运行
             const team = playerData.team;
@@ -3713,7 +3708,7 @@ class BedwarsMode {
             silverfish.nameTag = `§8[§r${team.getTeamColor()}${silverfish.nameSetter()}§8]\n§l${team.getTeamNameWithColor()}队 §r${team.getTeamColor()}蠹虫`;
             // 3. 为蠹虫添加一个最近的目标
             const nearestAttackablePlayer = lib.PlayerUtil.getNearby(event.location, 16).filter(attackablePlayer => {
-                const attackablePlayerData = this.map.getBedwarsPlayer(attackablePlayer);
+                const attackablePlayerData = this.map.getPlayerData(attackablePlayer);
                 // 如果不是起床战争玩家，不选为目标
                 if (!attackablePlayerData) return false;
                 // 如果是旁观模式玩家，不选为目标
@@ -3788,7 +3783,7 @@ class BedwarsMode {
                     if (usingItem.typeId != "bedwars:dream_defender") return;
                     // 如果玩家没有起床战争信息，终止运行
                     const player = event.player;
-                    const playerData = this.map.getBedwarsPlayer(player);
+                    const playerData = this.map.getPlayerData(player);
                     if (!playerData) return;
                     // 如果玩家没有队伍，终止运行
                     const team = playerData.team;
@@ -3818,7 +3813,7 @@ class BedwarsMode {
                         ironGolem.nameTag = `§8[§r${team.getTeamColor()}${ironGolem.nameSetter()}§8]\n§l${team.getTeamNameWithColor()}队 §r${team.getTeamColor()}铁傀儡`;
                         // 4. 为铁傀儡添加一个最近的目标
                         const nearestAttackablePlayer = lib.PlayerUtil.getNearby(spawnLocation, 16).filter(attackablePlayer => {
-                            const attackablePlayerData = this.map.getBedwarsPlayer(attackablePlayer);
+                            const attackablePlayerData = this.map.getPlayerData(attackablePlayer);
                             // 如果不是起床战争玩家，不选为目标
                             if (!attackablePlayerData) return false;
                             // 如果是旁观模式玩家，不选为目标
@@ -3875,7 +3870,7 @@ class BedwarsMode {
                     // 如果使用的不是魔法牛奶，终止运行
                     if (event.itemStack.typeId != "bedwars:magic_milk") return;
                     // 如果玩家没有起床战争数据，终止运行
-                    const playerData = this.map.getBedwarsPlayer(event.source);
+                    const playerData = this.map.getPlayerData(event.source);
                     if (!playerData) return;
                     // 检查完毕，为玩家设置 30 秒的魔法牛奶倒计时
                     playerData.magicMilkCountdown = 30;
@@ -3894,7 +3889,7 @@ class BedwarsMode {
             typeId: "magicMilkCountdown",
             interval: {
                 callback: () => {
-                    const countdownPlayers = this.map.teams.flatMap(team => team.alivePlayers).filter(player => player.magicMilkCountdown > 0);
+                    const countdownPlayers = this.map.getAllPlayerData({ includeSpectator: false, includeDeadPlayer: false }).filter(playerData => playerData.magicMilkCountdown > 0);
                     countdownPlayers.forEach(player => {
                         player.magicMilkCountdown--;
                         if (player.magicMilkCountdown <= 0) player.player.sendMessage({ translate: "message.magicMilkTimeOut" });
@@ -3921,7 +3916,7 @@ class BedwarsMode {
                         const thrower = bridgeEgg.getComponent("minecraft:projectile").owner;
                         if (!thrower) { bridgeEgg.remove(); return; };
                         // 如果搭桥蛋的掷出者没有起床战争信息，则移除搭桥蛋然后终止运行
-                        const throwerData = this.map.getBedwarsPlayer(thrower);
+                        const throwerData = this.map.getPlayerData(thrower);
                         if (!throwerData) { bridgeEgg.remove(); return; };
                         // 如果搭桥蛋的掷出者没有队伍信息，则移除搭桥蛋然后终止运行
                         const team = throwerData.team;
@@ -3994,14 +3989,14 @@ class BedwarsMode {
                     // 如果射击者没有起床战争信息，或没有队伍，终止运行
                     /** @type {minecraft.Player} */
                     const shooter = event.source;
-                    const shooterData = this.map.getBedwarsPlayer(shooter);
+                    const shooterData = this.map.getPlayerData(shooter);
                     if (!shooterData) return;
                     const shooterTeam = shooterData.team;
                     if (!shooterTeam) return;
                     // 如果被射击者没有起床战争信息，或没有队伍，终止运行
                     /** @type {minecraft.Player} */
                     const hit = event.getEntityHit().entity;
-                    const hitData = this.map.getBedwarsPlayer(hit);
+                    const hitData = this.map.getPlayerData(hit);
                     if (!hitData) return;
                     const hitTeam = hitData.team;
                     if (!hitTeam) return;
@@ -4759,6 +4754,9 @@ class BedwarsItemTrader extends BedwarsTrader {
     /** 当前商店正在显示的商店物品 @type {BedwarsItemShopitem[]} */
     currentItems = [];
 
+    /** 空槽位 ID */
+    emptySlots = [9, 17, 18, 26];
+
     /** 当前商店使用的商店物品类，在设置物品时，将调用此类中的物品 @abstract */
     currentClass = BedwarsClassicItemShopitem;
 
@@ -4770,10 +4768,14 @@ class BedwarsItemTrader extends BedwarsTrader {
     /** 设置物品类商人物品
      * @override
      * @param {"all"|"category"|"shopitem"} category 要设置槽位的类型，all（默认）：按照目前使用的目录替换全部物品；category：替换标签页物品；shopitem：替换商店物品
-     * @param {number} priority 当 category 未设置为 all 时，具体替换的物品在所有物品列表的优先级（即此物品的位置），设置为 -1 时则全部替换，默认为 -1
+     * @param {number} index 当 category 未设置为 all 时，具体替换的物品在所有物品列表的索引（即此物品的位置），设置为 -1 时则全部替换，默认为 -1
      */
-    setShopitem(category = "all", priority = -1) {
+    setShopitem(category = "all", index = -1) {
 
+        // 移除空槽位
+        this.emptySlots.forEach(emptySlot => lib.ItemUtil.replaceInventoryItem(this.trader, `minecraft:air`, emptySlot));
+
+        // 重置其他槽位
         const currentCategory = this.playerData.tradeInfo.category;
         this.currentItems = this.currentClass.getInstances(currentCategory, this.system, this.playerData);
         /** 替换标签页物品 @param {number} slot 为 -1 时则全部替换，否则只替换对应槽位的物品 */
@@ -4810,6 +4812,7 @@ class BedwarsItemTrader extends BedwarsTrader {
                 lib.ItemUtil.replaceInventoryItem(this.trader, `minecraft:air`, this.getRealSlot(index));
             };
         };
+        // 重置其他槽位
         if (category == "all") {
             lib.InventoryUtil.getInventory(this.trader).container.clearAll();
             resetCategoryItems(-1);
@@ -4817,13 +4820,13 @@ class BedwarsItemTrader extends BedwarsTrader {
             return;
         };
         if (category == "category") {
-            resetCategoryItems(priority);
+            resetCategoryItems(index);
             removeShopitemItems();
             resetShopitemItems(-1);
             return;
         };
         if (category == "shopitem") {
-            resetShopitemItems(priority);
+            resetShopitemItems(index);
             return;
         };
         return;
@@ -4832,14 +4835,14 @@ class BedwarsItemTrader extends BedwarsTrader {
 
     /** 从物品信息的优先级中得到实际应当将物品放到何种槽位
      * @description 例如，羊毛在方块标签中为 0 号物品，则应该放到物品栏第 10 个槽位中去
-     * @param {number} priority 
+     * @param {number} index
      */
-    getRealSlot(priority) {
+    getRealSlot(index) {
         // x  x  x  x  x  x  x  x  x 
         // x  0  1  2  3  4  5  6  x 
         // x  7  8  9  10 11 12 13 x 
-        if (priority >= 0 && priority <= 6) return priority + 10;
-        else return priority + 12;
+        if (index >= 0 && index <= 6) return index + 10;
+        else return index + 12;
     };
 
     /** @override */
@@ -5431,14 +5434,6 @@ class BedwarsMap {
 
     };
 
-    /** 从玩家信息获取起床战争玩家
-     * @param {minecraft.Player} player 
-     * @remarks 可以传入undefined，不会出现问题，最终会返回undefined
-     */
-    getBedwarsPlayer(player) {
-        return this.teams.flatMap(team => team.players).concat(this.spectatorPlayers).find(bedwarsPlayer => bedwarsPlayer.player.id == player?.id);
-    };
-
     /** 获取游戏开始介绍 */
     getStartIntro() {
         /**
@@ -5456,25 +5451,25 @@ class BedwarsMap {
 
     /** 播报床被破坏
      * @param {BedwarsTeam} team 被破坏床的队伍
-     * @param {BedwarsPlayer} breakerInfo 破坏者的起床战争信息
+     * @param {BedwarsPlayer} breakerData 破坏者的起床战争信息
      */
-    informBedDestroyed(team, breakerInfo) {
+    informBedDestroyed(team, breakerData) {
 
         // 对于被破坏床的队伍
-        team.players.forEach(playerInfo => {
-            const player = playerInfo.player;
+        team.players.forEach(playerData => {
+            const player = playerData.player;
             if (!player.isValid) return;
             lib.PlayerUtil.setTitle(player, { translate: "title.bedDestroyed" }, { translate: "subtitle.bedDestroyed" })
             player.playSound("mob.wither.death");
-            player.sendMessage(["\n", { translate: `message.bedDestroyed.${breakerInfo.killStyle}`, with: { rawtext: [{ translate: `message.selfBed` }, { text: breakerInfo.player.nameTag }] } }, "\n "])
+            player.sendMessage(["\n", { translate: `message.bedDestroyed.${breakerData.killStyle}`, with: { rawtext: [{ translate: `message.selfBed` }, { text: breakerData.player.nameTag }] } }, "\n "])
         });
 
         // 对于其他队伍和旁观玩家
-        this.teams.filter(otherTeam => otherTeam.id != team.id).flatMap(otherTeam => otherTeam.players).concat(this.spectatorPlayers).forEach(playerInfo => {
-            const player = playerInfo.player;
+        this.getAllPlayerData({ excludeTeams: [team.id] }).forEach(playerData => {
+            const player = playerData.player;
             if (!player.isValid) return; // 在 2025.12.04的一次测试中遇到退出游戏的玩家导致这里报错的问题
             player.playSound("mob.enderdragon.growl", { location: lib.Vector3Util.add(player.location, 0, 12, 0) }); // 末影龙的麦很炸，所以提高 12 格
-            player.sendMessage(["\n", { translate: `message.bedDestroyed.${breakerInfo.killStyle}`, with: { rawtext: [{ translate: `message.otherBed`, with: { rawtext: [{ translate: `team.${team.id}` }] } }, { text: breakerInfo.player.nameTag }] } }, "\n "]);
+            player.sendMessage(["\n", { translate: `message.bedDestroyed.${breakerData.killStyle}`, with: { rawtext: [{ translate: `message.otherBed`, with: { rawtext: [{ translate: `team.${team.id}` }] } }, { text: breakerData.player.nameTag }] } }, "\n "]);
         });
 
     };
@@ -5508,6 +5503,47 @@ class BedwarsMap {
             || safeArea.trader.some(safeLocation => lib.Vector3Util.distance(location, safeLocation) <= 3)
             || safeArea.spawnpoint.concat(safeArea.teamResource).some(safeLocation => lib.Vector3Util.distance(location, safeLocation) <= 5)
         );
+    };
+
+    // ===== 玩家操作 =====
+
+    /** 获取玩家信息
+     * @param {PlayerDataOptions} [options] 
+     */
+    getAllPlayerData(options) {
+
+        /**
+         * @typedef PlayerDataOptions
+         * @property {data.BedwarsTeamType[]} [includeTeams] 获取的玩家信息应该处于何队伍中（不包括旁观者） | 默认值：全部玩家
+         * @property {data.BedwarsTeamType[]} [excludeTeams] 获取的玩家信息不应处于何队伍中（不包括旁观者） | 默认值：空
+         * @property {boolean} [includeEliminated] 获取的玩家信息是否包括已淘汰的玩家（不包括旁观者） | 默认值：true
+         * @property {boolean} [includeSpectator] 获取的玩家信息是否包括旁观者 | 默认值：true
+         * @property {boolean} [includeDeadPlayer] 获取的玩家信息是否包括已死亡的玩家 | 默认值：true
+         */
+
+        let playerData = this.teams.flatMap(team => team.players);
+
+        // 筛选特定信息
+        if (options?.includeEliminated === false) playerData = playerData.filter(playerData => !playerData.isEliminated);
+        if (options?.includeDeadPlayer === false) playerData = playerData.filter(playerData => !playerData.isDead);
+
+        // 筛选特定队伍
+        if (options?.includeTeams) playerData = playerData.filter(playerData => options.includeTeams.includes(playerData.team?.id));
+        if (options?.excludeTeams) playerData = playerData.filter(playerData => !options.excludeTeams.includes(playerData.team?.id));
+
+        // 筛选旁观玩家
+        if (options?.includeSpectator === false) playerData.push(...this.spectatorPlayers);
+
+        return playerData;
+
+    };
+
+    /** 从玩家信息获取起床战争玩家
+     * @param {minecraft.Player} player 
+     * @remarks 可以传入undefined，不会出现问题，最终会返回undefined
+     */
+    getPlayerData(player) {
+        return this.getAllPlayerData().find(bedwarsPlayer => bedwarsPlayer.player.id == player?.id);
     };
 
     // ===== 资源点操作 =====
@@ -5604,25 +5640,32 @@ class BedwarsMap {
     };
 
     /** 游戏结束函数
-     * @param {BedwarsTeam | undefined} team 代表一个获胜的队伍，亦可以输入 undefined，代表各队伍打成了平手
+     * @param {BedwarsTeam | undefined} winningTeam 代表一个获胜的队伍，亦可以输入 undefined，代表各队伍打成了平手
      */
-    gameOver(team) {
+    gameOver(winningTeam) {
         // 设置为离开游戏状态
         this.system.mode.entryGameOverState();
         // 如果没有队伍胜利，则对全体通报游戏结束的消息
-        if (!team) lib.PlayerUtil.getAll().forEach(player => {
-            if (!player.isValid) return; // 在 2025.12.04的一次测试中遇到退出游戏的玩家导致这里报错的问题
-            player.onScreenDisplay.setTitle({ translate: "title.gameOver" });
-            player.sendMessage({ translate: "message.gameOver.endInATie" });
-        })
+        if (!winningTeam) {
+            lib.PlayerUtil.getAll().forEach(player => {
+                if (!player.isValid) return; // 在 2025.12.04的一次测试中遇到退出游戏的玩家导致这里报错的问题
+                player.onScreenDisplay.setTitle({ translate: "title.gameOver" });
+                player.sendMessage({ translate: "message.gameOver.endInATie" });
+            });
+            return;
+        }
         // 否则，则为某队伍获胜
-        else this.teams.flatMap(team => team.players).concat(this.spectatorPlayers).forEach(playerData => {
-            // 播放【胜利！】或【游戏结束！】标题
-            if (playerData.team?.id == team.id) playerData.player.onScreenDisplay.setTitle({ translate: "title.victory" });
-            else playerData.player.onScreenDisplay.setTitle({ translate: "title.gameOver" });
-            // 播放获胜玩家及击杀排行榜
-            const killRank = this.teams
-                .flatMap(team => team.players)
+        // 1. 播放【胜利！】或【游戏结束！】标题
+        this.getAllPlayerData({ includeTeams: [winningTeam.id] }).forEach(playerData => {
+            playerData.player.onScreenDisplay.setTitle({ translate: "title.victory" });
+        });
+        this.getAllPlayerData({ excludeTeams: [winningTeam.id] }).forEach(playerData => {
+            playerData.player.onScreenDisplay.setTitle({ translate: "title.gameOver" });
+        });
+        // 2. 播放获胜玩家及击杀排行榜
+        this.getAllPlayerData().forEach(playerData => {
+
+            const killRank = this.getAllPlayerData({ includeSpectator: false })
                 .map(playerData => ({
                     name: playerData.player.name,
                     totalKillCount: playerData.killCount + playerData.finalKillCount
@@ -5633,7 +5676,7 @@ class BedwarsMap {
                 { translate: "message.greenLine" },
                 "§l§f      起床战争§r      ",
                 "",
-                `${team.getTeamNameWithColor()}队§7 - ${team.players.flatMap(playerData => playerData.player.name).join(", ")}`,
+                `${winningTeam.getTeamNameWithColor()}队§7 - ${winningTeam.players.flatMap(playerData => playerData.player.name).join(", ")}`,
                 "",
                 `§e§l击杀数第一名§r§7 - ${killRank[0].name} - ${killRank[0].totalKillCount}`
             ];
@@ -6204,7 +6247,7 @@ class BedwarsPlayer {
         if (killer && killer.typeId == "minecraft:player") {
 
             // 获取击杀者的起床战争信息
-            const killerData = this.system.mode.map.getBedwarsPlayer(killer);
+            const killerData = this.system.mode.map.getPlayerData(killer);
 
             if (!killerData || !killerData.team) defaultDeath(); // 如果击杀者起床信息不存在，或击杀者起床信息的队伍不存在，则触发普通死亡样式（虽然实际运行过程中应该不太可能，但万一呢？）
             else if (this.deathType == "projectile") killedByOthers("beShot", killerData); // 被射杀
@@ -6217,7 +6260,7 @@ class BedwarsPlayer {
             // 获取该实体是否拥有主人信息
             /** @type {minecraft.Player|undefined} */
             const owner = killer.owner;
-            const ownerData = this.system.mode.map.getBedwarsPlayer(owner);
+            const ownerData = this.system.mode.map.getPlayerData(owner);
 
             if (!owner) defaultDeath(); // 如果不存在主人（比如万一是个僵尸呢），触发普通死亡样式
             else killedByOthers("beKilledGolem", ownerData); // 否则，是被其主人的傀儡击杀，给予其主人奖励
@@ -6227,7 +6270,7 @@ class BedwarsPlayer {
         else if (this.lastAttacker) {
 
             /** 上一个攻击者的起床战争信息 */
-            const attackerData = this.system.mode.map.getBedwarsPlayer(this.lastAttacker);
+            const attackerData = this.system.mode.map.getPlayerData(this.lastAttacker);
 
             if (this.deathType == "entityExplosion") killedByOthers("beKilled", attackerData); // 被其他玩家活活炸死（例如用火焰弹不断爆破）
             else if (this.deathType == "fall") killedByOthers("beKilledFall", attackerData); // 被其他玩家扔下去摔死
@@ -6693,7 +6736,7 @@ class BedwarsCaptureMode extends BedwarsMode {
                     if (!event.beforeItemStack) return;
                     // 检查玩家是否有起床战争信息（并且必须有合适的队伍），如果没有则直接终止程序
                     const player = event.player;
-                    const playerData = this.map.getBedwarsPlayer(player);
+                    const playerData = this.map.getPlayerData(player);
                     if (!playerData) return;
                     if (!playerData.team) return;
                     const team = playerData.team;
@@ -6752,7 +6795,7 @@ class BedwarsCaptureMode extends BedwarsMode {
                     const team = bedData.team;
                     // 获取破坏者及其起床战争信息
                     const breaker = event.player;
-                    const breakerData = this.map.getBedwarsPlayer(breaker);
+                    const breakerData = this.map.getPlayerData(breaker);
                     // 在玩家破坏床后，按照以下几种情况讨论：
                     // 1. 如果是杂玩家、旁观玩家，则还原床，警告无权限破坏床
                     if (!breakerData || !breakerData.team) {
@@ -7112,16 +7155,12 @@ class BedwarsCaptureMap extends BedwarsMap {
             });
 
         // 对于其他队伍和旁观玩家
-        this.teams
-            .filter(otherTeam => otherTeam.id != team.id)
-            .flatMap(otherTeam => otherTeam.players)
-            .concat(this.spectatorPlayers)
-            .forEach(playerData => {
-                const player = playerData.player;
-                lib.PlayerUtil.setTitle(player, { translate: "title.capture.allBedDestroyed", with: { rawtext: [{ translate: `team.${team.id}` }] } }, { translate: "subtitle.capture.allBedDestroyed.other" });
-                player.playSound("mob.enderdragon.growl", { location: lib.Vector3Util.add(player.location, 0, 12, 0) }); // 末影龙的麦很炸，所以提高 12 格
-                player.sendMessage({ translate: "message.capture.allBedDestroyed.other" });
-            });
+        this.getAllPlayerData({ excludeTeams: [team.id] }).forEach(playerData => {
+            const player = playerData.player;
+            lib.PlayerUtil.setTitle(player, { translate: "title.capture.allBedDestroyed", with: { rawtext: [{ translate: `team.${team.id}` }] } }, { translate: "subtitle.capture.allBedDestroyed.other" });
+            player.playSound("mob.enderdragon.growl", { location: lib.Vector3Util.add(player.location, 0, 12, 0) }); // 末影龙的麦很炸，所以提高 12 格
+            player.sendMessage({ translate: "message.capture.allBedDestroyed.other" });
+        });
 
     };
 
@@ -7549,7 +7588,7 @@ class BedwarsRushMode extends BedwarsMode {
                         // 如果玩家没有bridgeMode标签，终止运行
                         if (!player.hasTag("bridgeMode")) return;
                         // 如果玩家没有起床战争信息，终止运行
-                        const playerData = this.map.getBedwarsPlayer(player);
+                        const playerData = this.map.getPlayerData(player);
                         if (!playerData) return;
                         // 如果玩家放置的不是上述方块之一，终止运行
                         if (!beforeItemStack) return;

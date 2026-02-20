@@ -19,7 +19,7 @@
 ## 注意事项
 
 1. 禁止转载！您下载本包后，就代表着**本包仅允许您内部的使用**，严禁分发、二次或多次修改后分发。
-2. 如果有问题欢迎直接在本 GitHub 仓库的 issues 里面提交您遇到的问题，也可以加入 QQ 群： 673941729 。非诚勿扰！
+2. 如果有问题欢迎直接在本 GitHub 仓库的 issues 里面提交您遇到的问题，也可以加入 QQ 群：673941729 。非诚勿扰！
 
 ---
 
@@ -27,9 +27,26 @@
 
 > 版本： Beta 1.1_01
 
+- #80 修复了无法破坏蕨的问题
+- #84 修复了每当玩家变化且人数不足时就会警告人数不足的问题
+- #85 修复了使用铁傀儡右键箱子会放置铁傀儡的问题
+- #86 修复了床自毁会提示所有玩家的问题，现在不再对旁观玩家提示床自毁
 - #87 修复了在手机端可以先将商店物品放到空栏位再直接拿出的问题
 
 ### 技术性
 
-- 更名 `BedwarsMap.getBedwarsPlayer()` -> `BedwarsMap.getPlayerData()`
-- 新增 `BedwarsMap.getAllPlayerData: BedwarsPlayer()`，用于获取所有玩家信息，或得到特定的玩家信息，可用条件包括：处于特定队伍内、不处于特定队伍内、包含死亡玩家、包含淘汰玩家、包含旁观玩家
+#### 库文件
+
+- **新增** `lib.FormButtonComponent.visible: boolean | undefined`属性，以便控制显示的按钮是否需要显示出来，默认值为`true`
+
+#### 起床战争主文件
+
+- **更名** `BedwarsMap.getBedwarsPlayer()` → `BedwarsMap.getPlayerData()`
+- **新增** `BedwarsMap.getAllPlayerData(options: PlayerDataOptions | undefined): BedwarsPlayer[]`，用于获取所有起床战争玩家的信息
+  - `options: PlayerDataOptions | undefined`：用于筛选特定的玩家信息，可用条件包括：
+    - 处于特定队伍内（`includeTeams: data.BedwarsTeamType[] | undefined`），指定后将会额外筛选队伍，否则不筛选
+    - 不处于特定队伍内（`excludeTeams: data.BedwarsTeamType[] | undefined`），指定后将会额外筛选队伍，否则不筛选
+    - 包含死亡玩家（`includeDeadPlayer: boolean | undefined`），默认值为`true`
+    - 包含淘汰玩家（`includeEliminated: boolean | undefined`），默认值为`true`
+    - 包含旁观玩家（`includeSpectator: boolean | undefined`），默认值为`true`，需注意另外四项不筛选旁观玩家，如果不选定旁观玩家需单独指定此项
+- **新增** `BedwarsSystem.isReleaseVersion: boolean`，用于指定此版本是否为稳定版本，这会影响某些设置的显示

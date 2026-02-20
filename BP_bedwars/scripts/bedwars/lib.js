@@ -963,6 +963,7 @@ export class InventoryUtil {
  * @property {"button"} type 表示该组件采用按钮
  * @property {string | minecraft.RawMessage} text 按钮将显示的内容
  * @property {string} [icon] 按钮采用的图标（仅限 action 类 UI 可用），例如"textures/items/apple"
+ * @property {boolean} [visible] 按钮是否可见 | 默认值：true
  * @property {OnSelectedOptions} [onSelected] 选中该选项后的设置
  */
 
@@ -1042,7 +1043,7 @@ export class UIUtil {
                 case "header": form.header(component.text); break;
                 case "label": form.label(component.text); break;
                 case "divider": form.divider(); break;
-                case "button": form.button(component.text, component.icon); break;
+                case "button": if (component.visible !== false) form.button(component.text, component.icon); break;
                 default: break;
             }
         });

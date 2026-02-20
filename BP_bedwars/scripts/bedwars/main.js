@@ -28,7 +28,10 @@ class BedwarsSystem {
     systemEvents = {};
 
     /** 系统版本 */
-    version = "Alpha 1.1_04";
+    version = "Beta 1.1_01";
+
+    /** 是否为稳定版本 */
+    isReleaseVersion = false;
 
     /** 游戏 ID */
     gameId = lib.JSUtil.randomInt(1000, 9999);
@@ -1339,7 +1342,7 @@ class BedwarsSettings {
                                     { type: "label", text: "查看本附加包的更新内容。" },
                                     { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
                                     { type: "divider" },
-                                    {
+                                    { // 1.0 版本
                                         type: "button", text: "1.0版本",
                                         onSelected: {
                                             childForm: {
@@ -1357,7 +1360,7 @@ class BedwarsSettings {
                                             openChildForm: true,
                                         }
                                     },
-                                    {
+                                    { // 1.1 版本
                                         type: "button", text: "1.1版本",
                                         onSelected: {
                                             childForm: {
@@ -1375,8 +1378,8 @@ class BedwarsSettings {
                                             openChildForm: true,
                                         }
                                     },
-                                    {
-                                        type: "button", text: `§c${system.version}（最新测试版）`,
+                                    { // 最新测试版
+                                        type: "button", text: `§c${system.version}（最新测试版）`, visible: !system.isReleaseVersion,
                                         onSelected: {
                                             childForm: {
                                                 type: "action",
@@ -1403,6 +1406,7 @@ class BedwarsSettings {
                         type: "button",
                         text: "开发者设置...",
                         icon: "textures/items/map_settings",
+                        visible: !system.isReleaseVersion,
                         onSelected: {
                             callback: (selection, thisForm) => developerSettings(player, thisForm),
                         }
@@ -1637,7 +1641,8 @@ class BedwarsMode {
                         "minecraft:short_grass",
                         "minecraft:ladder",
                         "minecraft:sponge",
-                        "minecraft:wet_sponge"
+                        "minecraft:wet_sponge",
+                        "minecraft:fern"
                     ];
                     if (breakableVanillaBlocks.includes(block.typeId)) return;
                     // 判断破坏方块的玩家，如果允许创造模式的管理员破坏方块，则在破坏玩家是创造模式的管理员时终止判断
@@ -2329,76 +2334,94 @@ class BedwarsMode {
     afterEntryWaitingState() { };
 
     /** 玩家等待状态功能，并且调用此函数时将进行一次检测
-     * @param {boolean} showMessage 是否在玩家不足时提醒玩家人数不足
      * @remarks 该函数仅限在游戏阶段为 2 时调用有效，其余阶段调用无效
      */
     functionWaiting() {
         if (this.system.gameStage != 2) return;
-        const timelineController = () => {
-            // 如果人数充足，令倒计时等于设置值，并开始倒计时时间线
-            if (lib.PlayerUtil.getAmount() >= this.system.settings.beforeGaming.waiting.minPlayerCount) {
-                this.system.subscribeTimeline({
-                    typeId: "gameStartCountdown",
-                    interval: {
-                        callback: () => {
-                            // 倒计时并同步右侧快捷栏
-                            this.gameStartCountdown--;
-                            lib.PlayerUtil.getAll().forEach(player => this.beforeGamingInfoboard(player));
 
-                            // 提醒玩家还有多长时间开始游戏
-                            /** 倒计时提醒器 @param {number} countdown @param {string} messageColor @param {boolean} showTitle @param {string} titleColor */
-                            const countdownMessage = (countdown, messageColor = "§c", showTitle = true, titleColor = "§c") => {
-                                if (this.gameStartCountdown != countdown) return;
-                                lib.PlayerUtil.getAll().forEach(player => {
-                                    player.sendMessage({ translate: "message.gameStart", with: [`${messageColor}${this.gameStartCountdown}`] });
-                                    if (showTitle) player.onScreenDisplay.setTitle(`${titleColor}${this.gameStartCountdown}`, { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 })
-                                    player.playSound("note.hat", { location: player.location });
-                                });
-                            };
-                            countdownMessage(20, "", false);
-                            countdownMessage(10, "§6", true, "§a");
-                            countdownMessage(5);
-                            countdownMessage(4);
-                            countdownMessage(3);
-                            countdownMessage(2);
-                            countdownMessage(1);
-
-                            // 倒计时结束后，开始游戏
-                            if (this.gameStartCountdown == 0) this.entryGamingState();
-                        },
-                        tickInterval: 20,
-                    },
-                });
-            }
-            // 如果人数不足，停止倒计时并提醒玩家人数不足
-            else {
-                this.gameStartCountdown = this.system.settings.beforeGaming.waiting.gameStartWaitingTime + 1;
-                this.system.unsubscribeTimeline("gameStartCountdown");
-                lib.PlayerUtil.getAll().forEach(player => {
-                    player.sendMessage({ translate: "message.needsMorePlayer" });
-                    player.onScreenDisplay.setTitle({ translate: "title.needsMorePlayer" }, { fadeInDuration: 0, stayDuration: 40, fadeOutDuration: 0 });
-                    player.playSound("note.hat", { location: player.location });
-                });
-            };
+        /** 玩家是否充足 */
+        const haveEnoughPlayer = () => {
+            return lib.PlayerUtil.getAmount() >= this.system.settings.beforeGaming.waiting.minPlayerCount;
         };
-        // 有玩家进入或退出游戏后，进行一次检查
-        this.system.subscribeEvent({
-            typeId: "playerSpawnOrJoinWhenWaiting",
-            event: [
-                {
+
+        /** 游戏开始倒计时前的事件和时间线 */
+        const beforeCountdown = () => {
+            this.system.subscribeEvent({
+                typeId: "playerJoinWhenWaiting",
+                event: {
                     type: minecraft.world.afterEvents.playerSpawn,
                     /** @type {function(minecraft.PlayerSpawnAfterEvent): void} */
-                    callback: () => timelineController(),
+                    callback: () => {
+                        if (haveEnoughPlayer()) afterCountdown();
+                    },
                 },
-                {
+            });
+        };
+
+        /** 游戏开始倒计时后的事件和时间线 */
+        const afterCountdown = () => {
+            this.gameStartCountdown = this.system.settings.beforeGaming.waiting.gameStartWaitingTime + 1;
+            this.system.subscribeTimeline({
+                typeId: "gameStartCountdown",
+                interval: {
+                    callback: () => {
+                        // 倒计时并同步右侧快捷栏
+                        this.gameStartCountdown--;
+                        lib.PlayerUtil.getAll().forEach(player => this.beforeGamingInfoboard(player));
+
+                        // 提醒玩家还有多长时间开始游戏
+                        /** 倒计时提醒器
+                         * @param {number} countdown
+                         * @param {string} messageColor
+                         * @param {boolean} showTitle
+                         * @param {string} titleColor
+                         */
+                        const countdownMessage = (countdown, messageColor = "§c", showTitle = true, titleColor = "§c") => {
+                            if (this.gameStartCountdown != countdown) return;
+                            lib.PlayerUtil.getAll().forEach(player => {
+                                player.sendMessage({ translate: "message.gameStart", with: [`${messageColor}${this.gameStartCountdown}`] });
+                                if (showTitle) player.onScreenDisplay.setTitle(`${titleColor}${this.gameStartCountdown}`, { fadeInDuration: 0, stayDuration: 20, fadeOutDuration: 0 })
+                                player.playSound("note.hat", { location: player.location });
+                            });
+                        };
+                        countdownMessage(20, "", false);
+                        countdownMessage(10, "§6", true, "§a");
+                        countdownMessage(5);
+                        countdownMessage(4);
+                        countdownMessage(3);
+                        countdownMessage(2);
+                        countdownMessage(1);
+
+                        // 倒计时结束后，开始游戏
+                        if (this.gameStartCountdown == 0) this.entryGamingState();
+                    },
+                    tickInterval: 20,
+                },
+            });
+            this.system.subscribeEvent({
+                typeId: "playerLeaveWhenWaiting",
+                event: {
                     type: minecraft.world.afterEvents.playerLeave,
                     /** @type {function(minecraft.PlayerLeaveAfterEvent): void} */
-                    callback: () => timelineController(),
+                    callback: event => {
+                        if (!haveEnoughPlayer()) {
+                            lib.PlayerUtil.getAll().forEach(player => {
+                                player.sendMessage({ translate: "message.needsMorePlayer" });
+                                player.onScreenDisplay.setTitle({ translate: "title.needsMorePlayer" }, { fadeInDuration: 0, stayDuration: 40, fadeOutDuration: 0 });
+                                player.playSound("note.hat", { location: player.location });
+                            });
+                            this.gameStartCountdown = this.system.settings.beforeGaming.waiting.gameStartWaitingTime + 1;
+                            this.system.unsubscribeTimeline("gameStartCountdown");
+                            this.system.unsubscribeEvent("playerLeaveWhenWaiting");
+                            beforeCountdown();
+                        };
+                    },
                 },
-            ],
-        });
-        this.gameStartCountdown = this.system.settings.beforeGaming.waiting.gameStartWaitingTime + 1;
-        timelineController();
+            });
+        };
+
+        if (haveEnoughPlayer()) afterCountdown(); else beforeCountdown();
+
     };
 
     // ====================
@@ -3526,7 +3549,9 @@ class BedwarsMode {
                                 this.nextEvent.name = "绝杀模式";
                                 // 破坏玩家的所有床，并移除对应的检测事件
                                 this.map.teams.filter(team => team.bedIsExist).forEach(team => team.destroyBed());
-                                lib.PlayerUtil.getAll().forEach(player => {
+                                this.map.getAllPlayerData({ includeSpectator: false }).forEach(playerData => {
+                                    const player = playerData.player;
+                                    if (!player.isValid) return;
                                     player.playSound("mob.wither.death", { location: player.location });
                                     lib.PlayerUtil.setTitle(player, { translate: "title.bedDestroyed" }, { translate: "subtitle.bedDestroyed.allTeams" });
                                     player.sendMessage({ translate: "message.bedDestroyed.allTeams" });
@@ -3788,8 +3813,11 @@ class BedwarsMode {
                     // 如果玩家没有队伍，终止运行
                     const team = playerData.team;
                     if (!team) return;
-                    // 检查完成后：
+                    // 如果玩家对箱子或末影箱放置，终止运行
+                    const block = event.block;
+                    if (["minecraft:chest", "minecraft:ender_chest"].includes(block.typeId)) return;
 
+                    // 检查完成后：
                     minecraft.system.run(() => {
                         // 1. 生成铁傀儡
                         const spawnLocation = lib.DimensionUtil.getPlaceLocation(event.block, event.blockFace);
@@ -5532,7 +5560,7 @@ class BedwarsMap {
         if (options?.excludeTeams) playerData = playerData.filter(playerData => !options.excludeTeams.includes(playerData.team?.id));
 
         // 筛选旁观玩家
-        if (options?.includeSpectator === false) playerData.push(...this.spectatorPlayers);
+        if (options?.includeSpectator !== false) playerData.push(...this.spectatorPlayers);
 
         return playerData;
 

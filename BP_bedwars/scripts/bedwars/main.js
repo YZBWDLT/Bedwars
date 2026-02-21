@@ -230,11 +230,23 @@ class BedwarsSystem {
 
     /** 通知玩家并播放音效
      * @param {minecraft.Player} player
-     * @param {string | minecraft.RawMessage | (string | minecraft.RawMessage)[]} message 通常使用绿色普通（§a）和橙色重点（§c）文本
+     * @param {string | minecraft.RawMessage | (string | minecraft.RawMessage)[]} message 通常使用绿色普通（§a）和橙色重点（§6）文本
      */
     static informPlayer(player, message) {
         player.playSound("note.pling", { pitch: 2, location: player.location });
         player.sendMessage(message);
+    };
+
+    /** 通知所有玩家并播放音效
+     * @param {string | minecraft.RawMessage | (string | minecraft.RawMessage)[]} message 通常使用绿色普通（§a）和橙色重点（§6）文本
+     */
+    static informAllPlayers(message) {
+        lib.PlayerUtil.getAll().forEach(player => this.informPlayer(player, message));
+    };
+
+    /** 获取总玩家人数 */
+    static getPlayerAmount() {
+        return lib.PlayerUtil.getAll({ excludeTags: ["spectatorMode:nextGame", "spectatorMode:always"] }).length
     };
 
 };
@@ -282,6 +294,15 @@ class BedwarsSettings {
             playerSelectEnabled: false,
 
         },
+
+        /** 旁观模式设置 */
+        spectatorMode: {
+
+            /** 是否启用旁观模式 */
+            enabled: false,
+
+        }
+
     };
 
     /** 游戏内设置 */
@@ -704,6 +725,47 @@ class BedwarsSettings {
                                 system.unsubscribeTimeline("selectTeam");
                                 lib.EntityUtil.getNearby("bedwars:trader", { x: 4, y: 120, z: 0 }, 3).forEach(npc => npc.remove());
                             }
+                            // 备份设置
+                            this.backup(system);
+                        },
+                    },
+                    onCanceled: {
+                        openParentForm: true,
+                    }
+                },
+                player
+            );
+        };
+
+        /** 游戏前设置 - 旁观模式设置
+         * @param {minecraft.Player} player
+         * @param {lib.ActionUIData} parentForm
+         */
+        const spectatorModeSettings = (player, parentForm) => {
+            lib.UIUtil.createModal(
+                {
+                    type: "modal",
+                    parentForm: parentForm,
+                    submitButton: "确认",
+                    components: [
+                        { type: "header", text: "旁观模式设置" },
+                        { type: "label", text: "控制开始游戏前是否允许玩家选择主动观战。" },
+                        { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
+                        { type: "divider", },
+                        { type: "toggle", text: "启用主动旁观", tipText: `开始游戏前是否允许玩家选择主动观战。当前值：§a${settings.beforeGaming.spectatorMode.enabled}`, default: settings.beforeGaming.spectatorMode.enabled },
+                        { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
+                    ],
+                    onSubmitted: {
+                        openParentForm: true,
+                        callback: (values) => {
+                            // 若启用默认设置，则设置为默认设置
+                            if (values[values.length - 1]) settings.beforeGaming.spectatorMode = new BedwarsSettings().beforeGaming.spectatorMode;
+                            // 否则，应用这些设置
+                            else {
+                                settings.beforeGaming.spectatorMode.enabled = values[4];
+                            };
+                            // 如果玩家关闭了旁观模式设置，则移除玩家的物品
+                            if (!settings.beforeGaming.spectatorMode.enabled) lib.ItemUtil.removeItem(player, "bedwars:spectator_mode");
                             // 备份设置
                             this.backup(system);
                         },
@@ -1239,6 +1301,8 @@ class BedwarsSettings {
                                     { type: "label", text: "§7控制游戏允许的最小人数、最大人数和等待所需的时间。", },
                                     { type: "button", text: "组队设置...", icon: "textures/ui/multiplayer_glyph_color", onSelected: { callback: (selection, thisForm) => assignTeamSettings(player, thisForm), } },
                                     { type: "label", text: "§7控制开始游戏时系统如何组队，以及是否允许玩家自己选择队伍。", },
+                                    { type: "button", text: "旁观模式设置...", icon: "textures/items/ender_eye", onSelected: { callback: (selection, thisForm) => spectatorModeSettings(player, thisForm), } },
+                                    { type: "label", text: "§7控制开始游戏前是否允许玩家选择主动观战。", },
                                 ],
                                 onCanceled: { openParentForm: true, }
                             },
@@ -1497,6 +1561,70 @@ class BedwarsSettings {
 
     };
 
+    /** 对玩家显示旁观模式设置 UI
+     * @param {minecraft.Player} player 
+     * @param {BedwarsSystem} system 
+     */
+    static showSpectatorModeSettingsUI(player, system) {
+
+        // 获取玩家当前的状态
+        const modeData = {
+            "spectatorMode:none": {
+                id: 0,
+                tagId: "spectatorMode:none",
+                name: "不旁观",
+            },
+            "spectatorMode:nextGame": {
+                id: 1,
+                tagId: "spectatorMode:nextGame",
+                name: "仅下局旁观",
+            },
+            "spectatorMode:always": {
+                id: 2,
+                tagId: "spectatorMode:always",
+                name: "之后的所有游戏都旁观",
+            }
+        };
+        /** 旁观模式 @type {"spectatorMode:none"|"spectatorMode:nextGame"|"spectatorMode:always"} */
+        const currentModeTagId = player.getTags().find(tag => tag.includes("spectatorMode:")) ?? "spectatorMode:none";
+        const currentModeData = modeData[currentModeTagId];
+
+        // 结果处理
+
+        /** @param { 0 | 1 | 2 } result 0：不旁观，1：仅下局旁观，2：之后的所有游戏都旁观 */
+        const resolve = (result) => {
+            // 移除所有标签
+            Object.keys(modeData).forEach(tagId => player.removeTag(tagId));
+            // 按照玩家的选择添加新标签
+            const selectedData = Object.values(modeData)[result];
+            player.addTag(selectedData.tagId);
+            BedwarsSystem.informAllPlayers(`§6${player.name}§a已选择旁观模式：§6${selectedData.name}`);
+            // 如果玩家开启了主动观战，则移除玩家的选队信息
+            if (result !== 0) system.mode.removeSelectedTeam(player, true);
+        };
+
+        // 对玩家显示 UI
+        lib.UIUtil.createModal(
+            {
+                type: "modal",
+                submitButton: "确定",
+                components: [
+                    { type: "header", text: "旁观模式设置" },
+                    { type: "label", text: `选择之后的游戏是否主动观战，选择的结果会对所有玩家公告。` },
+                    { type: "label", text: `在选择了主动观战后，你将不能自主选队，当前已有的选队信息也将移除。` },
+                    { type: "label", text: `当前使用的设置：§a${currentModeData.name}` },
+                    { type: "divider" },
+                    { type: "dropdown", text: "旁观模式", items: Object.values(modeData).map(data => data.name), default: currentModeData.id },
+                ],
+                onSubmitted: {
+                    callback: (values) => resolve(values[5]),
+                }
+            },
+            player
+        );
+
+    };
+
 };
 
 // ===== 基础类 =====
@@ -1607,6 +1735,114 @@ class BedwarsMode {
 
     // ====================
     //
+    // 各类可用方法
+    //
+    // ====================
+
+    /** 移除玩家已选择的队伍信息，并重新设置 NPC 的物品
+     * @param {minecraft.Player} player
+     * @param {boolean} resetNpcItems 是否重置选队 NPC 的物品
+     */
+    removeSelectedTeam(player, resetNpcItems = false) {
+        Object.keys(this.selectTeamBeforeGame).forEach(key => {
+            this.selectTeamBeforeGame[key] = this.selectTeamBeforeGame[key].filter(currentPlayer => currentPlayer.id != player.id);
+        });
+        if (resetNpcItems) minecraft.system.run(() => lib.EntityUtil.getNearby("bedwars:trader", { x: 4, y: 120, z: 0 }, 2).forEach(npc => lib.InventoryUtil.getInventory(npc).container.clearAll()));
+    };
+
+    /** 游戏前初始化玩家
+     * @param {minecraft.Player} player 
+     */
+    initPlayer(player) {
+
+        // 清除玩家所有物品
+        lib.ItemUtil.removeItem(player);
+
+        // 清除玩家的经验等级
+        player.resetLevel();
+
+        // 清除玩家的末影箱
+        lib.PlayerUtil.resetEnderChest(player);
+
+        // 清除玩家的药效
+        player.getEffects().forEach(effect => player.removeEffect(effect.typeId));
+
+        // 重置玩家的血量
+        player.getComponent("minecraft:health").setCurrentValue(20);
+
+        // 移除玩家的队伍
+        player.triggerEvent("remove_team");
+
+        // 移除玩家的名字颜色
+        player.nameTag = player.name;
+
+        // 调整玩家的位置和重生点
+        player.teleport({ x: 0, y: 121, z: 0 });
+        player.setSpawnPoint({ x: 0, y: 121, z: 0, dimension: minecraft.world.getDimension("overworld") });
+
+        // 在开启了调试模式的情况下，如果玩家是管理员，调整为创造模式
+        if (this.system.settings.developer.debugMode && player.playerPermissionLevel >= 2) {
+            player.setGameMode(minecraft.GameMode.Creative);
+        };
+
+    };
+
+    /** 对玩家显示游戏中信息板
+     * @param {minecraft.Player} player 
+     * @param {BedwarsPlayer} playerInfo
+     */
+    gamingInfoboard(player, playerInfo) {
+
+        // 如果玩家没有起床战争信息，直接跳过之
+        if (!playerInfo) return;
+
+        /** 玩家所在的队伍 */
+        const playerTeam = playerInfo.team;
+
+        /** 信息板文本 */
+        const infoboardTexts = [
+            "§l§e       起床战争§r       ",
+            `§8${this.map.teamCount}队${this.name}模式 ${this.system.gameId}`,
+            "",
+            `§f${this.nextEvent.name} - §a${lib.JSUtil.timeToString(lib.JSUtil.secondToMinute(this.nextEvent.countdown))}`,
+            "",
+        ];
+
+        // 添加队伍信息
+        this.map.teams.forEach(team => {
+            const playerInTeam = playerTeam?.id == team.id ? "§7（你）" : "";
+            const teamState = (() => {
+                if (team.bedIsExist) return "§a✔";
+                else if (team.alivePlayers.length > 0) return `§a${team.alivePlayers.length}`;
+                else return "§c✘";
+            })();
+            infoboardTexts.push(`${team.getTeamNameWithColor()} §f${team.getTeamName()}队： ${teamState} ${playerInTeam}`)
+        });
+        infoboardTexts.push("");
+
+        // 如果地图最大队伍数<=4，则显示击杀信息等
+        if (this.map.teamCount <= 4) infoboardTexts.push(
+            `§f击杀数： §a${playerInfo.killCount}`,
+            `§f最终击杀数： §a${playerInfo.finalKillCount}`,
+            `§f破坏床数： §a${playerInfo.destroyBedCount}`,
+            ""
+        );
+
+        // 如果玩家是旁观玩家，则显示旁观信息
+        if (!playerTeam) infoboardTexts.push(
+            "§f您当前为旁观者",
+            ""
+        );
+
+        // 添加作者信息
+        infoboardTexts.push(`§e${this.system.settings.miscellaneous.infoboardLastLine}`);
+
+        player.onScreenDisplay.setActionBar(infoboardTexts.join("§r\n"));
+
+    };
+
+    // ====================
+    //
     // 通用事件与时间线
     //
     // ====================
@@ -1669,7 +1905,7 @@ class BedwarsMode {
             let progressTexts = [
                 `§f清除原地图中... §7${Math.ceil(this.clearingLayer * 6 / 20 / this.getLayerClearSpeed())}秒§r`, // 清除地图状态使用
                 `§f生成地图中... §7${this.loadTimeCountdown}秒§r`, // 生成地图状态使用
-                `§f等待中...§7还需${this.system.settings.beforeGaming.waiting.minPlayerCount - lib.PlayerUtil.getAmount()}人§r`, // 等待状态（玩家不足时）使用
+                `§f等待中...§7还需${this.system.settings.beforeGaming.waiting.minPlayerCount - BedwarsSystem.getPlayerAmount()}人§r`, // 等待状态（玩家不足时）使用
                 `§f即将开始： §a${this.gameStartCountdown}秒§r`, // 等待状态（玩家充足）使用
             ];
 
@@ -1677,7 +1913,7 @@ class BedwarsMode {
             if (this.system.gameStage == 0) return progressTexts[0];
             else if (this.system.gameStage == 1) return progressTexts[1];
             else {
-                if (lib.PlayerUtil.getAmount() < this.system.settings.beforeGaming.waiting.minPlayerCount) return progressTexts[2];
+                if (BedwarsSystem.getPlayerAmount() < this.system.settings.beforeGaming.waiting.minPlayerCount) return progressTexts[2];
                 else return progressTexts[3]
             }
         })();
@@ -1687,7 +1923,7 @@ class BedwarsMode {
             `§8${this.system.gameId}`,
             "",
             `§f地图： §a${this.map.name}`,
-            `§f玩家： §a${lib.PlayerUtil.getAmount()}/${this.system.settings.beforeGaming.waiting.maxPlayerCount}`,
+            `§f玩家： §a${BedwarsSystem.getPlayerAmount()}/${this.system.settings.beforeGaming.waiting.maxPlayerCount}`,
             "",
             progressText,
             "",
@@ -1721,6 +1957,8 @@ class BedwarsMode {
                         if (player.playerPermissionLevel >= 2 && !lib.InventoryUtil.hasItem(player, "bedwars:map_settings")) lib.ItemUtil.giveItem(player, "bedwars:map_settings", { itemLock: "inventory" });
                         // 如果启用了自主选队和击杀样式（但未启用随机击杀样式），则在玩家没有对应物品时给予物品
                         if (!lib.InventoryUtil.hasItem(player, "bedwars:kill_style") && this.system.settings.gaming.killStyle.isEnabled && !this.system.settings.gaming.killStyle.randomKillStyle) lib.ItemUtil.giveItem(player, "bedwars:kill_style", { itemLock: "inventory" });
+                        // 如果启用了旁观模式，则在玩家没有对应物品时给予物品
+                        if (!lib.InventoryUtil.hasItem(player, "bedwars:spectator_mode") && this.system.settings.beforeGaming.spectatorMode.enabled) lib.ItemUtil.giveItem(player, "bedwars:spectator_mode", { itemLock: "inventory" });
                     });
                 },
                 tickInterval: 20,
@@ -1743,14 +1981,7 @@ class BedwarsMode {
             event: {
                 type: minecraft.world.beforeEvents.playerLeave,
                 /** @type {function(minecraft.PlayerLeaveBeforeEvent): void} */
-                callback: (event) => {
-                    // 移除玩家的选队信息
-                    Object.keys(this.selectTeamBeforeGame).forEach(key => {
-                        this.selectTeamBeforeGame[key] = this.selectTeamBeforeGame[key].filter(currentPlayer => currentPlayer.id != event.player.id);
-                    });
-                    // 重新设置 NPC 的物品
-                    minecraft.system.run(() => lib.EntityUtil.getNearby("bedwars:trader", { x: 4, y: 120, z: 0 }, 2).forEach(npc => lib.InventoryUtil.getInventory(npc).container.clearAll()));
-                },
+                callback: (event) => this.removeSelectedTeam(event.player, true),
             },
         });
         if (this.system.settings.beforeGaming.teamAssign.playerSelectEnabled) this.timelineSelectTeam();
@@ -1784,7 +2015,7 @@ class BedwarsMode {
                     /** 队伍数 */
                     const teamCount = this.map.teams.length;
                     /** 全部玩家数 */
-                    const playerCount = lib.PlayerUtil.getAmount();
+                    const playerCount = BedwarsSystem.getPlayerAmount();
                     /** 设置的最大允许玩家人数 */
                     const maxPlayerSettings = this.system.settings.beforeGaming.waiting.maxPlayerCount;
                     /** 游戏内的总玩家人数，如果玩家人数大于设置的最大允许玩家人数，则使用设置值，否则使用玩家值 */
@@ -1888,19 +2119,18 @@ class BedwarsMode {
                      */
                     const playerSelectTeamTest = (player, thisTeamData) => {
 
+                        // 如果玩家开启了主动旁观，阻止之
+                        if (player.getTags().some(tag => ["spectatorMode:nextGame", "spectatorMode:always"].includes(tag))) {
+                            BedwarsSystem.warnPlayer(player, "§c你不能在开启旁观模式的情况下选队！");
+                            return;
+                        };
+
                         /** 该玩家当前选择的队伍信息 */
                         const selectedTeamData = npcItems.find(data => data.players.some(currentPlayer => currentPlayer.id == player.id));
 
-                        /** 移除当前玩家的队伍 */
-                        const removeTeam = () => {
-                            if (selectedTeamData) Object.keys(this.selectTeamBeforeGame).forEach(key => {
-                                this.selectTeamBeforeGame[key] = this.selectTeamBeforeGame[key].filter(currentPlayer => currentPlayer.id != player.id);
-                            });
-                        };
-
                         // 如果要选择的队伍为随机分队，则移除队伍，重新设置物品并终止程序
                         if (!thisTeamData) {
-                            removeTeam();
+                            this.removeSelectedTeam(player);
                             BedwarsSystem.informPlayer(player, { translate: "message.selectTeam.successClearTeam" });
                             return;
                         };
@@ -1938,7 +2168,7 @@ class BedwarsMode {
                         };
 
                         // 为玩家选择队伍
-                        removeTeam();
+                        this.removeSelectedTeam(player);
                         this.selectTeamBeforeGame[thisTeamData.team.id].push(player);
                         BedwarsSystem.informPlayer(player, { translate: "message.selectTeam.success", with: [thisTeamData.team.getTeamName()] });
 
@@ -1949,43 +2179,6 @@ class BedwarsMode {
                 },
             },
         });
-    };
-
-    /** 游戏前初始化玩家
-     * @param {minecraft.Player} player 
-     */
-    initPlayer(player) {
-
-        // 清除玩家所有物品
-        lib.ItemUtil.removeItem(player);
-
-        // 清除玩家的经验等级
-        player.resetLevel();
-
-        // 清除玩家的末影箱
-        lib.PlayerUtil.resetEnderChest(player);
-
-        // 清除玩家的药效
-        player.getEffects().forEach(effect => player.removeEffect(effect.typeId));
-
-        // 重置玩家的血量
-        player.getComponent("minecraft:health").setCurrentValue(20);
-
-        // 移除玩家的队伍
-        player.triggerEvent("remove_team");
-
-        // 移除玩家的名字颜色
-        player.nameTag = player.name;
-
-        // 调整玩家的位置和重生点
-        player.teleport({ x: 0, y: 121, z: 0 });
-        player.setSpawnPoint({ x: 0, y: 121, z: 0, dimension: minecraft.world.getDimension("overworld") });
-
-        // 在开启了调试模式的情况下，如果玩家是管理员，调整为创造模式
-        if (this.system.settings.developer.debugMode && player.playerPermissionLevel >= 2) {
-            player.setGameMode(minecraft.GameMode.Creative);
-        };
-
     };
 
     /** 显示游戏中的信息板 */
@@ -2001,60 +2194,6 @@ class BedwarsMode {
         });
     };
 
-    /** 对玩家显示游戏中信息板
-     * @param {minecraft.Player} player 
-     * @param {BedwarsPlayer} playerInfo
-     */
-    gamingInfoboard(player, playerInfo) {
-
-        // 如果玩家没有起床战争信息，直接跳过之
-        if (!playerInfo) return;
-
-        /** 玩家所在的队伍 */
-        const playerTeam = playerInfo.team;
-
-        /** 信息板文本 */
-        const infoboardTexts = [
-            "§l§e       起床战争§r       ",
-            `§8${this.map.teamCount}队${this.name}模式 ${this.system.gameId}`,
-            "",
-            `§f${this.nextEvent.name} - §a${lib.JSUtil.timeToString(lib.JSUtil.secondToMinute(this.nextEvent.countdown))}`,
-            "",
-        ];
-
-        // 添加队伍信息
-        this.map.teams.forEach(team => {
-            const playerInTeam = playerTeam?.id == team.id ? "§7（你）" : "";
-            const teamState = (() => {
-                if (team.bedIsExist) return "§a✔";
-                else if (team.alivePlayers.length > 0) return `§a${team.alivePlayers.length}`;
-                else return "§c✘";
-            })();
-            infoboardTexts.push(`${team.getTeamNameWithColor()} §f${team.getTeamName()}队： ${teamState} ${playerInTeam}`)
-        });
-        infoboardTexts.push("");
-
-        // 如果地图最大队伍数<=4，则显示击杀信息等
-        if (this.map.teamCount <= 4) infoboardTexts.push(
-            `§f击杀数： §a${playerInfo.killCount}`,
-            `§f最终击杀数： §a${playerInfo.finalKillCount}`,
-            `§f破坏床数： §a${playerInfo.destroyBedCount}`,
-            ""
-        );
-
-        // 如果玩家是旁观玩家，则显示旁观信息
-        if (!playerTeam) infoboardTexts.push(
-            "§f您当前为旁观者",
-            ""
-        );
-
-        // 添加作者信息
-        infoboardTexts.push(`§e${this.system.settings.miscellaneous.infoboardLastLine}`);
-
-        player.onScreenDisplay.setActionBar(infoboardTexts.join("§r\n"));
-
-    };
-
     /** 设置事件 */
     eventSettings() {
 
@@ -2066,6 +2205,7 @@ class BedwarsMode {
                 callback: event => {
                     if (event.itemStack.typeId === "bedwars:map_settings") BedwarsSettings.showSystemSettingsUI(event.source, this.system);
                     if (event.itemStack.typeId === "bedwars:kill_style") BedwarsSettings.showKillStyleSettingsUI(event.source);
+                    if (event.itemStack.typeId === "bedwars:spectator_mode") BedwarsSettings.showSpectatorModeSettingsUI(event.source, this.system);
                 },
             },
         });
@@ -2341,7 +2481,7 @@ class BedwarsMode {
 
         /** 玩家是否充足 */
         const haveEnoughPlayer = () => {
-            return lib.PlayerUtil.getAmount() >= this.system.settings.beforeGaming.waiting.minPlayerCount;
+            return BedwarsSystem.getPlayerAmount() >= this.system.settings.beforeGaming.waiting.minPlayerCount;
         };
 
         /** 游戏开始倒计时前的事件和时间线 */
@@ -2670,7 +2810,7 @@ class BedwarsMode {
                         // 尝试获取玩家的原有的起床战争信息，如果获取不到则添加一个旁观者并终止运行
                         const playerScoreboardData = lib.ScoreboardObjectiveUtil.get(player.name);
                         if (!playerScoreboardData) {
-                            this.map.spectatorPlayers.push(new BedwarsPlayer(this.system, { team: undefined, player: player }))
+                            this.map.addSpectator(player);
                             return;
                         };
                         // 检查完毕，尝试恢复数据
@@ -5345,7 +5485,7 @@ class BedwarsMap {
         // ===== 变量准备 =====
 
         /** 当前总人数 */
-        let playerAmount = lib.PlayerUtil.getAmount();
+        let playerAmount = BedwarsSystem.getPlayerAmount();
 
         /** 设置规定的上限人数 */
         let maxPlayerAmount = this.system.settings.beforeGaming.waiting.maxPlayerCount;
@@ -5357,15 +5497,27 @@ class BedwarsMap {
         let teams = lib.JSUtil.shuffleArray([...this.teams]);
 
         /** 所有玩家列表并打乱顺序 @type {minecraft.Player[]} */
-        let players = lib.JSUtil.shuffleArray([...lib.PlayerUtil.getAll()]);
+        let players = lib.JSUtil.shuffleArray([...lib.PlayerUtil.getAll({ excludeTags: ["spectatorMode:nextGame", "spectatorMode:always"] })]);
 
         /** 每队至少应当分配的玩家
          * @description 例：11人4队，一队最少分配11/4=2（向下取整）名玩家；13人8队，一队最少分配13/8=1（向下取整）名玩家
          */
         const minPlayerPerTeam = Math.floor(playerAmount / this.teamCount);
 
-        // ===== (1) 为自主选队的玩家先选定队伍 =====
-        // 如果启用了自主选队的玩家，则先选择队伍
+        // ===== (1) 为主动旁观的玩家先改为旁观 =====
+        // 为启用了主动旁观的玩家先改为旁观模式，然后将仅下局旁观的玩家的标签去掉
+        if (this.system.settings.beforeGaming.spectatorMode.enabled) {
+            lib.PlayerUtil.getAll({ tags: ["spectatorMode:nextGame"] }).forEach(player => {
+                this.addSpectator(player);
+                player.removeTag("spectatorMode:nextGame");
+            });
+            lib.PlayerUtil.getAll({ tags: ["spectatorMode:always"] }).forEach(player => {
+                this.addSpectator(player);
+            });
+        };
+
+        // ===== (2) 为自主选队的玩家先选定队伍 =====
+        // 为启用了自主选队的玩家先选择队伍
         // 经过队伍选定后：
         // - players 剩余的玩家均为待随机分配的玩家；
         // - playerAmount 代表待随机分配的玩家数量；
@@ -5389,21 +5541,21 @@ class BedwarsMap {
                 });
         };
 
-        // ===== (2) 将多出的玩家随机设置为旁观 =====
+        // ===== (3) 将多出的玩家随机设置为旁观 =====
         // 只保留maxPlayerAmount个玩家，剩下的玩家改为旁观模式
 
         if (playerAmount > maxPlayerAmount) {
 
             // 在已打乱的玩家数组中，保留前 maxPlayerAmount 个，剩下的玩家作为旁观模式的玩家
             const spectatorPlayers = players.splice(maxPlayerAmount);
-            spectatorPlayers.forEach(player => this.spectatorPlayers.push(new BedwarsPlayer(this.system, { team: undefined, player: player })));
+            spectatorPlayers.forEach(player => this.addSpectator(player));
 
             // 然后，令玩家数等于最大玩家数
             playerAmount = maxPlayerAmount;
 
         };
 
-        // ===== (3) 为每个队伍先分配 minPlayerPerTeam 个玩家 =====
+        // ===== (4) 为每个队伍先分配 minPlayerPerTeam 个玩家 =====
         // 经过自主选队和筛选之后，不同的队伍目前会分配到不同的人数
 
         // 以下假设3种情况：
@@ -5431,7 +5583,7 @@ class BedwarsMap {
             });
         };
 
-        // ===== 四、多余的玩家执行的逻辑 =====
+        // ===== (5) 多余的玩家执行的逻辑 =====
 
         // 1. 如果 players 还有剩余的玩家，则准备分配到剩余的队伍中去。
         // - (1) 3/3 2/2 2/2 2/2 （players剩余2人） 继续判断
@@ -5573,6 +5725,13 @@ class BedwarsMap {
     getPlayerData(player) {
         return this.getAllPlayerData().find(bedwarsPlayer => bedwarsPlayer.player.id == player?.id);
     };
+
+    /** 添加旁观玩家
+     * @param {minecraft.Player} player
+     */
+    addSpectator(player) {
+        this.spectatorPlayers.push(new BedwarsPlayer(this.system, { team: undefined, player: player }));
+    }
 
     // ===== 资源点操作 =====
 

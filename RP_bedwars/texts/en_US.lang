@@ -224,6 +224,7 @@ item.bedwars:category_rotating_items=§aRotating Items
 #### Settings Items
 item.bedwars:kill_style=Kill Style
 item.bedwars:map_settings=Map Settings
+item.bedwars:spectator_mode=Spectator Mode
 
 #### Select Team Items
 item.bedwars:select_team_red=§l§cSelect Team Red

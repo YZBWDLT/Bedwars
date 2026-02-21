@@ -364,9 +364,11 @@ export class EntityUtil {
 /** 玩家操作方法 */
 export class PlayerUtil {
 
-    /** 获取全部玩家 */
-    static getAll() {
-        return minecraft.world.getAllPlayers();
+    /** 获取全部玩家
+     * @param {minecraft.EntityQueryOptions} [options] 
+     */
+    static getAll(options) {
+        return minecraft.world.getPlayers(options);
     };
 
     /** 获取玩家数目 */

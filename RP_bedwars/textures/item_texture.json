@@ -128,6 +128,7 @@
         "bedwars_brown_bed": { "textures": "textures/items/bed_brown" },
 
         "bedwars_map_settings": { "textures": "textures/items/map_settings" },
-        "bedwars_kill_style": { "textures": "textures/items/diamond_sword" }
+        "bedwars_kill_style": { "textures": "textures/items/diamond_sword" },
+        "bedwars_spectator_mode": { "textures": "textures/items/ender_eye" }
     }
 }

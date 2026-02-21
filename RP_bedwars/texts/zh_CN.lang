@@ -224,6 +224,7 @@ item.bedwars:category_rotating_items=§a轮换物品
 #### 设置物品
 item.bedwars:kill_style=击杀样式
 item.bedwars:map_settings=地图设置
+item.bedwars:spectator_mode=旁观模式设置
 
 #### 选队物品
 item.bedwars:select_team_red=§l§c选择红队

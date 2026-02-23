@@ -25,16 +25,19 @@
 
 ## 更新日志
 
-> 版本： Beta 1.1_01
+> 版本： 1.1 - Pre 1
 
 ### 旁观模式
 
 - #7 新增主动旁观模式！
-- 可以在「设置 - 旁观模式设置」中启用，以允许主动旁观
-- 在开启了旁观模式的情况下，玩家可以使用一个新物品以打开主动旁观的设置 UI，在此 UI 中玩家可以选择不旁观、仅下局旁观、或之后的所有游戏都旁观
-- 选择了*仅下局旁观*或*之后的所有游戏都旁观*的玩家，会在开始游戏后自动归为旁观模式
-- 开启主动旁观后不能选队，已选队伍的信息会消失
-- 如果在开启了主动旁观的情况下，房主禁用了主动旁观功能，则会警告已开启了主动旁观的玩家，之后的游戏需注意参与
+  - 可以在「设置 - 旁观模式设置」中启用，以允许主动旁观
+  - 在开启了旁观模式的情况下，玩家可以使用一个新物品以打开主动旁观的设置 UI，在此 UI 中玩家可以选择不旁观、仅下局旁观、或之后的所有游戏都旁观
+  - 选择了*仅下局旁观*或*之后的所有游戏都旁观*的玩家，会在开始游戏后自动归为旁观模式
+  - 开启主动旁观后不能选队，已选队伍的信息会消失
+  - 如果在开启了主动旁观的情况下，房主禁用了主动旁观功能，则会警告已开启了主动旁观的玩家，之后的游戏需注意参与
+- #46 现在旁观者可以抬头以打开传送 UI！
+  - 可以在「设置 - 旁观模式设置」中启用，以允许旁观传送
+  - 便于玩家观察某个玩家的行动
 
 ### 漏洞修复
 
@@ -61,7 +64,19 @@
 
 #### 起床战争主文件
 
-- **更名** `BedwarsMap.getBedwarsPlayer()` → `BedwarsMap.getPlayerData()`
+- **新增** `BedwarsSystem.isReleaseVersion: boolean`属性，用于指定此版本是否为稳定版本，这会影响某些设置的显示
+- **新增** `BedwarsSystem.informAllPlayers(message: string | minecraft.RawMessage | (string | minecraft): void`静态方法，用于对所有玩家播放通知类消息
+- **新增** `BedwarsSystem.getPlayers(): minecraft.Player[]`方法，用于获取非主动旁观的玩家
+- **新增** `BedwarsSystem.getPlayerAmount(): number`方法，用于获取非主动旁观的玩家人数
+- **新增** `BedwarsSettings.gaming.spectatorMode`属性，以控制旁观玩家的可用功能，有如下属性：
+  - `spectateActivelyEnabled: boolean`：是否启用主动旁观模式
+  - `headUpTeleportEnabled: boolean`：是否启用旁观传送功能
+- **新增** `BedwarsSettings.gaming.killBonus`属性，以控制击杀奖励（但未实装相关功能），有如下属性：
+  - `enabled: boolean`：是否给予击杀者以击杀奖励
+  - `mode: number`：击杀奖励模式，`0`：直接给予资源，`1`：玩家的全部物品直接散落
+  - `loseLevelTierInExpMode: 0 | 1 | 2`：经验模式损失资源，损失的资源将给予击杀者，`0`：不损失，`1`：损失一半，`2`：完全损失
+  - `playerCanThrowItemsInVoid: boolean`：虚空玩家可扔物品
+- **新增** `BedwarsSettings.BedwarsSettings.showSpectatorModeSettingsUI(player: minecraft.Player, system: BedwarsSystem): void`静态方法，用于显示旁观模式的 UI
 - **新增** `BedwarsMap.getAllPlayerData(options: PlayerDataOptions | undefined): BedwarsPlayer[]`方法，用于获取所有起床战争玩家的信息
   - `options: PlayerDataOptions | undefined`：用于筛选特定的玩家信息，可用条件包括：
     - 处于特定队伍内（`includeTeams: data.BedwarsTeamType[] | undefined`），指定后将会额外筛选队伍，否则不筛选
@@ -69,18 +84,8 @@
     - 包含死亡玩家（`includeDeadPlayer: boolean | undefined`），默认值为`true`
     - 包含淘汰玩家（`includeEliminated: boolean | undefined`），默认值为`true`
     - 包含旁观玩家（`includeSpectator: boolean | undefined`），默认值为`true`，需注意另外四项不筛选旁观玩家，如果不选定旁观玩家需单独指定此项
-- **新增** `BedwarsSystem.isReleaseVersion: boolean`，用于指定此版本是否为稳定版本，这会影响某些设置的显示
-- **新增** `BedwarsSystem.informAllPlayers(message: string | minecraft.RawMessage | (string | minecraft): void`静态方法，用于对所有玩家播放通知类消息
-- **新增** `BedwarsSystem.getPlayers(): minecraft.Player[]`方法，用于获取非主动旁观的玩家
-- **新增** `BedwarsSystem.getPlayerAmount(): number`方法，用于获取非主动旁观的玩家人数
-- **新增** `BedwarsSettings.gaming.spectatorMode`属性，以控制旁观玩家的可用功能，有如下属性：
-  - `spectateActivelyEnabled: boolean`：是否启用主动旁观模式
-  - `headUpTeleportEnabled: boolean`：是否启用旁观传送功能
-- **新增** `BedwarsSettings.BedwarsSettings.showSpectatorModeSettingsUI(player: minecraft.Player, system: BedwarsSystem): void`静态方法，用于显示旁观模式的 UI
-- **新增** `BedwarsMode.removeSelectedTeam(player: minecraft.Player, resetNpcItems?: boolean): void`方法，用于移除玩家的选队信息，并可选是否重置 NPC 的物品
 - **新增** `BedwarsMap.addSpectator(player: minecraft.Player): void`方法，用于新增旁观玩家
-- **新增** `BedwarsSettings.gaming.killBonus`属性，以控制击杀奖励（但未实装相关功能），有如下属性：
-  - `enabled: boolean`：是否给予击杀者以击杀奖励
-  - `mode: number`：击杀奖励模式，`0`：直接给予资源，`1`：玩家的全部物品直接散落
-  - `loseLevelTierInExpMode: 0 | 1 | 2`：经验模式损失资源，损失的资源将给予击杀者，`0`：不损失，`1`：损失一半，`2`：完全损失
-  - `playerCanThrowItemsInVoid: boolean`：虚空玩家可扔物品
+- **更名** `BedwarsMap.getBedwarsPlayer()` → `BedwarsMap.getPlayerData()`
+- **新增** `BedwarsMode.removeSelectedTeam(player: minecraft.Player, resetNpcItems?: boolean): void`方法，用于移除玩家的选队信息，并可选是否重置 NPC 的物品
+- **新增** `BedwarsMode.timelineSpectatorHeadUpTeleport(): void`方法，为旁观传送的主逻辑
+- **新增** `BedwarsPlayer.setEliminated(): void`方法，设置玩家为已淘汰

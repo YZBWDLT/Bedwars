@@ -28,7 +28,7 @@ class BedwarsSystem {
     systemEvents = {};
 
     /** 系统版本 */
-    version = "Beta 1.1_01";
+    version = "1.1 - Pre 1";
 
     /** 是否为稳定版本 */
     isReleaseVersion = false;
@@ -428,13 +428,13 @@ class BedwarsSettings {
 
         /** 击杀奖励 */
         killBonus: {
-            
+
             /** 是否给予击杀者以击杀奖励 */
             enabled: true,
 
             /** 击杀奖励模式，0：直接给予资源，1：玩家的全部物品直接散落 */
             mode: 0,
-            
+
             /** 经验模式损失资源，损失的资源将给予击杀者，0：不损失，1：损失一半，2：完全损失 @type {0|1|2} */
             loseLevelTierInExpMode: 1,
 
@@ -792,13 +792,17 @@ class BedwarsSettings {
                                 settings.gaming.spectatorMode.spectateActivelyEnabled = values[4];
                                 settings.gaming.spectatorMode.headUpTeleportEnabled = values[5];
                             };
-                            // 如果玩家关闭了旁观模式设置，则移除玩家的物品，并重新进行一次玩家人数是否充足的检查
+                            // 如果玩家关闭了旁观模式设置，则移除玩家的物品
                             if (!settings.gaming.spectatorMode.spectateActivelyEnabled) {
                                 lib.ItemUtil.removeItem(player, "bedwars:spectator_mode");
-                                lib.PlayerUtil.getAll({tags:["spectatorMode:nextGame"]}).forEach(player => BedwarsSystem.informPlayer(player, "§c房主已关闭主动旁观。请注意，你将参加下一局的游戏！"));
-                                lib.PlayerUtil.getAll({tags:["spectatorMode:always"]}).forEach(player => BedwarsSystem.informPlayer(player, "§c房主已关闭主动旁观。请注意，你将参加之后的游戏！"));
-                                system.mode.functionWaiting()
-                            }
+                                lib.PlayerUtil.getAll({ tags: ["spectatorMode:nextGame"] }).forEach(player => BedwarsSystem.informPlayer(player, "§c房主已关闭主动旁观。请注意，你将参加下一局的游戏！"));
+                                lib.PlayerUtil.getAll({ tags: ["spectatorMode:always"] }).forEach(player => BedwarsSystem.informPlayer(player, "§c房主已关闭主动旁观。请注意，你将参加之后的游戏！"));
+                            };
+                            // 重新进行一次玩家人数是否充足的检查
+                            system.mode.functionWaiting();
+                            // 如果开启了旁观传送机制，则尝试添加时间线，否则尝试移除
+                            if (settings.gaming.spectatorMode.headUpTeleportEnabled) system.mode.timelineSpectatorHeadUpTeleport();
+                            else system.unsubscribeTimeline("spectatorHeadUpTeleport");
                             // 备份设置
                             this.backup(system);
                         },
@@ -1677,16 +1681,16 @@ class BedwarsSettings {
  */
 class BedwarsMode {
 
-    /** 模式类型 */
+    /** 模式类型 @readonly */
     type = "";
 
-    /** 模式名称 */
+    /** 模式名称 @readonly */
     name = "";
 
-    /** 系统 @type {BedwarsSystem} */
+    /** 系统 @type {BedwarsSystem} @readonly */
     system;
 
-    /** 地图 @type {BedwarsMap} */
+    /** 地图 @type {BedwarsMap} @readonly */
     map;
 
     /** 当前清除的层数（仅在清空地图时使用） */
@@ -2519,6 +2523,8 @@ class BedwarsMode {
 
         /** 游戏开始倒计时前的事件和时间线 */
         const beforeCountdown = () => {
+            this.system.unsubscribeTimeline("gameStartCountdown")
+            this.system.unsubscribeEvent("playerLeaveWhenWaiting")
             this.system.subscribeEvent({
                 typeId: "playerJoinWhenWaiting",
                 event: {
@@ -2533,6 +2539,7 @@ class BedwarsMode {
 
         /** 游戏开始倒计时后的事件和时间线 */
         const afterCountdown = () => {
+            this.system.unsubscribeEvent("playerJoinWhenWaiting")
             this.gameStartCountdown = this.system.settings.beforeGaming.waiting.gameStartWaitingTime + 1;
             this.system.subscribeTimeline({
                 typeId: "gameStartCountdown",
@@ -2702,6 +2709,7 @@ class BedwarsMode {
         this.timelineRemoveItem(); // 禁止特定类型的掉落物存在
         this.timelineSpawnResource(); // 生成队伍类型资源时间线（包括铁、金、绿宝石）
         this.timelineGameEvent(); // 游戏事件时间线
+        this.timelineSpectatorHeadUpTeleport(); // 旁观玩家抬头传送
         if (this.map.playerCouldIntoShop === false) this.timelineStopPlayerIntoShop(); // 阻止玩家进入商店的时间线
         // 重新设置重生点
         this.system.subscribeTimeline({
@@ -3767,6 +3775,59 @@ class BedwarsMode {
                     this.map.traders.forEach(trader => trader.teleportNearbyPlayer());
                 },
                 tickInterval: 20,
+            }
+        })
+    };
+
+    /** 旁观玩家抬头传送 */
+    timelineSpectatorHeadUpTeleport() {
+        // 非游戏阶段，阻止运行
+        if (this.system.gameStage != 3) return;
+        // 未启用旁观传送，阻止运行
+        if (!this.system.settings.gaming.spectatorMode.headUpTeleportEnabled) return;
+        // 除以上情况之外，尝试添加时间线
+        this.system.subscribeTimeline({
+            typeId: "spectatorHeadUpTeleport",
+            interval: {
+                callback: () => {
+                    this.map
+                        .getAllPlayerData({ excludeTeams: this.map.teams.map(team => team.id) })
+                        .map(playerData => playerData.player)
+                        .forEach(player => {
+                            // 检查旁观者是否抬头，若未抬头则终止运行
+                            const playerRotation = player.getRotation();
+                            if (playerRotation.x > -88) return;
+                            // 抬头后：
+                            // 1. 放平视角
+                            player.teleport(player.location, { rotation: { ...playerRotation, x: 0 } });
+                            // 2. 调用 UI
+                            lib.UIUtil.createAction({
+                                type: "action",
+                                components: this.map
+                                    .getAllPlayerData({ includeEliminated: false, includeSpectator: false })
+                                    .map(data => {
+                                        /** @type {lib.FormButtonComponent} */
+                                        const button = {
+                                            type: "button",
+                                            text: data.player.nameTag,
+                                            onSelected: {
+                                                callback: (selection, thisForm) => {
+                                                    if (!data.player.isValid) {
+                                                        BedwarsSystem.warnPlayer(player, `§c你不能传送到一个无效的玩家附近！`);
+                                                        return;
+                                                    }
+                                                    player.teleport(data.player.location);
+                                                    minecraft.system.runTimeout(() => BedwarsSystem.informPlayer(player, `§a已传送到§6${data.player.name}§a的位置处`), 5);
+                                                }
+                                            },
+                                        };
+                                        return button;
+                                    }),
+                                title: "传送到……"
+                            }, player);
+                        });
+                },
+                tickInterval: 5,
             }
         })
     };
@@ -6374,6 +6435,7 @@ class BedwarsPlayer {
             this.isDead = true;
             this.isEliminated = true;
             this.isSpectator = true;
+            if (this.system.settings.gaming.spectatorMode.headUpTeleportEnabled) this.player.sendMessage({ translate: "§c抬头以选择传送到哪位玩家附近！" });
         };
 
     };
@@ -6424,22 +6486,7 @@ class BedwarsPlayer {
             }
 
         }
-        else {
-
-            // 设置为淘汰状态
-            this.respawnTime = -1;
-            this.isEliminated = true;
-
-            // 通知该玩家已淘汰
-            this.player.sendMessage({ translate: "message.eliminated" });
-
-            // 将该玩家从该队伍的存活名单中移除出去
-            this.team.alivePlayers = this.team.alivePlayers.filter(alivePlayerData => alivePlayerData.player.id != this.player.id);
-
-            // 如果已经被移除的玩家是该队最后一名存活玩家，并且该队伍仍未被淘汰，则淘汰整个队伍
-            if (this.team.alivePlayers.length == 0 && !this.team.isEliminated) this.team.setEliminated();
-
-        };
+        else this.setEliminated();
 
         // --- 广播玩家被击杀的消息，并给予击杀者奖励 ---
 
@@ -6514,6 +6561,24 @@ class BedwarsPlayer {
         this.magicMilkCountdown = 0;
         if (this.system.mode.type == data.BedwarsModeType.Capture && this.isEliminated) this.player.sendMessage({ translate: "message.respawnTipWhenHaveBed" }); // 如果玩家在夺点模式已被淘汰，则提醒玩家重新获得一张床即可复活
     };
+
+    /** 设置玩家为已淘汰 */
+    setEliminated() {
+        // 设置为淘汰状态
+        this.respawnTime = -1;
+        this.isEliminated = true;
+
+        // 通知该玩家已淘汰
+        this.player.sendMessage({ translate: "message.eliminated" });
+        if (this.system.settings.gaming.spectatorMode.headUpTeleportEnabled) this.player.sendMessage({ translate: "§c抬头以选择传送到哪位玩家附近！" });
+
+        // 将该玩家从该队伍的存活名单中移除出去
+        this.team.alivePlayers = this.team.alivePlayers.filter(alivePlayerData => alivePlayerData.player.id != this.player.id);
+
+        // 如果已经被移除的玩家是该队最后一名存活玩家，并且该队伍仍未被淘汰，则淘汰整个队伍
+        if (this.team.alivePlayers.length == 0 && !this.team.isEliminated) this.team.setEliminated();
+
+    }
 
     /** 玩家受伤，并移除玩家的隐身状态
      * @param {minecraft.Player} attacker 伤害者，必须是拥有有效起床战争信息，且有队伍归属的玩家

@@ -244,9 +244,15 @@ class BedwarsSystem {
         lib.PlayerUtil.getAll().forEach(player => this.informPlayer(player, message));
     };
 
+    /** 获取全部玩家，若开启了主动旁观则返回未开启主动旁观的玩家 */
+    getPlayers() {
+        if (this.settings.gaming.spectatorMode.spectateActivelyEnabled) return lib.PlayerUtil.getAll({ excludeTags: ["spectatorMode:nextGame", "spectatorMode:always"] });
+        return lib.PlayerUtil.getAll();
+    };
+
     /** 获取总玩家人数 */
-    static getPlayerAmount() {
-        return lib.PlayerUtil.getAll({ excludeTags: ["spectatorMode:nextGame", "spectatorMode:always"] }).length
+    getPlayerAmount() {
+        return this.getPlayers().length;
     };
 
 };
@@ -294,14 +300,6 @@ class BedwarsSettings {
             playerSelectEnabled: false,
 
         },
-
-        /** 旁观模式设置 */
-        spectatorMode: {
-
-            /** 是否启用旁观模式 */
-            enabled: false,
-
-        }
 
     };
 
@@ -414,6 +412,34 @@ class BedwarsSettings {
 
             /** 是否启用无效队伍的商人 */
             spawnTraders: true
+
+        },
+
+        /** 旁观模式设置 */
+        spectatorMode: {
+
+            /** 是否启用主动旁观模式 */
+            spectateActivelyEnabled: false,
+
+            /** 是否启用旁观传送功能 */
+            headUpTeleportEnabled: false,
+
+        },
+
+        /** 击杀奖励 */
+        killBonus: {
+            
+            /** 是否给予击杀者以击杀奖励 */
+            enabled: true,
+
+            /** 击杀奖励模式，0：直接给予资源，1：玩家的全部物品直接散落 */
+            mode: 0,
+            
+            /** 经验模式损失资源，损失的资源将给予击杀者，0：不损失，1：损失一半，2：完全损失 @type {0|1|2} */
+            loseLevelTierInExpMode: 1,
+
+            /** 虚空玩家可扔物品 */
+            playerCanThrowItemsInVoid: false,
 
         },
 
@@ -752,7 +778,8 @@ class BedwarsSettings {
                         { type: "label", text: "控制开始游戏前是否允许玩家选择主动观战。" },
                         { type: "label", text: "§7按下右上角的「x」以返回上一页。", },
                         { type: "divider", },
-                        { type: "toggle", text: "启用主动旁观", tipText: `开始游戏前是否允许玩家选择主动观战。当前值：§a${settings.beforeGaming.spectatorMode.enabled}`, default: settings.beforeGaming.spectatorMode.enabled },
+                        { type: "toggle", text: "启用主动旁观", tipText: `开始游戏前是否允许玩家选择主动观战。当前值：§a${settings.gaming.spectatorMode.spectateActivelyEnabled}`, default: settings.gaming.spectatorMode.spectateActivelyEnabled },
+                        { type: "toggle", text: "启用旁观传送", tipText: `旁观者（包括已被淘汰的玩家）是否可以通过抬头打开传送 UI，并传送到某位玩家附近。当前值：§a${settings.gaming.spectatorMode.headUpTeleportEnabled}`, default: settings.gaming.spectatorMode.headUpTeleportEnabled },
                         { type: "toggle", text: "恢复默认设置", tipText: "将上述选项设置为我们预设的默认设置。", default: false, },
                     ],
                     onSubmitted: {
@@ -762,10 +789,16 @@ class BedwarsSettings {
                             if (values[values.length - 1]) settings.beforeGaming.spectatorMode = new BedwarsSettings().beforeGaming.spectatorMode;
                             // 否则，应用这些设置
                             else {
-                                settings.beforeGaming.spectatorMode.enabled = values[4];
+                                settings.gaming.spectatorMode.spectateActivelyEnabled = values[4];
+                                settings.gaming.spectatorMode.headUpTeleportEnabled = values[5];
                             };
-                            // 如果玩家关闭了旁观模式设置，则移除玩家的物品
-                            if (!settings.beforeGaming.spectatorMode.enabled) lib.ItemUtil.removeItem(player, "bedwars:spectator_mode");
+                            // 如果玩家关闭了旁观模式设置，则移除玩家的物品，并重新进行一次玩家人数是否充足的检查
+                            if (!settings.gaming.spectatorMode.spectateActivelyEnabled) {
+                                lib.ItemUtil.removeItem(player, "bedwars:spectator_mode");
+                                lib.PlayerUtil.getAll({tags:["spectatorMode:nextGame"]}).forEach(player => BedwarsSystem.informPlayer(player, "§c房主已关闭主动旁观。请注意，你将参加下一局的游戏！"));
+                                lib.PlayerUtil.getAll({tags:["spectatorMode:always"]}).forEach(player => BedwarsSystem.informPlayer(player, "§c房主已关闭主动旁观。请注意，你将参加之后的游戏！"));
+                                system.mode.functionWaiting()
+                            }
                             // 备份设置
                             this.backup(system);
                         },
@@ -1301,8 +1334,6 @@ class BedwarsSettings {
                                     { type: "label", text: "§7控制游戏允许的最小人数、最大人数和等待所需的时间。", },
                                     { type: "button", text: "组队设置...", icon: "textures/ui/multiplayer_glyph_color", onSelected: { callback: (selection, thisForm) => assignTeamSettings(player, thisForm), } },
                                     { type: "label", text: "§7控制开始游戏时系统如何组队，以及是否允许玩家自己选择队伍。", },
-                                    { type: "button", text: "旁观模式设置...", icon: "textures/items/ender_eye", onSelected: { callback: (selection, thisForm) => spectatorModeSettings(player, thisForm), } },
-                                    { type: "label", text: "§7控制开始游戏前是否允许玩家选择主动观战。", },
                                 ],
                                 onCanceled: { openParentForm: true, }
                             },
@@ -1330,6 +1361,8 @@ class BedwarsSettings {
                                     { type: "label", text: "§7控制玩家在击杀玩家和破坏床后的设置。" },
                                     { type: "button", text: "无效队伍设置...", icon: "textures/blocks/barrier", onSelected: { callback: (selection, thisForm) => invalidTeamSettings(player, thisForm) } },
                                     { type: "label", text: "§7控制一开始未分配到玩家的队伍如何运行。" },
+                                    { type: "button", text: "旁观模式设置...", icon: "textures/items/ender_eye", onSelected: { callback: (selection, thisForm) => spectatorModeSettings(player, thisForm), } },
+                                    { type: "label", text: "§7控制开始游戏前是否允许玩家选择主动观战。", },
                                 ],
                                 onCanceled: { openParentForm: true, }
                             },
@@ -1905,7 +1938,7 @@ class BedwarsMode {
             let progressTexts = [
                 `§f清除原地图中... §7${Math.ceil(this.clearingLayer * 6 / 20 / this.getLayerClearSpeed())}秒§r`, // 清除地图状态使用
                 `§f生成地图中... §7${this.loadTimeCountdown}秒§r`, // 生成地图状态使用
-                `§f等待中...§7还需${this.system.settings.beforeGaming.waiting.minPlayerCount - BedwarsSystem.getPlayerAmount()}人§r`, // 等待状态（玩家不足时）使用
+                `§f等待中...§7还需${this.system.settings.beforeGaming.waiting.minPlayerCount - this.system.getPlayerAmount()}人§r`, // 等待状态（玩家不足时）使用
                 `§f即将开始： §a${this.gameStartCountdown}秒§r`, // 等待状态（玩家充足）使用
             ];
 
@@ -1913,7 +1946,7 @@ class BedwarsMode {
             if (this.system.gameStage == 0) return progressTexts[0];
             else if (this.system.gameStage == 1) return progressTexts[1];
             else {
-                if (BedwarsSystem.getPlayerAmount() < this.system.settings.beforeGaming.waiting.minPlayerCount) return progressTexts[2];
+                if (this.system.getPlayerAmount() < this.system.settings.beforeGaming.waiting.minPlayerCount) return progressTexts[2];
                 else return progressTexts[3]
             }
         })();
@@ -1923,7 +1956,7 @@ class BedwarsMode {
             `§8${this.system.gameId}`,
             "",
             `§f地图： §a${this.map.name}`,
-            `§f玩家： §a${BedwarsSystem.getPlayerAmount()}/${this.system.settings.beforeGaming.waiting.maxPlayerCount}`,
+            `§f玩家： §a${this.system.getPlayerAmount()}/${this.system.settings.beforeGaming.waiting.maxPlayerCount}`,
             "",
             progressText,
             "",
@@ -1958,7 +1991,7 @@ class BedwarsMode {
                         // 如果启用了自主选队和击杀样式（但未启用随机击杀样式），则在玩家没有对应物品时给予物品
                         if (!lib.InventoryUtil.hasItem(player, "bedwars:kill_style") && this.system.settings.gaming.killStyle.isEnabled && !this.system.settings.gaming.killStyle.randomKillStyle) lib.ItemUtil.giveItem(player, "bedwars:kill_style", { itemLock: "inventory" });
                         // 如果启用了旁观模式，则在玩家没有对应物品时给予物品
-                        if (!lib.InventoryUtil.hasItem(player, "bedwars:spectator_mode") && this.system.settings.beforeGaming.spectatorMode.enabled) lib.ItemUtil.giveItem(player, "bedwars:spectator_mode", { itemLock: "inventory" });
+                        if (!lib.InventoryUtil.hasItem(player, "bedwars:spectator_mode") && this.system.settings.gaming.spectatorMode.spectateActivelyEnabled) lib.ItemUtil.giveItem(player, "bedwars:spectator_mode", { itemLock: "inventory" });
                     });
                 },
                 tickInterval: 20,
@@ -2015,7 +2048,7 @@ class BedwarsMode {
                     /** 队伍数 */
                     const teamCount = this.map.teams.length;
                     /** 全部玩家数 */
-                    const playerCount = BedwarsSystem.getPlayerAmount();
+                    const playerCount = this.system.getPlayerAmount();
                     /** 设置的最大允许玩家人数 */
                     const maxPlayerSettings = this.system.settings.beforeGaming.waiting.maxPlayerCount;
                     /** 游戏内的总玩家人数，如果玩家人数大于设置的最大允许玩家人数，则使用设置值，否则使用玩家值 */
@@ -2481,7 +2514,7 @@ class BedwarsMode {
 
         /** 玩家是否充足 */
         const haveEnoughPlayer = () => {
-            return BedwarsSystem.getPlayerAmount() >= this.system.settings.beforeGaming.waiting.minPlayerCount;
+            return this.system.getPlayerAmount() >= this.system.settings.beforeGaming.waiting.minPlayerCount;
         };
 
         /** 游戏开始倒计时前的事件和时间线 */
@@ -5485,7 +5518,7 @@ class BedwarsMap {
         // ===== 变量准备 =====
 
         /** 当前总人数 */
-        let playerAmount = BedwarsSystem.getPlayerAmount();
+        let playerAmount = this.system.getPlayerAmount();
 
         /** 设置规定的上限人数 */
         let maxPlayerAmount = this.system.settings.beforeGaming.waiting.maxPlayerCount;
@@ -5497,7 +5530,7 @@ class BedwarsMap {
         let teams = lib.JSUtil.shuffleArray([...this.teams]);
 
         /** 所有玩家列表并打乱顺序 @type {minecraft.Player[]} */
-        let players = lib.JSUtil.shuffleArray([...lib.PlayerUtil.getAll({ excludeTags: ["spectatorMode:nextGame", "spectatorMode:always"] })]);
+        let players = lib.JSUtil.shuffleArray([...this.system.getPlayers()]);
 
         /** 每队至少应当分配的玩家
          * @description 例：11人4队，一队最少分配11/4=2（向下取整）名玩家；13人8队，一队最少分配13/8=1（向下取整）名玩家
@@ -5506,7 +5539,7 @@ class BedwarsMap {
 
         // ===== (1) 为主动旁观的玩家先改为旁观 =====
         // 为启用了主动旁观的玩家先改为旁观模式，然后将仅下局旁观的玩家的标签去掉
-        if (this.system.settings.beforeGaming.spectatorMode.enabled) {
+        if (this.system.settings.gaming.spectatorMode.spectateActivelyEnabled) {
             lib.PlayerUtil.getAll({ tags: ["spectatorMode:nextGame"] }).forEach(player => {
                 this.addSpectator(player);
                 player.removeTag("spectatorMode:nextGame");

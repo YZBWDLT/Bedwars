@@ -102,3 +102,5 @@
   - `BedwarsMap.triggerBedDestructionEvent(): void`：触发事件：床自毁
   - `BedwarsMap.triggerDeathMatchEvent(): void`：触发事件：绝杀模式
 - **新增** `BedwarsMap.updateNextEvent(id?: "diamond_2" | "emerald_2" | "diamond_3" | "emerald_3" | "bed_destruction" | "death_match" | "game_over" | undefined, name?: "钻石生成点 II 级" | "绿宝石生成点 II 级" | "钻石生成点 III 级" | "绿宝石生成点 III 级" | "床自毁" | "绝杀模式" | "游戏结束" | undefined, countdown?: number): void`，以更新下一个事件的信息
+- **更改** 将`BedwarsMode.functionWaiting()`时间线化，现在人数检测是每秒进行一次，而非玩家退出或进入时进行一次
+  - 这是因为随着多项设置的更新，比如等待设置、主动旁观设置等，原来的人数判断逻辑变得越来越复杂，故而采用循环检查的方式，虽然会带来一点额外的性能负载，但我们坚信这不会对您的服务器或设备造成任何影响

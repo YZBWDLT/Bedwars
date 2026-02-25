@@ -46,6 +46,8 @@
 - #85 修复了使用铁傀儡右键箱子会放置铁傀儡的问题
 - #86 修复了床自毁会提示所有玩家的问题，现在不再对旁观玩家提示床自毁
 - #87 修复了在手机端可以先将商店物品放到空栏位再直接拿出的问题
+- 修复了在地图屋顶中可以冲毁铁轨和花盆的问题
+- 修复了在地图乐园中可以冲毁地毯的问题
 
 ### 技术性
 
@@ -79,13 +81,24 @@
 - **新增** `BedwarsSettings.BedwarsSettings.showSpectatorModeSettingsUI(player: minecraft.Player, system: BedwarsSystem): void`静态方法，用于显示旁观模式的 UI
 - **新增** `BedwarsMap.getAllPlayerData(options: PlayerDataOptions | undefined): BedwarsPlayer[]`方法，用于获取所有起床战争玩家的信息
   - `options: PlayerDataOptions | undefined`：用于筛选特定的玩家信息，可用条件包括：
-    - 处于特定队伍内（`includeTeams: data.BedwarsTeamType[] | undefined`），指定后将会额外筛选队伍，否则不筛选
-    - 不处于特定队伍内（`excludeTeams: data.BedwarsTeamType[] | undefined`），指定后将会额外筛选队伍，否则不筛选
-    - 包含死亡玩家（`includeDeadPlayer: boolean | undefined`），默认值为`true`
-    - 包含淘汰玩家（`includeEliminated: boolean | undefined`），默认值为`true`
-    - 包含旁观玩家（`includeSpectator: boolean | undefined`），默认值为`true`，需注意另外四项不筛选旁观玩家，如果不选定旁观玩家需单独指定此项
+    - 处于特定队伍内（`includeTeams?: data.BedwarsTeamType[] | undefined`），指定后将会额外筛选队伍，否则不筛选
+    - 不处于特定队伍内（`excludeTeams?: data.BedwarsTeamType[] | undefined`），指定后将会额外筛选队伍，否则不筛选
+    - 包含死亡玩家（`includeDeadPlayer?: boolean | undefined`），默认值为`true`
+    - 包含淘汰玩家（`includeEliminated?: boolean | undefined`），默认值为`true`
+    - 包含旁观玩家（`includeSpectator?: boolean | undefined`），默认值为`true`，需注意另外四项不筛选旁观玩家，如果不选定旁观玩家需单独指定此项
+    - 只包含已淘汰玩家（`onlyIncludeEliminated?: boolean | undefined`），默认值为`false`
 - **新增** `BedwarsMap.addSpectator(player: minecraft.Player): void`方法，用于新增旁观玩家
 - **更名** `BedwarsMap.getBedwarsPlayer()` → `BedwarsMap.getPlayerData()`
 - **新增** `BedwarsMode.removeSelectedTeam(player: minecraft.Player, resetNpcItems?: boolean): void`方法，用于移除玩家的选队信息，并可选是否重置 NPC 的物品
 - **新增** `BedwarsMode.timelineSpectatorHeadUpTeleport(): void`方法，为旁观传送的主逻辑
 - **新增** `BedwarsPlayer.setEliminated(): void`方法，设置玩家为已淘汰
+- **移动** 将`BedwarsMode.nextEvent`移动到`BedwarsMap`类下
+- **新增** 多个触发游戏事件的方法
+  - `BedwarsMap.triggerDiamondTier2Event(): void`：触发事件：钻石生成点 II 级
+  - `BedwarsMap.triggerDiamondTier3Event(): void`：触发事件：钻石生成点 III 级
+  - `BedwarsMap.triggerEmeraldTier2Event(): void`：触发事件：绿宝石生成点 II 级
+  - `BedwarsMap.triggerEmeraldTier3Event(): void`：触发事件：绿宝石生成点 III 级
+  - `BedwarsMap.triggerDiamondTier2Event(): void`：触发事件：钻石生成点 II 级
+  - `BedwarsMap.triggerBedDestructionEvent(): void`：触发事件：床自毁
+  - `BedwarsMap.triggerDeathMatchEvent(): void`：触发事件：绝杀模式
+- **新增** `BedwarsMap.updateNextEvent(id?: "diamond_2" | "emerald_2" | "diamond_3" | "emerald_3" | "bed_destruction" | "death_match" | "game_over" | undefined, name?: "钻石生成点 II 级" | "绿宝石生成点 II 级" | "钻石生成点 III 级" | "绿宝石生成点 III 级" | "床自毁" | "绝杀模式" | "游戏结束" | undefined, countdown?: number): void`，以更新下一个事件的信息

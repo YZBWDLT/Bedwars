@@ -2820,6 +2820,7 @@ export const mapData = {
                         heightLimitMax: 87,
                         heightLimitMin: 57,
                     },
+                    removeItemEntity: ["minecraft:white_carpet"]
                 },
             },
 
@@ -2980,7 +2981,7 @@ export const mapData = {
                         heightLimitMax: 91,
                         heightLimitMin: 62,
                     },
-                    removeItemEntity: ["minecraft:white_carpet"],
+                    removeItemEntity: ["minecraft:white_carpet", "minecraft:rail", "minecraft:detector_rail", "minecraft:flower_pot"],
                 },
             },
 

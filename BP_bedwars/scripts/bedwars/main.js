@@ -1740,20 +1740,6 @@ class BedwarsMode {
 
     };
 
-    /** 下一个事件 */
-    nextEvent = {
-
-        /** 下一个事件的 ID */
-        id: "",
-
-        /** 下一个事件的倒计时，单位：秒 */
-        countdown: 360,
-
-        /** 下一个事件的名称 */
-        name: "",
-
-    }
-
     /** @param {BedwarsSystem} system @param {BedwarsMap} map */
     constructor(system, map) {
 
@@ -1841,7 +1827,7 @@ class BedwarsMode {
             "§l§e       起床战争§r       ",
             `§8${this.map.teamCount}队${this.name}模式 ${this.system.gameId}`,
             "",
-            `§f${this.nextEvent.name} - §a${lib.JSUtil.timeToString(lib.JSUtil.secondToMinute(this.nextEvent.countdown))}`,
+            `§f${this.map.nextEvent.name} - §a${lib.JSUtil.timeToString(lib.JSUtil.secondToMinute(this.map.nextEvent.countdown))}`,
             "",
         ];
 
@@ -3689,74 +3675,37 @@ class BedwarsMode {
             typeId: "gameEvent",
             interval: {
                 callback: () => {
-                    this.nextEvent.countdown--;
-                    if (this.nextEvent.countdown <= 0) {
-                        switch (this.nextEvent.id) {
+                    this.map.nextEvent.countdown--;
+                    if (this.map.nextEvent.countdown <= 0) {
+                        switch (this.map.nextEvent.id) {
                             case "diamond_2":
-                                // 更新下一个游戏事件
-                                this.nextEvent.id = "emerald_2";
-                                this.nextEvent.name = "绿宝石生成点 II 级";
-                                // 更新钻石生成点的等级
-                                this.map.updateSpawner("diamond", 2);
-                                minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier2" });
+                                this.map.updateNextEvent("emerald_2", "绿宝石生成点 II 级", 360);
+                                this.map.triggerDiamondTier2Event();
                                 break;
                             case "emerald_2":
-                                // 更新下一个游戏事件
-                                this.nextEvent.id = "diamond_3";
-                                this.nextEvent.name = "钻石生成点 III 级";
-                                // 更新绿宝石生成点的等级
-                                this.map.updateSpawner("emerald", 2);
-                                minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier2" });
+                                this.map.updateNextEvent("diamond_3", "钻石生成点 III 级", 360);
+                                this.map.triggerEmeraldTier2Event();
                                 break;
                             case "diamond_3":
-                                // 更新下一个游戏事件
-                                this.nextEvent.id = "emerald_3";
-                                this.nextEvent.name = "绿宝石生成点 III 级";
-                                // 更新钻石生成点的等级
-                                this.map.updateSpawner("diamond", 3);
-                                minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier3" });
+                                this.map.updateNextEvent("emerald_3", "绿宝石生成点 III 级", 360);
+                                this.map.triggerDiamondTier3Event();
                                 break;
                             case "emerald_3":
-                                // 更新下一个游戏事件
-                                this.nextEvent.id = "bed_destruction";
-                                this.nextEvent.name = "床自毁";
-                                // 更新绿宝石生成点的等级
-                                this.map.updateSpawner("emerald", 3);
-                                minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier3" });
+                                this.map.updateNextEvent("bed_destruction", "床自毁", 360);
+                                this.map.triggerEmeraldTier3Event();
                                 break;
                             case "bed_destruction":
-                                // 更新下一个游戏事件
-                                this.nextEvent.id = "death_match";
-                                this.nextEvent.name = "绝杀模式";
-                                // 破坏玩家的所有床，并移除对应的检测事件
-                                this.map.teams.filter(team => team.bedIsExist).forEach(team => team.destroyBed());
-                                this.map.getAllPlayerData({ includeSpectator: false }).forEach(playerData => {
-                                    const player = playerData.player;
-                                    if (!player.isValid) return;
-                                    player.playSound("mob.wither.death", { location: player.location });
-                                    lib.PlayerUtil.setTitle(player, { translate: "title.bedDestroyed" }, { translate: "subtitle.bedDestroyed.allTeams" });
-                                    player.sendMessage({ translate: "message.bedDestroyed.allTeams" });
-                                });
-                                this.system.unsubscribeEvent("playerBreakBed");
+                                this.map.updateNextEvent("death_match", "绝杀模式", 360);
+                                this.map.triggerBedDestructionEvent();
                                 break;
                             case "death_match":
-                                // 更新下一个游戏事件
-                                this.nextEvent.id = "game_over";
-                                this.nextEvent.name = "游戏结束";
-                                // 生成末影龙，令每个存活的队伍召唤末影龙
-                                this.map.aliveTeams.forEach(team => {
-                                    lib.EntityUtil.add("minecraft:ender_dragon", this.map.spawnpoint);
-                                    if (team.teamUpgrades.dragonBuff) lib.EntityUtil.add("minecraft:ender_dragon", this.map.spawnpoint);
-                                });
-                                lib.PlayerUtil.getAll().forEach(player => player.onScreenDisplay.setTitle({ translate: "title.deathMatch" }));
-                                lib.DimensionUtil.setBlock("overworld", { x: 0, y: this.map.heightLimitMin, z: 0 }, "minecraft:barrier")
+                                this.map.updateNextEvent("game_over", "游戏结束", 360)
+                                this.map.triggerDeathMatchEvent();
                                 break;
                             case "game_over": default:
-                                // 结束游戏
                                 this.map.gameOver();
                                 break;
                         };
-                        this.nextEvent.countdown = 360;
                     };
                 },
                 tickInterval: 20,
@@ -3791,7 +3740,7 @@ class BedwarsMode {
             interval: {
                 callback: () => {
                     this.map
-                        .getAllPlayerData({ excludeTeams: this.map.teams.map(team => team.id) })
+                        .getAllPlayerData({ onlyIncludeEliminated: true, includeSpectator: true })
                         .map(playerData => playerData.player)
                         .forEach(player => {
                             // 检查旁观者是否抬头，若未抬头则终止运行
@@ -5337,7 +5286,7 @@ class BedwarsMap {
     /** 模式，该地图将按照什么模式执行 @type {data.BedwarsModeType} */
     mode = data.BedwarsModeType.Classic;
 
-    /** 系统 @type {BedwarsSystem} */
+    /** 系统 @type {BedwarsSystem} @readonly */
     system;
 
     /** 钻石生成点信息 */
@@ -5474,6 +5423,20 @@ class BedwarsMap {
 
     /** 玩家是否能够进入商店 */
     playerCouldIntoShop = true;
+
+    /** 下一个事件 */
+    nextEvent = {
+
+        /** 下一个事件的 ID */
+        id: "",
+
+        /** 下一个事件的倒计时，单位：秒 */
+        countdown: 360,
+
+        /** 下一个事件的名称 */
+        name: "",
+
+    }
 
     /** @param {BedwarsSystem} system @param {data.BedwarsMapData} mapData */
     constructor(system, mapData) {
@@ -5793,6 +5756,7 @@ class BedwarsMap {
          * @property {boolean} [includeEliminated] 获取的玩家信息是否包括已淘汰的玩家（不包括旁观者） | 默认值：true
          * @property {boolean} [includeSpectator] 获取的玩家信息是否包括旁观者 | 默认值：true
          * @property {boolean} [includeDeadPlayer] 获取的玩家信息是否包括已死亡的玩家 | 默认值：true
+         * @property {boolean} [onlyIncludeEliminated] 获取的玩家信息是否只包含已淘汰的玩家（不包括旁观者） | 默认值：false
          */
 
         let playerData = this.teams.flatMap(team => team.players);
@@ -5800,6 +5764,7 @@ class BedwarsMap {
         // 筛选特定信息
         if (options?.includeEliminated === false) playerData = playerData.filter(playerData => !playerData.isEliminated);
         if (options?.includeDeadPlayer === false) playerData = playerData.filter(playerData => !playerData.isDead);
+        if (options?.onlyIncludeEliminated) playerData = playerData.filter(playerData => playerData.isEliminated);
 
         // 筛选特定队伍
         if (options?.includeTeams) playerData = playerData.filter(playerData => options.includeTeams.includes(playerData.team?.id));
@@ -5966,6 +5931,70 @@ class BedwarsMap {
             message.push("", { translate: "message.greenLine" },);
             lib.PlayerUtil.showLineMessage(playerData.player, message);
         });
+    };
+
+    // ===== 游戏事件 =====
+
+    /** 更新下一个事件的信息
+     * @param {"diamond_2"|"emerald_2"|"diamond_3"|"emerald_3"|"bed_destruction"|"death_match"|"game_over"} [id] 下一个事件的 ID
+     * @param {"钻石生成点 II 级"|"绿宝石生成点 II 级"|"钻石生成点 III 级"|"绿宝石生成点 III 级"|"床自毁"|"绝杀模式"|"游戏结束"} [name] 下一个事件的名称
+     * @param {number} countdown 下一个事件的倒计时（单位：秒）
+     */
+    updateNextEvent(id, name, countdown = 360) {
+        this.nextEvent.id = id;
+        this.nextEvent.name = name;
+        this.nextEvent.countdown = countdown;
+    };
+
+    /** 触发事件：钻石生成点 II 级 */
+    triggerDiamondTier2Event() {
+        this.updateSpawner("diamond", 2);
+        minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier2" });
+    };
+
+    /** 触发事件：钻石生成点 III 级 */
+    triggerDiamondTier3Event() {
+        this.updateSpawner("diamond", 3);
+        minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier3" });
+    };
+
+    /** 触发事件：绿宝石生成点 II 级 */
+    triggerEmeraldTier2Event() {
+        this.updateSpawner("emerald", 2);
+        minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier2" });
+    };
+
+    /** 触发事件：绿宝石生成点 III 级 */
+    triggerEmeraldTier3Event() {
+        this.updateSpawner("emerald", 3);
+        minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier3" });
+    };
+
+    /** 触发事件：床自毁 */
+    triggerBedDestructionEvent() {
+        // 破坏所有的床
+        this.teams.filter(team => team.bedIsExist).forEach(team => team.destroyBed());
+        // 对所有非旁观玩家公告
+        this.getAllPlayerData({ includeSpectator: false }).forEach(playerData => {
+            const player = playerData.player;
+            if (!player.isValid) return;
+            player.playSound("mob.wither.death", { location: player.location });
+            lib.PlayerUtil.setTitle(player, { translate: "title.bedDestroyed" }, { translate: "subtitle.bedDestroyed.allTeams" });
+            player.sendMessage({ translate: "message.bedDestroyed.allTeams" });
+        });
+        // 移除对应的检测事件
+        this.system.unsubscribeEvent("playerBreakBed");
+    };
+
+    /** 触发事件：绝杀模式 */
+    triggerDeathMatchEvent() {
+        // 生成末影龙，令每个存活的队伍召唤末影龙
+        this.map.aliveTeams.forEach(team => {
+            lib.EntityUtil.add("minecraft:ender_dragon", this.map.spawnpoint);
+            if (team.teamUpgrades.dragonBuff) lib.EntityUtil.add("minecraft:ender_dragon", this.map.spawnpoint);
+        });
+        lib.PlayerUtil.getAll().forEach(player => player.onScreenDisplay.setTitle({ translate: "title.deathMatch" }));
+        lib.DimensionUtil.setBlock("overworld", { x: 0, y: this.map.heightLimitMin, z: 0 }, "minecraft:barrier")
     };
 
 };
@@ -6843,20 +6872,6 @@ class BedwarsClassicMode extends BedwarsMode {
     /** 模式名称 */
     name = "经典";
 
-    /** 下一个事件 */
-    nextEvent = {
-
-        /** 下一个事件的 ID @type {"diamond_2"|"emerald_2"|"diamond_3"|"emerald_3"|"bed_destruction"|"death_match"|"game_over"} */
-        id: "diamond_2",
-
-        /** 下一个事件的倒计时，单位：秒 */
-        countdown: 360,
-
-        /** 下一个事件的名称 @type {"钻石生成点 II 级"|"绿宝石生成点 II 级"|"钻石生成点 III 级"|"绿宝石生成点 III 级"|"床自毁"|"绝杀模式"|"游戏结束"} */
-        name: "钻石生成点 II 级",
-
-    };
-
     /** @param {BedwarsSystem} system @param {BedwarsMap} map */
     constructor(system, map) {
         super(system, map);
@@ -6979,20 +6994,6 @@ class BedwarsCaptureMode extends BedwarsMode {
 
     /** 模式名称 */
     name = "夺点";
-
-    /** 下一个事件 */
-    nextEvent = {
-
-        /** 下一个事件的 ID @type {"diamond_2"|"emerald_2"|"diamond_3"|"emerald_3"|undefined} */
-        id: "diamond_2",
-
-        /** 下一个事件的倒计时，单位：秒 */
-        countdown: 240,
-
-        /** 下一个事件的名称 @type {"钻石生成点 II 级"|"绿宝石生成点 II 级"|"钻石生成点 III 级"|"绿宝石生成点 III 级"|undefined} */
-        name: "钻石生成点 II 级",
-
-    };
 
     /** @param {BedwarsSystem} system @param {BedwarsCaptureMap} map */
     constructor(system, map) {
@@ -7140,8 +7141,8 @@ class BedwarsCaptureMode extends BedwarsMode {
         // 添加事件信息
         const dominantTeamData = this.map.getDominantTeam();
         const dominantTeam = this.map.teams.find(team => team.id == dominantTeamData.id);
-        if (this.nextEvent.id) infoboardTexts.push(
-            `§f${this.nextEvent.name} - §a${lib.JSUtil.timeToString(lib.JSUtil.secondToMinute(this.nextEvent.countdown))}`,
+        if (this.map.nextEvent.id) infoboardTexts.push(
+            `§f${this.map.nextEvent.name} - §a${lib.JSUtil.timeToString(lib.JSUtil.secondToMinute(this.map.nextEvent.countdown))}`,
         );
         if (dominantTeamData.countdown !== Infinity) infoboardTexts.push(
             `${dominantTeamData.id ? `${dominantTeam.getTeamName()}队胜利` : "游戏结束"} - §a${lib.JSUtil.timeToString(lib.JSUtil.secondToMinute(dominantTeamData.countdown))}`
@@ -7194,44 +7195,27 @@ class BedwarsCaptureMode extends BedwarsMode {
                 // 常规游戏事件
                 {
                     callback: () => {
-                        this.nextEvent.countdown--;
-                        if (this.nextEvent.countdown <= 0) {
-                            switch (this.nextEvent.id) {
+                        this.map.nextEvent.countdown--;
+                        if (this.map.nextEvent.countdown <= 0) {
+                            switch (this.map.nextEvent.id) {
                                 case "diamond_2":
-                                    // 更新下一个游戏事件
-                                    this.nextEvent.id = "emerald_2";
-                                    this.nextEvent.name = "绿宝石生成点 II 级";
-                                    // 更新钻石生成点的等级
-                                    this.map.updateSpawner("diamond", 2);
-                                    minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier2" });
+                                    this.map.updateNextEvent("emerald_2", "绿宝石生成点 II 级", 240);
+                                    this.map.triggerDiamondTier2Event();
                                     break;
                                 case "emerald_2":
-                                    // 更新下一个游戏事件
-                                    this.nextEvent.id = "diamond_3";
-                                    this.nextEvent.name = "钻石生成点 III 级";
-                                    // 更新绿宝石生成点的等级
-                                    this.map.updateSpawner("emerald", 2);
-                                    minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier2" });
+                                    this.map.updateNextEvent("diamond_3", "钻石生成点 III 级", 240);
+                                    this.map.triggerEmeraldTier2Event();
                                     break;
                                 case "diamond_3":
-                                    // 更新下一个游戏事件
-                                    this.nextEvent.id = "emerald_3";
-                                    this.nextEvent.name = "绿宝石生成点 III 级";
-                                    // 更新钻石生成点的等级
-                                    this.map.updateSpawner("diamond", 3);
-                                    minecraft.world.sendMessage({ translate: "message.diamondSpawnerUpgradedToTier3" });
+                                    this.map.updateNextEvent("emerald_3", "绿宝石生成点 III 级", 240);
+                                    this.map.triggerDiamondTier3Event();
                                     break;
                                 case "emerald_3":
-                                    // 更新下一个游戏事件
-                                    this.nextEvent.id = undefined;
-                                    this.nextEvent.name = undefined;
-                                    // 更新绿宝石生成点的等级
-                                    this.map.updateSpawner("emerald", 3);
-                                    minecraft.world.sendMessage({ translate: "message.emeraldSpawnerUpgradedToTier3" });
+                                    this.map.updateNextEvent(void 0, void 0, 114514);
+                                    this.map.triggerEmeraldTier3Event();
                                     break;
                                 default: break;
                             };
-                            this.nextEvent.countdown = 240;
                         };
                     },
                     tickInterval: 20
@@ -7490,20 +7474,6 @@ class BedwarsExperienceMode extends BedwarsMode {
 
     /** 模式名称 */
     name = "经验";
-
-    /** 下一个事件 */
-    nextEvent = {
-
-        /** 下一个事件的 ID @type {"diamond_2"|"emerald_2"|"diamond_3"|"emerald_3"|"bed_destruction"|"death_match"|"game_over"} */
-        id: "diamond_2",
-
-        /** 下一个事件的倒计时，单位：秒 */
-        countdown: 360,
-
-        /** 下一个事件的名称 @type {"钻石生成点 II 级"|"绿宝石生成点 II 级"|"钻石生成点 III 级"|"绿宝石生成点 III 级"|"床自毁"|"绝杀模式"|"游戏结束"} */
-        name: "钻石生成点 II 级",
-
-    };
 
     /** @param {BedwarsSystem} system @param {BedwarsMap} map */
     constructor(system, map) {
@@ -7764,20 +7734,6 @@ class BedwarsRushMode extends BedwarsMode {
     /** 模式名称 */
     name = "疾速";
 
-    /** 下一个事件 */
-    nextEvent = {
-
-        /** 下一个事件的 ID @type {"bed_destruction"|"game_over"} */
-        id: "bed_destruction",
-
-        /** 下一个事件的倒计时，单位：秒 */
-        countdown: 900,
-
-        /** 下一个事件的名称 @type {"床自毁"|"游戏结束"} */
-        name: "床自毁",
-
-    };
-
     /** @param {BedwarsSystem} system @param {BedwarsMap} map */
     constructor(system, map) {
         super(system, map);
@@ -7808,28 +7764,18 @@ class BedwarsRushMode extends BedwarsMode {
             typeId: "gameEvent",
             interval: {
                 callback: () => {
-                    this.nextEvent.countdown--;
-                    if (this.nextEvent.countdown <= 0) {
-                        switch (this.nextEvent.id) {
+                    this.map.nextEvent.countdown--;
+                    if (this.map.nextEvent.countdown <= 0) {
+                        switch (this.map.nextEvent.id) {
                             case "bed_destruction":
-                                // 更新下一个游戏事件
-                                this.nextEvent.id = "game_over";
-                                this.nextEvent.name = "游戏结束";
-                                // 破坏玩家的所有床，并移除对应的检测事件
-                                this.map.teams.filter(team => team.bedIsExist).forEach(team => team.destroyBed());
-                                lib.PlayerUtil.getAll().forEach(player => {
-                                    player.playSound("mob.wither.death", { location: player.location });
-                                    lib.PlayerUtil.setTitle(player, { translate: "title.bedDestroyed" }, { translate: "subtitle.bedDestroyed.allTeams" });
-                                    player.sendMessage({ translate: "message.bedDestroyed.allTeams" });
-                                });
-                                this.system.unsubscribeEvent("playerBreakBed");
+                                this.map.updateNextEvent("game_over", "游戏结束", 900)
+                                this.map.triggerBedDestructionEvent();
                                 break;
                             case "game_over": default:
                                 // 结束游戏
                                 this.map.gameOver();
                                 break;
                         };
-                        this.nextEvent.countdown = 900;
                     };
                 },
                 tickInterval: 20,

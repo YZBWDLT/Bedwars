@@ -28,10 +28,10 @@ class BedwarsSystem {
     systemEvents = {};
 
     /** 系统版本 */
-    version = "1.1 - Pre 1";
+    version = "1.1";
 
     /** 是否为稳定版本 */
-    isReleaseVersion = false;
+    isReleaseVersion = true;
 
     /** 游戏 ID */
     gameId = lib.JSUtil.randomInt(1000, 9999);
@@ -1508,7 +1508,7 @@ class BedwarsSettings {
                             callback: (selection, thisForm) => developerSettings(player, thisForm),
                         }
                     },
-                    { type: "label", text: "§7快速设置一些开发者内容。当心！它们可能会很危险！", },
+                    { type: "label", text: "§7快速设置一些开发者内容。当心！它们可能会很危险！", visible: !system.isReleaseVersion },
                 ],
             },
             player
@@ -3044,10 +3044,13 @@ class BedwarsMode {
                     const player = event.hurtEntity;
                     const playerData = this.map.getPlayerData(player);
                     if (!playerData) return;
-                    // 如果伤害玩家没有起床战争信息，终止运行
+                    // 如果伤害玩家没有起床战争信息，先检查伤害者是否为铁傀儡或蠹虫，如果是则移除隐身效果，然后终止运行
                     const damager = event.damageSource.damagingEntity;
                     const damagerData = this.map.getPlayerData(damager);
-                    if (!damagerData) return;
+                    if (!damagerData) {
+                        if (["bedwars:iron_golem", "minecraft:silverfish"].includes(damager.typeId)) playerData.removeInvisibilityEffect();
+                        return;
+                    }
                     // 如果伤害者没有队伍归属，终止运行
                     if (!damagerData.team) return;
                     playerData.beAttacked(damager);
@@ -5012,12 +5015,21 @@ class BedwarsItemTrader extends BedwarsTrader {
     /** @override */
     itemChangeTest() {
 
+        const removeShopitemItems = () => {
+            lib.EntityUtil.getNearby("minecraft:item", this.location, 5)
+                .filter(itemEntity => {
+                    const itemTypeId = itemEntity.getComponent("minecraft:item").itemStack.typeId;
+                    return itemTypeId.includes("bedwars:category") || itemTypeId.includes("bedwars:shopitem")
+                })
+                .forEach(itemEntity => itemEntity.remove());
+        };
+
         // 检查 0~8 号位的物品是否为该物品，如果不是则更改分类菜单并重新设置物品
         Object.values(data.categoryItemData).forEach((data, index) => {
             if (!lib.InventoryUtil.slotIsItem(this.trader, index, data.icon)) {
                 this.playerData.tradeInfo.category = data.category;
                 lib.ItemUtil.removeItem(this.player, data.icon);
-                lib.ItemUtil.removeItemEntity(data.icon);
+                removeShopitemItems();
                 this.setShopitem("category", index);
             };
         });
@@ -5027,7 +5039,7 @@ class BedwarsItemTrader extends BedwarsTrader {
             const shopitemId = `bedwars:shopitem_${item.id}`
             if (!lib.InventoryUtil.slotIsItem(this.trader, this.getRealSlot(index), shopitemId, item.amount)) {
                 lib.ItemUtil.removeItem(this.player, shopitemId);
-                lib.ItemUtil.removeItemEntity(shopitemId);
+                removeShopitemItems();
                 this.lastPurchasedItem = item.purchaseTest();
                 this.setShopitem("shopitem", -1);
                 // ↑ debug 目前因为其他物品可能还沿用旧的玩家物品数量信息，这里先做全局替换
@@ -5176,11 +5188,20 @@ class BedwarsUpgradeTrader extends BedwarsTrader {
     /** @override */
     itemChangeTest() {
 
+        const removeShopitemItems = () => {
+            lib.EntityUtil.getNearby("minecraft:item", this.location, 5)
+            .filter(itemEntity => {
+                const itemTypeId = itemEntity.getComponent("minecraft:item").itemStack.typeId;
+                return itemTypeId.includes("bedwars:upgrade") || Object.values(data.trapInformationData).map(trapInfo => trapInfo.icon).includes(itemTypeId)
+            })
+            .forEach(itemEntity => itemEntity.remove());
+        };
+
         // 检查团队升级物品是否为该物品，如果不是则尝试清除并购买该物品
         this.upgrade.forEach((item, index) => {
             if (!lib.InventoryUtil.slotIsItem(this.trader, this.getUpdateSlot(index), item.shopitemId, item.amount)) {
                 lib.ItemUtil.removeItem(this.player, item.shopitemId);
-                lib.ItemUtil.removeItemEntity(item.shopitemId);
+                removeShopitemItems();
                 this.lastPurchasedItem = item.purchaseTest();
                 this.setShopitem("upgrade", -1);
                 // ↑ debug 目前因为其他物品可能还沿用旧的玩家物品数量信息，这里先做全局替换
@@ -5193,7 +5214,7 @@ class BedwarsUpgradeTrader extends BedwarsTrader {
         this.trap.forEach((item, index) => {
             if (!lib.InventoryUtil.slotIsItem(this.trader, this.getTrapSlot(index), item.shopitemId, item.amount)) {
                 lib.ItemUtil.removeItem(this.player, item.shopitemId);
-                lib.ItemUtil.removeItemEntity(item.shopitemId);
+                removeShopitemItems();
                 this.lastPurchasedItem = item.purchaseTest();
                 this.setShopitem("trap", -1);
                 // ↑ debug 目前因为其他物品可能还沿用旧的玩家物品数量信息，这里先做全局替换
@@ -5206,7 +5227,7 @@ class BedwarsUpgradeTrader extends BedwarsTrader {
         this.trapInformation.forEach((item, index) => {
             if (!lib.InventoryUtil.slotIsItem(this.trader, this.getTrapInformationSlot(index), item.icon)) {
                 lib.ItemUtil.removeItem(this.player, item.icon);
-                lib.ItemUtil.removeItemEntity(item.icon);
+                removeShopitemItems();
                 this.setShopitem("trapInformation", index);
             };
         });
@@ -6077,19 +6098,21 @@ class BedwarsTeam {
 
     /** 标记为无效队伍 */
     setInvalid() {
-        // 标记为无效和淘汰队伍
+        // 标记为无效队伍
         this.isValid = false;
+        // 标记为淘汰队伍
+        this.setEliminated(false);
         // 设置床为不存在，并且移除床
         this.destroyBed();
     };
 
     /** 标记为已被淘汰 */
-    setEliminated() {
+    setEliminated(showMessage = true) {
         // 如果该队伍已经被淘汰了，则终止运行
         if (this.isEliminated) return;
         this.isEliminated = true;
         this.map.aliveTeams = this.map.aliveTeams.filter(aliveTeam => aliveTeam.id != this.id);
-        minecraft.world.sendMessage(["\n", { translate: "message.teamEliminated", with: [`${this.getTeamNameWithColor()}`] }, "\n "]);
+        if (showMessage) minecraft.world.sendMessage(["\n", { translate: "message.teamEliminated", with: [`${this.getTeamNameWithColor()}`] }, "\n "]);
         if (this.map.aliveTeams.length == 1) this.map.gameOver(this.map.aliveTeams[0]);
     };
 
@@ -6572,11 +6595,16 @@ class BedwarsPlayer {
         this.timeSinceLastAttack = 0;
 
         // 移除隐身状态
-        if (this.player.getProperty("bedwars:is_invisible")) {
-            this.player.triggerEvent("show_armor");
-            this.player.sendMessage({ translate: "message.beHitWhenInvisibility" });
-        };
+        this.removeInvisibilityEffect();
 
+    };
+
+    /** 尝试移除玩家的隐身状态，返回是否成功移除 */
+    removeInvisibilityEffect() {
+        if (!this.player.getProperty("bedwars:is_invisible")) return false;
+        this.player.triggerEvent("show_armor");
+        this.player.sendMessage({ translate: "message.beHitWhenInvisibility" });
+        return true;
     };
 
     /** 重置受伤信息 */

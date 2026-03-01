@@ -953,6 +953,7 @@ export class InventoryUtil {
  * @typedef FormLabelComponent
  * @property {"label"} type 表示该组件采用文字标注
  * @property {string | minecraft.RawMessage} text 文字标注将采用的内容
+ * @property {boolean} [visible] 按钮是否可见（当前仅 action 类 UI 可用） | 默认值：true
  */
 
 /** FormDividerComponent
@@ -1043,7 +1044,7 @@ export class UIUtil {
         if (formData.components) formData.components.forEach(component => {
             switch (component.type) {
                 case "header": form.header(component.text); break;
-                case "label": form.label(component.text); break;
+                case "label": if (component.visible !== false) form.label(component.text); break;
                 case "divider": form.divider(); break;
                 case "button": if (component.visible !== false) form.button(component.text, component.icon); break;
                 default: break;

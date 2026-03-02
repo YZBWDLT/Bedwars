@@ -1418,6 +1418,9 @@ class BedwarsSettings {
                                     { type: "label", text: "§l测试员（1.0版本）" },
                                     { type: "label", text: "巴豆、星辰、龙龙、烟雨、小飞侠、文雨、火卫三、鸽子、月、硫化银、鱼周、白洲梓、lanos、Dull、小意、辉金、十三酱、小面包、鱼、虾皮、小鼠、蒙德人、祉语、帕、吴鸡哥、星空、基岩、沫尘、创哲宇、牢土、玖、小鸟、书豪、擺给、千里、han、条形马、laolu、墨、怡柔、star、闲鱼" },
                                     { type: "divider" },
+                                    { type: "label", text: "§l测试员（1.1版本）" },
+                                    { type: "label", text: "巴豆、硫化银、文雨、小飞侠、鸽子、绿叶、橘子、火卫三、祉语、南瓜汁、小鼠、lanos、比翼鸟、蒙德人、星辰、抖抖抖、烟雨、龙龙、Panda、十三酱、帕、塞拉、海王星、鱼周、基岩、xsg、Cuzy、千里、墨" },
+                                    { type: "divider" },
                                     { type: "label", text: `§l特别鸣谢` },
                                     { type: "label", text: `祉语（感谢提供服务器！）` },
                                     { type: "label", text: `辉金（为我们提供了远古的测试素材！）` },
@@ -3048,7 +3051,7 @@ class BedwarsMode {
                     const damager = event.damageSource.damagingEntity;
                     const damagerData = this.map.getPlayerData(damager);
                     if (!damagerData) {
-                        if (["bedwars:iron_golem", "minecraft:silverfish"].includes(damager.typeId)) playerData.removeInvisibilityEffect();
+                        if (["bedwars:iron_golem", "minecraft:silverfish"].includes(damager?.typeId)) playerData.removeInvisibilityEffect();
                         return;
                     }
                     // 如果伤害者没有队伍归属，终止运行

@@ -1,0 +1,441 @@
+{
+    "format_version": "1.21.0",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "bedwars:iron_golem",
+            "is_spawnable": true,
+            "is_summonable": true,
+            "is_experimental": false,
+            "properties": {
+                "bedwars:team": {
+                    "type": "enum",
+                    "values": ["none", "red", "blue", "green", "yellow", "white", "pink", "gray", "cyan", "brown", "purple", "orange"],
+                    "default": "none"
+                }
+            }
+        },
+
+        "components": {
+            "minecraft:type_family": { "family": [ "irongolem", "mob" ] },
+            "minecraft:nameable": { "allow_name_tag_renaming": true, "always_show": true },
+            "minecraft:collision_box": { "width": 1.4, "height": 2.9 },
+            "minecraft:health": { "value": 30, "max": 30 },
+            "minecraft:hurt_on_condition": { "damage_conditions": [ { "filters": { "test": "in_lava", "subject": "self", "operator": "==", "value": true }, "cause": "lava", "damage_per_tick": 4 } ] },
+            "minecraft:movement": { "value": 0.25 },
+            "minecraft:navigation.walk": { "can_path_over_water": false, "avoid_water": true, "avoid_damage_blocks": true },
+            "minecraft:movement.basic": { },
+            "minecraft:jump.static": { },
+            "minecraft:can_climb": { },
+            "minecraft:attack": { "damage": { "range_min": 4, "range_max": 10 } },
+            "minecraft:knockback_resistance": { "value": 1.0 },
+            "minecraft:leashable": { "soft_distance": 4.0, "hard_distance": 6.0, "max_distance": 10.0 },
+            "minecraft:behavior.melee_attack": { "priority": 1, "track_target": true },
+            "minecraft:behavior.move_towards_target": { "priority": 2, "speed_multiplier": 0.9, "within_radius": 32 },
+            "minecraft:behavior.random_stroll": { "priority": 6, "speed_multiplier": 0.6, "xz_dist": 16 },
+            "minecraft:behavior.look_at_player": { "priority": 7, "look_distance": 6.0, "probability": 0.02 },
+            "minecraft:behavior.random_look_around": { "priority": 8 },
+            "minecraft:behavior.hurt_by_target": { "priority": 2, "entity_types": { "filters": { "test": "is_family", "subject": "other", "operator": "!=", "value": "creeper" } } },
+            "minecraft:persistent": { },
+            "minecraft:physics": { },
+            "minecraft:pushable": { "is_pushable": true, "is_pushable_by_piston": true },
+            "minecraft:follow_range": { "value": 64 },
+            "minecraft:conditional_bandwidth_optimization": { },
+            "minecraft:preferred_path": {
+                "max_fall_blocks": 1,
+                "jump_cost": 5,
+                "default_block_cost": 1.5,
+                "preferred_path_blocks": [
+                    { "cost": 0, "blocks": [ "grass_path" ] },
+                    { "cost": 1, "blocks": [ "cobblestone", "stone", "stonebrick", "sandstone", "mossy_cobblestone", "stone_slab", "stone_slab2", "stone_slab3", "stone_slab4", "double_stone_slab", "double_stone_slab2", "double_stone_slab3", "double_stone_slab4", "wooden_slab", "double_wooden_slab", "planks", "brick_block", "nether_brick", "red_nether_brick", "end_bricks", "red_sandstone", "stained_glass", "glass", "glowstone", "prismarine", "emerald_block", "diamond_block", "lapis_block", "gold_block", "redstone_block", "purple_glazed_terracotta", "white_glazed_terracotta", "orange_glazed_terracotta", "magenta_glazed_terracotta", "light_blue_glazed_terracotta", "yellow_glazed_terracotta", "lime_glazed_terracotta", "pink_glazed_terracotta", "gray_glazed_terracotta", "silver_glazed_terracotta", "cyan_glazed_terracotta", "blue_glazed_terracotta", "brown_glazed_terracotta", "green_glazed_terracotta", "red_glazed_terracotta", "black_glazed_terracotta" ] },
+                    { "cost": 50, "blocks": [ "bed", "lectern", "composter", "grindstone", "blast_furnace", "smoker", "fletching_table", "cartography_table", "brewing_stand", "smithing_table", "cauldron", "barrel", "loom", "stonecutter" ] }
+                ]
+            },
+            "minecraft:damage_sensor": {
+                "triggers": [
+                    { "cause": "fall", "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "red", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "red", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "blue", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "blue", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "green", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "green", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "yellow", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "yellow", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "white", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "white", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "pink", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "pink", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "gray", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "gray", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "cyan", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "cyan", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "brown", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "brown", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "purple", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "purple", "subject": "other" } ] } }, "deals_damage": false },
+                    { "on_damage": { "filters": { "all_of": [ { "test": "enum_property", "domain": "bedwars:team", "value": "orange", "subject": "self" }, { "test": "enum_property", "domain": "bedwars:team", "value": "orange", "subject": "other" } ] } }, "deals_damage": false }
+                ]
+            }
+
+        },
+
+        "events": {
+            "team_red": { "add": { "component_groups": [ "team_red" ] }, "set_property": { "bedwars:team": "red" } },
+            "team_blue": { "add": { "component_groups": [ "team_blue" ] }, "set_property": { "bedwars:team": "blue" } },
+            "team_green": { "add": { "component_groups": [ "team_green" ] }, "set_property": { "bedwars:team": "green" } },
+            "team_yellow": { "add": { "component_groups": [ "team_yellow" ] }, "set_property": { "bedwars:team": "yellow" } },
+            "team_white": { "add": { "component_groups": [ "team_white" ] }, "set_property": { "bedwars:team": "white" } },
+            "team_pink": { "add": { "component_groups": [ "team_pink" ] }, "set_property": { "bedwars:team": "pink" } },
+            "team_gray": { "add": { "component_groups": [ "team_gray" ] }, "set_property": { "bedwars:team": "gray" } },
+            "team_cyan": { "add": { "component_groups": [ "team_cyan" ] }, "set_property": { "bedwars:team": "cyan" } },
+            "team_brown": { "add": { "component_groups": [ "team_brown" ] }, "set_property": { "bedwars:team": "brown" } },
+            "team_purple": { "add": { "component_groups": [ "team_purple" ] }, "set_property": { "bedwars:team": "purple" } },
+            "team_orange": { "add": { "component_groups": [ "team_cyan" ] }, "set_property": { "bedwars:team": "cyan" } }
+        },
+
+        "component_groups": {
+            "team_red": {
+                "minecraft:behavior.nearest_attackable_target": {
+                    "priority": 0,
+                    "attack_interval": 10,
+                    "entity_types": [
+                        {
+                            "filters": {
+                                "all_of": [
+                                    { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                                    { "test": "enum_property", "domain": "bedwars:team", "value": "red", "subject": "other", "operator": "!=" }
+                                ]
+                            },
+                            "max_dist": 16
+                        }
+                    ]
+                },
+                "minecraft:behavior.melee_attack": { "priority": 0, "track_target": true },
+                "minecraft:angry": {
+                    "broadcast_anger": true,
+                    "broadcast_filters": {
+                        "all_of": [
+                            { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                            { "test": "enum_property", "domain": "bedwars:team", "value": "red", "subject": "other", "operator": "!=" }
+                        ]
+                    },
+                    "broadcast_range": 20,
+                    "broadcast_anger_on_attack": true,
+                    "broadcast_anger_on_being_attacked": true,
+                    "broadcast_anger_when_dying": true,
+                    "duration": 241
+                }
+            },
+            "team_blue": {
+                "minecraft:behavior.nearest_attackable_target": {
+                    "priority": 0,
+                    "attack_interval": 10,
+                    "entity_types": [
+                        {
+                            "filters": {
+                                "all_of": [
+                                    { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                                    { "test": "enum_property", "domain": "bedwars:team", "value": "blue", "subject": "other", "operator": "!=" }
+                                ]
+                            },
+                            "max_dist": 16
+                        }
+                    ]
+                },
+                "minecraft:behavior.melee_attack": { "priority": 0, "track_target": true },
+                "minecraft:angry": {
+                    "broadcast_anger": true,
+                    "broadcast_filters": {
+                        "all_of": [
+                            { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                            { "test": "enum_property", "domain": "bedwars:team", "value": "blue", "subject": "other", "operator": "!=" }
+                        ]
+                    },
+                    "broadcast_range": 20,
+                    "broadcast_anger_on_attack": true,
+                    "broadcast_anger_on_being_attacked": true,
+                    "broadcast_anger_when_dying": true,
+                    "duration": 241
+                }
+            },
+            "team_green": {
+                "minecraft:behavior.nearest_attackable_target": {
+                    "priority": 0,
+                    "attack_interval": 10,
+                    "entity_types": [
+                        {
+                            "filters": {
+                                "all_of": [
+                                    { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                                    { "test": "enum_property", "domain": "bedwars:team", "value": "green", "subject": "other", "operator": "!=" }
+                                ]
+                            },
+                            "max_dist": 16
+                        }
+                    ]
+                },
+                "minecraft:behavior.melee_attack": { "priority": 0, "track_target": true },
+                "minecraft:angry": {
+                    "broadcast_anger": true,
+                    "broadcast_filters": {
+                        "all_of": [
+                            { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                            { "test": "enum_property", "domain": "bedwars:team", "value": "green", "subject": "other", "operator": "!=" }
+                        ]
+                    },
+                    "broadcast_range": 20,
+                    "broadcast_anger_on_attack": true,
+                    "broadcast_anger_on_being_attacked": true,
+                    "broadcast_anger_when_dying": true,
+                    "duration": 241
+                }
+            },
+            "team_yellow": {
+                "minecraft:behavior.nearest_attackable_target": {
+                    "priority": 0,
+                    "attack_interval": 10,
+                    "entity_types": [
+                        {
+                            "filters": {
+                                "all_of": [
+                                    { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                                    { "test": "enum_property", "domain": "bedwars:team", "value": "yellow", "subject": "other", "operator": "!=" }
+                                ]
+                            },
+                            "max_dist": 16
+                        }
+                    ]
+                },
+                "minecraft:behavior.melee_attack": { "priority": 0, "track_target": true },
+                "minecraft:angry": {
+                    "broadcast_anger": true,
+                    "broadcast_filters": {
+                        "all_of": [
+                            { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                            { "test": "enum_property", "domain": "bedwars:team", "value": "yellow", "subject": "other", "operator": "!=" }
+                        ]
+                    },
+                    "broadcast_range": 20,
+                    "broadcast_anger_on_attack": true,
+                    "broadcast_anger_on_being_attacked": true,
+                    "broadcast_anger_when_dying": true,
+                    "duration": 241
+                }
+            },
+            "team_white": {
+                "minecraft:behavior.nearest_attackable_target": {
+                    "priority": 0,
+                    "attack_interval": 10,
+                    "entity_types": [
+                        {
+                            "filters": {
+                                "all_of": [
+                                    { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                                    { "test": "enum_property", "domain": "bedwars:team", "value": "white", "subject": "other", "operator": "!=" }
+                                ]
+                            },
+                            "max_dist": 16
+                        }
+                    ]
+                },
+                "minecraft:behavior.melee_attack": { "priority": 0, "track_target": true },
+                "minecraft:angry": {
+                    "broadcast_anger": true,
+                    "broadcast_filters": {
+                        "all_of": [
+                            { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                            { "test": "enum_property", "domain": "bedwars:team", "value": "white", "subject": "other", "operator": "!=" }
+                        ]
+                    },
+                    "broadcast_range": 20,
+                    "broadcast_anger_on_attack": true,
+                    "broadcast_anger_on_being_attacked": true,
+                    "broadcast_anger_when_dying": true,
+                    "duration": 241
+                }
+            },
+            "team_pink": {
+                "minecraft:behavior.nearest_attackable_target": {
+                    "priority": 0,
+                    "attack_interval": 10,
+                    "entity_types": [
+                        {
+                            "filters": {
+                                "all_of": [
+                                    { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                                    { "test": "enum_property", "domain": "bedwars:team", "value": "pink", "subject": "other", "operator": "!=" }
+                                ]
+                            },
+                            "max_dist": 16
+                        }
+                    ]
+                },
+                "minecraft:behavior.melee_attack": { "priority": 0, "track_target": true },
+                "minecraft:angry": {
+                    "broadcast_anger": true,
+                    "broadcast_filters": {
+                        "all_of": [
+                            { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                            { "test": "enum_property", "domain": "bedwars:team", "value": "pink", "subject": "other", "operator": "!=" }
+                        ]
+                    },
+                    "broadcast_range": 20,
+                    "broadcast_anger_on_attack": true,
+                    "broadcast_anger_on_being_attacked": true,
+                    "broadcast_anger_when_dying": true,
+                    "duration": 241
+                }
+            },
+            "team_gray": {
+                "minecraft:behavior.nearest_attackable_target": {
+                    "priority": 0,
+                    "attack_interval": 10,
+                    "entity_types": [
+                        {
+                            "filters": {
+                                "all_of": [
+                                    { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                                    { "test": "enum_property", "domain": "bedwars:team", "value": "gray", "subject": "other", "operator": "!=" }
+                                ]
+                            },
+                            "max_dist": 16
+                        }
+                    ]
+                },
+                "minecraft:behavior.melee_attack": { "priority": 0, "track_target": true },
+                "minecraft:angry": {
+                    "broadcast_anger": true,
+                    "broadcast_filters": {
+                        "all_of": [
+                            { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                            { "test": "enum_property", "domain": "bedwars:team", "value": "gray", "subject": "other", "operator": "!=" }
+                        ]
+                    },
+                    "broadcast_range": 20,
+                    "broadcast_anger_on_attack": true,
+                    "broadcast_anger_on_being_attacked": true,
+                    "broadcast_anger_when_dying": true,
+                    "duration": 241
+                }
+            },
+            "team_cyan": {
+                "minecraft:behavior.nearest_attackable_target": {
+                    "priority": 0,
+                    "attack_interval": 10,
+                    "entity_types": [
+                        {
+                            "filters": {
+                                "all_of": [
+                                    { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                                    { "test": "enum_property", "domain": "bedwars:team", "value": "cyan", "subject": "other", "operator": "!=" }
+                                ]
+                            },
+                            "max_dist": 16
+                        }
+                    ]
+                },
+                "minecraft:behavior.melee_attack": { "priority": 0, "track_target": true },
+                "minecraft:angry": {
+                    "broadcast_anger": true,
+                    "broadcast_filters": {
+                        "all_of": [
+                            { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                            { "test": "enum_property", "domain": "bedwars:team", "value": "cyan", "subject": "other", "operator": "!=" }
+                        ]
+                    },
+                    "broadcast_range": 20,
+                    "broadcast_anger_on_attack": true,
+                    "broadcast_anger_on_being_attacked": true,
+                    "broadcast_anger_when_dying": true,
+                    "duration": 241
+                }
+            },
+            "team_brown": {
+                "minecraft:behavior.nearest_attackable_target": {
+                    "priority": 0,
+                    "attack_interval": 10,
+                    "entity_types": [
+                        {
+                            "filters": {
+                                "all_of": [
+                                    { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                                    { "test": "enum_property", "domain": "bedwars:team", "value": "brown", "subject": "other", "operator": "!=" }
+                                ]
+                            },
+                            "max_dist": 16
+                        }
+                    ]
+                },
+                "minecraft:behavior.melee_attack": { "priority": 0, "track_target": true },
+                "minecraft:angry": {
+                    "broadcast_anger": true,
+                    "broadcast_filters": {
+                        "all_of": [
+                            { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                            { "test": "enum_property", "domain": "bedwars:team", "value": "brown", "subject": "other", "operator": "!=" }
+                        ]
+                    },
+                    "broadcast_range": 20,
+                    "broadcast_anger_on_attack": true,
+                    "broadcast_anger_on_being_attacked": true,
+                    "broadcast_anger_when_dying": true,
+                    "duration": 241
+                }
+            },
+            "team_purple": {
+                "minecraft:behavior.nearest_attackable_target": {
+                    "priority": 0,
+                    "attack_interval": 10,
+                    "entity_types": [
+                        {
+                            "filters": {
+                                "all_of": [
+                                    { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                                    { "test": "enum_property", "domain": "bedwars:team", "value": "purple", "subject": "other", "operator": "!=" }
+                                ]
+                            },
+                            "max_dist": 16
+                        }
+                    ]
+                },
+                "minecraft:behavior.melee_attack": { "priority": 0, "track_target": true },
+                "minecraft:angry": {
+                    "broadcast_anger": true,
+                    "broadcast_filters": {
+                        "all_of": [
+                            { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                            { "test": "enum_property", "domain": "bedwars:team", "value": "purple", "subject": "other", "operator": "!=" }
+                        ]
+                    },
+                    "broadcast_range": 20,
+                    "broadcast_anger_on_attack": true,
+                    "broadcast_anger_on_being_attacked": true,
+                    "broadcast_anger_when_dying": true,
+                    "duration": 241
+                }
+            },
+            "team_orange": {
+                "minecraft:behavior.nearest_attackable_target": {
+                    "priority": 0,
+                    "attack_interval": 10,
+                    "entity_types": [
+                        {
+                            "filters": {
+                                "all_of": [
+                                    { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                                    { "test": "enum_property", "domain": "bedwars:team", "value": "orange", "subject": "other", "operator": "!=" }
+                                ]
+                            },
+                            "max_dist": 16
+                        }
+                    ]
+                },
+                "minecraft:behavior.melee_attack": { "priority": 0, "track_target": true },
+                "minecraft:angry": {
+                    "broadcast_anger": true,
+                    "broadcast_filters": {
+                        "all_of": [
+                            { "test": "has_property", "value": "bedwars:team", "subject": "other" },
+                            { "test": "enum_property", "domain": "bedwars:team", "value": "orange", "subject": "other", "operator": "!=" }
+                        ]
+                    },
+                    "broadcast_range": 20,
+                    "broadcast_anger_on_attack": true,
+                    "broadcast_anger_on_being_attacked": true,
+                    "broadcast_anger_when_dying": true,
+                    "duration": 241
+                }
+            }
+        }
+    }
+}

@@ -4,55 +4,35 @@
 		"name": "量筒的起床战争 行为包",
 		"description": "仿照Hypixel在基岩版上实现的起床战争！",
 		"uuid": "459363a0-9008-4654-a350-496c402f2223",
-		"version": [
-			1,
-			0,
-			4
-		],
-		"min_engine_version": [
-			1,
-			21,
-			0
-		]
+		"version": [ 1, 1, 7 ],
+		"min_engine_version": [ 1, 21, 100 ]
 	},
 	"modules": [
 		{
 			"type": "data",
 			"uuid": "957e511b-05b3-465d-afa3-13b6d94d57ec",
-			"version": [
-				1,
-				0,
-				0
-			]
+			"version": [ 1, 0, 0 ]
 		},
 		{
 			"type": "script",
 			"uuid": "ec90562e-ee59-46c1-997b-bc55ac078fa5",
-			"version": [
-				1,
-				0,
-				0
-			],
+			"version": [ 1, 0, 0 ],
 			"entry": "scripts/bedwars/main.js"
 		}
 	],
 	"metadata": {
 		"authors": [
 			"YZBWDLT"
-		],
-		"generated_with": {
-			"bridge": [
-				"2.7.42"
-			],
-			"dash": [
-				"0.11.7"
-			]
-		}
+		]
 	},
 	"dependencies": [
 		{
 			"module_name": "@minecraft/server",
-			"version": "1.11.0"
+			"version": "2.1.0"
+		},
+		{
+			"module_name": "@minecraft/server-ui",
+			"version": "2.0.0"
 		}
 	]
 }

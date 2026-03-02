@@ -48,17 +48,25 @@
         "bedwars_tnt_side": { "textures": [ "textures/blocks/tnt_side" ] },
 
         "bedwars_shopitem_wool": { "textures": [ "textures/blocks/wool_colored_white" ] },
-        "bedwars_shopitem_planks": { "textures": [ "textures/blocks/planks_oak" ] },
+        "bedwars_shopitem_oak_planks": { "textures": [ "textures/blocks/planks_oak" ] },
         "bedwars_shopitem_end_stone": { "textures": [ "textures/blocks/end_stone" ] },
-        "bedwars_shopitem_blast_proof_glass": { "textures": [ "textures/blocks/glass_white" ] },
-        "bedwars_shopitem_stained_hardened_clay": { "textures": [ "textures/blocks/hardened_clay_stained_white" ] },
+        "bedwars_shopitem_blast_proof_glass": { "textures": [ "textures/blocks/glass" ] },
+        "bedwars_shopitem_stained_hardened_clay": { "textures": [ "textures/blocks/hardened_clay" ] },
         "bedwars_shopitem_obsidian": { "textures": [ "textures/blocks/obsidian" ] },
         "bedwars_shopitem_sponge": { "textures": [ "textures/blocks/sponge" ] },
         "bedwars_shopitem_tnt_top": { "textures": [ "textures/blocks/tnt_top" ] },
         "bedwars_shopitem_tnt_bottom": { "textures": [ "textures/blocks/tnt_bottom" ] },
         "bedwars_shopitem_tnt_side": { "textures": [ "textures/blocks/tnt_side" ] },
 
-        "bedwars_upgrade_heal_pool_side" : { "textures" : "textures/blocks/hay_block_side" },
-        "bedwars_upgrade_heal_pool_top" : { "textures" : "textures/blocks/hay_block_top" }
+        "bedwars_upgrade_heal_pool_side": { "textures" : "textures/blocks/hay_block_side" },
+        "bedwars_upgrade_heal_pool_top": { "textures" : "textures/blocks/hay_block_top" },
+        "bedwars_upgrade_forge_front_off": { "textures": "textures/blocks/furnace_front_off" },
+        "bedwars_upgrade_forge_top": { "textures": "textures/blocks/furnace_top" },
+        "bedwars_upgrade_forge_side": { "textures": "textures/blocks/furnace_side" },
+
+        "bedwars_category_blocks": { "textures": [ "textures/blocks/hardened_clay" ] },
+        "bedwars_category_utility_top": { "textures": [ "textures/blocks/tnt_top" ] },
+        "bedwars_category_utility_bottom": { "textures": [ "textures/blocks/tnt_bottom" ] },
+        "bedwars_category_utility_side": { "textures": [ "textures/blocks/tnt_side" ] }
     }
 }

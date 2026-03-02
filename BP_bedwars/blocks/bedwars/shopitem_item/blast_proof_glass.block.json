@@ -1,0 +1,13 @@
+{
+    "format_version": "1.20.50",
+    "minecraft:block": {
+        "description": {
+            "identifier": "bedwars:shopitem_blast_proof_glass",
+            "menu_category": { "category": "items", "is_hidden_in_commands": false }
+        },
+        "components": {
+            "minecraft:geometry": "geometry.glass",
+            "minecraft:material_instances": { "*": { "render_method": "blend", "texture": "bedwars_shopitem_blast_proof_glass" } }
+        }
+    }
+}

@@ -13,7 +13,7 @@
             "minecraft:collision_box": { "width": 0.25, "height": 0.25 },
             "minecraft:projectile": {
                 "on_hit": {
-                    "impact_damage": { "damage": 0, "knockback": true },
+                    "impact_damage": { "damage": -1, "knockback": true },
                     "definition_event": { "affect_projectile": true, "event_trigger": { "event": "on_hit", "target": "self" } },
                     "remove_on_hit": { }
                 },
@@ -30,4 +30,3 @@
         "component_groups": { }
     }
 }
-    

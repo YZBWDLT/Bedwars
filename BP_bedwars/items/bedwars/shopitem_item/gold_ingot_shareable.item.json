@@ -1,0 +1,13 @@
+{
+    "format_version": "1.21.50",
+    "minecraft:item": {
+        "description": {
+            "identifier": "bedwars:shopitem_gold_ingot_shareable",
+            "menu_category": { "category": "items", "is_hidden_in_commands": false }
+        },
+        "components": {
+            "minecraft:icon": "bedwars_gold_ingot",
+            "minecraft:should_despawn": false
+        }
+    }
+}

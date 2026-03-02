@@ -1,7 +1,7 @@
 {
     "format_version": "1.8.0",
     "render_controllers": {
-        "controller.render.iron_golem_cracks": {
+        "controller.render.bedwars_iron_golem_cracks": {
             "arrays": {
                 "textures": {
                     "Array.cracks": [
@@ -13,7 +13,12 @@
                 }
             },
             "geometry": "Geometry.default",
-            "textures": [ "Array.cracks[math.clamp(query.health / (query.max_health / 4), 0, 3)]" ]
+            "textures": [ "Array.cracks[math.clamp(query.health / (query.max_health / 4), 0, 3)]" ],
+            "materials": [
+                {
+                    "*": "material.default"
+                }
+            ]
         }
     }
 }

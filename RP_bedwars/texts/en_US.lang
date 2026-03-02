@@ -1,10 +1,81 @@
+### ===== New Entities =====
+entity.bedwars:diamond_spawner.name=Diamond Spawner
+entity.bedwars:emerald_spawner.name=Emerald Spawner
+entity.bedwars:marker.name=Marker
+entity.bedwars:text_display.name=Text Display
+entity.bed_bug.name=Bedbug
+entity.fireball.name=Fireball
+entity.bridge_egg.name=Bridge Egg
+
+### ===== New Blocks =====
+tile.bedwars:red_wool.name=Red Wool
+tile.bedwars:blue_wool.name=Blue Wool
+tile.bedwars:green_wool.name=Lime Wool
+tile.bedwars:yellow_wool.name=Yellow Wool
+tile.bedwars:white_wool.name=White Wool
+tile.bedwars:pink_wool.name=Pink Wool
+tile.bedwars:gray_wool.name=Gray Wool
+tile.bedwars:cyan_wool.name=Cyan Wool
+tile.bedwars:purple_wool.name=Purple Wool
+tile.bedwars:orange_wool.name=Orange Wool
+tile.bedwars:brown_wool.name=Brown Wool
+
+tile.bedwars:red_stained_hardened_clay.name=Red Hardened Clay
+tile.bedwars:blue_stained_hardened_clay.name=Blue Hardened Clay
+tile.bedwars:green_stained_hardened_clay.name=Lime Hardened Clay
+tile.bedwars:yellow_stained_hardened_clay.name=Yellow Hardened Clay
+tile.bedwars:white_stained_hardened_clay.name=White Hardened Clay
+tile.bedwars:pink_stained_hardened_clay.name=Pink Hardened Clay
+tile.bedwars:gray_stained_hardened_clay.name=Gray Hardened Clay
+tile.bedwars:cyan_stained_hardened_clay.name=Cyan Hardened Clay
+tile.bedwars:purple_stained_hardened_clay.name=Purple Hardened Clay
+tile.bedwars:orange_stained_hardened_clay.name=Orange Hardened Clay
+tile.bedwars:brown_stained_hardened_clay.name=Brown Hardened Clay
+
+tile.bedwars:red_blast_proof_glass.name=Red Blast-Proof Glass
+tile.bedwars:blue_blast_proof_glass.name=Blue Blast-Proof Glass
+tile.bedwars:green_blast_proof_glass.name=Lime Blast-Proof Glass
+tile.bedwars:yellow_blast_proof_glass.name=Yellow Blast-Proof Glass
+tile.bedwars:white_blast_proof_glass.name=White Blast-Proof Glass
+tile.bedwars:pink_blast_proof_glass.name=Pink Blast-Proof Glass
+tile.bedwars:gray_blast_proof_glass.name=Gray Blast-Proof Glass
+tile.bedwars:cyan_blast_proof_glass.name=Cyan Blast-Proof Glass
+tile.bedwars:purple_blast_proof_glass.name=Purple Blast-Proof Glass
+tile.bedwars:orange_blast_proof_glass.name=Orange Blast-Proof Glass
+tile.bedwars:brown_blast_proof_glass.name=Brown Blast-Proof Glass
+
+tile.bedwars:end_stone.name=End Stone
+tile.bedwars:obsidian.name=Obsidian
+tile.bedwars:oak_planks.name=Oak Planks
+
 ### ===== New Items =====
+
 #### Resources
 item.bedwars:diamond=Diamond
 item.bedwars:emerald=Emerald
 item.bedwars:iron_ingot=Iron Ingot
 item.bedwars:gold_ingot=Gold Ingot
+item.bedwars:emerald_shareable=Emerald
+item.bedwars:iron_ingot_shareable=Iron Ingot
+item.bedwars:gold_ingot_shareable=Gold Ingot
+
+#### Gadgets
+item.bedwars:magic_milk=Magic Milk
+item.bedwars:potion_invisibility=Invisibility Potion (30 seconds)
+item.bedwars:potion_speed=Speed II Potion (45 seconds)
+item.bedwars:potion_jump_boost=Jump V Potion (45 seconds)
+item.bedwars:bed_bug=Bedbug
+item.bedwars:bridge_egg=Bridge Egg
+item.bedwars:dream_defender=Dream Defender
+item.bedwars:fireball=Fireball
+item.bedwars:knockback_stick=Stick (Knockback I)
+tile.bedwars:tnt.name=TNT
+
 #### Tools
+item.bedwars:wooden_sword=Wooden Sword
+item.bedwars:stone_sword=Stone Sword
+item.bedwars:iron_sword=Iron Sword
+item.bedwars:diamond_sword=Diamond Sword
 item.bedwars:wooden_pickaxe=Wooden Pickaxe
 item.bedwars:iron_pickaxe=Iron Pickaxe
 item.bedwars:golden_pickaxe=Golden Pickaxe
@@ -14,10 +85,67 @@ item.bedwars:stone_axe=Stone Axe
 item.bedwars:iron_axe=Iron Axe
 item.bedwars:diamond_axe=Diamond Axe
 item.bedwars:shears=Shears
+
+#### Beds
+item.bedwars:red_bed=Red Bed
+item.bedwars:blue_bed=Blue Bed
+
+#### Team Apparels
+item.bedwars:red_helmet=Red Hat
+item.bedwars:red_chestplate=Red Shirt
+item.bedwars:red_leggings=Red Pants
+item.bedwars:red_boots=Red Shoes
+item.bedwars:blue_helmet=Blue Hat
+item.bedwars:blue_chestplate=Blue Shirt
+item.bedwars:blue_leggings=Blue Pants
+item.bedwars:blue_boots=Blue Shoes
+item.bedwars:green_helmet=Green Hat
+item.bedwars:green_chestplate=Green Shirt
+item.bedwars:green_leggings=Green Pants
+item.bedwars:green_boots=Green Shoes
+item.bedwars:yellow_helmet=Yellow Hat
+item.bedwars:yellow_chestplate=Yellow Shirt
+item.bedwars:yellow_leggings=Yellow Pants
+item.bedwars:yellow_boots=Yellow Shoes
+item.bedwars:white_helmet=White Hat
+item.bedwars:white_chestplate=White Shirt
+item.bedwars:white_leggings=White Pants
+item.bedwars:white_boots=White Shoes
+item.bedwars:pink_helmet=Pink Hat
+item.bedwars:pink_chestplate=Pink Shirt
+item.bedwars:pink_leggings=Pink Pants
+item.bedwars:pink_boots=Pink Shoes
+item.bedwars:gray_helmet=Gray Hat
+item.bedwars:gray_chestplate=Gray Shirt
+item.bedwars:gray_leggings=Gray Pants
+item.bedwars:gray_boots=Gray Shoes
+item.bedwars:cyan_helmet=Cyan Hat
+item.bedwars:cyan_chestplate=Cyan Shirt
+item.bedwars:cyan_leggings=Cyan Pants
+item.bedwars:cyan_boots=Cyan Shoes
+item.bedwars:orange_helmet=Orange Hat
+item.bedwars:orange_chestplate=Orange Shirt
+item.bedwars:orange_leggings=Orange Pants
+item.bedwars:orange_boots=Orange Shoes
+item.bedwars:purple_helmet=Purple Hat
+item.bedwars:purple_chestplate=Purple Shirt
+item.bedwars:purple_leggings=Purple Pants
+item.bedwars:purple_boots=Purple Shoes
+item.bedwars:brown_helmet=Brown Hat
+item.bedwars:brown_chestplate=Brown Shirt
+item.bedwars:brown_leggings=Brown Pants
+item.bedwars:brown_boots=Brown Shoes
+item.bedwars:chainmail_leggings=Chainmail Leggings
+item.bedwars:chainmail_boots=Chainmail Boots
+item.bedwars:iron_leggings=Iron Leggings
+item.bedwars:iron_boots=Iron Boots
+item.bedwars:diamond_leggings=Diamond Leggings
+item.bedwars:diamond_boots=Diamond Boots
+
 #### Shopitems
 tile.bedwars:shopitem_wool.name=§aWool
 tile.bedwars:shopitem_stained_hardened_clay.name=§aHardened Clay
-tile.bedwars:shopitem_planks.name=§aPlanks
+tile.bedwars:shopitem_oak_planks.name=§aPlanks
 tile.bedwars:shopitem_blast_proof_glass.name=§aBlast-Proof Glass
 tile.bedwars:shopitem_end_stone.name=§aEnd Stone
 item.bedwars:shopitem_ladder=§aLadder
@@ -31,13 +159,13 @@ item.bedwars:shopitem_iron_armor=§aPermanent Iron Armor
 item.bedwars:shopitem_diamond_armor=§aPermanent Diamond Armor
 item.bedwars:shopitem_shears=§aPermanent Shears
 item.bedwars:shopitem_wooden_axe=§aPermanent Wooden Axe (Efficiency I)
-item.bedwars:shopitem_stone_axe=§aStone Axe (Efficiency I) §r§7(Needs Wooden Axe)
-item.bedwars:shopitem_iron_axe=§aIron Axe (Efficiency II) §r§7(Needs Stone Axe)
-item.bedwars:shopitem_diamond_axe=§aDiamond Stone Axe (Efficiency III) §r§7(Needs Iron Axe)
+item.bedwars:shopitem_stone_axe=§aStone Axe (Efficiency I)
+item.bedwars:shopitem_iron_axe=§aIron Axe (Efficiency II)
+item.bedwars:shopitem_diamond_axe=§aDiamond Stone Axe (Efficiency III)
 item.bedwars:shopitem_wooden_pickaxe=§aPermanent Wooden Pickaxe (Efficiency I)
-item.bedwars:shopitem_iron_pickaxe=§aIron Pickaxe (Efficiency II) §r§7(Needs Wooden Pickaxe)
-item.bedwars:shopitem_golden_pickaxe=§aGolden Pickaxe (Efficiency III) §r§7(Needs Iron Pickaxe)
-item.bedwars:shopitem_diamond_pickaxe=§aDiamond Stone Pickaxe (Efficiency III) §r§7(Needs Golden Pickaxe)
+item.bedwars:shopitem_iron_pickaxe=§aIron Pickaxe (Efficiency II)
+item.bedwars:shopitem_golden_pickaxe=§aGolden Pickaxe (Efficiency III)
+item.bedwars:shopitem_diamond_pickaxe=§aDiamond Stone Pickaxe (Efficiency III)
 item.bedwars:shopitem_bow=§aBow
 item.bedwars:shopitem_bow_power=§aBow (Power I)
 item.bedwars:shopitem_bow_power_punch=§aBow (Power I, Punch I)
@@ -57,22 +185,372 @@ item.bedwars:shopitem_magic_milk=§aMagic Milk
 tile.bedwars:shopitem_sponge.name=§aSponge
 item.bedwars:shopitem_compact_pop_up_tower=§aCompact Pop-up Tower
 item.bedwars:shopitem_bed=§aBed
+item.bedwars:shopitem_emerald_shareable=§aEmerald
+item.bedwars:shopitem_iron_ingot_shareable=§aIron Ingot
+item.bedwars:shopitem_gold_ingot_shareable=§aGold Ingot
 
 #### Team Upgrades
-item.bedwars:upgrade_sharpened_swords=§a锋利附魔
-item.bedwars:upgrade_reinforced_armor_tier_1=§a盔甲强化 I
-item.bedwars:upgrade_reinforced_armor_tier_2=§a盔甲强化 II
-item.bedwars:upgrade_reinforced_armor_tier_3=§a盔甲强化 III
-item.bedwars:upgrade_reinforced_armor_tier_4=§a盔甲强化 IV
-item.bedwars:upgrade_maniac_miner_tier_1=§a疯狂矿工 I
-item.bedwars:upgrade_maniac_miner_tier_2=§a疯狂矿工 II
-item.bedwars:upgrade_forge_tier_1=§a铁锻炉
-item.bedwars:upgrade_forge_tier_2=§a金锻炉
-item.bedwars:upgrade_forge_tier_3=§a绿宝石锻炉
-item.bedwars:upgrade_forge_tier_4=§a熔融锻炉
-tile.bedwars:upgrade_heal_pool.name=§a治愈池
-item.bedwars:upgrade_dragon_buff=§a末影龙增益
-item.bedwars:upgrade_its_a_trap=§a这是个陷阱！
-item.bedwars:upgrade_counter_offensive_trap=§a反击陷阱
-item.bedwars:upgrade_alarm_trap=§a报警陷阱
-item.bedwars:upgrade_miner_fatigue_trap=§a挖掘疲劳陷阱
+item.bedwars:upgrade_sharpened_swords=§aSharpened Swords
+item.bedwars:upgrade_reinforced_armor_tier_1=§aReinforced Armor I
+item.bedwars:upgrade_reinforced_armor_tier_2=§aReinforced Armor II
+item.bedwars:upgrade_reinforced_armor_tier_3=§aReinforced Armor III
+item.bedwars:upgrade_reinforced_armor_tier_4=§aReinforced Armor IV
+item.bedwars:upgrade_maniac_miner_tier_1=§aManiac Miner I
+item.bedwars:upgrade_maniac_miner_tier_2=§aManiac Miner II
+tile.bedwars:upgrade_forge_tier_1.name=§aIron Forge
+tile.bedwars:upgrade_forge_tier_2.name=§aGold Forge
+tile.bedwars:upgrade_forge_tier_3.name=§aEmerald Forge
+tile.bedwars:upgrade_forge_tier_4.name=§aMolten Forge
+tile.bedwars:upgrade_heal_pool.name=§aHeal Pool
+item.bedwars:upgrade_cushioned_boots_tier_1=§aCushioned Boots I
+item.bedwars:upgrade_cushioned_boots_tier_2=§aCushioned Boots II
+item.bedwars:upgrade_dragon_buff=§aDragon Buff
+item.bedwars:upgrade_blindness_trap=§aBlindness Trap
+item.bedwars:upgrade_counter_offensive_trap=§aCounter-Offensive Trap
+item.bedwars:upgrade_reveal_trap=§aReveal Trap
+item.bedwars:upgrade_miner_fatigue_trap=§aMiner Fatigue Trap
+
+#### 标签物品
+item.bedwars:category_quick_buy=§bQuick Buy
+tile.bedwars:category_blocks.name=§aBlocks
+item.bedwars:category_melee=§aMelee
+item.bedwars:category_armor=§aArmor
+item.bedwars:category_tools=§aTools
+item.bedwars:category_ranged=§aRanged
+item.bedwars:category_potions=§aPotions
+tile.bedwars:category_utility.name=§aUtility
+item.bedwars:category_rotating_items=§aRotating Items
+
+#### Settings Items
+item.bedwars:kill_style=Kill Style
+item.bedwars:map_settings=Map Settings
+item.bedwars:spectator_mode=Spectator Mode
+
+#### Select Team Items
+item.bedwars:select_team_red=§l§cSelect Team Red
+item.bedwars:select_team_blue=§l§9Select Team Blue
+item.bedwars:select_team_green=§l§aSelect Team Green
+item.bedwars:select_team_yellow=§l§eSelect Team Yellow
+item.bedwars:select_team_white=§l§fSelect Team White
+item.bedwars:select_team_pink=§l§dSelect Team Pink
+item.bedwars:select_team_gray=§l§7Select Team Gray
+item.bedwars:select_team_cyan=§l§3Select Team Cyan
+item.bedwars:select_team_orange=§l§6Select Team Orange
+item.bedwars:select_team_purple=§l§5Select Team Purple
+item.bedwars:select_team_brown=§l§nSelect Team Brown
+
+## ===== Team Names =====
+team.red=§cR
+team.blue=§9B
+team.yellow=§eY
+team.green=§aG
+team.white=§fW
+team.cyan=§3C
+team.pink=§dP
+team.gray=§7S
+team.orange=§6O
+team.brown=§nB
+team.purple=§5P
+
+## ===== Messages =====
+
+### --- Game Start ---
+
+title.needsMorePlayer=§cNeeds More Players...
+message.needsMorePlayer=§cWe don't have enough players! Start cancelled.
+
+message.gameStart=§eThe game starts in %s§e seconds!
+
+### --- Mode Intros ---
+
+message.greenLine=§a§l---------------
+message.gameStartTitle.classic=§f§lBED WARS (CLASSIC)
+message.gameStartIntroduction.classic=§e§lProtect your bed and destroy the enemy's beds, collect iron ingots, gold ingots, diamonds and emeralds to upgrade and make yourself and your team stronger.
+message.gameStartTitle.capture=§f§lBED WARS (CAPTURE)
+message.gameStartIntroduction.capture=§e§lBuy and place more beds to cut into your opponent's score, or destroy all of their beds before they can place more and knock them all out for the ultimate victory.
+message.gameStartTitle.experience=§f§l起床战争（经验模式）
+message.gameStartIntroduction.experience=§e§l保护你的床并摧毁敌人的床，资源将自动转化为经验，利用经验购买道具。
+message.gameStartTitle.rush=§f§l起床战争（疾速模式）
+message.gameStartIntroduction.rush=§e§l所有资源生成点都为满级！你的床有三层保护！手持剑右键点击开启建桥模式！
+message.gameStartTitle.voidless=§f§l起床战争（无虚空模式）
+message.gameStartIntroduction.voidless=§e§l保护你的床并摧毁敌人的床，但是现在不再有虚空了！你的床有三层保护！
+message.gameStartTitle.offensiveAndDefensive=§f§l起床战争（攻防战）
+message.gameStartIntroduction.offensiveAndDefensive=§e§l所有玩家分为攻方和守方，在规定时间内攻方拿下三张床即可胜利，守方则尽一切可能阻止攻方！
+message.gameStartTitle.noResource=§f§l起床战争（无资源模式）
+message.gameStartIntroduction.noResource=§e§l保护你的床并摧毁敌人的床，方块自动补充，武器装备固定，没有资源点和商店。速战速决！
+message.gameStartTitle.skywars=§f§l起床战争（空岛战争模式）
+message.gameStartIntroduction.skywars=§e§l保护你的床并摧毁敌人的床，但是场景可破坏，资源全部来自岛上的箱子！
+message.gameStartTitle.defend=§f§l起床战争（死守模式）
+message.gameStartIntroduction.defend=§e§l保护你的床并摧毁敌人的床。但是，当你失去床后，你将被淘汰！
+
+### --- Kill And Bed Destruction ---
+### Useful templates: 
+### { translate: `message.bedDestroyed.${killStyle}`, with: { rawtext: [ { translate: `message.selfBed` } ] } }
+### { translate: `message.bedDestroyed.${killStyle}`, with: { rawtext: [ { translate: `message.otherBed`, with: { rawtext: [ { text: `team.${id}` } ] } } ] } }
+
+#### Normal
+title.bedDestroyed=§cBED DESTROYED!
+subtitle.bedDestroyed=You will no longer respawn!
+subtitle.bedDestroyed.allTeams=All beds have been destroyed!
+title.deathMatch=§cSudden Death
+message.finalKill=§l§bFINAL KILL!
+message.kill.died=%s§7 died.
+message.kill.fellIntoVoid=%s§7 fell into the void.
+message.selfBed=§7Your bed
+message.otherBed=Bed %s
+message.bedDestroyed.allTeams=§l§cYour bed has been destroyed!
+message.enderChestItemReleased=§aContents of %s's Ender Chest have been dropped into their fountain.
+message.selfTeamPlayer.breakingBed=§cYou can't destroy your own bed!
+message.invalidPlayer.breakingBed=§cYou don't have permission to destroy the bed!
+message.teamEliminated=§lTEAM ELIMINATED > §rTeam %s§c has been eliminated!
+
+#### Style: Default
+message.kill.beKilled.default=%s§7 was killed by %s§7.
+message.kill.beKilledVoid.default=%s§7 was knocked into the void by %s§7.
+message.kill.beShot.default=%s§7was shot by %s§7.
+message.kill.beKilledFall.default=%s§7 was knocked off a cliff by %s§7.
+message.kill.beKilledGolem.default=%s§7 was killed by %s§7's Golem.
+message.bedDestroyed.default=§lBED DESTRUCTION > §r%s §7was destroyed by %s§7!
+
+#### 样式：火焰
+message.kill.beKilled.flame=%s§7被%s§7击倒。
+message.kill.beKilledVoid.flame=%s§7被%s§7化为粉尘。
+message.kill.beShot.flame=%s§7被%s§7熔化。
+message.kill.beKilledFall.flame=%s§7被%s§7化为灰烬。
+message.kill.beKilledGolem.flame=%s§7被%s§7的傀儡油炸了。
+message.bedDestroyed.flame=§lBED DESTRUCTION > §r%s的床§7被%s§7焚烧！
+
+#### 样式：西部
+message.kill.beKilled.west=%s§7被%s§7中箭无数。
+message.kill.beKilledVoid.west=%s§7被%s§7逼入末路。
+message.kill.beShot.west=%s§7因%s§7用炸药炸死。
+message.kill.beKilledFall.west=%s§7在一场饮酒比赛中输给了%s§7。
+message.kill.beKilledGolem.west=%s§7输掉了与%s§7的傀儡的对决。
+message.bedDestroyed.west=§lBED DESTRUCTION > §r%s的床§7被%s§7冻住！
+
+#### 样式：光荣
+message.kill.beKilled.glory=%s§7死于与%s§7的近战。
+message.kill.beKilledVoid.glory=%s§7与%s§7战至边缘。
+message.kill.beShot.glory=%s§7死于%s§7的百步穿杨之术。
+message.kill.beKilledFall.glory=%s§7因%s§7而跌跌撞撞地滑落边缘。
+message.kill.beKilledGolem.glory=%s§7与%s§7的傀儡的跳起了探戈。
+message.bedDestroyed.glory=§lBED DESTRUCTION > §r%s的床§7不得不向%s§7高举白旗！
+
+#### 样式：海盗
+message.kill.beKilled.pirate=%s§7被%s§7塞进了戴维·琼斯的箱子。
+message.kill.beKilledVoid.pirate=%s§7被%s§7的加农炮炸死了。
+message.kill.beShot.pirate=%s§7被%s§7射杀。
+message.kill.beKilledFall.pirate=%s§7被%s§7的魔法杀死了。
+message.kill.beKilledGolem.pirate=%s§7被%s§7的傀儡用金属杀死了。
+message.bedDestroyed.pirate=§lBED DESTRUCTION > §r%s的床§7被%s§7的大炮轰成了渣！
+
+#### 样式：爱情
+message.kill.beKilled.love=%s§7受到了%s§7的冷淡。
+message.kill.beKilledVoid.love=%s§7被%s§7的爱情炸弹击中。
+message.kill.beShot.love=%s§7被%s§7的丘比特之箭射杀。
+message.kill.beKilledFall.love=%s§7被%s§7赶出了联盟。
+message.kill.beKilledGolem.love=%s§7不敌%s§7的傀儡。
+message.bedDestroyed.love=§lBED DESTRUCTION > §r%s的床§7被%s§7拆解！
+
+#### 样式：圣诞老人工坊
+message.kill.beKilled.christmas=%s§7被%s§7打包成了礼物。
+message.kill.beKilledVoid.christmas=%s§7因%s§7而摔到硬木地板上而死。
+message.kill.beShot.christmas=%s§7被%s§7列入淘气名单。
+message.kill.beKilledFall.christmas=%s§7被%s§7推下了滑坡。
+message.kill.beKilledGolem.christmas=%s§7被%s§7的傀儡做成了姜饼。
+message.bedDestroyed.christmas=§lBED DESTRUCTION > §r%s的床§7被%s§7用来交换饼干和牛奶！
+
+#### 样式：表情包
+message.kill.beKilled.meme=%s§7被%s§7完爆。
+message.kill.beKilledVoid.meme=%s§7被%s§7击败。
+message.kill.beShot.meme=%s§7被%s§7删了一记耳光。
+message.kill.beKilledFall.meme=%s§7被%s§7烤熟了。
+message.kill.beKilledGolem.meme=%s§7被%s§7的傀儡捉弄致死。
+message.bedDestroyed.meme=§lBED DESTRUCTION > §r%s的床§7被%s§7做成表情包！
+
+#### 样式：打包
+message.kill.beKilled.pack=%s§7被%s§7打包成了礼物。
+message.kill.beKilledVoid.pack=%s§7被%s§7打成了蝴蝶结。
+message.kill.beShot.pack=%s§7被%s§7粘住了。
+message.kill.beKilledFall.pack=%s§7被%s§7的礼物绊倒了。
+message.kill.beKilledGolem.pack=%s§7被%s§7的傀儡绑起来了。
+message.bedDestroyed.pack=§lBED DESTRUCTION > §r%s的床§7被%s§7装满了面巾纸！
+
+#### 样式：胜利
+message.kill.beKilled.victory=%s§7被%s§7§e打败§7。
+message.kill.beFinalKilled.victory=%s§7成为了%s§7的第§e#%s§7个最终击杀。
+message.kill.beKilledVoid.victory=%s§7被%s§7推入§e虚空§7。
+message.kill.beShot.victory=%s§7被%s§7§e射杀§7。
+message.kill.beKilledFall.victory=%s§7被%s§7击落边缘。
+message.kill.beKilledGolem.victory=%s§7被%s§7的傀儡§e打败§7。
+message.bedDestroyed.victory=§lBED DESTRUCTION > §r%s的床§7是%s§7破坏的第§e#%s§7张床！
+
+#### 样式：荣耀
+message.kill.beKilled.honour=%s§7被%s§7§6践踏§7。
+message.kill.beFinalKilled.honour=%s§7成为了%s§7的第§e#%s§7个最终击杀。
+message.kill.beKilledVoid.honour=%s§7被%s§7掷落§6深渊§7。
+message.kill.beShot.honour=%s§7被%s§7§6射杀§7。
+message.kill.beKilledFall.honour=%s§7被%s§7重重地击落§6地面§7。
+message.kill.beKilledGolem.honour=%s§7被%s§7的傀儡§6超越§7。
+message.bedDestroyed.honour=§lBED DESTRUCTION > §r%s的床§7是%s§7破坏的第§e#%s§7张床！
+
+#### 样式：新三国（独家，by 狂野巴豆）(PLS DO NOT TRANSLATE)
+message.kill.beKilled.newThreeKingdom=%s§7被%s§7摸须一刀斩。
+message.kill.beKilledVoid.newThreeKingdom=%s§7被%s§7叉出去，掉进虚空。生死不明，那就是死了。
+message.kill.beShot.newThreeKingdom=%s§7被%s§7射了一万个透明窟窿。
+message.kill.beKilledFall.newThreeKingdom=%s§7摔成肉饼，被%s§7拿去煮汤喝。虽然酸，但咱家不怕酸！
+message.kill.beKilledGolem.newThreeKingdom=%s§7被铁傀儡杀了，不是%s§7害了你，是这个乱世害了你啊！
+message.bedDestroyed.newThreeKingdom=§l床被破坏了 > §r%s的床§7与%s§7战至最后一刻，自！刎！归！天！
+
+### --- Death and respawn ---
+
+title.respawning=§cYOU DIED!
+subtitle.respawning=§eYou will respawn in §c%s§e seconds!
+message.respawning=§eYou will respawn in §c%s§e seconds!    
+
+title.respawned=§aRESPAWNED!
+subtitile.respawned= 
+message.respawned=§eYou have respawned!
+
+message.playerRejoin.haveBed=§eYou bed hasn't been destroyed yet!
+message.playerRejoin.haveNoBed=§cYou bed has been destroyed! You will no longer respawn!
+
+message.eliminated=§cYou have been eliminated!
+
+### --- Purchase Items ---
+
+message.purchaseItemsSuccessfully=§aYou purchased §6%s
+message.purchaseTeamUpgradeSuccessfully=§6%s§a purchased §6%s
+message.resourceNotEnough=§cYou don't have enough %s! Need %sx%s more!
+message.alreadyGotItem=§cYou already have this item!
+message.inventoryFull=§cInventory full!
+message.trapQueueFull=§cTrap queue full!
+message.invalidPlayer.purchaseItems=§cYou don't have permission to purchase the item!
+
+### --- Traps ---
+
+title.trapTriggered=§cTRAP TRIGGERED!
+subtitle.trapTriggered=Your %s has been set off!
+message.trapTriggered=§l§c%s was set off!
+
+title.trapTriggered.revealTrap=§cALARM!!!
+subtitle.trapTriggered.revealTrap=Your Alarm Trap has been set off by Team %s§f %s§f!    #### Hope you can use %1,%2... instead of using %s ~
+message.trapTriggered.revealTrap=§l§cThe Alarm Trap has been set off by Team %s §c%s§c!
+
+### --- Resource Upgrade ---
+
+message.diamondSpawnerUpgradedToTier2=§bDimaond Generators§e has been upgraded to Tier §cII§e!
+message.diamondSpawnerUpgradedToTier3=§bDiamond Generators§e has been upgraded to Tier §cIII§e!
+message.emeraldSpawnerUpgradedToTier2=§2Emerald Generators§e has been upgraded to Tier §cII§e!
+message.emeraldSpawnerUpgradedToTier3=§2Emerald Generators§e has been upgraded to Tier §cIII§e!
+
+### --- Game Over ---
+
+title.gameOver=§l§cGAME OVER!
+title.victory=§l§6VICTORY
+message.gameOver.endInATie=§r§cThe game ended in a draw! No winner!
+
+### --- Height limit ---
+
+message.heightLimit.max=§cBuild height limit reached!
+message.heightLimit.min=§cYou can't place block here!
+
+### --- Other ---
+
+message.breakingInvalidBlocks=§cYou can only break blocks placed by a player!
+message.magicMilkTimeOut=§cYour Magic Milk wore off!
+message.beHitWhenInvisibility=§cYou took damage and lost your invisibility!
+message.areaNotAllowed=§cYou can't enter this area!
+message.cannotOpenAliveTeamChests=%s§c还未被淘汰，你无法打开这个箱子！
+message.bowHitHealth=%s§7is on §c%s§7 HP!
+
+### --- Capture Mode ---
+
+title.capture.allBedDestroyed=All beds of Team %s §chas been destroyed!
+subtitle.capture.allBedDestroyed.other=Eliminate all enemies to win!
+subtitle.capture.allBedDestroyed.self=You will no longer respawn after death!
+message.capture.bedDestroyed=§rTeam %s§e lost one bed! Currently the team occupies §a%s§e beds.
+message.capture.bedCaptured=§rTeam %s§e occupied one bed! Currently the team occupies §a%s§e beds.
+message.capture.allBedDestroyed.other=§cAll enemy beds have been destroyed, eliminate all enemies to win!
+message.capture.allBedDestroyed.self=§cAll your beds have been destroyed and you will no longer respawn after death! Place a new bed to respawn your eliminated teammates!
+
+message.respawnTipWhenHaveBed=§cDon't get discouraged, this may be temporary! When your team gets a new bed, you will respawn!
+message.respawn.newBed=§cBecause the team has obtained a new bed, the eliminated members of the team will be respawned!
+
+### --- Settings ---
+
+message.settings.warning.regenerateMapWhenLoading=§cYou can't regenerate map when loading map, please try again later.
+message.settings.warning.allModesDisabled=§cYou can't disable all modes!
+message.killStyle.success=§aYou chose kill style §6%s
+message.killStyle.scoreboardLost=§cYou can't use this setting because the key scoreboard object "killStyle" has been lost
+message.selectTeam.success=§aYou chose Team %s
+message.selectTeam.successClearTeam=§aYou chose Assign Team Randomly, cleared your selection
+message.selectTeam.scoreboardLost=§cYou can't use this setting because the key scoreboard object "selectTeam" has been lost
+message.selectTeam.teamIsFull=§cTeam %s §cis full! You can't choose this team!
+message.selectTeam.sameTeam=§cYou can not choose team that you have chosen!
+
+### --- Shopitems ---
+message.bedwars:shopitem_wool=Wool
+message.bedwars:shopitem_stained_hardened_clay=Stained Hardened Clay
+message.bedwars:shopitem_oak_planks=Planks
+message.bedwars:shopitem_blast_proof_glass=Blast-Proof Glass
+message.bedwars:shopitem_end_stone=End Stone
+message.bedwars:shopitem_ladder=Ladder
+message.bedwars:shopitem_obsidian=Obsidian
+message.bedwars:shopitem_stone_sword=Stone Sword
+message.bedwars:shopitem_iron_sword=Iron Sword
+message.bedwars:shopitem_diamond_sword=Diamond Sword
+message.bedwars:shopitem_knockback_stick=Knockback Stick (Knockback I)
+message.bedwars:shopitem_chain_armor=Permanent Chain Armor
+message.bedwars:shopitem_iron_armor=Permanent Iron Armor
+message.bedwars:shopitem_diamond_armor=Permanent Diamond Armor
+message.bedwars:shopitem_shears=Permanent Shears
+message.bedwars:shopitem_wooden_axe=Wooden Axe (Efficiency I)
+message.bedwars:shopitem_stone_axe=Stone Axe (Efficiency I)
+message.bedwars:shopitem_iron_axe=Iron Axe (Efficiency II)
+message.bedwars:shopitem_diamond_axe=Diamond Axe (Efficiency III)
+message.bedwars:shopitem_wooden_pickaxe=Wooden Pickaxe (Efficiency I)
+message.bedwars:shopitem_iron_pickaxe=Iron Pickaxe (Efficiency II)
+message.bedwars:shopitem_golden_pickaxe=Golden Pickaxe (Efficiency III)
+message.bedwars:shopitem_diamond_pickaxe=Diamond Pickaxe (Efficiency III)
+message.bedwars:shopitem_bow=Bow
+message.bedwars:shopitem_bow_power=Bow (Power I)
+message.bedwars:shopitem_bow_power_punch=Bow (Power I, Punch I)
+message.bedwars:shopitem_arrow=Arrow
+message.bedwars:shopitem_potion_jump_boost=Jump Boost V Potion (45 seconds)
+message.bedwars:shopitem_potion_speed=Speed II Potion (45 seconds)
+message.bedwars:shopitem_potion_invisibility=Invisibility Potion (30 seconds)
+message.bedwars:shopitem_golden_apple=Golden Apple
+message.bedwars:shopitem_bed_bug=Bed Bug
+message.bedwars:shopitem_dream_defender=Dream Defender
+message.bedwars:shopitem_fireball=Fireball
+message.bedwars:shopitem_tnt=TNT
+message.bedwars:shopitem_ender_pearl=Ender Pearl
+message.bedwars:shopitem_water_bucket=Water Bucket
+message.bedwars:shopitem_bridge_egg=Bridge Egg
+message.bedwars:shopitem_magic_milk=Magic Milk
+message.bedwars:shopitem_sponge=Sponge
+message.bedwars:shopitem_compact_pop_up_tower=Compact Pop-Up Tower
+message.bedwars:shopitem_bed=Bed
+message.bedwars:shopitem_iron_ingot_shareable=Iron Ingot
+message.bedwars:shopitem_gold_ingot_shareable=Gold Ingot
+message.bedwars:shopitem_emerald_shareable=Emerald
+message.bedwars:upgrade_sharpened_swords=Sharpened Swords
+message.bedwars:upgrade_reinforced_armor_tier_1=Reinforced Armor I
+message.bedwars:upgrade_reinforced_armor_tier_2=Reinforced Armor II
+message.bedwars:upgrade_reinforced_armor_tier_3=Reinforced Armor III
+message.bedwars:upgrade_reinforced_armor_tier_4=Reinforced Armor IV
+message.bedwars:upgrade_maniac_miner_tier_1=Maniac Miner I
+message.bedwars:upgrade_maniac_miner_tier_2=Maniac Miner II
+message.bedwars:upgrade_forge_tier_1=Iron Forge
+message.bedwars:upgrade_forge_tier_2=Gold Forge
+message.bedwars:upgrade_forge_tier_3=Emerald Forge
+message.bedwars:upgrade_forge_tier_4=Molten Forge
+message.bedwars:upgrade_heal_pool=Heal Pool
+message.bedwars:upgrade_cushioned_boots_tier_1=Cushioned Boots I
+message.bedwars:upgrade_cushioned_boots_tier_2=Cushioned Boots II
+message.bedwars:upgrade_dragon_buff=Dragon Buff
+message.bedwars:upgrade_blindness_trap=Blindness Trap
+message.bedwars:upgrade_counter_offensive_trap=Counter-Offensive Trap
+message.bedwars:upgrade_reveal_trap=Reveal Trap
+message.bedwars:upgrade_miner_fatigue_trap=Miner Fatigue Trap

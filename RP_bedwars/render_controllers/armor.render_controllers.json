@@ -11,7 +11,7 @@
                 "Texture.enchanted"
             ],
             "part_visibility": [
-                { "*": "!query.is_sheared" }
+                { "*": "!query.property('bedwars:is_invisible')" }
             ]
         }
     }
